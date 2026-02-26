@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v2
+      - name: Install Python 3.11
+        run: uv python install 3.11
+      - name: Sync backend dependencies
+        run: uv sync --frozen --project apps/backend --extra dev
+      - name: Ruff lint
+        run: uv run --project apps/backend ruff check apps/backend
+      - name: Ruff format check
+        run: uv run --project apps/backend ruff format --check apps/backend
+      - name: Mypy
+        run: uv run --project apps/backend mypy apps/backend/src
+      - name: Pytest
+        run: uv run --project apps/backend pytest
+
+  web:
+    name: Web quality gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: apps/web
+      - name: ESLint
+        run: npm run lint
+        working-directory: apps/web
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: apps/web
+      - name: Unit tests
+        run: npm run test -- --run
+        working-directory: apps/web
+      - name: Build
+        run: npm run build
+        working-directory: apps/web

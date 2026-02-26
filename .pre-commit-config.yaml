@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: backend-ruff-check
+        name: backend ruff check
+        entry: uv
+        args: [run, --project, apps/backend, ruff, check, apps/backend]
+        language: system
+        pass_filenames: false
+      - id: backend-ruff-format
+        name: backend ruff format check
+        entry: uv
+        args: [run, --project, apps/backend, ruff, format, --check, apps/backend]
+        language: system
+        pass_filenames: false
+      - id: backend-mypy
+        name: backend mypy
+        entry: uv
+        args: [run, --project, apps/backend, mypy, apps/backend/src]
+        language: system
+        pass_filenames: false
+      - id: backend-pytest
+        name: backend pytest
+        entry: uv
+        args: [run, --project, apps/backend, pytest, apps/backend/tests/unit]
+        language: system
+        pass_filenames: false
+      - id: web-eslint
+        name: web eslint
+        entry: npm
+        args: [run, lint, --prefix, apps/web]
+        language: system
+        pass_filenames: false

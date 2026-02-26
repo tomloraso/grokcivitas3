@@ -1,0 +1,10 @@
+[project]
+name = "fullstack-bootstrap-template"
+version = "0.1.0"
+description = "Workspace configuration for a full-stack bootstrap monorepo."
+requires-python = ">=3.11,<3.13"
+readme = "README.md"
+license = { text = "MIT" }
+
+[tool.uv.workspace]
+members = ["apps/backend"]

@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Node
+node_modules/
+apps/web/node_modules/
+apps/web/dist/
+apps/web/coverage/
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local env
+.env
+.env.*
+
+# Tooling
+playwright-report/
+test-results/

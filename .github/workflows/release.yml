@@ -1,0 +1,12 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release-placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release note
+        run: echo "Define semantic-release or tagged release workflow for your org."
