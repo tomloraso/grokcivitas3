@@ -1,3 +1,0 @@
-[console_scripts]
-bootstrap-api = bootstrap_app.api.main:run
-bootstrap-cli = bootstrap_app.cli.main:app
