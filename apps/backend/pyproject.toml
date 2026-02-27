@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bootstrap-app-backend"
+name = "civitas-backend"
 version = "0.1.0"
-description = "Hexagonal backend template"
+description = "Hexagonal backend service for Civitas"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
@@ -26,12 +26,12 @@ dev = [
 ]
 
 [project.scripts]
-bootstrap-api = "bootstrap_app.api.main:run"
-bootstrap-cli = "bootstrap_app.cli.main:app"
+civitas-api = "civitas.api.main:run"
+civitas-cli = "civitas.cli.main:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["bootstrap_app*"]
+include = ["civitas*"]
 
 [tool.ruff]
 line-length = 100
@@ -45,11 +45,11 @@ ignore = ["E501"]
 ban-relative-imports = "parents"
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
-"bootstrap_app.adapters".msg = "Domain/application must not import adapters directly. Use ports and dependency injection."
+"civitas.adapters".msg = "Domain/application must not import adapters directly. Use ports and dependency injection."
 
 [tool.ruff.lint.per-file-ignores]
-"src/bootstrap_app/api/**" = ["B008", "TID251"]
-"src/bootstrap_app/cli/**" = ["TID251"]
+"src/civitas/api/**" = ["B008", "TID251"]
+"src/civitas/cli/**" = ["TID251"]
 "tests/**" = ["TID251"]
 
 [tool.mypy]
@@ -63,4 +63,6 @@ mypy_path = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "--cov=bootstrap_app --cov-report=term-missing"
+addopts = "--cov=civitas --cov-report=term-missing"
+
+

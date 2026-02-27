@@ -1,9 +1,9 @@
 import typer
 
-from bootstrap_app.adapters.persistence.in_memory_task_repository import InMemoryTaskRepository
-from bootstrap_app.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
+from civitas.adapters.persistence.in_memory_task_repository import InMemoryTaskRepository
+from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 
-app = typer.Typer(help="Bootstrap App CLI")
+app = typer.Typer(help="Civitas CLI")
 _repo = InMemoryTaskRepository()
 
 

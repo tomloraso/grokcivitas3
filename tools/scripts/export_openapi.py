@@ -7,7 +7,7 @@ Run from repo root:
 from pathlib import Path
 import json
 
-from bootstrap_app.api.main import app
+from civitas.api.main import app
 
 
 def main() -> None:
@@ -20,3 +20,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

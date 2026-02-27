@@ -20,7 +20,8 @@ run:
 	@echo "  make run-web"
 
 run-backend:
-	uv run --project apps/backend uvicorn bootstrap_app.api.main:app --reload --host 0.0.0.0 --port 8000
+	uv run --project apps/backend uvicorn civitas.api.main:app --reload --host 0.0.0.0 --port 8000
 
 run-web:
 	cd apps/web && npm run dev
+

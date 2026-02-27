@@ -1,5 +1,5 @@
 {
-  "name": "bootstrap-web",
+  "name": "civitas-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -42,3 +42,4 @@
     "vitest": "^2.0.5"
   }
 }
+

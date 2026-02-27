@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from bootstrap_app.api.main import app
+from civitas.api.main import app
 
 client = TestClient(app)
 

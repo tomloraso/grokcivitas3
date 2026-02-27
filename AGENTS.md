@@ -1,13 +1,18 @@
 # AGENTS.md
 
-Fullstack Bootstrap Template is an apps-first Python/TypeScript monorepo baseline for backend + web delivery.
+Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
+
+## Product context
+
+1. **Start with the project brief:** read `.planning/project-brief.md` before planning or implementing product features.
+2. **Treat the brief as product source of truth:** if implementation/docs drift from the brief, update the brief or explicitly record the decision.
 
 ## Essential rules
 
 1. **Read `docs/architecture.md`** before any non-trivial change. Follow layering and dependency rules.
 2. **Keep documentation in sync.** Update `docs/` when behavior changes and add new pages to `docs/index.md`.
 3. **Run commands from repo root.** Use canonical commands in `.agents/tooling.md`.
-4. **Follow ownership + leaf-import rules.** Domain helpers go in `apps/backend/src/bootstrap_app/domain/shared/helpers`; application helpers go in `apps/backend/src/bootstrap_app/application/shared/utils`; avoid barrel re-exports.
+4. **Follow ownership + leaf-import rules.** Domain helpers go in `apps/backend/src/civitas/domain/shared/helpers`; application helpers go in `apps/backend/src/civitas/application/shared/utils`; avoid barrel re-exports.
 5. **Enforce inward imports.** Domain has zero outward dependencies; adapters depend on application/domain ports; entrypoints (`api`, `cli`) stay thin.
 6. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
 7. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
@@ -24,3 +29,4 @@ Fullstack Bootstrap Template is an apps-first Python/TypeScript monorepo baselin
 | Documentation | [.agents/documentation.md](.agents/documentation.md) |
 
 Use native planning workflows for large features/refactors.
+

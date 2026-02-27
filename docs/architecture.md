@@ -1,6 +1,6 @@
 # Architecture
 
-This template uses an apps-first monorepo with a hexagonal backend and React web app.
+Civitas uses an apps-first monorepo with a hexagonal backend and React web app.
 
 - `apps/backend`: Python API and CLI with domain/application/adapters boundaries.
 - `apps/web`: React frontend consuming backend contracts.

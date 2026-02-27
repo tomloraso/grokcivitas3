@@ -4,11 +4,11 @@ Before any non-trivial change, read `docs/architecture.md`.
 
 ## Package ownership
 
-- `apps/backend/src/bootstrap_app/domain`: business rules and entities.
-- `apps/backend/src/bootstrap_app/application`: use-cases, orchestration, and ports.
-- `apps/backend/src/bootstrap_app/adapters`: infrastructure implementations.
-- `apps/backend/src/bootstrap_app/contracts`: API/event DTOs and schemas.
-- `apps/backend/src/bootstrap_app/api` and `cli`: transport/composition roots only.
+- `apps/backend/src/civitas/domain`: business rules and entities.
+- `apps/backend/src/civitas/application`: use-cases, orchestration, and ports.
+- `apps/backend/src/civitas/adapters`: infrastructure implementations.
+- `apps/backend/src/civitas/contracts`: API/event DTOs and schemas.
+- `apps/backend/src/civitas/api` and `cli`: transport/composition roots only.
 
 ## Dependency direction (non-negotiable)
 
@@ -33,3 +33,4 @@ Before any non-trivial change, read `docs/architecture.md`.
 
 - `apps/backend/tests/unit/test_import_boundaries.py` verifies layer boundaries.
 - `ruff` tidy-import rules backstop banned imports.
+

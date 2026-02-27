@@ -21,6 +21,15 @@ make test
 make run
 ```
 
+If `make` is not installed in your shell, run commands directly:
+
+```bash
+uv run --project apps/backend ruff check apps/backend
+uv run --project apps/backend mypy apps/backend/src
+uv run --project apps/backend pytest
+cd apps/web && npm run lint && npm run typecheck && npm run test
+```
+
 ## Dependency services
 
 ```bash

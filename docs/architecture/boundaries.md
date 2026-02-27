@@ -2,12 +2,12 @@
 
 ## Backend package map
 
-- `bootstrap_app.domain`: entities and pure rules.
-- `bootstrap_app.application`: use-cases and port protocols.
-- `bootstrap_app.adapters`: repository/IO implementations.
-- `bootstrap_app.contracts`: request/response DTOs.
-- `bootstrap_app.api`: HTTP routes and dependency wiring.
-- `bootstrap_app.cli`: CLI wrappers around application services.
+- `civitas.domain`: entities and pure rules.
+- `civitas.application`: use-cases and port protocols.
+- `civitas.adapters`: repository/IO implementations.
+- `civitas.contracts`: request/response DTOs.
+- `civitas.api`: HTTP routes and dependency wiring.
+- `civitas.cli`: CLI wrappers around application services.
 
 ## Rules
 
@@ -19,3 +19,4 @@
 ## Frontend boundary
 
 Frontend depends on backend API contracts only; business rules remain backend-owned.
+

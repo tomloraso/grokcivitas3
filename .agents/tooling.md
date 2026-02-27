@@ -14,7 +14,7 @@ Run all commands from the repo root.
 - Format: `uv run --project apps/backend ruff format apps/backend`
 - Typecheck: `uv run --project apps/backend mypy apps/backend/src`
 - Tests: `uv run --project apps/backend pytest`
-- Dev API: `uv run --project apps/backend uvicorn bootstrap_app.api.main:app --reload --host 0.0.0.0 --port 8000`
+- Dev API: `uv run --project apps/backend uvicorn civitas.api.main:app --reload --host 0.0.0.0 --port 8000`
 
 ## Web
 
@@ -30,3 +30,4 @@ Run all commands from the repo root.
 - `make lint`
 - `make test`
 - `make run`
+

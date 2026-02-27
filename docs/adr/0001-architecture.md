@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-Teams need a reusable full-stack bootstrap with clear ownership and minimal architectural drift.
+The Civitas codebase needs a production-ready full-stack structure with clear ownership and minimal architectural drift.
 
 ## Decision
 Adopt an apps-first monorepo:

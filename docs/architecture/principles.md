@@ -23,4 +23,4 @@ Boundary tests and CI checks block architecture drift.
 
 ## 5) Golden path by example
 
-The template includes one small feature implemented end-to-end across domain, application, adapters, API, and web.
+The repository includes one small scaffold feature implemented end-to-end across domain, application, adapters, API, and web.

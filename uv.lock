@@ -4,8 +4,8 @@ requires-python = ">=3.11, <3.13"
 
 [manifest]
 members = [
-    "bootstrap-app-backend",
-    "fullstack-bootstrap-template",
+    "civitas-backend",
+    "civitas-workspace",
 ]
 
 [[package]]
@@ -40,7 +40,7 @@ wheels = [
 ]
 
 [[package]]
-name = "bootstrap-app-backend"
+name = "civitas-backend"
 version = "0.1.0"
 source = { editable = "apps/backend" }
 dependencies = [
@@ -166,7 +166,7 @@ wheels = [
 ]
 
 [[package]]
-name = "fullstack-bootstrap-template"
+name = "civitas-workspace"
 version = "0.1.0"
 source = { virtual = "." }
 
@@ -609,3 +609,4 @@ sdist = { url = "https://files.pythonhosted.org/packages/32/ce/eeb58ae4ac36fe09e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/e4/d04a086285c20886c0daad0e026f250869201013d18f81d9ff5eada73a88/uvicorn-0.41.0-py3-none-any.whl", hash = "sha256:29e35b1d2c36a04b9e180d4007ede3bcb32a85fbdfd6c6aeb3f26839de088187", size = 68783, upload-time = "2026-02-16T23:07:22.357Z" },
 ]
+

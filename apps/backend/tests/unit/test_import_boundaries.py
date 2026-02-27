@@ -3,17 +3,17 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "bootstrap_app"
+SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "civitas"
 
 
 FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     "domain": (
-        "bootstrap_app.application",
-        "bootstrap_app.adapters",
-        "bootstrap_app.api",
-        "bootstrap_app.cli",
+        "civitas.application",
+        "civitas.adapters",
+        "civitas.api",
+        "civitas.cli",
     ),
-    "application": ("bootstrap_app.adapters",),
+    "application": ("civitas.adapters",),
 }
 
 

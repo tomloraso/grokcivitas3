@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from bootstrap_app.domain.tasks.models import Task
+from civitas.domain.tasks.models import Task
 
 
 class TaskRepository(Protocol):

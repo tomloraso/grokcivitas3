@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 
-from bootstrap_app.application.tasks.ports.task_repository import TaskRepository
-from bootstrap_app.domain.tasks.models import Task
+from civitas.application.tasks.ports.task_repository import TaskRepository
+from civitas.domain.tasks.models import Task
 
 
 class InMemoryTaskRepository(TaskRepository):

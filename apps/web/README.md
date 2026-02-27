@@ -1,6 +1,6 @@
 # Web
 
-React + TypeScript frontend template consuming backend API contracts.
+React + TypeScript frontend for Civitas, consuming backend API contracts.
 
 ## Commands
 

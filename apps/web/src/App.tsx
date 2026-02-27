@@ -34,7 +34,7 @@ export function App() {
 
   return (
     <main className="container">
-      <h1>Bootstrap App</h1>
+      <h1>Civitas</h1>
       <p>Backend health: {health}</p>
 
       <form onSubmit={onSubmit} className="task-form">
@@ -55,3 +55,4 @@ export function App() {
     </main>
   );
 }
+

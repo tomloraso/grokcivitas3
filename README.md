@@ -1,33 +1,33 @@
-# Fullstack Bootstrap Template
+# Civitas
 
-Production-oriented full-stack monorepo starter with:
+Civitas is a production-oriented full-stack monorepo for a UK public-data research platform.
 
-- Hexagonal Python backend (`domain`, `application`, `adapters`, `api`, `cli`)
-- React + TypeScript frontend
-- Opinionated quality gates (lint, format, typecheck, tests)
-- CI/CD scaffolding
-- Devcontainer, pre-commit, Docker Compose, Makefile
-- Agent-ready operating docs (`AGENTS.md`, `.agents/*`, `agents/*`)
+Start with the product brief:
+- `.planning/project-brief.md`
+
+## Stack
+
+- Backend: FastAPI + Python with hexagonal layering (`domain`, `application`, `adapters`, `api`, `cli`)
+- Frontend: React + TypeScript
+- Tooling: `uv`, npm, Makefile, pre-commit, Docker Compose
+- Quality gates: lint, format, typecheck, unit/integration tests
 
 ## Repository layout
 
 ```text
-apps/backend  # FastAPI + hexagonal backend
-apps/web      # React frontend
-docs          # architecture + ADRs + runbooks
-.agents       # agent execution guides
-agents        # prompts and eval scaffolding
+apps/backend  # Python API + CLI service
+apps/web      # Public-facing web app
+docs          # Architecture, ADRs, runbooks
+.planning     # Product/planning documents
+.agents       # Agent execution guides
+agents        # Prompt/eval scaffolding
+tools         # Repo scripts
 ```
 
-## Golden path feature
+## Scaffold baseline
 
-A small `tasks` feature is implemented end-to-end:
-
-- Domain entity: `Task`
-- Application use-case: create/list tasks via repository port
-- Adapter: in-memory repository
-- API: `POST /api/v1/tasks`, `GET /api/v1/tasks`
-- Web: task creation/listing page
+The repository currently includes a small `tasks` flow end-to-end as an architectural baseline.
+It exists to validate wiring and quality gates and will be replaced by Civitas domain features.
 
 ## Quickstart
 
@@ -37,3 +37,13 @@ make lint
 make test
 make run
 ```
+
+If `make` is unavailable (common on Windows shells), run the equivalent commands:
+
+```bash
+uv sync --project apps/backend --extra dev
+cd apps/web && npm install
+uv run --project apps/backend pytest
+cd apps/web && npm run test
+```
+

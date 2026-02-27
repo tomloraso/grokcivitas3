@@ -1,10 +1,10 @@
 # Repository Structure
 
 ```text
-strategic-bootstrap-template/
+civitas/
 |- apps/
 |  |- backend/
-|  |  |- src/bootstrap_app/
+|  |  |- src/civitas/
 |  |  |  |- domain/
 |  |  |  |- application/
 |  |  |  |- adapters/
@@ -24,8 +24,9 @@ strategic-bootstrap-template/
 
 ## Placement quick-reference
 
-- Business logic: `apps/backend/src/bootstrap_app/domain/*`
-- Use-cases + ports: `apps/backend/src/bootstrap_app/application/*`
-- Adapter implementations: `apps/backend/src/bootstrap_app/adapters/*`
-- DTO/schemas/contracts: `apps/backend/src/bootstrap_app/contracts/*`
-- HTTP/CLI entrypoints only: `apps/backend/src/bootstrap_app/api`, `cli`
+- Business logic: `apps/backend/src/civitas/domain/*`
+- Use-cases + ports: `apps/backend/src/civitas/application/*`
+- Adapter implementations: `apps/backend/src/civitas/adapters/*`
+- DTO/schemas/contracts: `apps/backend/src/civitas/contracts/*`
+- HTTP/CLI entrypoints only: `apps/backend/src/civitas/api`, `cli`
+

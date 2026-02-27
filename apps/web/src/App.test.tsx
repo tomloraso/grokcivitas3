@@ -35,8 +35,9 @@ describe("App", () => {
   it("renders header and fetched task", async () => {
     render(<App />);
 
-    expect(screen.getByText("Bootstrap App")).toBeInTheDocument();
+    expect(screen.getByText("Civitas")).toBeInTheDocument();
     expect(await screen.findByText("Task")).toBeInTheDocument();
     expect(await screen.findByText("Backend health: ok")).toBeInTheDocument();
   });
 });
+
