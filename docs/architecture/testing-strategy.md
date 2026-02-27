@@ -11,6 +11,7 @@
 ## Boundary
 
 - Import-layer tests enforce architecture direction.
+- Boundary checks also enforce transport-contract isolation (API schemas are API-only).
 
 ## Frontend
 

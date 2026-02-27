@@ -88,4 +88,4 @@ Bronze is the reproducibility checkpoint. The full pipeline can be re-run from r
 - Detailed data schemas and pipeline design -> see `data-architecture.md`
 - Phase-by-phase delivery plan -> see `phased-delivery.md`
 - Frontend component architecture -> future planning doc
-- Infrastructure / deployment topology -> future planning doc
+- Infrastructure / deployment topology -> see `deployment-strategy.md`

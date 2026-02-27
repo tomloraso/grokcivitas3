@@ -16,6 +16,8 @@
 - Application must not import infrastructure/api/cli/bootstrap.
 - Infrastructure may import application ports and domain types.
 - API/CLI must remain thin and use bootstrap for composition.
+- API/CLI must not import infrastructure modules directly.
+- API schemas (`civitas.api.schemas`) are transport-only and imported by API modules only.
 
 ## Frontend boundary
 

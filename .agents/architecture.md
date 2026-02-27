@@ -1,6 +1,7 @@
 # Architecture Guardrails
 
 Before any non-trivial change, read `docs/architecture.md`.
+For backend feature implementation details, read `docs/architecture/backend-conventions.md`.
 
 ## Package ownership
 
@@ -28,6 +29,16 @@ Before any non-trivial change, read `docs/architecture.md`.
 - Use explicit leaf imports.
 - No barrel imports (`__init__.py` re-export chains).
 - Keep one canonical import path per concept.
+
+## Models, Contracts, Ports
+
+- Domain models live in `domain/<feature>` and carry business invariants.
+- Application ports live in `application/<feature>/ports` as Protocols.
+- API request/response schemas live only in `api/schemas`.
+- Do not return API schemas from application or infrastructure layers.
+- Keep mapping ownership explicit:
+  - API maps wire schemas <-> app/domain contracts.
+  - Infrastructure maps DB/external payloads <-> app/domain contracts.
 
 ## Enforcement
 

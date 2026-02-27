@@ -10,4 +10,5 @@ Read these pages before changing structure:
 
 - `docs/architecture/principles.md`
 - `docs/architecture/boundaries.md`
+- `docs/architecture/backend-conventions.md`
 - `docs/architecture/testing-strategy.md`

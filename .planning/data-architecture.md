@@ -73,7 +73,7 @@ Gold responsibilities:
 - **Enrichment** - postcode resolution to lat/lng (via Postcodes.io), distance calculations.
 - **Denormalization** - materialized views or denormalized tables optimized for API query patterns.
 - **Indexing** - PostGIS GIST spatial indexes, B-tree on URN/school ID, compound indexes on common filters.
-- **History** - yearly snapshots per school per metric, enabling trend queries.
+- **History** - typed yearly snapshots per school (domain-specific fact tables), enabling trend queries without EAV pivots.
 
 **Advantages of staging-in-PostgreSQL over a separate format (for example, Parquet):**
 - One query language (SQL) for transform and serving.
@@ -91,8 +91,9 @@ Gold responsibilities:
 **URL:** https://get-information-schools.service.gov.uk/Downloads  
 **Refresh:** Ongoing (GIAS updates as schools change)  
 **Ingestion cadence:** Weekly or on-demand  
-**Key fields:** URN, EstablishmentName, TypeOfEstablishment, PhaseOfEducation, Postcode, Easting, Northing, OpenDate, CloseDate, StatutoryLowAge, StatutoryHighAge, SchoolCapacity, NumberOfPupils  
+**Key fields:** URN, EstablishmentName, TypeOfEstablishment (name), PhaseOfEducation (name), EstablishmentStatus (name), Postcode, Easting, Northing, OpenDate, CloseDate, StatutoryLowAge, StatutoryHighAge, SchoolCapacity, NumberOfPupils  
 **Role in Gold:** Canonical school dimension table. Every other source joins to GIAS via URN.
+**Coordinate rule:** Convert Easting/Northing from EPSG:27700 (BNG) to EPSG:4326 for serving geometry.
 
 ### 2. DfE School Performance / Pupil Characteristics
 
@@ -100,7 +101,7 @@ Gold responsibilities:
 **Refresh:** Annual (typically June)  
 **Ingestion cadence:** Annual after release  
 **Key fields:** URN, AcademicYear, FSMPercentage, FSM6Percentage, SENPercentage, EHCPPercentage, EthnicityBreakdown, TopLanguages  
-**Role in Gold:** Demographics and need metrics. Stored as yearly snapshots for trend queries.
+**Role in Gold:** Demographics and need metrics stored in typed yearly fact tables for trend queries.
 
 ### 3. Ofsted Inspections
 
@@ -134,8 +135,9 @@ Gold responsibilities:
 **URL:** https://postcodes.io/  
 **Refresh:** Stable  
 **Ingestion cadence:** On-demand (lookup at search time + batch enrichment for school postcodes)  
-**Key fields:** Postcode -> Latitude, Longitude, LSOA, AdminDistrict  
+**Key fields:** postcode -> latitude, longitude, lsoa, admin_district  
 **Role in Gold:** Postcode resolution for user search and school LSOA enrichment for IMD joins.
+**Runtime rule:** API search uses cache-first postcode resolution (`postcode_cache`) with TTL refresh.
 
 ### 7. ONS Index of Multiple Deprivation (IMD)
 
@@ -158,10 +160,16 @@ schools
   open_date, close_date
   updated_at
 
-school_metrics
+school_demographics_yearly
   urn (FK), academic_year
-  metric_group, metric_key, value
-  (PK: urn + academic_year + metric_key)
+  fsm_pct, fsm6_pct, sen_pct, ehcp_pct
+  ethnicity_breakdown_json, top_languages_json
+  (PK: urn + academic_year)
+
+school_ofsted_latest
+  urn (PK/FK)
+  inspection_date, overall_effectiveness
+  source_published_at
 
 ofsted_inspections
   urn (FK), inspection_date
@@ -185,7 +193,8 @@ postcode_cache
 **Indexes (minimum):**
 - `schools.geography` - GIST spatial index for radius queries
 - `schools.urn` - B-tree (PK)
-- `school_metrics (urn, academic_year)` - compound index for trend queries
+- `school_demographics_yearly (urn, academic_year)` - compound index for trend queries
+- `school_ofsted_latest.urn` - B-tree (PK)
 - `ofsted_inspections (urn, inspection_date)` - compound index for timeline
 - `area_crime_context (urn, month)` - compound index
 - `postcode_cache.postcode` - B-tree (PK)
@@ -220,7 +229,7 @@ Each module implements:
 - CLI command: `civitas pipeline run --source gias` (or `--all`)
 - Sequential execution per source.
 - Logging: row counts, rejected rows, timing per stage.
-- No external orchestrator for MVP (no Airflow/Dagster). CLI + cron is sufficient.
+- No external orchestrator for MVP (no Airflow/Dagster). CLI + scheduler job is sufficient.
 - Future: add a lightweight orchestrator when dependency graphs/retries are needed.
 
 ### Error handling
@@ -235,11 +244,11 @@ Each module implements:
 
 | Source | Refresh frequency | Pipeline trigger |
 |--------|-------------------|-----------------|
-| GIAS | Weekly | Scheduled (cron) |
+| GIAS | Weekly | Scheduled job |
 | DfE characteristics | Annual | Manual after release |
-| Ofsted | Monthly | Scheduled (cron) |
-| Police UK | Monthly | Scheduled (cron) |
-| Land Registry | Monthly | Scheduled (cron) |
+| Ofsted | Monthly | Scheduled job |
+| Police UK | Monthly | Scheduled job |
+| Land Registry | Monthly | Scheduled job |
 | Postcodes.io | On-demand | Called during enrichment |
 | ONS IMD | On new release | Manual |
 
@@ -251,4 +260,4 @@ Each module implements:
 2. **Historical backfill** - how many years of DfE data are available for download? Need to verify archive access.
 3. **Police API fallback limits** - if API fallback is used, what throttling strategy is required?
 4. **Land Registry** - include in MVP or defer to Phase 2?
-5. **Bronze storage location** - local filesystem for dev, cloud blob storage for production.
+5. **Typed metrics JSON boundaries** - which non-core metrics stay in typed columns vs JSON blobs (ethnicity/language detail)?

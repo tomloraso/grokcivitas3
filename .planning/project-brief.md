@@ -41,10 +41,7 @@ The first vertical is school research for ages 4-16. The platform is intentional
 4. Compare schools:
 - Side-by-side comparison for up to 4 schools using a consistent metric set.
 
-5. Report export:
-- Branded PDF export (initially postcode report, then school report).
-
-6. Paywall + purchase:
+5. Paywall + purchase:
 - Free: limited headline view and limited ranking.
 - Paid: unlock full postcode dataset for 30 days.
 - Optional lifetime unlock model (post-MVP if needed).
@@ -88,6 +85,7 @@ Minimum indicator groups:
 - Editorial rankings, recommendations, or subjective scoring.
 - Full coverage of every UK public dataset in initial release.
 - Complex enterprise admin tooling.
+- PDF report export (deferred to post-MVP).
 
 ## Business Model (Initial)
 - Freemium access:
@@ -96,7 +94,7 @@ Minimum indicator groups:
 
 ## Success Criteria (Initial)
 - Users can search by postcode and compare nearby schools in minutes.
-- Premium users can unlock full local data and export a usable report.
+- Premium users can unlock full local data for postcode-level research.
 - Data refreshes are reliable, auditable, and trend history is maintained.
 
 ## Open Decisions

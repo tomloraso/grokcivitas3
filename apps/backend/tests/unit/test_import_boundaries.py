@@ -20,7 +20,23 @@ FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
         "civitas.cli",
         "civitas.bootstrap",
     ),
+    "infrastructure": (
+        "civitas.api",
+        "civitas.cli",
+    ),
+    "api": (
+        "civitas.infrastructure",
+        "civitas.domain",
+    ),
+    "cli": (
+        "civitas.infrastructure",
+        "civitas.domain",
+        "civitas.api.schemas",
+    ),
 }
+
+API_SCHEMAS_PREFIX = "civitas.api.schemas"
+API_SCHEMAS_ALLOWED_LAYERS = {"api"}
 
 
 def _imports(path: Path) -> set[str]:
@@ -43,5 +59,12 @@ def test_import_boundaries() -> None:
             for imported in _imports(py_file):
                 if imported.startswith(prefixes):
                     violations.append(f"{py_file}: forbidden import {imported}")
+                if (
+                    imported.startswith(API_SCHEMAS_PREFIX)
+                    and layer not in API_SCHEMAS_ALLOWED_LAYERS
+                ):
+                    violations.append(
+                        f"{py_file}: API schema import only allowed in API layer ({imported})"
+                    )
 
     assert not violations, "\n".join(violations)

@@ -6,6 +6,7 @@
 - Data pipeline and API are built together, source by source.
 - Frontend features start only when the API endpoint they consume is tested and stable.
 - Each phase ends with working tests, passing lint, and a demoable artifact.
+- Deployment assumptions are tracked in `.planning/deployment-strategy.md` and updated when phase design changes runtime needs.
 
 ---
 
@@ -13,20 +14,26 @@
 
 **Goal:** Prove the full Bronze -> Staging -> Gold pipeline with one source, expose schools via API, display on frontend.
 
+### Detailed design
+
+- `.planning/phases/phase-0/README.md`
+- `.planning/phases/phase-0/0A-data-platform-baseline.md`
+- `.planning/phases/phase-0/0B-gias-pipeline.md`
+- `.planning/phases/phase-0/0C-postcode-search-api.md`
+- `.planning/phases/phase-0/0D-web-search-map.md`
+
 ### Deliverables
 
-1. **PostgreSQL + PostGIS setup** - Docker Compose service, schema migrations (Alembic or raw SQL).
-2. **Pipeline framework** - base pipeline interface, CLI integration (`civitas pipeline run --source gias`).
-3. **GIAS pipeline** - download, clean, load schools into Gold `schools` table with PostGIS geometry.
-4. **Postcode resolution** - Postcodes.io integration for user search (postcode -> lat/lng).
-5. **Schools search API** - `GET /api/schools?postcode=...&radius=5` returning schools within radius, sorted by distance.
-6. **Frontend: search + results list** - postcode input, results list with school name/type/distance.
-7. **Frontend: map view** - markers for results on an interactive map.
+1. **0A: Data platform baseline** - PostGIS runtime, migration framework, pipeline base contracts, CLI orchestration.
+2. **0B: GIAS pipeline** - Bronze -> Staging -> Gold load into `schools` with PostGIS geometry and idempotent upsert semantics.
+3. **0C: Postcode search API** - Postcodes.io resolution + cache, `GET /api/v1/schools?postcode=...&radius=...`, spatial radius query sorted by distance.
+4. **0D: Web search + map** - postcode form, list results, and Leaflet markers backed by Phase 0 API contract.
 
 ### Exit criteria
 
 - User can enter a postcode and see nearby schools on a list and map.
 - Pipeline is re-runnable and idempotent.
+- OpenAPI contract is updated and consumed by web client/types.
 - Import boundary tests pass, with lint and tests green.
 
 ### Dependencies
@@ -35,22 +42,24 @@
 
 ---
 
-## Phase 1 - School profiles + DfE metrics
+## Phase 1 - School profiles + DfE metrics + Ofsted headline
 
-**Goal:** Add depth to school records with DfE pupil characteristics. Deliver a profile page with headline stats and trends.
+**Goal:** Add depth to school records with DfE pupil characteristics plus the latest Ofsted headline rating on profile.
 
 ### Deliverables
 
 1. **DfE characteristics pipeline** - Bronze -> Staging -> Gold for pupil demographics (FSM, SEN, ethnicity, languages).
-2. **Gold `school_metrics` table** - yearly snapshots per school, metric-key model.
-3. **School profile API** - `GET /api/schools/{urn}` returning core info + latest metrics.
-4. **Trends API** - `GET /api/schools/{urn}/trends` returning 3-5 year metric history with deltas.
-5. **Frontend: school profile page** - headline stats (big numbers, flags), trend sparklines.
-6. **Frontend: navigation** - results list -> profile page linking.
+2. **Ofsted latest pipeline** - Bronze -> Staging -> Gold latest inspection outcome per school (headline rating + date).
+3. **Gold `school_demographics_yearly` table** - typed yearly columns for core demographic metrics (not metric-key EAV).
+4. **Gold `school_ofsted_latest` table** - one latest Ofsted snapshot per school.
+5. **School profile API** - `GET /api/v1/schools/{urn}` returning core info + latest demographics + latest Ofsted headline.
+6. **Trends API** - `GET /api/v1/schools/{urn}/trends` returning 3-5 year history with deltas from typed yearly metrics.
+7. **Frontend: school profile page** - headline stats (including Ofsted badge) plus trend sparklines.
+8. **Frontend: navigation** - results list -> profile page linking.
 
 ### Exit criteria
 
-- User can open a school profile and view demographic indicators plus trend direction.
+- User can open a school profile and view demographic indicators, trend direction, and latest Ofsted rating.
 - Historical data covers 3+ years where available.
 
 ### Dependencies
@@ -59,13 +68,13 @@
 
 ---
 
-## Phase 2 - Ofsted + area context
+## Phase 2 - Ofsted timeline + area context
 
-**Goal:** Add inspection history and area-level context (crime, deprivation) to profile depth.
+**Goal:** Add full inspection history timeline and area-level context (crime, deprivation) to profile depth.
 
 ### Deliverables
 
-1. **Ofsted pipeline** - Bronze -> Staging -> Gold for inspection records.
+1. **Ofsted timeline pipeline extension** - Bronze -> Staging -> Gold for full inspection record history.
 2. **Gold `ofsted_inspections` table** - full inspection timeline per school.
 3. **ONS IMD pipeline** - Bronze -> Staging -> Gold for deprivation by LSOA.
 4. **Gold `area_deprivation` table** - IMD decile and child poverty by LSOA.
@@ -76,7 +85,7 @@
 
 ### Exit criteria
 
-- School profiles show Ofsted rating with inspection history.
+- School profiles show latest Ofsted rating and inspection history timeline.
 - Area context is visible (deprivation decile and crime summary).
 - New pipelines are idempotent and tested.
 
@@ -86,22 +95,21 @@
 
 ---
 
-## Phase 3 - Compare + export
+## Phase 3 - Compare experience
 
-**Goal:** Deliver side-by-side school comparison and PDF report export.
+**Goal:** Deliver side-by-side school comparison with robust metric alignment and missing-data handling.
 
 ### Deliverables
 
-1. **Compare API** - `GET /api/schools/compare?urns=...` returning aligned metrics for up to 4 schools.
+1. **Compare API** - `GET /api/v1/schools/compare?urns=...` returning aligned metrics for up to 4 schools.
 2. **Frontend: compare view** - side-by-side table/card layout with consistent metric rows.
 3. **Frontend: compare selection UX** - add/remove schools from comparison set across search and profile.
-4. **PDF export API** - `GET /api/reports/postcode/{postcode}` generating a branded PDF report.
-5. **Frontend: export trigger** - download button on search results and/or school profile.
+4. **Compare data contract hardening** - deterministic handling for missing/suppressed values and differing year coverage.
 
 ### Exit criteria
 
 - User can select 2-4 schools and compare them side-by-side.
-- User can download a postcode PDF report.
+- Comparison output remains readable and stable when schools have different data coverage.
 
 ### Dependencies
 
@@ -143,6 +151,7 @@
 
 - Land Registry house price pipeline and profile integration.
 - School workforce data (teacher ratios, sickness days, supply percentage).
+- PDF report export (postcode and/or school reports) if business value justifies.
 - SEO-ready static/indexable location pages.
 - Operational admin dashboard (pipeline health, row counts, last refresh).
 - Lifetime unlock option.
@@ -160,9 +169,9 @@
 | Phase | Name | Key outcome | Estimated complexity |
 |-------|------|-------------|---------------------|
 | 0 | Data foundation + GIAS | Search by postcode, schools on map | Foundation / largest setup effort |
-| 1 | Profiles + DfE metrics | School profile with trends | Medium |
-| 2 | Ofsted + area context | Rich profiles with inspections and area data | Medium-large (multiple pipelines) |
-| 3 | Compare + export | Side-by-side comparison and PDF reports | Medium |
+| 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
+| 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
+| 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
 | 5 | Post-MVP extensions | Additional data and operational tooling | Ongoing |
 
@@ -170,8 +179,6 @@
 
 ## Open questions
 
-1. **Phase 0 map stack** - Leaflet vs MapLibre for initial map implementation?
-2. **PDF generation** - server-side rendering (recommended) vs client-side?
-3. **Auth provider** - managed provider vs custom email auth?
-4. **Payment provider** - Stripe assumed but not yet confirmed.
-5. **Phase ordering** - move Ofsted elements earlier if user value justifies it?
+1. **Auth provider** - managed provider vs custom email auth?
+2. **Payment provider** - Stripe assumed but not yet confirmed.
+3. **Typed metrics schema boundaries** - split by domain (`demographics`, `attendance`, `workforce`) or one wider yearly fact table?
