@@ -7,10 +7,10 @@ civitas/
 |  |  |- src/civitas/
 |  |  |  |- domain/
 |  |  |  |- application/
-|  |  |  |- adapters/
-|  |  |  |- contracts/
+|  |  |  |- infrastructure/
 |  |  |  |- api/
-|  |  |  `- cli/
+|  |  |  |- cli/
+|  |  |  `- bootstrap/
 |  |  `- tests/
 |  `- web/
 |- packages/
@@ -26,7 +26,7 @@ civitas/
 
 - Business logic: `apps/backend/src/civitas/domain/*`
 - Use-cases + ports: `apps/backend/src/civitas/application/*`
-- Adapter implementations: `apps/backend/src/civitas/adapters/*`
-- DTO/schemas/contracts: `apps/backend/src/civitas/contracts/*`
+- Infrastructure implementations: `apps/backend/src/civitas/infrastructure/*`
 - HTTP/CLI entrypoints only: `apps/backend/src/civitas/api`, `cli`
+- Dependency composition only: `apps/backend/src/civitas/bootstrap/*`
 

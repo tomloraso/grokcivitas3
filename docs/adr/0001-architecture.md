@@ -9,7 +9,7 @@ The Civitas codebase needs a production-ready full-stack structure with clear ow
 ## Decision
 Adopt an apps-first monorepo:
 
-- `apps/backend` with domain/application/adapters/api/cli layering.
+- `apps/backend` with domain/application/infrastructure/api/cli plus bootstrap composition.
 - `apps/web` for React frontend.
 - `packages/*` reserved for optional shared modules.
 

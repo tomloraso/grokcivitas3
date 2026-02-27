@@ -9,11 +9,17 @@ SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "civitas"
 FORBIDDEN_PREFIXES: dict[str, tuple[str, ...]] = {
     "domain": (
         "civitas.application",
-        "civitas.adapters",
+        "civitas.infrastructure",
         "civitas.api",
         "civitas.cli",
+        "civitas.bootstrap",
     ),
-    "application": ("civitas.adapters",),
+    "application": (
+        "civitas.infrastructure",
+        "civitas.api",
+        "civitas.cli",
+        "civitas.bootstrap",
+    ),
 }
 
 

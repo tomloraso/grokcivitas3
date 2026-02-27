@@ -6,10 +6,10 @@ Hexagonal Python backend service for Civitas.
 
 - `src/civitas/domain`: pure business logic.
 - `src/civitas/application`: use-cases and ports.
-- `src/civitas/adapters`: IO implementations.
-- `src/civitas/contracts`: transport DTOs.
+- `src/civitas/infrastructure`: IO implementations.
 - `src/civitas/api`: HTTP layer.
 - `src/civitas/cli`: CLI layer.
+- `src/civitas/bootstrap`: dependency composition.
 
 ## Commands
 

@@ -13,7 +13,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 2. **Keep documentation in sync.** Update `docs/` when behavior changes and add new pages to `docs/index.md`.
 3. **Run commands from repo root.** Use canonical commands in `.agents/tooling.md`.
 4. **Follow ownership + leaf-import rules.** Domain helpers go in `apps/backend/src/civitas/domain/shared/helpers`; application helpers go in `apps/backend/src/civitas/application/shared/utils`; avoid barrel re-exports.
-5. **Enforce inward imports.** Domain has zero outward dependencies; adapters depend on application/domain ports; entrypoints (`api`, `cli`) stay thin.
+5. **Enforce inward imports.** Domain has zero outward dependencies; infrastructure depends on application/domain ports; entrypoints (`api`, `cli`) stay thin and bootstrap handles composition.
 6. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
 7. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
 

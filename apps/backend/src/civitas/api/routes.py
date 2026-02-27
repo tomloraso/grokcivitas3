@@ -3,8 +3,8 @@ from collections.abc import Sequence
 from fastapi import APIRouter, Depends
 
 from civitas.api.dependencies import get_create_task_use_case, get_list_tasks_use_case
+from civitas.api.schemas.tasks import TaskCreateRequest, TaskResponse
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
-from civitas.contracts.tasks import TaskCreateRequest, TaskResponse
 
 router = APIRouter(prefix="/api/v1", tags=["tasks"])
 

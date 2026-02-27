@@ -4,8 +4,9 @@
 
 - Domain: pure business logic, no infrastructure imports.
 - Application: orchestrates use-cases via ports.
-- Adapters: implement ports and perform IO.
-- API/CLI: thin entrypoints and wiring only.
+- Infrastructure: implements ports and performs IO.
+- API/CLI: thin entrypoints only.
+- Bootstrap: owns composition and concrete wiring.
 
 ## 2) Single source of truth for contracts
 
@@ -23,4 +24,4 @@ Boundary tests and CI checks block architecture drift.
 
 ## 5) Golden path by example
 
-The repository includes one small scaffold feature implemented end-to-end across domain, application, adapters, API, and web.
+The repository includes one small scaffold feature implemented end-to-end across domain, application, infrastructure, API, and web.

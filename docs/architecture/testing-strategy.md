@@ -6,7 +6,7 @@
 
 ## Integration
 
-- API endpoint behavior with in-memory adapters.
+- API endpoint behavior with in-memory infrastructure adapters.
 
 ## Boundary
 

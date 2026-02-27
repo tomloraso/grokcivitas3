@@ -6,16 +6,16 @@ Before any non-trivial change, read `docs/architecture.md`.
 
 - `apps/backend/src/civitas/domain`: business rules and entities.
 - `apps/backend/src/civitas/application`: use-cases, orchestration, and ports.
-- `apps/backend/src/civitas/adapters`: infrastructure implementations.
-- `apps/backend/src/civitas/contracts`: API/event DTOs and schemas.
-- `apps/backend/src/civitas/api` and `cli`: transport/composition roots only.
+- `apps/backend/src/civitas/infrastructure`: persistence and external integrations.
+- `apps/backend/src/civitas/api` and `cli`: transport entrypoints only.
+- `apps/backend/src/civitas/bootstrap`: dependency composition/wiring.
 
 ## Dependency direction (non-negotiable)
 
-- Domain must not import `application`, `adapters`, `api`, or `cli`.
-- Application may import domain/contracts but must not import adapters.
-- Adapters implement application/domain ports.
-- API/CLI depend on application and adapters for wiring.
+- Domain must not import `application`, `infrastructure`, `api`, `cli`, or `bootstrap`.
+- Application may import domain but must not import infrastructure or transport layers.
+- Infrastructure implements application/domain ports.
+- API/CLI depend on application contracts and bootstrap wiring.
 
 ## Utility ownership split
 

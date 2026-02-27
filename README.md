@@ -7,7 +7,7 @@ Start with the product brief:
 
 ## Stack
 
-- Backend: FastAPI + Python with hexagonal layering (`domain`, `application`, `adapters`, `api`, `cli`)
+- Backend: FastAPI + Python with layered architecture (`domain`, `application`, `infrastructure`, `api`, `cli`, `bootstrap`)
 - Frontend: React + TypeScript
 - Tooling: `uv`, npm, Makefile, pre-commit, Docker Compose
 - Quality gates: lint, format, typecheck, unit/integration tests
