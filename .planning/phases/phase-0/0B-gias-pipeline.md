@@ -2,10 +2,11 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-02-27
 - Depends on:
   - `.planning/phases/phase-0/0A-data-platform-baseline.md`
+  - `.planning/phases/phase-0/0E-configuration-foundation.md` (follow-up alignment)
   - `.planning/data-architecture.md`
   - `.planning/project-brief.md`
   - `.planning/deployment-strategy.md`
@@ -36,6 +37,8 @@ Implement the first real production-style data pipeline using GIAS as the canoni
 3. **Geometry source**: derive geometry from GIAS easting/northing when available and valid.
 4. **Bronze immutability**: every downloaded file is written to a date-stamped folder and never mutated.
 5. **Coordinate transform**: convert GIAS easting/northing from EPSG:27700 (BNG) to EPSG:4326 for `location` geography.
+6. **Source acquisition fallback**: pipeline supports `CIVITAS_GIAS_SOURCE_CSV` / `CIVITAS_GIAS_SOURCE_ZIP` (local path or URL) because non-browser automation against GIAS download pages is not consistently reliable.
+7. **Configuration convergence**: direct env access in current implementation is transitional and will be centralized via 0E settings.
 
 ## Source Contract
 
@@ -45,6 +48,7 @@ Implement the first real production-style data pipeline using GIAS as the canoni
   - `POST https://get-information-schools.service.gov.uk/Downloads/Collate`
   - `GET https://get-information-schools.service.gov.uk/Downloads/GenerateAjax/{id}`
   - `GET https://ea-edubase-api-prod.azurewebsites.net/edubase/downloads/File.xhtml?id={id}` (zip payload)
+- Operational note: 2026-02-27 implementation uses explicit source path/url configuration via environment variables for deterministic automation in local/CI runs.
 - Expected CSV file name pattern: `edubasealldataYYYYMMDD.csv`
 - Required CSV headers (locked to exact names):
   - URN
@@ -88,12 +92,12 @@ If source fields change, pipeline fails fast with explicit schema mismatch loggi
 ### Bronze
 
 - Path format: `data/bronze/gias/{yyyy-mm-dd}/edubasealldata.csv`
-- Store source checksum and download timestamp in run metadata.
+- Store source checksum and download timestamp in `edubasealldata.metadata.json` alongside the Bronze CSV.
 
 ### Staging
 
 - Create per-run staging table in `staging` schema (for example: `staging.gias_schools__{run_id}`).
-- Load via `COPY`.
+- Load via batched inserts from normalized rows (`COPY` optimization deferred).
 - Normalize:
   - trim text fields
   - normalize postcode case/spacing
@@ -141,19 +145,17 @@ If source fields change, pipeline fails fast with explicit schema mismatch loggi
 ## File-Oriented Implementation Plan
 
 1. `apps/backend/src/civitas/infrastructure/pipelines/gias.py`
-   - implement download, stage, promote pipeline methods.
+   - implemented `download`, `stage`, and `promote` methods.
 2. `apps/backend/src/civitas/infrastructure/pipelines/__init__.py`
-   - register GIAS pipeline entry in source registry.
+   - updated source registry to inject DB engine into GIAS pipeline.
 3. `apps/backend/alembic/versions/*_phase0_gias_schools.py`
-   - create Gold `schools` table + indexes.
-4. `apps/backend/src/civitas/infrastructure/persistence/` (new postgres module files as needed)
-   - shared SQL execution helpers for pipeline promote/upsert.
-5. `apps/backend/tests/fixtures/gias/`
-   - sample GIAS CSV fixtures for valid + invalid rows.
-6. `apps/backend/tests/integration/test_gias_pipeline.py`
-   - end-to-end pipeline test against test DB.
-7. `apps/backend/tests/unit/test_gias_transforms.py`
-   - normalization and validation rule tests.
+   - added migration for Gold `schools` table + indexes.
+4. `apps/backend/tests/fixtures/gias/`
+   - added sample GIAS CSV fixtures for valid + mixed validity rows.
+5. `apps/backend/tests/integration/test_gias_pipeline.py`
+   - added stage/promote idempotency and geometry integration coverage (DB-availability gated).
+6. `apps/backend/tests/unit/test_gias_transforms.py`
+   - added normalization and validation rule coverage.
 
 ## Observability
 
@@ -163,10 +165,10 @@ For each run record:
 - staged rows
 - promoted rows
 - rejected rows
-- duration per stage
 - failure reason (if failed)
 
-This data must persist in `pipeline_runs` even when run fails.
+This data persists in `pipeline_runs` even when run fails.
+Stage duration persistence is tracked as a follow-up enhancement.
 
 ## Testing And Quality Gates
 
@@ -182,6 +184,7 @@ This data must persist in `pipeline_runs` even when run fails.
 
 - `make lint`
 - `make test`
+- If `make` is unavailable in shell, run equivalent backend/web lint + typecheck + test commands directly.
 
 ## Acceptance Criteria
 

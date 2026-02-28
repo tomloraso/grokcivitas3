@@ -1,0 +1,6 @@
+URN,EstablishmentName,TypeOfEstablishment (name),PhaseOfEducation (name),EstablishmentStatus (name),Postcode,Easting,Northing,OpenDate,CloseDate,NumberOfPupils,SchoolCapacity
+100001,Alpha Primary School,Community school,Primary,Open,sw1a1aa,529090,179645,01/09/2010,,312,420
+100002,Beta Secondary Academy,Academy converter,Secondary,Open,ec1a1bb,531120,181500,15/08/2013,,SUPP,NE
+,Missing URN School,Community school,Primary,Open,SW1A 0AA,529090,179645,01/09/2010,,200,300
+100004,Invalid Coordinates School,Community school,Primary,Open,SW1A 2AA,9000000,179645,01/09/2010,,150,220
+100005,Invalid Date School,Community school,Primary,Open,SW1A 3AA,529100,179700,not-a-date,,120,210

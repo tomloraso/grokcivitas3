@@ -18,6 +18,7 @@
 
 - `.planning/phases/phase-0/README.md`
 - `.planning/phases/phase-0/0A-data-platform-baseline.md`
+- `.planning/phases/phase-0/0E-configuration-foundation.md`
 - `.planning/phases/phase-0/0B-gias-pipeline.md`
 - `.planning/phases/phase-0/0C-postcode-search-api.md`
 - `.planning/phases/phase-0/0D-web-search-map.md`
@@ -25,14 +26,16 @@
 ### Deliverables
 
 1. **0A: Data platform baseline** - PostGIS runtime, migration framework, pipeline base contracts, CLI orchestration.
-2. **0B: GIAS pipeline** - Bronze -> Staging -> Gold load into `schools` with PostGIS geometry and idempotent upsert semantics.
-3. **0C: Postcode search API** - Postcodes.io resolution + cache, `GET /api/v1/schools?postcode=...&radius=...`, spatial radius query sorted by distance.
-4. **0D: Web search + map** - postcode form, list results, and Leaflet markers backed by Phase 0 API contract.
+2. **0E: Configuration foundation** - typed backend settings, centralized environment access, and local `.env` workflow.
+3. **0B: GIAS pipeline** - Bronze -> Staging -> Gold load into `schools` with PostGIS geometry and idempotent upsert semantics.
+4. **0C: Postcode search API** - Postcodes.io resolution + cache, `GET /api/v1/schools?postcode=...&radius=...`, spatial radius query sorted by distance.
+5. **0D: Web search + map** - postcode form, list results, and Leaflet markers backed by Phase 0 API contract.
 
 ### Exit criteria
 
 - User can enter a postcode and see nearby schools on a list and map.
 - Pipeline is re-runnable and idempotent.
+- Runtime configuration is centralized and typed (no ad-hoc `os.environ` access across features).
 - OpenAPI contract is updated and consumed by web client/types.
 - Import boundary tests pass, with lint and tests green.
 

@@ -191,7 +191,7 @@ postcode_cache
 ```
 
 **Indexes (minimum):**
-- `schools.geography` - GIST spatial index for radius queries
+- `schools.location` - GIST spatial index for radius queries
 - `schools.urn` - B-tree (PK)
 - `school_demographics_yearly (urn, academic_year)` - compound index for trend queries
 - `school_ofsted_latest.urn` - B-tree (PK)

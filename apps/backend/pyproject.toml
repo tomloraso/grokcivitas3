@@ -9,9 +9,12 @@ description = "Hexagonal backend service for Civitas"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
+  "alembic>=1.16.0,<2",
   "fastapi>=0.116.1,<1",
+  "psycopg[binary]>=3.2.0,<4",
   "pydantic>=2.11.0,<3",
   "pydantic-settings>=2.10.0,<3",
+  "sqlalchemy>=2.0.0,<3",
   "typer>=0.16.0,<1",
   "uvicorn>=0.35.0,<1"
 ]
@@ -26,6 +29,7 @@ dev = [
 ]
 
 [project.scripts]
+civitas = "civitas.cli.main:app"
 civitas-api = "civitas.api.main:run"
 civitas-cli = "civitas.cli.main:app"
 
@@ -51,6 +55,7 @@ ban-relative-imports = "parents"
 "src/civitas/api/**" = ["B008", "TID251"]
 "src/civitas/cli/**" = ["TID251"]
 "src/civitas/bootstrap/**" = ["TID251"]
+"src/civitas/infrastructure/**" = ["TID251"]
 "tests/**" = ["TID251"]
 
 [tool.mypy]

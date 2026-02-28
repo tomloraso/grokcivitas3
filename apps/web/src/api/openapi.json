@@ -93,6 +93,74 @@
           }
         }
       }
+    },
+    "/api/v1/schools": {
+      "get": {
+        "tags": [
+          "tasks",
+          "schools"
+        ],
+        "summary": "Search Schools",
+        "operationId": "search_schools_api_v1_schools_get",
+        "parameters": [
+          {
+            "name": "postcode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Postcode"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Radius"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolsSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid postcode or radius parameter."
+          },
+          "404": {
+            "description": "Postcode not found."
+          },
+          "503": {
+            "description": "Postcode resolver unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -109,6 +177,140 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "SchoolSearchItemResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "distance_miles": {
+            "type": "number",
+            "title": "Distance Miles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "name",
+          "type",
+          "phase",
+          "postcode",
+          "lat",
+          "lng",
+          "distance_miles"
+        ],
+        "title": "SchoolSearchItemResponse"
+      },
+      "SchoolsSearchCenterResponse": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "SchoolsSearchCenterResponse"
+      },
+      "SchoolsSearchQueryResponse": {
+        "properties": {
+          "postcode": {
+            "type": "string",
+            "title": "Postcode"
+          },
+          "radius_miles": {
+            "type": "number",
+            "title": "Radius Miles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "postcode",
+          "radius_miles"
+        ],
+        "title": "SchoolsSearchQueryResponse"
+      },
+      "SchoolsSearchResponse": {
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/SchoolsSearchQueryResponse"
+          },
+          "center": {
+            "$ref": "#/components/schemas/SchoolsSearchCenterResponse"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "schools": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSearchItemResponse"
+            },
+            "type": "array",
+            "title": "Schools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "center",
+          "count",
+          "schools"
+        ],
+        "title": "SchoolsSearchResponse"
       },
       "TaskCreateRequest": {
         "properties": {

@@ -50,19 +50,29 @@ flowchart LR
 
 ## Delivery Model
 
-Phase 0 is split into four substantial deliverables. Each document is written for direct execution by agents.
+Phase 0 is split into five substantial deliverables. Each document is written for direct execution by agents.
 
 1. `0A-data-platform-baseline.md`
-2. `0B-gias-pipeline.md`
-3. `0C-postcode-search-api.md`
-4. `0D-web-search-map.md`
+2. `0E-configuration-foundation.md`
+3. `0B-gias-pipeline.md`
+4. `0C-postcode-search-api.md`
+5. `0D-web-search-map.md`
 
 ## Execution Sequence
 
 1. Complete 0A first.
-2. Build 0B on the 0A platform and migration baseline.
-3. Build 0C after 0B is queryable in Gold.
-4. Build 0D after 0C endpoint contract is stable.
+2. Complete 0E as a configuration hardening gate.
+3. Build 0B on the 0A platform and migration baseline.
+4. Build 0C after 0B is queryable in Gold and 0E settings are wired.
+5. Build 0D after 0C endpoint contract is stable.
+
+## Progress (2026-02-27)
+
+- 0A Data platform baseline: completed.
+- 0E Configuration foundation: completed.
+- 0B GIAS pipeline: completed.
+- 0C Postcode search API: completed.
+- 0D Web search + map: pending.
 
 ## Phase 0 Definition Of Done
 
@@ -79,5 +89,6 @@ Phase 0 is split into four substantial deliverables. Each document is written fo
 
 ## Decisions Captured
 
-- 2026-02-27: Phase 0 is decomposed into 0A-0D rather than one large document.
+- 2026-02-27: Phase 0 is decomposed into 0A-0E rather than one large document.
 - 2026-02-27: Phase 0 map implementation will use Leaflet for fastest delivery.
+- 2026-02-27: Added 0E configuration foundation to centralize runtime settings before Phase 0 completion.

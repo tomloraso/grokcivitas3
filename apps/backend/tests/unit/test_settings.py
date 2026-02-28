@@ -1,0 +1,104 @@
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from civitas.infrastructure.config.settings import (
+    DEFAULT_BRONZE_ROOT,
+    DEFAULT_DATABASE_URL,
+    DEFAULT_POSTCODE_CACHE_TTL_DAYS,
+    DEFAULT_POSTCODES_IO_BASE_URL,
+    AppSettings,
+    get_settings,
+)
+
+SRC_ROOT = Path(__file__).resolve().parents[2] / "src" / "civitas"
+SETTINGS_MODULE_PATH = SRC_ROOT / "infrastructure" / "config" / "settings.py"
+ENV_ACCESS_PATTERN = re.compile(r"\bos\.(?:environ|getenv)\b|\benviron\s*\[")
+
+
+def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in (
+        "CIVITAS_DATABASE_URL",
+        "CIVITAS_BRONZE_ROOT",
+        "CIVITAS_GIAS_SOURCE_CSV",
+        "CIVITAS_GIAS_SOURCE_ZIP",
+        "CIVITAS_HTTP_TIMEOUT_SECONDS",
+        "CIVITAS_HTTP_MAX_RETRIES",
+        "CIVITAS_HTTP_RETRY_BACKOFF_SECONDS",
+        "CIVITAS_POSTCODES_IO_BASE_URL",
+        "CIVITAS_POSTCODE_CACHE_TTL_DAYS",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+    settings = AppSettings(_env_file=None)
+
+    assert settings.database.url == DEFAULT_DATABASE_URL
+    assert settings.pipeline.bronze_root == DEFAULT_BRONZE_ROOT
+    assert settings.pipeline.gias_source_csv is None
+    assert settings.pipeline.gias_source_zip is None
+    assert settings.http_clients.timeout_seconds == 10.0
+    assert settings.http_clients.max_retries == 2
+    assert settings.http_clients.retry_backoff_seconds == 0.5
+    assert settings.school_search.postcodes_io_base_url == DEFAULT_POSTCODES_IO_BASE_URL
+    assert settings.school_search.postcode_cache_ttl_days == DEFAULT_POSTCODE_CACHE_TTL_DAYS
+
+
+def test_app_settings_reads_environment_overrides(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv(
+        "CIVITAS_DATABASE_URL", "postgresql+psycopg://override:override@localhost:5432/app"
+    )
+    monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
+    monkeypatch.setenv("CIVITAS_GIAS_SOURCE_CSV", "  https://example.com/gias.csv  ")
+    monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "20")
+    monkeypatch.setenv("CIVITAS_HTTP_MAX_RETRIES", "5")
+    monkeypatch.setenv("CIVITAS_HTTP_RETRY_BACKOFF_SECONDS", "1.25")
+    monkeypatch.setenv("CIVITAS_POSTCODES_IO_BASE_URL", "https://postcodes.io")
+    monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "7")
+
+    settings = AppSettings(_env_file=None)
+
+    assert settings.database.url == "postgresql+psycopg://override:override@localhost:5432/app"
+    assert settings.pipeline.bronze_root == tmp_path / "custom-bronze"
+    assert settings.pipeline.gias_source_csv == "https://example.com/gias.csv"
+    assert settings.http_clients.timeout_seconds == 20.0
+    assert settings.http_clients.max_retries == 5
+    assert settings.http_clients.retry_backoff_seconds == 1.25
+    assert settings.school_search.postcodes_io_base_url == "https://postcodes.io"
+    assert settings.school_search.postcode_cache_ttl_days == 7
+
+
+def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CIVITAS_DATABASE_URL", "")
+    monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "-1")
+    monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "0")
+
+    with pytest.raises(ValidationError):
+        AppSettings(_env_file=None)
+
+
+def test_runtime_env_access_is_restricted_to_settings_module() -> None:
+    violations: list[str] = []
+    for py_file in SRC_ROOT.rglob("*.py"):
+        if py_file == SETTINGS_MODULE_PATH:
+            continue
+        if ENV_ACCESS_PATTERN.search(py_file.read_text(encoding="utf-8")):
+            violations.append(str(py_file))
+
+    assert not violations, (
+        "Direct environment access detected outside settings module:\n" + "\n".join(violations)
+    )
+
+
+def test_get_settings_loader_is_cached() -> None:
+    get_settings.cache_clear()
+    first = get_settings()
+    second = get_settings()
+    assert first is second
+    get_settings.cache_clear()

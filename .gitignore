@@ -25,6 +25,7 @@ apps/web/coverage/
 # Local env
 .env
 .env.*
+!.env.example
 
 # Tooling
 playwright-report/

@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-02-27
 - Depends on:
   - `.planning/phases/phase-0/0B-gias-pipeline.md`
@@ -62,6 +62,16 @@ sequenceDiagram
 4. **Postcode cache is mandatory**: cache-first resolution path is required for reliability and cost control.
 5. **Cache TTL**: 30 days for successful postcode resolutions.
 6. **Distance semantics**: sort by straight-line distance from resolved postcode coordinates.
+
+## Implementation Progress (2026-02-28)
+
+- Completed: added schools domain/application models, ports, and `SearchSchoolsByPostcodeUseCase`.
+- Completed: added Postcodes.io client adapter with retry/backoff and explicit not-found/unavailable error mapping.
+- Completed: added cache-first postcode resolver (`postcode_cache` with 30-day TTL semantics).
+- Completed: added PostGIS school radius repository with deterministic ordering (`distance ASC`, `urn ASC`) and open-school filtering.
+- Completed: added `GET /api/v1/schools` route + API schemas and bootstrap dependency wiring.
+- Completed: added Alembic migration for `postcode_cache`.
+- Completed: added unit/integration coverage for use case, cache repository, API contract/error paths, and spatial repository (DB-availability gated).
 
 ## External Resolver Contract
 

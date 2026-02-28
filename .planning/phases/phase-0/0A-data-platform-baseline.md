@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-02-27
 - Depends on:
   - `.planning/project-brief.md`
@@ -46,6 +46,15 @@ No source-specific business logic is implemented in 0A.
 2. **Local DB image**: use `postgis/postgis:16-3.4` instead of plain Postgres image.
 3. **Pipeline lifecycle model**: standard three-step contract (`download`, `stage`, `promote`) with a shared run context.
 4. **Entrypoint model**: keep `civitas.cli.main` thin; pipeline wiring lives in bootstrap and infrastructure.
+
+## Implementation Progress (2026-02-27)
+
+- Completed: PostGIS local runtime baseline (`docker-compose.yml`).
+- Completed: Alembic initialized under `apps/backend/alembic` with baseline migration for `pipeline_runs`, `pipeline_rejections`, and `staging` schema.
+- Completed: Pipeline abstractions and runner (`infrastructure/pipelines/base.py`, `infrastructure/pipelines/runner.py`).
+- Completed: Placeholder `gias` pipeline registration and bootstrap wiring.
+- Completed: CLI `pipeline run --source` and `pipeline run --all` command surface.
+- Completed: Unit tests for pipeline runner and CLI wiring.
 
 ## Design
 

@@ -15,9 +15,11 @@ Hexagonal Python backend service for Civitas.
 
 ```bash
 uv sync --project apps/backend --extra dev
+uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade head
 uv run --project apps/backend ruff check apps/backend
 uv run --project apps/backend mypy apps/backend/src
 uv run --project apps/backend pytest
+uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend uvicorn civitas.api.main:app --reload
 ```
 
