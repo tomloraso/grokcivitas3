@@ -9,6 +9,7 @@
   - `.planning/phases/phase-0/0C-postcode-search-api.md`
   - `.planning/project-brief.md`
   - `docs/architecture/principles.md`
+  - `docs/architecture/frontend-conventions.md`
 
 ## Objective
 
@@ -94,6 +95,15 @@ Add a dedicated feature folder:
 - Keep layout and control styling aligned with 0D1 token and primitive layers.
 - Add map/list responsive behavior through shared layout primitives, not ad-hoc page-level overrides.
 
+### 0D2 to 0D1 composition map
+
+| 0D2 component | Required 0D1 composition |
+|---|---|
+| `SearchForm` | `TextInput`, `Select`, `Button`, `Field` |
+| `SchoolsList` | `ResultCard`, `LoadingSkeleton`, `EmptyState`, `ErrorState` |
+| `SchoolsMap` | `MapPanel` |
+| `SchoolsSearchFeature` | `AppShell`, `PageContainer`, `SplitPaneLayout` |
+
 ## File-Oriented Implementation Plan
 
 1. `apps/web/package.json`
@@ -109,7 +119,7 @@ Add a dedicated feature folder:
 6. `apps/web/src/features/schools-search/components/SchoolsList.tsx`
    - results list rendering and empty/error handling composed with shared state/card primitives.
 7. `apps/web/src/features/schools-search/components/SchoolsMap.tsx`
-   - marker rendering and center behavior with lazy-loaded map boundary.
+   - marker rendering and center behavior with lazy-loaded map boundary via shared `MapPanel`.
 8. `apps/web/src/features/schools-search/SchoolsSearchFeature.tsx`
    - feature orchestration container.
 9. `apps/web/src/App.tsx`
@@ -118,6 +128,8 @@ Add a dedicated feature folder:
     - replace task assertions with schools-search behavior tests.
 11. `apps/web/e2e/tasks.spec.ts`
     - replace with schools search smoke test (rename file).
+12. `apps/web/scripts/check-budgets.mjs` (or equivalent)
+    - ensure 0D1 performance budgets remain green during 0D2 integration.
 
 ## Testing And Quality Gates
 
@@ -139,6 +151,7 @@ Add a dedicated feature folder:
 - `make lint`
 - `make test`
 - `cd apps/web && npm run build`
+- `cd apps/web && npm run budget:check`
 
 ## Acceptance Criteria
 
@@ -147,6 +160,7 @@ Add a dedicated feature folder:
 3. Empty and error states are explicit and recoverable.
 4. Web uses backend-derived contract types, not manually duplicated schemas.
 5. Web search/map feature uses shared 0D1 primitives/tokens and passes agreed accessibility/responsiveness/performance rails.
+6. 0D2 feature code does not import raw `@radix-ui/*` primitives or bypass the shared component/token system.
 
 ## Risks And Mitigations
 
