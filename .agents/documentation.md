@@ -16,4 +16,6 @@
 - `docs/architecture.md`
 - `docs/architecture/principles.md`
 - `docs/architecture/boundaries.md`
+- `docs/architecture/backend-conventions.md`
+- `docs/architecture/frontend-conventions.md`
 - `docs/architecture/testing-strategy.md`

@@ -8,7 +8,8 @@
 4. [Architecture Principles](./architecture/principles.md)
 5. [Boundaries](./architecture/boundaries.md)
 6. [Backend Conventions](./architecture/backend-conventions.md)
-7. [Testing Strategy](./architecture/testing-strategy.md)
-8. [ADR 0001: Architecture](./adr/0001-architecture.md)
-9. [Local Development Runbook](./runbooks/local-development.md)
+7. [Frontend Conventions](./architecture/frontend-conventions.md)
+8. [Testing Strategy](./architecture/testing-strategy.md)
+9. [ADR 0001: Architecture](./adr/0001-architecture.md)
+10. [Local Development Runbook](./runbooks/local-development.md)
 

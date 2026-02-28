@@ -5,6 +5,7 @@
 - Each phase delivers a usable increment; no phase is purely infrastructure with no visible output.
 - Data pipeline and API are built together, source by source.
 - Frontend features start only when the API endpoint they consume is tested and stable.
+- Frontend flagship slices must pass a foundations gate (tokens, primitives, and quality rails) before feature-specific polish.
 - Each phase ends with working tests, passing lint, and a demoable artifact.
 - Deployment assumptions are tracked in `.planning/deployment-strategy.md` and updated when phase design changes runtime needs.
 
@@ -12,7 +13,7 @@
 
 ## Phase 0 - Data foundation + GIAS baseline
 
-**Goal:** Prove the full Bronze -> Staging -> Gold pipeline with one source, expose schools via API, display on frontend.
+**Goal:** Prove the full Bronze -> Staging -> Gold pipeline with one source, expose schools via API, and deliver a production-grade frontend baseline plus search/map experience.
 
 ### Detailed design
 
@@ -21,6 +22,7 @@
 - `.planning/phases/phase-0/0E-configuration-foundation.md`
 - `.planning/phases/phase-0/0B-gias-pipeline.md`
 - `.planning/phases/phase-0/0C-postcode-search-api.md`
+- `.planning/phases/phase-0/0D1-web-foundations.md`
 - `.planning/phases/phase-0/0D-web-search-map.md`
 
 ### Deliverables
@@ -29,7 +31,8 @@
 2. **0E: Configuration foundation** - typed backend settings, centralized environment access, and local `.env` workflow.
 3. **0B: GIAS pipeline** - Bronze -> Staging -> Gold load into `schools` with PostGIS geometry and idempotent upsert semantics.
 4. **0C: Postcode search API** - Postcodes.io resolution + cache, `GET /api/v1/schools?postcode=...&radius=...`, spatial radius query sorted by distance.
-5. **0D: Web search + map** - postcode form, list results, and Leaflet markers backed by Phase 0 API contract.
+5. **0D1: Web foundations** - brand/theming baseline, design tokens, reusable component primitives, and frontend quality rails.
+6. **0D2: Web search + map** - postcode form, list results, and Leaflet markers composed from 0D1 foundations and backed by Phase 0 API contract.
 
 ### Exit criteria
 
@@ -37,6 +40,8 @@
 - Pipeline is re-runnable and idempotent.
 - Runtime configuration is centralized and typed (no ad-hoc `os.environ` access across features).
 - OpenAPI contract is updated and consumed by web client/types.
+- Web foundations are in place (tokenized theme + reusable primitives) and used by the Phase 0 search/map UI.
+- Frontend quality rails for accessibility, responsiveness, performance, and code quality are defined and passing for the Phase 0 slice.
 - Import boundary tests pass, with lint and tests green.
 
 ### Dependencies
@@ -171,7 +176,7 @@
 
 | Phase | Name | Key outcome | Estimated complexity |
 |-------|------|-------------|---------------------|
-| 0 | Data foundation + GIAS | Search by postcode, schools on map | Foundation / largest setup effort |
+| 0 | Data foundation + GIAS | Search by postcode with production-grade web foundations and schools on map | Foundation / largest setup effort |
 | 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |

@@ -23,4 +23,9 @@
 
 Frontend depends on backend API contracts only; business rules remain backend-owned.
 
+- UI modules must consume typed API functions, not raw network calls.
+- Only `apps/web/src/api/*` performs HTTP calls.
+- Frontend wire contracts are derived from backend OpenAPI (`src/api/generated-types.ts`) via `src/api/types.ts`.
+- Avoid hand-maintained duplicate API payload types when generated contracts exist.
+
 

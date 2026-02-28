@@ -17,6 +17,7 @@
 
 - Unit/component tests via Vitest + Testing Library.
 - Optional E2E coverage via Playwright scaffold.
+- ESLint rules enforce frontend network/import boundaries.
 
 ## CI quality gates
 

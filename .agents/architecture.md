@@ -2,6 +2,7 @@
 
 Before any non-trivial change, read `docs/architecture.md`.
 For backend feature implementation details, read `docs/architecture/backend-conventions.md`.
+For frontend feature implementation details, read `docs/architecture/frontend-conventions.md`.
 
 ## Package ownership
 
@@ -10,6 +11,9 @@ For backend feature implementation details, read `docs/architecture/backend-conv
 - `apps/backend/src/civitas/infrastructure`: persistence and external integrations.
 - `apps/backend/src/civitas/api` and `cli`: transport entrypoints only.
 - `apps/backend/src/civitas/bootstrap`: dependency composition/wiring.
+- `apps/web/src/api`: frontend API clients and contract types only.
+- `apps/web/src/features`: feature-level UI/state logic.
+- `apps/web/src/shared`: reusable UI primitives and pure utilities.
 
 ## Dependency direction (non-negotiable)
 
@@ -17,6 +21,8 @@ For backend feature implementation details, read `docs/architecture/backend-conv
 - Application may import domain but must not import infrastructure or transport layers.
 - Infrastructure implements application/domain ports.
 - API/CLI depend on application contracts and bootstrap wiring.
+- In web, components/pages/features depend on typed API modules; only `apps/web/src/api/*` performs network IO.
+- In web, frontend contract types are derived from backend OpenAPI (`src/api/generated-types.ts` -> `src/api/types.ts`).
 
 ## Utility ownership split
 
@@ -44,4 +50,5 @@ For backend feature implementation details, read `docs/architecture/backend-conv
 
 - `apps/backend/tests/unit/test_import_boundaries.py` verifies layer boundaries.
 - `ruff` tidy-import rules backstop banned imports.
+- `apps/web/eslint.config.js` enforces frontend contract/import/network guardrails.
 

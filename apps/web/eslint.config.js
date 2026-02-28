@@ -26,5 +26,49 @@ export default tseslint.config(
         { "allowConstantExport": true }
       ]
     }
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message: "Call backend APIs through typed modules under src/api/*."
+        }
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/api/openapi.json"],
+              message: "openapi.json is only for generating TypeScript API contracts."
+            },
+            {
+              group: ["**/generated-types", "**/generated-types.ts"],
+              message: "Import API contract aliases from src/api/types.ts."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: [
+      "src/api/**/*.{ts,tsx}",
+      "src/**/*.test.{ts,tsx}",
+      "src/**/*.spec.{ts,tsx}",
+      "src/test-setup.ts"
+    ],
+    rules: {
+      "no-restricted-globals": "off"
+    }
+  },
+  {
+    files: ["src/api/types.ts"],
+    rules: {
+      "no-restricted-imports": "off"
+    }
   }
 );

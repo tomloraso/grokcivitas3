@@ -1,17 +1,18 @@
-# Phase 0D Design - Web Search And Map Experience
+# Phase 0D2 Design - Web Search And Map Experience
 
 ## Document Control
 
 - Status: Draft
-- Last updated: 2026-02-27
+- Last updated: 2026-02-28
 - Depends on:
+  - `.planning/phases/phase-0/0D1-web-foundations.md`
   - `.planning/phases/phase-0/0C-postcode-search-api.md`
   - `.planning/project-brief.md`
   - `docs/architecture/principles.md`
 
 ## Objective
 
-Ship the first user-facing Civitas journey: postcode search showing nearby schools in both list and map views using the Phase 0 API contract.
+Ship the first user-facing Civitas journey: postcode search showing nearby schools in both list and map views using the Phase 0 API contract and the shared foundations established in 0D1.
 
 ## Scope
 
@@ -22,12 +23,14 @@ Ship the first user-facing Civitas journey: postcode search showing nearby schoo
 - Interactive map with markers for results.
 - Loading, empty, and error states for search flow.
 - Contract-aligned API client/types sourced from backend OpenAPI.
+- Composition from shared tokenized primitives and layout patterns defined in 0D1.
 
 ### Out of scope
 
 - School profile pages (Phase 1).
 - Compare/export/premium behaviors (Phase 3+).
 - Advanced filtering/sorting beyond distance default.
+- New design-token or primitive-system decisions (owned by 0D1).
 
 ## Decisions
 
@@ -35,6 +38,8 @@ Ship the first user-facing Civitas journey: postcode search showing nearby schoo
 2. **State strategy**: local feature state via React hooks; no global state library in Phase 0.
 3. **Contract strategy**: OpenAPI-exported schema remains source of truth for web types.
 4. **Initial route strategy**: keep single-page flow in `App` for Phase 0; route split can follow in Phase 1.
+5. **Composition rule**: search/map UI must use shared components/tokens from 0D1; no one-off control styling in feature code.
+6. **Map performance rule**: map bundle loads lazily so initial shell render remains fast on mobile.
 
 ## UX Contract
 
@@ -73,7 +78,7 @@ Ship the first user-facing Civitas journey: postcode search showing nearby schoo
 Add a dedicated feature folder:
 
 - `apps/web/src/features/schools-search/`
-  - `components/` (form, list, map)
+  - `components/` (feature composition from shared primitives)
   - `hooks/` (search state orchestration)
   - `types.ts` (feature-local view types if needed)
 
@@ -86,12 +91,13 @@ Add a dedicated feature folder:
 ### App composition
 
 - Replace task scaffold usage in `apps/web/src/App.tsx` with schools search feature root.
-- Keep styling in `apps/web/src/styles.css` unless component-scoped CSS modules are introduced.
+- Keep layout and control styling aligned with 0D1 token and primitive layers.
+- Add map/list responsive behavior through shared layout primitives, not ad-hoc page-level overrides.
 
 ## File-Oriented Implementation Plan
 
 1. `apps/web/package.json`
-   - add map dependencies (`leaflet`, `react-leaflet`, and types as needed).
+   - add map dependencies (`leaflet`, `react-leaflet`, and types as needed) if not already added by 0D1.
 2. `apps/web/src/api/openapi.json`
    - refresh from backend after 0C contract is finalized.
 3. `apps/web/src/api/generated-types.ts` (or equivalent generated target)
@@ -99,20 +105,18 @@ Add a dedicated feature folder:
 4. `apps/web/src/api/client.ts`
    - add `searchSchools` function.
 5. `apps/web/src/features/schools-search/components/SearchForm.tsx`
-   - postcode + radius inputs and submit behavior.
+   - postcode + radius inputs and submit behavior composed with shared form primitives.
 6. `apps/web/src/features/schools-search/components/SchoolsList.tsx`
-   - results list rendering and empty/error handling.
+   - results list rendering and empty/error handling composed with shared state/card primitives.
 7. `apps/web/src/features/schools-search/components/SchoolsMap.tsx`
-   - marker rendering and center behavior.
+   - marker rendering and center behavior with lazy-loaded map boundary.
 8. `apps/web/src/features/schools-search/SchoolsSearchFeature.tsx`
    - feature orchestration container.
 9. `apps/web/src/App.tsx`
    - mount schools search feature.
-10. `apps/web/src/styles.css`
-    - update layout styles for list + map split and responsive behavior.
-11. `apps/web/src/App.test.tsx`
+10. `apps/web/src/App.test.tsx`
     - replace task assertions with schools-search behavior tests.
-12. `apps/web/e2e/tasks.spec.ts`
+11. `apps/web/e2e/tasks.spec.ts`
     - replace with schools search smoke test (rename file).
 
 ## Testing And Quality Gates
@@ -123,14 +127,18 @@ Add a dedicated feature folder:
   - form validation and submit calls.
   - successful result rendering.
   - empty/error states.
+  - keyboard/focus navigation for form + result list controls.
+  - accessibility smoke on feature root using shared 0D1 testing utilities.
 - E2E smoke:
   - app loads and search UI is visible.
   - mocked or test backend path returns list and map markers.
+  - responsive behavior validated at minimum mobile and desktop viewports.
 
 ### Required gates
 
 - `make lint`
 - `make test`
+- `cd apps/web && npm run build`
 
 ## Acceptance Criteria
 
@@ -138,6 +146,7 @@ Add a dedicated feature folder:
 2. Distance values displayed in list align with API payload ordering.
 3. Empty and error states are explicit and recoverable.
 4. Web uses backend-derived contract types, not manually duplicated schemas.
+5. Web search/map feature uses shared 0D1 primitives/tokens and passes agreed accessibility/responsiveness/performance rails.
 
 ## Risks And Mitigations
 

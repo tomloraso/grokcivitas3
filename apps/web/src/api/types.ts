@@ -1,13 +1,8 @@
-export type HealthResponse = {
-  status: string;
-};
+import type { components, operations } from "./generated-types";
 
-export type Task = {
-  id: string;
-  title: string;
-  created_at: string;
-};
+export type HealthResponse =
+  operations["health_api_v1_health_get"]["responses"][200]["content"]["application/json"];
 
-export type CreateTaskRequest = {
-  title: string;
-};
+export type Task = components["schemas"]["TaskResponse"];
+
+export type CreateTaskRequest = components["schemas"]["TaskCreateRequest"];

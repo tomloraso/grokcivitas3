@@ -1,6 +1,6 @@
 # Contributing
 
-1. Read `AGENTS.md` and `docs/architecture.md`.
+1. Read `AGENTS.md`, `docs/architecture.md`, and the relevant conventions page (`backend-conventions.md` or `frontend-conventions.md`).
 2. Write tests first for behavior changes.
 3. Keep imports aligned with boundary rules.
 4. Run `make lint` and `make test` before opening a PR.
