@@ -29,6 +29,15 @@ Copy-Item .env.example .env
 
 Backend runtime configuration is loaded from `.env` via the shared settings module.
 
+Frontend (Vite) optional map tile configuration lives in `apps/web/.env.example`:
+
+```bash
+# apps/web/.env
+VITE_MAP_TILE_PROVIDER=cartodb-dark-matter
+# Optional: enables Stadia dark fallback
+# VITE_STADIA_MAPS_API_KEY=...
+```
+
 ## Daily commands
 
 ```bash
@@ -45,6 +54,26 @@ uv run --project apps/backend mypy apps/backend/src
 uv run --project apps/backend pytest
 cd apps/web && npm run lint && npm run typecheck && npm run test
 ```
+
+## Web quality rails
+
+Run these before signing off web foundation or layout changes:
+
+```bash
+cd apps/web && npm run build
+cd apps/web && npm run budget:check
+cd apps/web && npm run lighthouse:check
+```
+
+The latest Lighthouse snapshot is stored at `apps/web/artifacts/lighthouse/latest.json`.
+
+## Map tile provider governance
+
+Before production release:
+
+1. Confirm primary provider attribution text is visible in map attribution UI.
+2. Verify fallback provider behavior by forcing a primary tile error and ensuring failover occurs.
+3. Validate current terms/usage limits for the selected providers and record any changes in release notes.
 
 ## Dependency services
 

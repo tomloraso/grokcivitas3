@@ -15,19 +15,23 @@ src/
   app/                  # app shell, providers, route wiring
   pages/                # route-level composition only
   features/<feature>/   # feature UI, hooks, local state, feature mapping
+  components/           # shared local UI/layout/map primitives (Phase 0 baseline)
   api/                  # HTTP clients, generated contracts, contract aliases
   shared/               # reusable UI primitives and pure utilities
 ```
 
 If a feature starts in a flatter structure, new files should still follow these ownership rules and migrate toward this layout.
 
+Phase 0D1 currently keeps shared primitives under `src/components/*` with local ownership (shadcn-style for UI primitives). Treat `components` as part of the shared layer for dependency direction purposes.
+
 ## Dependency Direction
 
 1. `app` may import `pages`, `features`, `api`, and `shared`.
 2. `pages` may import `features`, `api`, and `shared`.
-3. `features` may import `api` and `shared`.
-4. `api` may import generated contract files and internal API helpers only.
-5. `shared` must not import `app`, `pages`, `features`, or `api`.
+3. `features` may import `components`, `api`, and `shared`.
+4. `components` may import `shared` only.
+5. `api` may import generated contract files and internal API helpers only.
+6. `shared` must not import `app`, `pages`, `features`, `components`, or `api`.
 6. Use explicit leaf imports; avoid barrel re-export chains.
 
 ## Contracts and Type Ownership

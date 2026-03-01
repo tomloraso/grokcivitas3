@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-03-01T08:56:07.491Z",
+  "targetUrl": "http://127.0.0.1:4409/",
+  "lighthouseVersion": "12.8.2",
+  "performanceScore": 0.98,
+  "thresholds": {
+    "lcpMs": 2000,
+    "cls": 0.1,
+    "tbtMs": 200
+  },
+  "metrics": {
+    "lcpMs": 1852.797,
+    "cls": 0,
+    "tbtMs": 77
+  }
+}

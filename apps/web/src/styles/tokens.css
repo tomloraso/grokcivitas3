@@ -1,0 +1,90 @@
+:root {
+  --font-family-display: "Space Grotesk";
+  --font-family-body: "Public Sans";
+  --font-family-mono: "IBM Plex Mono";
+
+  --ref-color-navy-950: #060a13;
+  --ref-color-navy-900: #0c1222;
+  --ref-color-navy-800: #141d30;
+  --ref-color-navy-700: #1c2840;
+  --ref-color-navy-600: #263350;
+
+  --ref-color-grey-50: #f8fafc;
+  --ref-color-grey-200: #e2e8f0;
+  --ref-color-grey-400: #94a3b8;
+  --ref-color-grey-500: #64748b;
+
+  --ref-color-brand-500: #8b5cf6;
+  --ref-color-brand-400: #a78bfa;
+  --ref-color-brand-600: #7c3aed;
+  --ref-color-accent-400: #22d3ee;
+  --ref-color-accent-500: #06b6d4;
+
+  --ref-color-success-500: #22c55e;
+  --ref-color-warning-500: #f59e0b;
+  --ref-color-danger-500: #ef4444;
+  --ref-color-info-500: #3b82f6;
+
+  --ref-color-border-subtle: rgba(255, 255, 255, 0.06);
+  --ref-color-border-default: rgba(255, 255, 255, 0.1);
+  --ref-color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-bg-canvas: var(--ref-color-navy-900);
+  --color-bg-surface: var(--ref-color-navy-800);
+  --color-bg-elevated: var(--ref-color-navy-700);
+  --color-text-primary: var(--ref-color-grey-50);
+  --color-text-secondary: var(--ref-color-grey-400);
+  --color-text-disabled: var(--ref-color-grey-500);
+  --color-border-default: var(--ref-color-border-default);
+  --color-border-subtle: var(--ref-color-border-subtle);
+  --color-action-primary: var(--ref-color-brand-500);
+  --color-action-primary-hover: var(--ref-color-brand-400);
+  --color-action-primary-solid: var(--ref-color-brand-600);
+  --color-action-primary-solid-hover: var(--ref-color-brand-500);
+  --color-action-secondary: var(--ref-color-accent-500);
+  --color-state-success: var(--ref-color-success-500);
+  --color-state-warning: var(--ref-color-warning-500);
+  --color-state-danger: var(--ref-color-danger-500);
+  --color-state-info: var(--ref-color-info-500);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --elevation-sm: 0 10px 24px rgba(1, 4, 15, 0.32);
+  --elevation-md: 0 24px 56px rgba(1, 4, 15, 0.42);
+  --elevation-lg: 0 32px 72px rgba(1, 4, 15, 0.5);
+
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+
+  --z-base: 1;
+  --z-nav: 10;
+  --z-popover: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  --button-height: 44px;
+  --button-height-sm: 36px;
+  --button-padding-inline: var(--space-4);
+  --button-font-weight: 600;
+
+  --input-height: 44px;
+  --input-padding-inline: var(--space-3);
+
+  --panel-blur: 18px;
+}

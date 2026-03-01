@@ -42,6 +42,30 @@ export default tseslint.config(
         {
           patterns: [
             {
+              group: ["@radix-ui/*"],
+              message: "Import Radix primitives only inside src/components/ui/*."
+            },
+            {
+              group: ["**/api/openapi.json"],
+              message: "openapi.json is only for generating TypeScript API contracts."
+            },
+            {
+              group: ["**/generated-types", "**/generated-types.ts"],
+              message: "Import API contract aliases from src/api/types.ts."
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
               group: ["**/api/openapi.json"],
               message: "openapi.json is only for generating TypeScript API contracts."
             },

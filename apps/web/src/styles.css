@@ -1,35 +1,6 @@
-:root {
-  font-family: "Segoe UI", sans-serif;
-  line-height: 1.5;
-}
+@import "./styles/tokens.css";
+@import "./styles/theme.css";
 
-body {
-  margin: 0;
-  background: #f8fafc;
-  color: #111827;
-}
-
-.container {
-  max-width: 720px;
-  margin: 2rem auto;
-  padding: 1rem;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-}
-
-.task-form {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-input {
-  flex: 1;
-  padding: 0.5rem;
-}
-
-button {
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

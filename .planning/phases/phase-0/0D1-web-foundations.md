@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-02-28
 - Depends on:
   - `.planning/project-brief.md`
@@ -14,6 +14,44 @@
 ## Objective
 
 Establish production-grade frontend foundations before 0D2 implementation so the first user-facing search/map slice is polished, accessible, performant, and easy to evolve over time.
+
+## Implementation Progress (2026-02-28)
+
+- Completed: Tailwind + PostCSS styling engine wired for Vite (`tailwind.config.ts`, `postcss.config.js`).
+- Completed: Core/semantic/component token files added (`src/styles/tokens.css`, `src/styles/theme.css`) and consumed via global `src/styles.css`.
+- Completed: Required shared layout and UI baseline components implemented under local ownership:
+  - `src/components/layout/{AppShell,PageContainer,SplitPaneLayout}.tsx`
+  - `src/components/ui/{Card,Button,TextInput,Select,Field,LoadingSkeleton,EmptyState,ErrorState,ResultCard}.tsx`
+  - `src/components/maps/{MapPanel,MapPanelLeaflet}.tsx`
+- Completed: Map tile provider configuration with primary/fallback resolution added (`src/shared/maps/map-tiles.ts`) with feature compatibility re-export (`src/features/schools-search/config/map-tiles.ts`).
+- Completed: Frontend code-quality rail for Radix ownership boundary added in ESLint (raw `@radix-ui/*` imports restricted outside shared UI internals).
+- Completed: Accessibility and responsiveness smoke tests added for shell/layout/primitives and map keyboard/touch interactions (`src/App.test.tsx`, `src/components/**/**/*.test.tsx`, `e2e/tasks.spec.ts`), plus deterministic token contrast regression tests (`src/styles/contrast.test.ts`).
+- Completed: Performance budget enforcement added (`scripts/check-budgets.mjs`) with thresholds:
+  - app shell JS <= 170 KiB gzip
+  - app shell CSS <= 35 KiB gzip
+  - lazy map chunk JS <= 260 KiB gzip
+- Completed: Lighthouse mobile budget enforcement and snapshot capture added (`scripts/check-lighthouse.mjs`) with thresholds:
+  - LCP <= 2.0s
+  - CLS <= 0.10
+  - TBT <= 200ms
+- Completed: Web gates executed and passing (`npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`, `npm run budget:check`), with repository-level gates also passing (`make lint`, `make test`).
+
+## Contrast Verification Snapshot (2026-02-28)
+
+Validated with deterministic contrast calculation against seeded dark theme colors:
+
+| Pairing | Ratio | Target | Status |
+|---|---:|---:|---|
+| `--color-text-primary` on `--color-bg-canvas` | 17.84:1 | >= 4.5:1 | pass |
+| `--color-text-primary` on `--color-bg-surface` | 16.08:1 | >= 4.5:1 | pass |
+| `--color-text-secondary` on `--color-bg-surface` | 6.56:1 | >= 4.5:1 | pass |
+| `--color-text-secondary` on `--color-bg-canvas` | 7.28:1 | >= 4.5:1 | pass |
+| `--color-action-primary` on `--color-bg-surface` | 3.97:1 | >= 3:1 | pass |
+| white text on `--color-action-primary-solid` | 5.70:1 | >= 4.5:1 | pass |
+| `--color-state-success` on `--color-bg-surface` | 7.38:1 | >= 3:1 | pass |
+| `--color-state-warning` on `--color-bg-surface` | 7.83:1 | >= 3:1 | pass |
+| `--color-state-danger` on `--color-bg-surface` | 4.47:1 | >= 3:1 | pass |
+| `--color-state-info` on `--color-bg-surface` | 4.57:1 | >= 3:1 | pass |
 
 ## Scope
 
@@ -248,7 +286,7 @@ Implement and use a minimum of these shared components before 0D2:
    - reusable base controls and state components (shadcn-style local ownership).
 9. `apps/web/src/components/maps/MapPanel.tsx`
    - shared map container wrapper for lazy loading and consistent chrome.
-10. `apps/web/src/features/schools-search/config/map-tiles.ts`
+10. `apps/web/src/shared/maps/map-tiles.ts` (with compatibility re-export in `apps/web/src/features/schools-search/config/map-tiles.ts`)
    - centralize tile URL/attribution config and primary/fallback provider selection.
 11. `apps/web/src/test/`
    - add shared accessibility/responsiveness test utilities.
