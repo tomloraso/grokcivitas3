@@ -6,3 +6,10 @@ export type HealthResponse =
 export type Task = components["schemas"]["TaskResponse"];
 
 export type CreateTaskRequest = components["schemas"]["TaskCreateRequest"];
+
+export type SchoolsSearchResponse = components["schemas"]["SchoolsSearchResponse"];
+
+export type SchoolSearchResultItem = components["schemas"]["SchoolSearchItemResponse"];
+
+export type SearchSchoolsQuery =
+  operations["search_schools_api_v1_schools_get"]["parameters"]["query"];

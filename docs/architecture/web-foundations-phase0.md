@@ -41,14 +41,14 @@ Radix boundary rule:
 
 - Accessibility smoke tests run with `vitest-axe` for shell, layout, and primitives.
 - Contrast pairings required by 0D1 are enforced by `src/styles/contrast.test.ts` against token values.
-- E2E coverage validates keyboard activation for map markers and popups in `apps/web/e2e/tasks.spec.ts`.
+- E2E coverage validates keyboard activation for map markers and popups in `apps/web/e2e/schools-search.spec.ts`.
 
 ## Responsiveness
 
 - `SplitPaneLayout` provides the mobile-first single-column to desktop split-pane transition.
 - Touch target minimum enforced through 44px control heights (`h-11`) for primary inputs/buttons and
   44px Leaflet zoom controls in the map panel.
-- Playwright smoke coverage validates desktop/tablet/mobile layout behavior in `apps/web/e2e/tasks.spec.ts`.
+- Playwright smoke coverage validates desktop/tablet/mobile layout behavior in `apps/web/e2e/schools-search.spec.ts`.
 
 ## Performance
 

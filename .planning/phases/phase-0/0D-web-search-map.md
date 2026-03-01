@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Draft
-- Last updated: 2026-02-28
+- Status: Implemented
+- Last updated: 2026-03-01
 - Depends on:
   - `.planning/phases/phase-0/0D1-web-foundations.md`
   - `.planning/phases/phase-0/0C-postcode-search-api.md`
@@ -14,6 +14,27 @@
 ## Objective
 
 Ship the first user-facing Civitas journey: postcode search showing nearby schools in both list and map views using the Phase 0 API contract and the shared foundations established in 0D1.
+
+## Implementation Progress (2026-03-01)
+
+- Completed: replaced demo preview-state scaffold with live schools-search feature composition under `apps/web/src/features/schools-search`.
+- Completed: added typed API client support for `GET /api/v1/schools` with OpenAPI-derived contracts (`src/api/types.ts` aliases + `src/api/client.ts` `searchSchools`).
+- Completed: implemented local feature orchestration hook for postcode/radius form state, submit lifecycle, and deterministic idle/loading/success/empty/error rendering.
+- Completed: implemented map/list composition using shared 0D1 primitives:
+  - `SearchForm` -> `TextInput`, `Select`, `Button`, `Field`
+  - `SchoolsList` -> `ResultCard`, `LoadingSkeleton`, `EmptyState`, `ErrorState`
+  - `SchoolsMap` -> `MapPanel` with lazy-loaded Leaflet chunk retained
+  - `SchoolsSearchFeature` -> `AppShell`, `PageContainer`, `SplitPaneLayout`
+- Completed: replaced app tests with 0D2 behavior coverage (validation, submit call shape, loading, success list+map markers, empty, error/retry, accessibility smoke).
+- Completed: replaced Playwright demo spec with schools-search smoke coverage using route-level API mocking (`apps/web/e2e/schools-search.spec.ts`) and removed the old `tasks.spec.ts`.
+- Completed: quality gates passing for 0D2 integration:
+  - `cd apps/web && npm run lint`
+  - `cd apps/web && npm run typecheck`
+  - `cd apps/web && npm run test`
+  - `cd apps/web && npm run build`
+  - `cd apps/web && npm run budget:check`
+  - `make lint`
+  - `make test`
 
 ## Scope
 
@@ -126,8 +147,8 @@ Add a dedicated feature folder:
    - mount schools search feature.
 10. `apps/web/src/App.test.tsx`
     - replace task assertions with schools-search behavior tests.
-11. `apps/web/e2e/tasks.spec.ts`
-    - replace with schools search smoke test (rename file).
+11. `apps/web/e2e/schools-search.spec.ts`
+    - schools search smoke test with mocked API response path.
 12. `apps/web/scripts/check-budgets.mjs` (or equivalent)
     - ensure 0D1 performance budgets remain green during 0D2 integration.
 

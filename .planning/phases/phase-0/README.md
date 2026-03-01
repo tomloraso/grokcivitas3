@@ -76,7 +76,7 @@ Phase 0 is split into six substantial deliverables. Each document is written for
 - 0B GIAS pipeline: completed.
 - 0C Postcode search API: completed.
 - 0D1 Web foundations: completed.
-- 0D Web search + map: pending.
+- 0D Web search + map: completed.
 
 ## Phase 0 Definition Of Done
 

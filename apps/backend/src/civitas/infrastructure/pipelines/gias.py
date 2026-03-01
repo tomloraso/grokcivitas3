@@ -39,6 +39,13 @@ NORTHING_RANGE = (0.0, 1300000.0)
 BRONZE_FILE_NAME = "edubasealldata.csv"
 CSV_NAME_SUBSTRING = "edubasealldata"
 
+# GIAS bulk extracts from get-information-schools.service.gov.uk are
+# encoded as Windows-1252 (cp1252).  School names frequently contain
+# Windows-style right single quotes (\x92) and other characters outside
+# the ASCII/UTF-8 range.  cp1252 is a strict superset of ASCII so test
+# fixtures authored in plain ASCII are decoded correctly.
+GIAS_CSV_ENCODING = "cp1252"
+
 
 @dataclass(frozen=True)
 class GiasStagedRow:
@@ -176,7 +183,7 @@ class GiasPipeline:
 
         staged_rows: list[GiasStagedRow] = []
         rejected_rows: list[tuple[str, dict[str, str]]] = []
-        with source_csv.open("r", encoding="utf-8", newline="") as csv_file:
+        with source_csv.open("r", encoding=GIAS_CSV_ENCODING, newline="") as csv_file:
             reader = csv.DictReader(csv_file)
             if reader.fieldnames is None:
                 raise ValueError("GIAS CSV has no header row.")
@@ -433,7 +440,7 @@ def _strip_or_none(raw_value: str | None) -> str | None:
 
 
 def _count_csv_rows(csv_path: Path) -> int:
-    with csv_path.open("r", encoding="utf-8", newline="") as csv_file:
+    with csv_path.open("r", encoding=GIAS_CSV_ENCODING, newline="") as csv_file:
         row_count_with_header = sum(1 for _ in csv.reader(csv_file))
     return max(0, row_count_with_header - 1)
 

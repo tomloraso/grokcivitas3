@@ -25,7 +25,7 @@ Establish production-grade frontend foundations before 0D2 implementation so the
   - `src/components/maps/{MapPanel,MapPanelLeaflet}.tsx`
 - Completed: Map tile provider configuration with primary/fallback resolution added (`src/shared/maps/map-tiles.ts`) with feature compatibility re-export (`src/features/schools-search/config/map-tiles.ts`).
 - Completed: Frontend code-quality rail for Radix ownership boundary added in ESLint (raw `@radix-ui/*` imports restricted outside shared UI internals).
-- Completed: Accessibility and responsiveness smoke tests added for shell/layout/primitives and map keyboard/touch interactions (`src/App.test.tsx`, `src/components/**/**/*.test.tsx`, `e2e/tasks.spec.ts`), plus deterministic token contrast regression tests (`src/styles/contrast.test.ts`).
+- Completed: Accessibility and responsiveness smoke tests added for shell/layout/primitives and map keyboard/touch interactions (`src/App.test.tsx`, `src/components/**/**/*.test.tsx`, `e2e/schools-search.spec.ts`), plus deterministic token contrast regression tests (`src/styles/contrast.test.ts`).
 - Completed: Performance budget enforcement added (`scripts/check-budgets.mjs`) with thresholds:
   - app shell JS <= 170 KiB gzip
   - app shell CSS <= 35 KiB gzip

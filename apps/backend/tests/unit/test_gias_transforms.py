@@ -1,13 +1,18 @@
+import csv
 from datetime import date
+from pathlib import Path
 
 import pytest
 
 from civitas.infrastructure.pipelines.gias import (
+    GIAS_CSV_ENCODING,
     REQUIRED_GIAS_HEADERS,
     normalize_gias_postcode,
     normalize_gias_row,
     validate_gias_headers,
 )
+
+FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures" / "gias"
 
 
 def _row(**overrides: str) -> dict[str, str]:
@@ -84,3 +89,26 @@ def test_normalize_gias_row_rejects_invalid_date() -> None:
 
     assert normalized is None
     assert rejection == "invalid_open_date"
+
+
+def test_csv_with_cp1252_characters_parses_without_error() -> None:
+    """Regression: GIAS CSV contains Windows-1252 characters (e.g. \\x92 right
+    single quote in school names like "St Mary\u2019s").  Reading as UTF-8
+    raises UnicodeDecodeError; reading with GIAS_CSV_ENCODING succeeds."""
+    fixture = FIXTURES_DIR / "edubasealldata_cp1252.csv"
+    assert fixture.exists(), f"cp1252 fixture missing at {fixture}"
+
+    # Must fail under UTF-8 — confirms the fixture has real cp1252 bytes.
+    with pytest.raises(UnicodeDecodeError):
+        fixture.read_text(encoding="utf-8")
+
+    # Must succeed under the pipeline's declared encoding.
+    with fixture.open("r", encoding=GIAS_CSV_ENCODING, newline="") as csv_file:
+        reader = csv.DictReader(csv_file)
+        rows = list(reader)
+
+    assert len(rows) == 1
+    normalized, rejection = normalize_gias_row(rows[0])
+    assert rejection is None
+    assert normalized is not None
+    assert "\u2019" in normalized.name  # right single quote decoded correctly
