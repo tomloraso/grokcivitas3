@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: In progress
+- Status: Completed
 - Last updated: 2026-03-02
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
@@ -113,7 +113,8 @@ Phase 1 is split into nine substantial deliverables:
 - 1E School trends API: completed.
 - 1F Web routing & navigation foundation: completed.
 - 1F1 Web component expansion & data viz baseline: completed.
-- 1G-1H: pending.
+- 1G Web school profile page: completed.
+- 1H Phase 1 quality gates: completed.
 
 ## Tracking Log
 
@@ -160,6 +161,41 @@ Phase 1 is split into nine substantial deliverables:
     - `make lint` — clean
     - `make test` — 80 backend + 102 frontend tests passing
   - Result: all gates passed; Phase 1F1 is complete.
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 1G Web school profile page:
+    - API client: `getSchoolProfile(urn)`, `getSchoolTrends(urn)` + 8 type aliases.
+    - Feature module: `src/features/school-profile/` with types, mapper, hook (reducer-based), 5 components.
+    - Components: ProfileHeader, OfstedHeadlineCard, DemographicsSummary, TrendPanel, CoverageNotice.
+    - SchoolProfileFeature page: loading, not-found, error (retry), success states.
+    - Route: `/schools/:urn` wired to SchoolProfileFeature (replaced placeholder).
+    - Tests: 23 mapper unit tests + 11 component integration tests (a11y included).
+    - E2E: 3 Playwright tests updated with profile/trends API mocking.
+    - Deleted orphaned SchoolProfilePlaceholder.tsx.
+  - Quality gates verified:
+    - `npm run lint` — clean
+    - `npm run typecheck` — clean
+    - `npm run test` — 136 tests passing (13 files)
+    - `npm run build` — production build succeeds
+    - `npm run budget:check` — app shell JS 120.4 KiB (budget 170), CSS 12.7 KiB (budget 35), map chunk 45.2 KiB (budget 260)
+    - `make lint` — clean
+    - `make test` — 80 backend + 136 frontend tests passing
+  - Result: all gates passed; Phase 1G is complete.
+- 2026-03-02 (phase closeout checkpoint):
+  - Completed Phase 1H quality gates and sign-off sequence:
+    - `uv run --project apps/backend python tools/scripts/verify_phase1_sources.py`
+    - `uv run --project apps/backend pytest`
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_import_boundaries.py -q`
+    - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+    - `cd apps/web && npm run generate:types`
+    - `cd apps/web && npm run lint`
+    - `cd apps/web && npm run typecheck`
+    - `cd apps/web && npm run test`
+    - `cd apps/web && npm run build`
+    - `cd apps/web && npm run budget:check`
+    - `cd apps/web && npm run test:e2e`
+    - `make lint`
+    - `make test`
+  - Result: all Phase 1 quality gates passed; Phase 1 is signed off.
 
 ## Phase 1 Definition Of Done
 

@@ -1,6 +1,8 @@
 import type {
   CreateTaskRequest,
   HealthResponse,
+  SchoolProfileResponse,
+  SchoolTrendsResponse,
   SearchSchoolsQuery,
   SchoolsSearchResponse,
   Task
@@ -54,4 +56,14 @@ export async function searchSchools({
   }
 
   return request<SchoolsSearchResponse>(`/api/v1/schools?${params.toString()}`);
+}
+
+export async function getSchoolProfile(urn: string): Promise<SchoolProfileResponse> {
+  return request<SchoolProfileResponse>(`/api/v1/schools/${encodeURIComponent(urn)}`);
+}
+
+export async function getSchoolTrends(urn: string): Promise<SchoolTrendsResponse> {
+  return request<SchoolTrendsResponse>(
+    `/api/v1/schools/${encodeURIComponent(urn)}/trends`
+  );
 }

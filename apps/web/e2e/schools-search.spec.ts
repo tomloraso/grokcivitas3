@@ -34,6 +34,56 @@ const mockSearchResponse = {
   ]
 };
 
+const mockProfileResponse = {
+  school: {
+    urn: "100001",
+    name: "Camden Bridge Primary School",
+    phase: "Primary",
+    type: "Community school",
+    status: "Open",
+    postcode: "NW1 8NH",
+    lat: 51.5424,
+    lng: -0.1418
+  },
+  demographics_latest: {
+    academic_year: "2024/25",
+    disadvantaged_pct: 17.2,
+    fsm_pct: null,
+    sen_pct: 13.0,
+    ehcp_pct: 2.1,
+    eal_pct: 8.4,
+    first_language_english_pct: 90.6,
+    first_language_unclassified_pct: 1.0,
+    coverage: {
+      fsm_supported: false,
+      ethnicity_supported: false,
+      top_languages_supported: false
+    }
+  },
+  ofsted_latest: {
+    overall_effectiveness_code: "2",
+    overall_effectiveness_label: "Good",
+    inspection_start_date: "2025-10-10",
+    publication_date: "2025-11-15",
+    is_graded: true,
+    ungraded_outcome: null
+  }
+};
+
+const mockTrendsResponse = {
+  urn: "100001",
+  years_available: ["2024/25"],
+  history_quality: { is_partial_history: true, min_years_for_delta: 2, years_count: 1 },
+  series: {
+    disadvantaged_pct: [
+      { academic_year: "2024/25", value: 17.2, delta: null, direction: null }
+    ],
+    sen_pct: [],
+    ehcp_pct: [],
+    eal_pct: []
+  }
+};
+
 async function expectPrimaryControlsVisible(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
   await expect(page.getByLabel("Postcode")).toBeVisible();
@@ -156,11 +206,25 @@ test("site header and footer are visible on the search page", async ({ page }) =
 });
 
 test("click result navigates to school profile route", async ({ page }) => {
-  await page.route("**/api/v1/schools**", async (route) => {
+  await page.route("**/api/v1/schools?**", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify(mockSearchResponse)
+    });
+  });
+  await page.route("**/api/v1/schools/100001", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockProfileResponse)
+    });
+  });
+  await page.route("**/api/v1/schools/100001/trends", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockTrendsResponse)
     });
   });
 
@@ -171,10 +235,27 @@ test("click result navigates to school profile route", async ({ page }) => {
 
   await page.getByLabel("View profile for Camden Bridge Primary School").click();
   await expect(page).toHaveURL(/\/schools\/100001$/);
-  await expect(page.getByRole("heading", { name: /100001/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Camden Bridge Primary School" })).toBeVisible();
+  await expect(page.getByText("Demographics")).toBeVisible();
+  await expect(page.getByLabel(/Ofsted rating: Good/)).toBeVisible();
 });
 
 test("browser back returns to search from school profile", async ({ page }) => {
+  await page.route("**/api/v1/schools/100001", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockProfileResponse)
+    });
+  });
+  await page.route("**/api/v1/schools/100001/trends", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockTrendsResponse)
+    });
+  });
+
   await gotoRoute(page, "/");
   await gotoRoute(page, "/schools/100001");
   await page.goBack();
@@ -184,6 +265,21 @@ test("browser back returns to search from school profile", async ({ page }) => {
 });
 
 test("header Search link navigates back to search route", async ({ page }) => {
+  await page.route("**/api/v1/schools/100001", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockProfileResponse)
+    });
+  });
+  await page.route("**/api/v1/schools/100001/trends", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockTrendsResponse)
+    });
+  });
+
   await gotoRoute(page, "/schools/100001");
   await page.getByRole("banner").getByRole("link", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL("/");

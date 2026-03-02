@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Completed
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1D-school-profile-api.md`
@@ -11,6 +11,36 @@
   - `.planning/phases/phase-1/1F1-web-component-expansion-data-viz-baseline.md`
   - `.planning/phases/phase-0/0D1-web-foundations.md`
   - `docs/architecture/frontend-conventions.md`
+
+## Tracking Update (2026-03-02)
+
+- Implementation complete for `/schools/:urn` profile composition.
+- Route wiring updated in `apps/web/src/app/routes.tsx` to mount `SchoolProfileFeature`.
+- Feature delivered under `apps/web/src/features/school-profile/` with:
+  - typed data fetching (`getSchoolProfile`, `getSchoolTrends`),
+  - contract-to-view-model mapper,
+  - profile header, Ofsted card, demographics summary, trends panel, and coverage notice.
+- Sparse/empty data handling implemented:
+  - explicit partial-history messaging,
+  - explicit no-trend-data state,
+  - explicit unsupported-metric coverage notice.
+- Degradation behavior implemented:
+  - trends failures do not block profile rendering.
+- Test coverage added/updated:
+  - mapper tests,
+  - feature state tests (loading/success/error/not-found),
+  - single-year and empty-series trend tests,
+  - coverage notice and accessibility smoke tests,
+  - E2E verification from search -> profile including Ofsted and demographics assertions.
+- Quality gates executed and green:
+  - `cd apps/web && npm run lint`
+  - `cd apps/web && npm run typecheck`
+  - `cd apps/web && npm run test`
+  - `cd apps/web && npm run build`
+  - `cd apps/web && npm run budget:check`
+  - `cd apps/web && npm run test:e2e`
+  - `make lint`
+  - `make test`
 
 ## Objective
 
