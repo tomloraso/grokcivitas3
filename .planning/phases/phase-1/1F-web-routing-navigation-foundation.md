@@ -18,6 +18,20 @@ Move the web app from single-feature mount to route-based composition and add th
 
 Phase 0D1 established the tokenized visual system and reusable component primitives. Phase 0D2 composed the first feature using those primitives. This deliverable follows the same pattern: it provides the structural website shell that all subsequent pages and features render within.
 
+## Visual Reference Points
+
+Three production sites serve as design touchstones for the Civitas visual language. Each demonstrates a specific quality we aim to carry through the navigation shell and layout system:
+
+| Reference | What we take from it |
+|---|---|
+| **[Vercel](https://vercel.com/)** | Restrained site chrome — ultra-thin header, no visual weight competing with content. Monochrome surfaces with a single accent colour. Typography does the heavy-lifting. |
+| **[Linear](https://linear.app/)** | Dark-first palette where hierarchy comes from luminance steps, not colour variety. Subtle glassmorphism panels. Motion is purposeful and minimal. |
+| **[The Refugee Project](https://www.therefugeeproject.org/)** | Map-as-canvas paradigm — the dark map *is* the background. Colour is reserved exclusively for data encoding (marker size/fill). UI overlays are semi-transparent so the spatial context reads through. |
+
+These references inform a binding design principle:
+
+> **Dark canvas, colour = data.** Background surfaces stay near-black. Every splash of chromatic colour must encode information (rating band, Ofsted category, selection state, trend direction). Decorative colour (ambient glows, tinted panels) is suppressed in map-first views so data owns the visual budget.
+
 ## Scope
 
 ### In scope
@@ -40,6 +54,9 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
 - Add search-result navigation to profile route.
 - Preserve existing Phase 0 search behavior on the `/` route.
 - Add shared loading and not-found route behavior.
+- **MapOverlayLayout**: a second layout variant (alongside `SplitPaneLayout`) where the map stretches to full viewport and UI panels float as glassmorphism overlays.
+- Ambient-glow suppression mechanism so map-first views use the dark map tiles as background instead of the violet radial gradients.
+- Chromeless `MapPanel` variant that renders without the panel header bar, allowing it to serve as a full-bleed background.
 
 ### Out of scope
 
@@ -58,6 +75,10 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
 6. **Site header and footer are shared layout components**, owned under `src/components/layout/` consistent with `AppShell`, `PageContainer`, and `SplitPaneLayout`.
 7. **Mobile navigation**: use shadcn/ui Sheet (Radix Dialog-based) for the mobile drawer. Follows existing Radix ownership boundary (wrapped as local component, raw Radix not exposed to features).
 8. **Breadcrumbs**: implemented as a shared layout component; each page/route supplies breadcrumb segments declaratively.
+9. **Dark canvas, colour = data**: map-first views suppress ambient decoration (violet glow divs, tinted surfaces). The dark CartoDB tiles serve as the page background. Chromatic colour is reserved for data encoding — marker fill, selection rings, rating bands, trend indicators. Decorative uses of brand violet are limited to content pages (profile, about) and interactive UI chrome (buttons, links, focus rings).
+10. **MapOverlayLayout**: introduced as a layout variant alongside `SplitPaneLayout`. The search route uses `MapOverlayLayout` by default; content routes (profile, 404) use standard `PageContainer` layout. The layout provides a `data-layout="map-overlay"` attribute on the root element so CSS can conditionally suppress ambient glows.
+11. **Overlay panels use neutral glassmorphism**: panels floating over the map use `rgba(15, 15, 20, 0.85)` with `backdrop-filter: blur(16px)` — no violet tint — so they recede behind the data layer. This extends the existing `panel-surface` token with a `panel-surface-neutral` variant.
+12. **Visual reference touchstones**: Vercel (restrained chrome), Linear (dark-first luminance hierarchy), The Refugee Project (map-as-canvas, colour = data). These inform all visual decisions in 1F and downstream deliverables.
 
 ## UX And Navigation Contract
 
@@ -104,6 +125,20 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
     - support navigation affordance while keeping shared ownership boundaries.
 15. `apps/web/src/shared/routing/` (new optional)
     - route helpers for profile path construction.
+16. `apps/web/src/components/layout/MapOverlayLayout.tsx` (new)
+    - full-viewport map container with absolutely-positioned overlay panel slots (search panel, detail panel).
+    - sets `data-layout="map-overlay"` on root for CSS-driven ambient-glow suppression.
+    - accepts `children` for the overlay panel content and a `map` slot for the map component.
+17. `apps/web/src/components/maps/MapPanelChromeless.tsx` (new)
+    - variant of `MapPanel` that renders without the panel header bar and fixed-height constraint.
+    - fills its parent container; intended for use inside `MapOverlayLayout`.
+18. `apps/web/src/styles/tokens.css` (update)
+    - add `--panel-surface-neutral` token (`rgba(15, 15, 20, 0.85)`) for map overlay panels.
+19. `apps/web/src/styles/theme.css` (update)
+    - add `[data-layout="map-overlay"] .ambient-glow { display: none; }` rule.
+    - add `.panel-surface-neutral` utility class with neutral glassmorphism values.
+20. `apps/web/src/components/layout/AppShell.tsx` (update)
+    - ensure ambient-glow divs have the `.ambient-glow` class so they can be suppressed by layout context.
 
 ## Testing And Quality Gates
 
@@ -120,6 +155,10 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
 - Skip-to-content link is first focusable element and targets `#main-content`.
 - Breadcrumbs render correct segments on profile route.
 - Accessibility smoke (axe) for header, footer, and navigation components.
+- MapOverlayLayout renders map at full viewport with overlay panel visible.
+- MapOverlayLayout suppresses ambient-glow elements (not visible in DOM or hidden via CSS).
+- MapPanelChromeless renders without header bar and fills parent container.
+- `panel-surface-neutral` class applies correct glassmorphism values (no violet tint).
 
 ### E2E updates
 
@@ -151,6 +190,10 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
 9. Icon library is installed and available for use by 1F1 and 1G.
 10. Route architecture follows frontend ownership and dependency conventions.
 11. Existing Phase 0 search behavior remains intact.
+12. MapOverlayLayout renders the map as a full-viewport background with search panel as a glassmorphism overlay.
+13. Ambient violet glow is suppressed in map-first layout; map tiles serve as the visual background.
+14. Overlay panels use neutral glassmorphism (no violet tint) so colour budget is reserved for data.
+15. Visual language is consistent with reference touchstones (Vercel, Linear, The Refugee Project).
 
 ## Risks And Mitigations
 
@@ -162,3 +205,7 @@ Phase 0D1 established the tokenized visual system and reusable component primiti
   - Mitigation: keep chrome minimal and low-contrast, consistent with dark-first token system; defer marketing/content-heavy navigation to post-MVP.
 - Risk: mobile drawer adds bundle weight.
   - Mitigation: Radix Dialog is already a dependency for Select; Sheet reuses the same primitive with minimal incremental cost.
+- Risk: MapOverlayLayout diverges visually from content pages, feeling like two different apps.
+  - Mitigation: shared header/footer chrome, shared token system, and shared typography create continuity. Only the background treatment differs (map tiles vs ambient glow).
+- Risk: neutral glassmorphism panels feel flat or clinical without the violet tint.
+  - Mitigation: the data visualisation layer (coloured markers, rating bands) provides the chromatic richness. Panel borders use subtle `--color-border-primary` luminance steps for depth.
