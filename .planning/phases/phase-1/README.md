@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: In progress
 - Last updated: 2026-03-02
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
@@ -103,6 +103,14 @@ Phase 1 is split into nine substantial deliverables:
   - landing page: `https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes` -> `200`
   - latest asset link on 2026-03-02:
     - `https://assets.publishing.service.gov.uk/media/698b20be95285e721cd7127d/Management_information_-_state-funded_schools_-_latest_inspections_as_at_31_Jan_2026.csv` -> `200`
+
+## Progress (2026-03-02)
+
+- 1A Source contract gate: completed.
+- 1B DfE characteristics pipeline: completed.
+- 1C Ofsted latest pipeline: completed.
+- 1D School profile API: completed.
+- 1E-1H: pending.
 
 ## Phase 1 Definition Of Done
 

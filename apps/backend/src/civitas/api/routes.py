@@ -5,7 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from civitas.api.dependencies import (
     get_create_task_use_case,
     get_list_tasks_use_case,
+    get_school_profile_use_case,
     get_search_schools_by_postcode_use_case,
+)
+from civitas.api.schemas.school_profiles import (
+    SchoolProfileDemographicsCoverageResponse,
+    SchoolProfileDemographicsLatestResponse,
+    SchoolProfileOfstedLatestResponse,
+    SchoolProfileResponse,
+    SchoolProfileSchoolResponse,
 )
 from civitas.api.schemas.schools import (
     SchoolSearchItemResponse,
@@ -14,6 +22,11 @@ from civitas.api.schemas.schools import (
     SchoolsSearchResponse,
 )
 from civitas.api.schemas.tasks import TaskCreateRequest, TaskResponse
+from civitas.application.school_profiles.errors import (
+    SchoolProfileDataUnavailableError,
+    SchoolProfileNotFoundError,
+)
+from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.schools.errors import (
     InvalidSchoolSearchParametersError,
     PostcodeNotFoundError,
@@ -94,4 +107,69 @@ def search_schools(
             )
             for school in result.schools
         ],
+    )
+
+
+@router.get(
+    "/schools/{urn}",
+    response_model=SchoolProfileResponse,
+    tags=["schools"],
+    responses={
+        404: {"description": "School URN not found."},
+        503: {"description": "School profile datastore unavailable."},
+    },
+)
+def get_school_profile(
+    urn: str,
+    use_case: GetSchoolProfileUseCase = Depends(get_school_profile_use_case),
+) -> SchoolProfileResponse:
+    try:
+        result = use_case.execute(urn=urn)
+    except SchoolProfileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except SchoolProfileDataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    demographics_latest = None
+    if result.demographics_latest is not None:
+        demographics_latest = SchoolProfileDemographicsLatestResponse(
+            academic_year=result.demographics_latest.academic_year,
+            disadvantaged_pct=result.demographics_latest.disadvantaged_pct,
+            fsm_pct=result.demographics_latest.fsm_pct,
+            sen_pct=result.demographics_latest.sen_pct,
+            ehcp_pct=result.demographics_latest.ehcp_pct,
+            eal_pct=result.demographics_latest.eal_pct,
+            first_language_english_pct=result.demographics_latest.first_language_english_pct,
+            first_language_unclassified_pct=result.demographics_latest.first_language_unclassified_pct,
+            coverage=SchoolProfileDemographicsCoverageResponse(
+                fsm_supported=result.demographics_latest.coverage.fsm_supported,
+                ethnicity_supported=result.demographics_latest.coverage.ethnicity_supported,
+                top_languages_supported=result.demographics_latest.coverage.top_languages_supported,
+            ),
+        )
+
+    ofsted_latest = None
+    if result.ofsted_latest is not None:
+        ofsted_latest = SchoolProfileOfstedLatestResponse(
+            overall_effectiveness_code=result.ofsted_latest.overall_effectiveness_code,
+            overall_effectiveness_label=result.ofsted_latest.overall_effectiveness_label,
+            inspection_start_date=result.ofsted_latest.inspection_start_date,
+            publication_date=result.ofsted_latest.publication_date,
+            is_graded=result.ofsted_latest.is_graded,
+            ungraded_outcome=result.ofsted_latest.ungraded_outcome,
+        )
+
+    return SchoolProfileResponse(
+        school=SchoolProfileSchoolResponse(
+            urn=result.school.urn,
+            name=result.school.name,
+            phase=result.school.phase,
+            type=result.school.school_type,
+            status=result.school.status,
+            postcode=result.school.postcode,
+            lat=result.school.lat,
+            lng=result.school.lng,
+        ),
+        demographics_latest=demographics_latest,
+        ofsted_latest=ofsted_latest,
     )

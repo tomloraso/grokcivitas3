@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/README.md`
@@ -89,6 +89,14 @@ No implementation work for `1B` or `1C` may start until this gate passes.
   - `Publication date`
   - `Latest OEIF overall effectiveness`
   - `Ungraded inspection overall outcome`
+
+## Implementation Progress (2026-03-02)
+
+- Completed: executable gate script added at `tools/scripts/verify_phase1_sources.py`.
+- Completed: deterministic pass/fail behavior with non-zero exit on contract failure.
+- Completed: parser and gate unit coverage added at `apps/backend/tests/unit/test_verify_phase1_sources.py`.
+- Completed: gate command verified against live contracts using:
+  - `uv run --project apps/backend python tools/scripts/verify_phase1_sources.py`
 
 ## Required Metric Coverage Policy
 

@@ -56,6 +56,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schools/{urn}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Profile */
+        get: operations["get_school_profile_api_v1_schools__urn__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -64,6 +81,75 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** SchoolProfileDemographicsCoverageResponse */
+        SchoolProfileDemographicsCoverageResponse: {
+            /** Fsm Supported */
+            fsm_supported: boolean;
+            /** Ethnicity Supported */
+            ethnicity_supported: boolean;
+            /** Top Languages Supported */
+            top_languages_supported: boolean;
+        };
+        /** SchoolProfileDemographicsLatestResponse */
+        SchoolProfileDemographicsLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Disadvantaged Pct */
+            disadvantaged_pct: number | null;
+            /** Fsm Pct */
+            fsm_pct: number | null;
+            /** Sen Pct */
+            sen_pct: number | null;
+            /** Ehcp Pct */
+            ehcp_pct: number | null;
+            /** Eal Pct */
+            eal_pct: number | null;
+            /** First Language English Pct */
+            first_language_english_pct: number | null;
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: number | null;
+            coverage: components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
+        };
+        /** SchoolProfileOfstedLatestResponse */
+        SchoolProfileOfstedLatestResponse: {
+            /** Overall Effectiveness Code */
+            overall_effectiveness_code: string | null;
+            /** Overall Effectiveness Label */
+            overall_effectiveness_label: string | null;
+            /** Inspection Start Date */
+            inspection_start_date: string | null;
+            /** Publication Date */
+            publication_date: string | null;
+            /** Is Graded */
+            is_graded: boolean;
+            /** Ungraded Outcome */
+            ungraded_outcome: string | null;
+        };
+        /** SchoolProfileResponse */
+        SchoolProfileResponse: {
+            school: components["schemas"]["SchoolProfileSchoolResponse"];
+            demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
+            ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
+        };
+        /** SchoolProfileSchoolResponse */
+        SchoolProfileSchoolResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Phase */
+            phase: string | null;
+            /** Type */
+            type: string | null;
+            /** Status */
+            status: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
         };
         /** SchoolSearchItemResponse */
         SchoolSearchItemResponse: {
@@ -269,6 +355,51 @@ export interface operations {
                 };
             };
             /** @description Postcode resolver unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_school_profile_api_v1_schools__urn__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolProfileResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School profile datastore unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;

@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1A-source-contract-gate.md`
@@ -88,13 +88,27 @@ Not currently supported from validated school-level source (2026-03-02):
 4. Use typed columns only in Gold; no metric-key EAV table.
 5. Store source dataset id and source version for auditability.
 6. Represent unavailable metrics as nullable typed columns with coverage flags; do not synthesize values.
+7. Promote path only upserts rows whose `urn` exists in `schools` (inner join) so demographics pipeline remains resilient when source includes non-current/unknown URNs.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added `DfeCharacteristicsPipeline` (`apps/backend/src/civitas/infrastructure/pipelines/dfe_characteristics.py`) with Bronze download, staging validation, and Gold promote stages.
+- Completed: added pipeline source registration and settings wiring for:
+  - `CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV`
+  - `CIVITAS_DFE_CHARACTERISTICS_DATASET_ID`
+- Completed: added Gold migration `20260302_04_phase1_school_demographics_yearly.py`.
+- Completed: added fixtures and tests:
+  - `apps/backend/tests/fixtures/dfe_characteristics/*`
+  - `apps/backend/tests/unit/test_dfe_characteristics_transforms.py`
+  - `apps/backend/tests/integration/test_dfe_characteristics_pipeline.py`
+- Completed: updated local config/runbook docs and validated `civitas pipeline run --source dfe_characteristics` wiring through CLI tests.
 
 ## Data Flow
 
 ### Bronze
 
 - Path format:
-  - `data/bronze/dfe-characteristics/{yyyy-mm-dd}/school_characteristics.csv`
+  - `data/bronze/dfe_characteristics/{yyyy-mm-dd}/school_characteristics.csv`
 - Metadata sidecar:
   - `school_characteristics.metadata.json`
   - includes endpoint URL, dataset id, published version, checksum, row count.
@@ -107,6 +121,7 @@ Not currently supported from validated school-level source (2026-03-02):
   - trim fields,
   - parse numeric/suppressed values,
   - parse `academic_year`,
+  - deduplicate repeated `(urn, academic_year)` rows deterministically (last row wins),
   - reject rows without `school_urn` or year.
 - Log rejects to `pipeline_rejections`.
 

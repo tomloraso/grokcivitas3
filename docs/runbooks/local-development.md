@@ -94,7 +94,10 @@ Set `CIVITAS_DATABASE_URL` in `.env` to target a different database.
 ## Pipeline baseline commands
 
 ```bash
+uv run --project apps/backend python tools/scripts/verify_phase1_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
+uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --all
 ```
 
@@ -109,6 +112,22 @@ CIVITAS_GIAS_SOURCE_ZIP=C:\path\to\extract.zip
 
 # Or HTTP URL for CSV/ZIP
 CIVITAS_GIAS_SOURCE_CSV=https://example.com/edubasealldata.csv
+```
+
+For DfE characteristics runs, these optional `.env` values control dataset selection and manual CSV override:
+
+```bash
+# Local CSV file or HTTP URL override
+CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV=C:\path\to\school_characteristics.csv
+
+# Defaults to validated Phase 1 dataset id when not set
+CIVITAS_DFE_CHARACTERISTICS_DATASET_ID=019afee4-ba17-73cb-85e0-f88c101bb734
+```
+
+For Ofsted latest runs, this optional `.env` value overrides landing-page auto-resolution with a local file or URL:
+
+```bash
+CIVITAS_OFSTED_LATEST_SOURCE_CSV=C:\path\to\latest_inspections.csv
 ```
 
 For postcode search API behavior, these optional `.env` values control resolver and cache behavior:

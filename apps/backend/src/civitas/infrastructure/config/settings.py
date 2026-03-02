@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
 DEFAULT_BRONZE_ROOT = Path("data/bronze")
+DEFAULT_DFE_CHARACTERISTICS_DATASET_ID = "019afee4-ba17-73cb-85e0-f88c101bb734"
 DEFAULT_POSTCODES_IO_BASE_URL = "https://api.postcodes.io"
 DEFAULT_POSTCODE_CACHE_TTL_DAYS = 30
 
@@ -20,6 +21,9 @@ class PipelineSettings(BaseModel):
     bronze_root: Path
     gias_source_csv: str | None = None
     gias_source_zip: str | None = None
+    dfe_characteristics_source_csv: str | None = None
+    dfe_characteristics_dataset_id: str
+    ofsted_latest_source_csv: str | None = None
 
 
 class HttpClientSettings(BaseModel):
@@ -58,6 +62,19 @@ class AppSettings(BaseSettings):
         default=None,
         validation_alias="CIVITAS_GIAS_SOURCE_ZIP",
     )
+    dfe_characteristics_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
+    )
+    dfe_characteristics_dataset_id: str = Field(
+        default=DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+    )
+    ofsted_latest_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_OFSTED_LATEST_SOURCE_CSV",
+    )
 
     http_timeout_seconds: PositiveFloat = Field(
         default=10.0,
@@ -90,6 +107,9 @@ class AppSettings(BaseSettings):
             bronze_root=self.bronze_root,
             gias_source_csv=self.gias_source_csv,
             gias_source_zip=self.gias_source_zip,
+            dfe_characteristics_source_csv=self.dfe_characteristics_source_csv,
+            dfe_characteristics_dataset_id=self.dfe_characteristics_dataset_id,
+            ofsted_latest_source_csv=self.ofsted_latest_source_csv,
         )
 
     @property
@@ -107,7 +127,13 @@ class AppSettings(BaseSettings):
             postcode_cache_ttl_days=self.postcode_cache_ttl_days,
         )
 
-    @field_validator("gias_source_csv", "gias_source_zip", mode="before")
+    @field_validator(
+        "gias_source_csv",
+        "gias_source_zip",
+        "dfe_characteristics_source_csv",
+        "ofsted_latest_source_csv",
+        mode="before",
+    )
     @classmethod
     def _empty_string_to_none(cls, value: object) -> object:
         if value is None:
@@ -115,6 +141,13 @@ class AppSettings(BaseSettings):
         if isinstance(value, str):
             stripped = value.strip()
             return stripped if stripped else None
+        return value
+
+    @field_validator("dfe_characteristics_dataset_id", mode="before")
+    @classmethod
+    def _normalize_dataset_id(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
         return value
 
 

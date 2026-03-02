@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1A-source-contract-gate.md`
@@ -58,7 +58,7 @@ Ingest the latest Ofsted inspection headline per school from a verified callable
 
 ## Decisions
 
-1. Resolve latest CSV from landing page on each download run unless override is set.
+1. Resolve latest CSV from landing page on each download run unless override is set, selecting the newest dated `latest_inspections` asset when multiple candidates are present.
 2. Gold table keeps one latest row per current `urn`.
 3. Use `Latest OEIF overall effectiveness` as primary headline when available.
 4. Map numeric overall effectiveness codes to labels:
@@ -70,12 +70,33 @@ Ingest the latest Ofsted inspection headline per school from a verified callable
 5. If graded field is null, keep `ungraded inspection overall outcome` as secondary headline text.
 6. Do not infer a graded label from ungraded outcome text.
 
+## Implementation Progress (2026-03-02)
+
+- Completed: added `OfstedLatestPipeline` at `apps/backend/src/civitas/infrastructure/pipelines/ofsted_latest.py` with:
+  - landing page latest-asset URL resolution,
+  - Bronze download + metadata sidecar,
+  - staging normalization/validation/rejection logging,
+  - Gold promote upsert behavior.
+- Completed: added pipeline source registration and settings wiring for:
+  - `PipelineSource.OFSTED_LATEST`,
+  - `CIVITAS_OFSTED_LATEST_SOURCE_CSV`.
+- Completed: added Gold migration `20260302_05_phase1_school_ofsted_latest.py`.
+- Completed: added fixtures and tests:
+  - `apps/backend/tests/fixtures/ofsted_latest/*`
+  - `apps/backend/tests/unit/test_ofsted_latest_transforms.py`
+  - `apps/backend/tests/integration/test_ofsted_latest_pipeline.py`
+- Completed: updated CLI/settings coverage and local runbook wiring for the new source:
+  - `apps/backend/tests/unit/test_pipeline_cli.py`
+  - `apps/backend/tests/unit/test_settings.py`
+  - `.env.example`
+  - `docs/runbooks/local-development.md`
+
 ## Data Flow
 
 ### Bronze
 
 - Path format:
-  - `data/bronze/ofsted-latest/{yyyy-mm-dd}/latest_inspections.csv`
+  - `data/bronze/ofsted_latest/{yyyy-mm-dd}/latest_inspections.csv`
 - Metadata sidecar:
   - `latest_inspections.metadata.json`
   - includes landing page URL, resolved asset URL, checksum, row count.

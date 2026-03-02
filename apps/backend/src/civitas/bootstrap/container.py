@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 from civitas.infrastructure.config.settings import AppSettings, get_settings
@@ -9,6 +10,9 @@ from civitas.infrastructure.persistence.database import db_engine
 from civitas.infrastructure.persistence.in_memory_task_repository import InMemoryTaskRepository
 from civitas.infrastructure.persistence.postgres_postcode_cache_repository import (
     PostgresPostcodeCacheRepository,
+)
+from civitas.infrastructure.persistence.postgres_school_profile_repository import (
+    PostgresSchoolProfileRepository,
 )
 from civitas.infrastructure.persistence.postgres_school_search_repository import (
     PostgresSchoolSearchRepository,
@@ -42,6 +46,12 @@ def school_search_repository() -> PostgresSchoolSearchRepository:
 
 
 @lru_cache(maxsize=1)
+def school_profile_repository() -> PostgresSchoolProfileRepository:
+    settings = app_settings()
+    return PostgresSchoolProfileRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
 def postcode_cache_repository() -> PostgresPostcodeCacheRepository:
     settings = app_settings()
     return PostgresPostcodeCacheRepository(engine=db_engine(settings.database.url))
@@ -72,6 +82,12 @@ def search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:
     return SearchSchoolsByPostcodeUseCase(
         school_search_repository=school_search_repository(),
         postcode_resolver=postcode_resolver(),
+    )
+
+
+def get_school_profile_use_case() -> GetSchoolProfileUseCase:
+    return GetSchoolProfileUseCase(
+        school_profile_repository=school_profile_repository(),
     )
 
 

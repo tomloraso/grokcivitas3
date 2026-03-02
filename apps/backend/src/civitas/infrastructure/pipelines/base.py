@@ -8,6 +8,8 @@ from uuid import UUID
 
 class PipelineSource(str, Enum):
     GIAS = "gias"
+    DFE_CHARACTERISTICS = "dfe_characteristics"
+    OFSTED_LATEST = "ofsted_latest"
 
 
 class PipelineRunStatus(str, Enum):

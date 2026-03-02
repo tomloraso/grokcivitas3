@@ -161,6 +161,55 @@
           }
         }
       }
+    },
+    "/api/v1/schools/{urn}": {
+      "get": {
+        "tags": [
+          "tasks",
+          "schools"
+        ],
+        "summary": "Get School Profile",
+        "operationId": "get_school_profile_api_v1_schools__urn__get",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Urn"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolProfileResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "School URN not found."
+          },
+          "503": {
+            "description": "School profile datastore unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -177,6 +226,315 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "SchoolProfileDemographicsCoverageResponse": {
+        "properties": {
+          "fsm_supported": {
+            "type": "boolean",
+            "title": "Fsm Supported"
+          },
+          "ethnicity_supported": {
+            "type": "boolean",
+            "title": "Ethnicity Supported"
+          },
+          "top_languages_supported": {
+            "type": "boolean",
+            "title": "Top Languages Supported"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fsm_supported",
+          "ethnicity_supported",
+          "top_languages_supported"
+        ],
+        "title": "SchoolProfileDemographicsCoverageResponse"
+      },
+      "SchoolProfileDemographicsLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "disadvantaged_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disadvantaged Pct"
+          },
+          "fsm_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsm Pct"
+          },
+          "sen_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sen Pct"
+          },
+          "ehcp_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ehcp Pct"
+          },
+          "eal_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eal Pct"
+          },
+          "first_language_english_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Language English Pct"
+          },
+          "first_language_unclassified_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Language Unclassified Pct"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/SchoolProfileDemographicsCoverageResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "disadvantaged_pct",
+          "fsm_pct",
+          "sen_pct",
+          "ehcp_pct",
+          "eal_pct",
+          "first_language_english_pct",
+          "first_language_unclassified_pct",
+          "coverage"
+        ],
+        "title": "SchoolProfileDemographicsLatestResponse"
+      },
+      "SchoolProfileOfstedLatestResponse": {
+        "properties": {
+          "overall_effectiveness_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Effectiveness Code"
+          },
+          "overall_effectiveness_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Effectiveness Label"
+          },
+          "inspection_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Start Date"
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
+          },
+          "is_graded": {
+            "type": "boolean",
+            "title": "Is Graded"
+          },
+          "ungraded_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ungraded Outcome"
+          }
+        },
+        "type": "object",
+        "required": [
+          "overall_effectiveness_code",
+          "overall_effectiveness_label",
+          "inspection_start_date",
+          "publication_date",
+          "is_graded",
+          "ungraded_outcome"
+        ],
+        "title": "SchoolProfileOfstedLatestResponse"
+      },
+      "SchoolProfileResponse": {
+        "properties": {
+          "school": {
+            "$ref": "#/components/schemas/SchoolProfileSchoolResponse"
+          },
+          "demographics_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileDemographicsLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ofsted_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileOfstedLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "school",
+          "demographics_latest",
+          "ofsted_latest"
+        ],
+        "title": "SchoolProfileResponse"
+      },
+      "SchoolProfileSchoolResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "name",
+          "phase",
+          "type",
+          "status",
+          "postcode",
+          "lat",
+          "lng"
+        ],
+        "title": "SchoolProfileSchoolResponse"
       },
       "SchoolSearchItemResponse": {
         "properties": {

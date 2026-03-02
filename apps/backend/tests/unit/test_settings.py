@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from civitas.infrastructure.config.settings import (
     DEFAULT_BRONZE_ROOT,
     DEFAULT_DATABASE_URL,
+    DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
     DEFAULT_POSTCODES_IO_BASE_URL,
     AppSettings,
@@ -26,6 +27,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_BRONZE_ROOT",
         "CIVITAS_GIAS_SOURCE_CSV",
         "CIVITAS_GIAS_SOURCE_ZIP",
+        "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
+        "CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+        "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
         "CIVITAS_HTTP_TIMEOUT_SECONDS",
         "CIVITAS_HTTP_MAX_RETRIES",
         "CIVITAS_HTTP_RETRY_BACKOFF_SECONDS",
@@ -40,6 +44,11 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.bronze_root == DEFAULT_BRONZE_ROOT
     assert settings.pipeline.gias_source_csv is None
     assert settings.pipeline.gias_source_zip is None
+    assert settings.pipeline.dfe_characteristics_source_csv is None
+    assert settings.pipeline.ofsted_latest_source_csv is None
+    assert (
+        settings.pipeline.dfe_characteristics_dataset_id == DEFAULT_DFE_CHARACTERISTICS_DATASET_ID
+    )
     assert settings.http_clients.timeout_seconds == 10.0
     assert settings.http_clients.max_retries == 2
     assert settings.http_clients.retry_backoff_seconds == 0.5
@@ -56,6 +65,15 @@ def test_app_settings_reads_environment_overrides(
     )
     monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
     monkeypatch.setenv("CIVITAS_GIAS_SOURCE_CSV", "  https://example.com/gias.csv  ")
+    monkeypatch.setenv(
+        "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
+        "  https://example.com/dfe_characteristics.csv  ",
+    )
+    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " custom-dataset-id ")
+    monkeypatch.setenv(
+        "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
+        "  https://example.com/ofsted_latest.csv  ",
+    )
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "20")
     monkeypatch.setenv("CIVITAS_HTTP_MAX_RETRIES", "5")
     monkeypatch.setenv("CIVITAS_HTTP_RETRY_BACKOFF_SECONDS", "1.25")
@@ -67,6 +85,12 @@ def test_app_settings_reads_environment_overrides(
     assert settings.database.url == "postgresql+psycopg://override:override@localhost:5432/app"
     assert settings.pipeline.bronze_root == tmp_path / "custom-bronze"
     assert settings.pipeline.gias_source_csv == "https://example.com/gias.csv"
+    assert (
+        settings.pipeline.dfe_characteristics_source_csv
+        == "https://example.com/dfe_characteristics.csv"
+    )
+    assert settings.pipeline.dfe_characteristics_dataset_id == "custom-dataset-id"
+    assert settings.pipeline.ofsted_latest_source_csv == "https://example.com/ofsted_latest.csv"
     assert settings.http_clients.timeout_seconds == 20.0
     assert settings.http_clients.max_retries == 5
     assert settings.http_clients.retry_backoff_seconds == 1.25
@@ -78,6 +102,7 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_DATABASE_URL", "")
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "-1")
     monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "0")
+    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " ")
 
     with pytest.raises(ValidationError):
         AppSettings(_env_file=None)

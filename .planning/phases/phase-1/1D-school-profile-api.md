@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1B-dfe-characteristics-pipeline.md`
@@ -117,6 +117,24 @@ Path params:
 4. Mapping ownership follows backend conventions:
    - infrastructure -> domain/application types,
    - API layer -> wire schema.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added school profile domain/application layers:
+  - `apps/backend/src/civitas/domain/school_profiles/models.py`
+  - `apps/backend/src/civitas/application/school_profiles/{dto.py,use_cases.py,errors.py}`
+  - `apps/backend/src/civitas/application/school_profiles/ports/school_profile_repository.py`
+- Completed: added Postgres repository adapter:
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_profile_repository.py`
+  - joins `schools` + latest `school_demographics_yearly` row + `school_ofsted_latest`.
+- Completed: added API schema + route + dependency wiring for `GET /api/v1/schools/{urn}`:
+  - `apps/backend/src/civitas/api/schemas/school_profiles.py`
+  - `apps/backend/src/civitas/api/{dependencies.py,routes.py}`
+  - `apps/backend/src/civitas/bootstrap/container.py`
+- Completed: added test coverage:
+  - unit: `apps/backend/tests/unit/test_get_school_profile_use_case.py`
+  - API contract: `apps/backend/tests/integration/test_school_profile_api.py`
+  - repository integration: `apps/backend/tests/integration/test_school_profile_repository.py`
 
 ## File-Oriented Implementation Plan
 
