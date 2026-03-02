@@ -81,6 +81,15 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
   }
+
+  /* Hide scrollbars while preserving scroll functionality */
+  .scrollbar-hide {
+    scrollbar-width: none;          /* Firefox */
+    -ms-overflow-style: none;       /* IE/Edge legacy */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;                  /* Chrome, Safari, Opera */
+  }
 }
 
 /* Suppress ambient glow orbs in map-overlay layout */

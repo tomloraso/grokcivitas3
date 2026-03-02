@@ -526,7 +526,7 @@ def _normalize_overall_effectiveness_code(raw_value: str) -> str:
 
 def _parse_optional_date(raw_value: str | None) -> date | None:
     value = (raw_value or "").strip()
-    if not value:
+    if not value or value.upper() == "NULL":
         return None
 
     supported_formats = (

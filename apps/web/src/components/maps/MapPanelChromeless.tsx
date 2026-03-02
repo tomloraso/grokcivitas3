@@ -1,9 +1,12 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 
 import { LoadingSkeleton } from "../ui/LoadingSkeleton";
 import type { MapMarker } from "./MapPanel";
 
 const MapPanelLeaflet = lazy(async () => import("./MapPanelLeaflet"));
+
+/** Geographic center of England/Wales — used as the landing view */
+const UK_DEFAULT_CENTER = { lat: 54.0, lng: -2.5 };
 
 interface MapPanelChromelessProps {
   center: { lat: number; lng: number } | null;
@@ -21,19 +24,13 @@ export function MapPanelChromeless({
   markers,
   className
 }: MapPanelChromelessProps): JSX.Element {
+  const mapCenter = useMemo(() => center ?? UK_DEFAULT_CENTER, [center]);
+
   return (
     <div className={className ?? "h-full w-full"}>
-      {center ? (
-        <Suspense fallback={<LoadingSkeleton lines={5} className="m-4" />}>
-          <MapPanelLeaflet center={center} markers={markers} />
-        </Suspense>
-      ) : (
-        <div className="grid h-full place-items-center bg-surface/80 p-6 text-center">
-          <p className="max-w-sm text-sm text-secondary">
-            Search results will appear here once a postcode is resolved.
-          </p>
-        </div>
-      )}
+      <Suspense fallback={<LoadingSkeleton lines={5} className="m-4" />}>
+        <MapPanelLeaflet center={mapCenter} markers={markers} />
+      </Suspense>
     </div>
   );
 }

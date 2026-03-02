@@ -114,8 +114,14 @@ describe("App", () => {
     expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
   });
 
-  it("renders site footer on all routes", async () => {
+  it("hides site footer on the search/map page", async () => {
     await renderAppAtRoute("/");
+
+    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
+  });
+
+  it("renders site footer on non-map routes", async () => {
+    await renderAppAtRoute("/schools/100001");
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByText(/Civitas. All data sourced/)).toBeInTheDocument();

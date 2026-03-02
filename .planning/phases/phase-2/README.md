@@ -108,13 +108,26 @@ Phase 2 is split into eight substantial deliverables:
 
 ## Progress (2026-03-02)
 
-- 2A Source contract gate: planned.
+- 2A Source contract gate: completed.
 - 2B Ofsted timeline pipeline: planned.
 - 2C ONS IMD pipeline: planned.
 - 2D Police crime context pipeline: planned.
 - 2E School profile API extensions: planned.
 - 2F Web profile area context enhancements: planned.
 - 2G Phase 2 quality gates: planned.
+
+## Tracking Log
+
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 2A source contract gate implementation:
+    - added `tools/scripts/verify_phase2_sources.py`,
+    - added `apps/backend/tests/unit/test_verify_phase2_sources.py`.
+  - Revalidated focused tests:
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_verify_phase2_sources.py -q`
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_verify_phase1_sources.py apps/backend/tests/unit/test_verify_phase2_sources.py -q`
+  - Revalidated gate command:
+    - `uv run --project apps/backend python tools/scripts/verify_phase2_sources.py`
+  - Result: Phase 2A gate command passed with live endpoint checks.
 
 ## Phase 2 Definition Of Done
 

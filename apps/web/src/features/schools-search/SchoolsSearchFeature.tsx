@@ -22,7 +22,7 @@ export function SchoolsSearchFeature(): JSX.Element {
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-secondary">
             Schools Discovery
           </p>
-          <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">Find schools near you</h1>
+          <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">Find schools near you</h1>
           <p className="mt-3 text-sm text-secondary sm:text-base">
             Search by UK postcode to explore nearby schools in list and map view.
           </p>
@@ -43,6 +43,15 @@ export function SchoolsSearchFeature(): JSX.Element {
         aria-label="School results"
         className="space-y-4 border-t border-border-subtle/70 px-4 pb-5 pt-5 sm:px-5"
       >
+        {state.status === "success" && state.result ? (
+          <p className="text-sm text-secondary">
+            <span className="font-semibold text-primary">{state.result.count}</span>{" "}
+            {state.result.count === 1 ? "school" : "schools"} within{" "}
+            <span className="font-semibold text-primary">{state.result.query.radius_miles} miles</span>{" "}
+            of{" "}
+            <span className="font-mono font-semibold text-primary">{state.result.query.postcode}</span>
+          </p>
+        ) : null}
         <SchoolsList
           status={state.status}
           schools={state.result?.schools ?? []}

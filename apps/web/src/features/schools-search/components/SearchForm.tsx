@@ -42,7 +42,7 @@ export function SearchForm({
     <Panel>
       <form
         aria-label="Schools search form"
-        className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end"
+        className="flex flex-col gap-4"
         onSubmit={handleSubmit}
       >
         <Field
@@ -63,19 +63,21 @@ export function SearchForm({
             placeholder="SW1A 1AA"
           />
         </Field>
-        <Field label="Radius" htmlFor="radius-select">
-          <Select
-            id="radius-select"
-            name="radius"
-            ariaLabel="Search radius"
-            value={radius}
-            onValueChange={onRadiusChange}
-            options={RADIUS_OPTIONS}
-          />
-        </Field>
-        <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
-          {isSubmitting ? "Searching..." : "Search schools"}
-        </Button>
+        <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+          <Field label="Radius" htmlFor="radius-select">
+            <Select
+              id="radius-select"
+              name="radius"
+              ariaLabel="Search radius"
+              value={radius}
+              onValueChange={onRadiusChange}
+              options={RADIUS_OPTIONS}
+            />
+          </Field>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Searching..." : "Search schools"}
+          </Button>
+        </div>
       </form>
     </Panel>
   );

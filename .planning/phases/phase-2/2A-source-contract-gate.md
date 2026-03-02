@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/README.md`
@@ -150,6 +150,22 @@ No implementation work for `2B`, `2C`, `2D`, or `2E` may start until this gate p
   - `result.lsoa` (label),
   - `result.latitude`,
   - `result.longitude`.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added executable Phase 2 source gate script:
+  - `tools/scripts/verify_phase2_sources.py`
+- Completed: implemented contract checks for:
+  - Ofsted landing + `all_inspections` + `latest_inspections` + 2015-2019 baseline assets.
+  - ONS IoD2025 and IoD2019 landing/file endpoints with required header verification.
+  - Police archive index + latest monthly archive resolution + schema reference + API endpoints + limits page checks.
+  - Postcodes.io lookup fields required for LSOA joins.
+- Completed: added unit coverage for extractor/parser logic and gate pass/fail behavior:
+  - `apps/backend/tests/unit/test_verify_phase2_sources.py`
+- Completed: optimized police archive verification path to avoid downloading full multi-GB archives by validating status with bounded read.
+- Completed: executed gate command against live endpoints:
+  - `uv run --project apps/backend python tools/scripts/verify_phase2_sources.py`
+  - result: `PASS: Phase 2 source contracts verified`
 
 ## Required Metric Coverage Policy
 

@@ -26,13 +26,13 @@ export function MapOverlayLayout({
       className={cn("relative h-[calc(100vh-3.5rem)] overflow-hidden", className)}
     >
       {/* Full-bleed map background */}
-      <section aria-label="Map view" className="absolute inset-0">
+      <section aria-label="Map view" className="absolute inset-0 z-0">
         {map}
       </section>
 
       {/* Overlay panel slot */}
       <div className="pointer-events-none absolute inset-0 z-base p-4 sm:p-6">
-        <div className="pointer-events-auto h-full w-[min(420px,100%)] overflow-y-auto rounded-xl panel-surface-neutral shadow-lg">
+        <div className="pointer-events-auto h-full w-[min(420px,100%)] overflow-y-auto rounded-xl panel-surface-neutral shadow-lg scrollbar-hide">
           {children}
         </div>
       </div>

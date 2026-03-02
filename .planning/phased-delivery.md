@@ -133,6 +133,45 @@
 
 ---
 
+## Phase UX - Visual quality + interaction uplift (web cross-cutting)
+
+**Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys.
+
+### Detailed design
+
+- `.planning/phases/phase-ux/README.md`
+- `.planning/phases/phase-ux/UX-1-maplibre-migration-uk-bounds-landing-state.md`
+- `.planning/phases/phase-ux/UX-2-map-interaction-depth.md`
+- `.planning/phases/phase-ux/UX-3-overlay-panel-refinement.md`
+- `.planning/phases/phase-ux/UX-4-typography-spacing-visual-hierarchy.md`
+- `.planning/phases/phase-ux/UX-5-transitions-motion.md`
+- `.planning/phases/phase-ux/UX-6-navigation-site-chrome-refinement.md`
+- `.planning/phases/phase-ux/UX-7-loading-empty-state-polish.md`
+
+### Deliverables
+
+1. **UX-1: MapLibre migration + UK bounds** - move from raster Leaflet stack to UK-scoped vector rendering with custom style control.
+2. **UX-2: Map interaction depth** - fly-to, radius overlays, clustering, and list-marker interaction linking.
+3. **UX-3: Overlay panel refinement** - desktop collapse, mobile bottom-sheet, hidden-scrollbar behavior, and scroll affordances.
+4. **UX-4: Typography and hierarchy** - editorial spacing and data-first visual hierarchy on search/profile routes.
+5. **UX-5: Transitions and motion** - route and interaction continuity with reduced-motion parity.
+6. **UX-6: Navigation chrome refinement** - map-first header/footer behavior and contextual breadcrumb/search state.
+7. **UX-7: Loading/empty/error polish** - map-aware contextual states preserving user orientation.
+
+### Exit criteria
+
+- Search route renders UK-bounded vector map and map/list interactions feel connected.
+- Overlay, typography, motion, and chrome refinements produce a polished map-first UX.
+- Loading, empty, and error states preserve map context and support recovery.
+- Existing quality rails remain green (`make lint`, `make test`, web budgets, Lighthouse, accessibility).
+
+### Dependencies
+
+- Phase 0 and Phase 1 web baseline.
+- Can run in parallel with Phase 2 backend work; coordinate with Phase 2 web section (`2F`) to keep profile styling aligned.
+
+---
+
 ## Phase 3 - Compare experience
 
 **Goal:** Deliver side-by-side school comparison with robust metric alignment and missing-data handling.
@@ -209,6 +248,7 @@
 | 0 | Data foundation + GIAS | Search by postcode with production-grade web foundations and schools on map | Foundation / largest setup effort |
 | 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
+| UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
 | 5 | Post-MVP extensions | Additional data and operational tooling | Ongoing |

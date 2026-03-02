@@ -11,10 +11,16 @@ const NAV_LINKS = [{ label: "Search", href: paths.home }] as const;
 export function SiteHeader(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const isMapPage = location.pathname === paths.home;
 
   return (
     <header
-      className="sticky top-0 z-nav border-b border-border-subtle/60 bg-canvas/80 backdrop-blur-xl"
+      className={cn(
+        "sticky top-0 z-nav backdrop-blur-xl transition-colors duration-base",
+        isMapPage
+          ? "border-b border-transparent bg-transparent"
+          : "border-b border-border-subtle/60 bg-canvas/80"
+      )}
       role="banner"
     >
       <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between px-4 sm:px-6 lg:px-8">
