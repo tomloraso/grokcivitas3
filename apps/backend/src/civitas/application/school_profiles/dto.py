@@ -45,7 +45,71 @@ class SchoolOfstedLatestDto:
 
 
 @dataclass(frozen=True)
+class SchoolOfstedTimelineEventDto:
+    inspection_number: str
+    inspection_start_date: date
+    publication_date: date | None
+    inspection_type: str | None
+    overall_effectiveness_label: str | None
+    headline_outcome_text: str | None
+    category_of_concern: str | None
+
+
+@dataclass(frozen=True)
+class SchoolOfstedTimelineCoverageDto:
+    is_partial_history: bool
+    earliest_event_date: date | None
+    latest_event_date: date | None
+    events_count: int
+
+
+@dataclass(frozen=True)
+class SchoolOfstedTimelineDto:
+    events: tuple[SchoolOfstedTimelineEventDto, ...]
+    coverage: SchoolOfstedTimelineCoverageDto
+
+
+@dataclass(frozen=True)
+class SchoolAreaDeprivationDto:
+    lsoa_code: str
+    imd_decile: int
+    idaci_score: float
+    idaci_decile: int
+    source_release: str
+
+
+@dataclass(frozen=True)
+class SchoolAreaCrimeCategoryDto:
+    category: str
+    incident_count: int
+
+
+@dataclass(frozen=True)
+class SchoolAreaCrimeDto:
+    radius_miles: float
+    latest_month: str
+    total_incidents: int
+    categories: tuple[SchoolAreaCrimeCategoryDto, ...]
+
+
+@dataclass(frozen=True)
+class SchoolAreaContextCoverageDto:
+    has_deprivation: bool
+    has_crime: bool
+    crime_months_available: int
+
+
+@dataclass(frozen=True)
+class SchoolAreaContextDto:
+    deprivation: SchoolAreaDeprivationDto | None
+    crime: SchoolAreaCrimeDto | None
+    coverage: SchoolAreaContextCoverageDto
+
+
+@dataclass(frozen=True)
 class SchoolProfileResponseDto:
     school: SchoolProfileSchoolDto
     demographics_latest: SchoolDemographicsLatestDto | None
     ofsted_latest: SchoolOfstedLatestDto | None
+    ofsted_timeline: SchoolOfstedTimelineDto | None
+    area_context: SchoolAreaContextDto | None

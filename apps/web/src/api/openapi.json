@@ -276,6 +276,145 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "SchoolProfileAreaContextCoverageResponse": {
+        "properties": {
+          "has_deprivation": {
+            "type": "boolean",
+            "title": "Has Deprivation"
+          },
+          "has_crime": {
+            "type": "boolean",
+            "title": "Has Crime"
+          },
+          "crime_months_available": {
+            "type": "integer",
+            "title": "Crime Months Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "has_deprivation",
+          "has_crime",
+          "crime_months_available"
+        ],
+        "title": "SchoolProfileAreaContextCoverageResponse"
+      },
+      "SchoolProfileAreaContextResponse": {
+        "properties": {
+          "deprivation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileAreaDeprivationResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "crime": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileAreaCrimeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/SchoolProfileAreaContextCoverageResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "deprivation",
+          "crime",
+          "coverage"
+        ],
+        "title": "SchoolProfileAreaContextResponse"
+      },
+      "SchoolProfileAreaCrimeCategoryResponse": {
+        "properties": {
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "incident_count": {
+            "type": "integer",
+            "title": "Incident Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category",
+          "incident_count"
+        ],
+        "title": "SchoolProfileAreaCrimeCategoryResponse"
+      },
+      "SchoolProfileAreaCrimeResponse": {
+        "properties": {
+          "radius_miles": {
+            "type": "number",
+            "title": "Radius Miles"
+          },
+          "latest_month": {
+            "type": "string",
+            "title": "Latest Month"
+          },
+          "total_incidents": {
+            "type": "integer",
+            "title": "Total Incidents"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileAreaCrimeCategoryResponse"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "radius_miles",
+          "latest_month",
+          "total_incidents",
+          "categories"
+        ],
+        "title": "SchoolProfileAreaCrimeResponse"
+      },
+      "SchoolProfileAreaDeprivationResponse": {
+        "properties": {
+          "lsoa_code": {
+            "type": "string",
+            "title": "Lsoa Code"
+          },
+          "imd_decile": {
+            "type": "integer",
+            "title": "Imd Decile"
+          },
+          "idaci_score": {
+            "type": "number",
+            "title": "Idaci Score"
+          },
+          "idaci_decile": {
+            "type": "integer",
+            "title": "Idaci Decile"
+          },
+          "source_release": {
+            "type": "string",
+            "title": "Source Release"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lsoa_code",
+          "imd_decile",
+          "idaci_score",
+          "idaci_decile",
+          "source_release"
+        ],
+        "title": "SchoolProfileAreaDeprivationResponse"
+      },
       "SchoolProfileDemographicsCoverageResponse": {
         "properties": {
           "fsm_supported": {
@@ -475,6 +614,150 @@
         ],
         "title": "SchoolProfileOfstedLatestResponse"
       },
+      "SchoolProfileOfstedTimelineCoverageResponse": {
+        "properties": {
+          "is_partial_history": {
+            "type": "boolean",
+            "title": "Is Partial History"
+          },
+          "earliest_event_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Earliest Event Date"
+          },
+          "latest_event_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Event Date"
+          },
+          "events_count": {
+            "type": "integer",
+            "title": "Events Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_partial_history",
+          "earliest_event_date",
+          "latest_event_date",
+          "events_count"
+        ],
+        "title": "SchoolProfileOfstedTimelineCoverageResponse"
+      },
+      "SchoolProfileOfstedTimelineEventResponse": {
+        "properties": {
+          "inspection_number": {
+            "type": "string",
+            "title": "Inspection Number"
+          },
+          "inspection_start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Inspection Start Date"
+          },
+          "publication_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publication Date"
+          },
+          "inspection_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inspection Type"
+          },
+          "overall_effectiveness_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Effectiveness Label"
+          },
+          "headline_outcome_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headline Outcome Text"
+          },
+          "category_of_concern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Of Concern"
+          }
+        },
+        "type": "object",
+        "required": [
+          "inspection_number",
+          "inspection_start_date",
+          "publication_date",
+          "inspection_type",
+          "overall_effectiveness_label",
+          "headline_outcome_text",
+          "category_of_concern"
+        ],
+        "title": "SchoolProfileOfstedTimelineEventResponse"
+      },
+      "SchoolProfileOfstedTimelineResponse": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileOfstedTimelineEventResponse"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/SchoolProfileOfstedTimelineCoverageResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "events",
+          "coverage"
+        ],
+        "title": "SchoolProfileOfstedTimelineResponse"
+      },
       "SchoolProfileResponse": {
         "properties": {
           "school": {
@@ -499,13 +782,21 @@
                 "type": "null"
               }
             ]
+          },
+          "ofsted_timeline": {
+            "$ref": "#/components/schemas/SchoolProfileOfstedTimelineResponse"
+          },
+          "area_context": {
+            "$ref": "#/components/schemas/SchoolProfileAreaContextResponse"
           }
         },
         "type": "object",
         "required": [
           "school",
           "demographics_latest",
-          "ofsted_latest"
+          "ofsted_latest",
+          "ofsted_timeline",
+          "area_context"
         ],
         "title": "SchoolProfileResponse"
       },

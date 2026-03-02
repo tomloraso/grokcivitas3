@@ -99,6 +99,52 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** SchoolProfileAreaContextCoverageResponse */
+        SchoolProfileAreaContextCoverageResponse: {
+            /** Has Deprivation */
+            has_deprivation: boolean;
+            /** Has Crime */
+            has_crime: boolean;
+            /** Crime Months Available */
+            crime_months_available: number;
+        };
+        /** SchoolProfileAreaContextResponse */
+        SchoolProfileAreaContextResponse: {
+            deprivation: components["schemas"]["SchoolProfileAreaDeprivationResponse"] | null;
+            crime: components["schemas"]["SchoolProfileAreaCrimeResponse"] | null;
+            coverage: components["schemas"]["SchoolProfileAreaContextCoverageResponse"];
+        };
+        /** SchoolProfileAreaCrimeCategoryResponse */
+        SchoolProfileAreaCrimeCategoryResponse: {
+            /** Category */
+            category: string;
+            /** Incident Count */
+            incident_count: number;
+        };
+        /** SchoolProfileAreaCrimeResponse */
+        SchoolProfileAreaCrimeResponse: {
+            /** Radius Miles */
+            radius_miles: number;
+            /** Latest Month */
+            latest_month: string;
+            /** Total Incidents */
+            total_incidents: number;
+            /** Categories */
+            categories: components["schemas"]["SchoolProfileAreaCrimeCategoryResponse"][];
+        };
+        /** SchoolProfileAreaDeprivationResponse */
+        SchoolProfileAreaDeprivationResponse: {
+            /** Lsoa Code */
+            lsoa_code: string;
+            /** Imd Decile */
+            imd_decile: number;
+            /** Idaci Score */
+            idaci_score: number;
+            /** Idaci Decile */
+            idaci_decile: number;
+            /** Source Release */
+            source_release: string;
+        };
         /** SchoolProfileDemographicsCoverageResponse */
         SchoolProfileDemographicsCoverageResponse: {
             /** Fsm Supported */
@@ -143,11 +189,50 @@ export interface components {
             /** Ungraded Outcome */
             ungraded_outcome: string | null;
         };
+        /** SchoolProfileOfstedTimelineCoverageResponse */
+        SchoolProfileOfstedTimelineCoverageResponse: {
+            /** Is Partial History */
+            is_partial_history: boolean;
+            /** Earliest Event Date */
+            earliest_event_date: string | null;
+            /** Latest Event Date */
+            latest_event_date: string | null;
+            /** Events Count */
+            events_count: number;
+        };
+        /** SchoolProfileOfstedTimelineEventResponse */
+        SchoolProfileOfstedTimelineEventResponse: {
+            /** Inspection Number */
+            inspection_number: string;
+            /**
+             * Inspection Start Date
+             * Format: date
+             */
+            inspection_start_date: string;
+            /** Publication Date */
+            publication_date: string | null;
+            /** Inspection Type */
+            inspection_type: string | null;
+            /** Overall Effectiveness Label */
+            overall_effectiveness_label: string | null;
+            /** Headline Outcome Text */
+            headline_outcome_text: string | null;
+            /** Category Of Concern */
+            category_of_concern: string | null;
+        };
+        /** SchoolProfileOfstedTimelineResponse */
+        SchoolProfileOfstedTimelineResponse: {
+            /** Events */
+            events: components["schemas"]["SchoolProfileOfstedTimelineEventResponse"][];
+            coverage: components["schemas"]["SchoolProfileOfstedTimelineCoverageResponse"];
+        };
         /** SchoolProfileResponse */
         SchoolProfileResponse: {
             school: components["schemas"]["SchoolProfileSchoolResponse"];
             demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
+            ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
+            area_context: components["schemas"]["SchoolProfileAreaContextResponse"];
         };
         /** SchoolProfileSchoolResponse */
         SchoolProfileSchoolResponse: {

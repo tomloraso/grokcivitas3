@@ -112,7 +112,7 @@ Phase 2 is split into eight substantial deliverables:
 - 2B Ofsted timeline pipeline: completed.
 - 2C ONS IMD pipeline: completed.
 - 2D Police crime context pipeline: completed.
-- 2E School profile API extensions: planned.
+- 2E School profile API extensions: completed.
 - 2F Web profile area context enhancements: planned.
 - 2G Phase 2 quality gates: planned.
 
@@ -173,6 +173,19 @@ Phase 2 is split into eight substantial deliverables:
     - `make lint`
     - `make test`
   - Result: end-to-end gates green with deterministic Phase 2D coverage.
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 2E School profile API extensions:
+    - extended school-profile domain/application models and DTO mapping for `ofsted_timeline` and `area_context`,
+    - extended Postgres repository composition to query `ofsted_inspections`, `area_deprivation`, and `area_crime_context`,
+    - extended API schema/route contract for `GET /api/v1/schools/{urn}` with backward-compatible Phase 1 fields.
+  - Synced contracts:
+    - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+    - `cd apps/web && npm run generate:types`
+  - Revalidated focused and repository gates:
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_profile_use_case.py apps/backend/tests/integration/test_school_profile_repository.py apps/backend/tests/integration/test_school_profile_api.py -q`
+    - `make lint`
+    - `make test`
+  - Result: Phase 2E implementation complete and gate-verified.
 
 ## Phase 2 Definition Of Done
 

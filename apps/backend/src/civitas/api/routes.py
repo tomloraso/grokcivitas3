@@ -10,9 +10,17 @@ from civitas.api.dependencies import (
     get_search_schools_by_postcode_use_case,
 )
 from civitas.api.schemas.school_profiles import (
+    SchoolProfileAreaContextCoverageResponse,
+    SchoolProfileAreaContextResponse,
+    SchoolProfileAreaCrimeCategoryResponse,
+    SchoolProfileAreaCrimeResponse,
+    SchoolProfileAreaDeprivationResponse,
     SchoolProfileDemographicsCoverageResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileOfstedLatestResponse,
+    SchoolProfileOfstedTimelineCoverageResponse,
+    SchoolProfileOfstedTimelineEventResponse,
+    SchoolProfileOfstedTimelineResponse,
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
 )
@@ -171,6 +179,77 @@ def get_school_profile(
             ungraded_outcome=result.ofsted_latest.ungraded_outcome,
         )
 
+    ofsted_timeline = SchoolProfileOfstedTimelineResponse(
+        events=[
+            SchoolProfileOfstedTimelineEventResponse(
+                inspection_number=event.inspection_number,
+                inspection_start_date=event.inspection_start_date,
+                publication_date=event.publication_date,
+                inspection_type=event.inspection_type,
+                overall_effectiveness_label=event.overall_effectiveness_label,
+                headline_outcome_text=event.headline_outcome_text,
+                category_of_concern=event.category_of_concern,
+            )
+            for event in result.ofsted_timeline.events
+        ]
+        if result.ofsted_timeline is not None
+        else [],
+        coverage=SchoolProfileOfstedTimelineCoverageResponse(
+            is_partial_history=result.ofsted_timeline.coverage.is_partial_history,
+            earliest_event_date=result.ofsted_timeline.coverage.earliest_event_date,
+            latest_event_date=result.ofsted_timeline.coverage.latest_event_date,
+            events_count=result.ofsted_timeline.coverage.events_count,
+        )
+        if result.ofsted_timeline is not None
+        else SchoolProfileOfstedTimelineCoverageResponse(
+            is_partial_history=True,
+            earliest_event_date=None,
+            latest_event_date=None,
+            events_count=0,
+        ),
+    )
+
+    deprivation = None
+    if result.area_context is not None and result.area_context.deprivation is not None:
+        deprivation = SchoolProfileAreaDeprivationResponse(
+            lsoa_code=result.area_context.deprivation.lsoa_code,
+            imd_decile=result.area_context.deprivation.imd_decile,
+            idaci_score=result.area_context.deprivation.idaci_score,
+            idaci_decile=result.area_context.deprivation.idaci_decile,
+            source_release=result.area_context.deprivation.source_release,
+        )
+
+    crime = None
+    if result.area_context is not None and result.area_context.crime is not None:
+        crime = SchoolProfileAreaCrimeResponse(
+            radius_miles=result.area_context.crime.radius_miles,
+            latest_month=result.area_context.crime.latest_month,
+            total_incidents=result.area_context.crime.total_incidents,
+            categories=[
+                SchoolProfileAreaCrimeCategoryResponse(
+                    category=category.category,
+                    incident_count=category.incident_count,
+                )
+                for category in result.area_context.crime.categories
+            ],
+        )
+
+    area_context = SchoolProfileAreaContextResponse(
+        deprivation=deprivation,
+        crime=crime,
+        coverage=SchoolProfileAreaContextCoverageResponse(
+            has_deprivation=result.area_context.coverage.has_deprivation,
+            has_crime=result.area_context.coverage.has_crime,
+            crime_months_available=result.area_context.coverage.crime_months_available,
+        )
+        if result.area_context is not None
+        else SchoolProfileAreaContextCoverageResponse(
+            has_deprivation=False,
+            has_crime=False,
+            crime_months_available=0,
+        ),
+    )
+
     return SchoolProfileResponse(
         school=SchoolProfileSchoolResponse(
             urn=result.school.urn,
@@ -184,6 +263,8 @@ def get_school_profile(
         ),
         demographics_latest=demographics_latest,
         ofsted_latest=ofsted_latest,
+        ofsted_timeline=ofsted_timeline,
+        area_context=area_context,
     )
 
 

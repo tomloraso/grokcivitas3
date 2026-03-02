@@ -7,9 +7,17 @@ from fastapi.testclient import TestClient
 from civitas.api.dependencies import get_school_profile_use_case
 from civitas.api.main import app
 from civitas.application.school_profiles.dto import (
+    SchoolAreaContextCoverageDto,
+    SchoolAreaContextDto,
+    SchoolAreaCrimeCategoryDto,
+    SchoolAreaCrimeDto,
+    SchoolAreaDeprivationDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsLatestDto,
     SchoolOfstedLatestDto,
+    SchoolOfstedTimelineCoverageDto,
+    SchoolOfstedTimelineDto,
+    SchoolOfstedTimelineEventDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
 )
@@ -82,6 +90,50 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 is_graded=True,
                 ungraded_outcome=None,
             ),
+            ofsted_timeline=SchoolOfstedTimelineDto(
+                events=(
+                    SchoolOfstedTimelineEventDto(
+                        inspection_number="10426709",
+                        inspection_start_date=date(2025, 11, 11),
+                        publication_date=date(2026, 1, 11),
+                        inspection_type="S5 Inspection",
+                        overall_effectiveness_label=None,
+                        headline_outcome_text="Strong standard",
+                        category_of_concern=None,
+                    ),
+                ),
+                coverage=SchoolOfstedTimelineCoverageDto(
+                    is_partial_history=False,
+                    earliest_event_date=date(2015, 9, 14),
+                    latest_event_date=date(2026, 1, 15),
+                    events_count=9,
+                ),
+            ),
+            area_context=SchoolAreaContextDto(
+                deprivation=SchoolAreaDeprivationDto(
+                    lsoa_code="E01004736",
+                    imd_decile=3,
+                    idaci_score=0.241,
+                    idaci_decile=2,
+                    source_release="IoD2025",
+                ),
+                crime=SchoolAreaCrimeDto(
+                    radius_miles=1.0,
+                    latest_month="2026-01",
+                    total_incidents=486,
+                    categories=(
+                        SchoolAreaCrimeCategoryDto(
+                            category="violent-crime",
+                            incident_count=132,
+                        ),
+                    ),
+                ),
+                coverage=SchoolAreaContextCoverageDto(
+                    has_deprivation=True,
+                    has_crime=True,
+                    crime_months_available=12,
+                ),
+            ),
         )
     )
     app.dependency_overrides[get_school_profile_use_case] = lambda: fake_use_case
@@ -123,6 +175,50 @@ def test_get_school_profile_returns_expected_contract() -> None:
             "is_graded": True,
             "ungraded_outcome": None,
         },
+        "ofsted_timeline": {
+            "events": [
+                {
+                    "inspection_number": "10426709",
+                    "inspection_start_date": "2025-11-11",
+                    "publication_date": "2026-01-11",
+                    "inspection_type": "S5 Inspection",
+                    "overall_effectiveness_label": None,
+                    "headline_outcome_text": "Strong standard",
+                    "category_of_concern": None,
+                }
+            ],
+            "coverage": {
+                "is_partial_history": False,
+                "earliest_event_date": "2015-09-14",
+                "latest_event_date": "2026-01-15",
+                "events_count": 9,
+            },
+        },
+        "area_context": {
+            "deprivation": {
+                "lsoa_code": "E01004736",
+                "imd_decile": 3,
+                "idaci_score": 0.241,
+                "idaci_decile": 2,
+                "source_release": "IoD2025",
+            },
+            "crime": {
+                "radius_miles": 1.0,
+                "latest_month": "2026-01",
+                "total_incidents": 486,
+                "categories": [
+                    {
+                        "category": "violent-crime",
+                        "incident_count": 132,
+                    }
+                ],
+            },
+            "coverage": {
+                "has_deprivation": True,
+                "has_crime": True,
+                "crime_months_available": 12,
+            },
+        },
     }
     assert fake_use_case.calls == ["123456"]
 
@@ -142,6 +238,8 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             ),
             demographics_latest=None,
             ofsted_latest=None,
+            ofsted_timeline=None,
+            area_context=None,
         )
     )
     app.dependency_overrides[get_school_profile_use_case] = lambda: fake_use_case
@@ -151,6 +249,24 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert response.status_code == 200
     assert response.json()["demographics_latest"] is None
     assert response.json()["ofsted_latest"] is None
+    assert response.json()["ofsted_timeline"] == {
+        "events": [],
+        "coverage": {
+            "is_partial_history": True,
+            "earliest_event_date": None,
+            "latest_event_date": None,
+            "events_count": 0,
+        },
+    }
+    assert response.json()["area_context"] == {
+        "deprivation": None,
+        "crime": None,
+        "coverage": {
+            "has_deprivation": False,
+            "has_crime": False,
+            "crime_months_available": 0,
+        },
+    }
 
 
 def test_get_school_profile_returns_404_for_unknown_urn() -> None:

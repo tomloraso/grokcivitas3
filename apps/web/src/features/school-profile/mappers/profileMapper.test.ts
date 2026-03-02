@@ -36,6 +36,24 @@ const BASE_PROFILE: SchoolProfileResponse = {
     publication_date: "2025-11-15",
     is_graded: true,
     ungraded_outcome: null
+  },
+  ofsted_timeline: {
+    events: [],
+    coverage: {
+      is_partial_history: true,
+      earliest_event_date: null,
+      latest_event_date: null,
+      events_count: 0
+    }
+  },
+  area_context: {
+    deprivation: null,
+    crime: null,
+    coverage: {
+      has_deprivation: false,
+      has_crime: false,
+      crime_months_available: 0
+    }
   }
 };
 
@@ -251,7 +269,25 @@ describe("mapProfileToVM", () => {
         lng: -0.1
       },
       demographics_latest: null,
-      ofsted_latest: null
+      ofsted_latest: null,
+      ofsted_timeline: {
+        events: [],
+        coverage: {
+          is_partial_history: true,
+          earliest_event_date: null,
+          latest_event_date: null,
+          events_count: 0
+        }
+      },
+      area_context: {
+        deprivation: null,
+        crime: null,
+        coverage: {
+          has_deprivation: false,
+          has_crime: false,
+          crime_months_available: 0
+        }
+      }
     };
     const vm = mapProfileToVM(sparse, null);
     expect(vm.school.phase).toBe("Unknown");

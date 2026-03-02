@@ -52,6 +52,24 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
     publication_date: "2025-11-15",
     is_graded: true,
     ungraded_outcome: null
+  },
+  ofsted_timeline: {
+    events: [],
+    coverage: {
+      is_partial_history: true,
+      earliest_event_date: null,
+      latest_event_date: null,
+      events_count: 0
+    }
+  },
+  area_context: {
+    deprivation: null,
+    crime: null,
+    coverage: {
+      has_deprivation: false,
+      has_crime: false,
+      crime_months_available: 0
+    }
   }
 };
 

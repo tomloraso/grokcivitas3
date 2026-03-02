@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/2B-ofsted-timeline-pipeline.md`
@@ -108,6 +108,30 @@ Extend the existing school profile endpoint to include:
 4. Area deprivation uses verified IDACI fields as child-poverty context proxy.
 5. Missing context data is represented explicitly via `coverage` flags and nullable sections.
 6. Crime summary defaults to latest available month while preserving category breakdown.
+7. Timeline coverage is marked `is_partial_history=true` when no events exist or earliest event is after the verified historical baseline date (`2015-09-14`).
+8. Current deprivation join path uses cached postcode LSOA name (`postcode_cache.lsoa`) matched to `area_deprivation.lsoa_name` because cached LSOA code storage is not yet available in Phase 2E.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: extended school profile domain/application models for Phase 2 sections:
+  - `apps/backend/src/civitas/domain/school_profiles/models.py`
+  - `apps/backend/src/civitas/application/school_profiles/{dto.py,use_cases.py}`
+- Completed: extended Postgres profile repository composition:
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_profile_repository.py`
+  - added timeline query (`ofsted_inspections`), deprivation lookup (`postcode_cache` -> `area_deprivation`), and latest-month crime summary (`area_crime_context`).
+- Completed: extended API wire schemas and route mapping:
+  - `apps/backend/src/civitas/api/schemas/school_profiles.py`
+  - `apps/backend/src/civitas/api/routes.py`
+- Completed: extended backend tests:
+  - `apps/backend/tests/unit/test_get_school_profile_use_case.py`
+  - `apps/backend/tests/integration/test_school_profile_repository.py`
+  - `apps/backend/tests/integration/test_school_profile_api.py`
+- Completed: synced contracts and regenerated frontend API types:
+  - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+  - `cd apps/web && npm run generate:types`
+- Completed: revalidated repository quality gates after 2E implementation:
+  - `make lint`
+  - `make test`
 
 ## Application And Infrastructure Design
 

@@ -82,6 +82,82 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS postcode_cache (
+                    postcode text PRIMARY KEY,
+                    lat double precision NOT NULL,
+                    lng double precision NOT NULL,
+                    lsoa text NULL,
+                    admin_district text NULL,
+                    cached_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS ofsted_inspections (
+                    inspection_number text PRIMARY KEY,
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    inspection_start_date date NOT NULL,
+                    inspection_end_date date NULL,
+                    publication_date date NULL,
+                    inspection_type text NULL,
+                    inspection_type_grouping text NULL,
+                    event_type_grouping text NULL,
+                    overall_effectiveness_code text NULL,
+                    overall_effectiveness_label text NULL,
+                    headline_outcome_text text NULL,
+                    category_of_concern text NULL,
+                    source_schema_version text NOT NULL,
+                    source_asset_url text NOT NULL,
+                    source_asset_month text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS area_deprivation (
+                    lsoa_code text PRIMARY KEY,
+                    lsoa_name text NOT NULL,
+                    local_authority_district_code text NULL,
+                    local_authority_district_name text NULL,
+                    imd_score double precision NOT NULL,
+                    imd_rank integer NOT NULL,
+                    imd_decile integer NOT NULL,
+                    idaci_score double precision NOT NULL,
+                    idaci_rank integer NOT NULL,
+                    idaci_decile integer NOT NULL,
+                    source_release text NOT NULL,
+                    lsoa_vintage text NOT NULL,
+                    source_file_url text NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS area_crime_context (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    month date NOT NULL,
+                    crime_category text NOT NULL,
+                    incident_count integer NOT NULL,
+                    radius_meters double precision NOT NULL,
+                    source_month text NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, month, crime_category, radius_meters)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_demographics_yearly (
                     urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
                     academic_year text NOT NULL,
@@ -154,6 +230,31 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO postcode_cache (
+                    postcode,
+                    lat,
+                    lng,
+                    lsoa,
+                    admin_district
+                ) VALUES (
+                    'SW1A 1AA',
+                    51.5010,
+                    -0.1416,
+                    'Westminster 018C',
+                    'Westminster'
+                )
+                ON CONFLICT (postcode) DO UPDATE SET
+                    lat = EXCLUDED.lat,
+                    lng = EXCLUDED.lng,
+                    lsoa = EXCLUDED.lsoa,
+                    admin_district = EXCLUDED.admin_district,
+                    cached_at = timezone('utc', now())
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_demographics_yearly (
                     urn,
                     academic_year,
@@ -211,6 +312,57 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO ofsted_inspections (
+                    inspection_number,
+                    urn,
+                    inspection_start_date,
+                    publication_date,
+                    inspection_type,
+                    overall_effectiveness_label,
+                    headline_outcome_text,
+                    category_of_concern,
+                    source_schema_version,
+                    source_asset_url,
+                    source_asset_month
+                ) VALUES
+                (
+                    '10420001',
+                    '910001',
+                    '2015-09-14',
+                    '2015-10-10',
+                    'S5 Inspection',
+                    'Good',
+                    NULL,
+                    NULL,
+                    'all_inspections_historical_2015_2019',
+                    'https://assets.publishing.service.gov.uk/media/example/historical.csv',
+                    '2019-08'
+                ),
+                (
+                    '10426709',
+                    '910001',
+                    '2025-11-11',
+                    '2026-01-11',
+                    'S5 Inspection',
+                    NULL,
+                    'Strong standard',
+                    NULL,
+                    'all_inspections_ytd',
+                    'https://assets.publishing.service.gov.uk/media/example/ytd.csv',
+                    '2026-01'
+                )
+                ON CONFLICT (inspection_number) DO UPDATE SET
+                    publication_date = EXCLUDED.publication_date,
+                    inspection_type = EXCLUDED.inspection_type,
+                    overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
+                    headline_outcome_text = EXCLUDED.headline_outcome_text,
+                    source_asset_url = EXCLUDED.source_asset_url
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_ofsted_latest (
                     urn,
                     inspection_start_date,
@@ -243,12 +395,98 @@ def _seed_data(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                INSERT INTO area_deprivation (
+                    lsoa_code,
+                    lsoa_name,
+                    local_authority_district_code,
+                    local_authority_district_name,
+                    imd_score,
+                    imd_rank,
+                    imd_decile,
+                    idaci_score,
+                    idaci_rank,
+                    idaci_decile,
+                    source_release,
+                    lsoa_vintage,
+                    source_file_url
+                ) VALUES (
+                    'E01004736',
+                    'Westminster 018C',
+                    'E09000033',
+                    'Westminster',
+                    22.4,
+                    10234,
+                    3,
+                    0.241,
+                    7284,
+                    2,
+                    'IoD2025',
+                    '2021',
+                    'https://assets.publishing.service.gov.uk/media/example/file_7.csv'
+                )
+                ON CONFLICT (lsoa_code) DO UPDATE SET
+                    lsoa_name = EXCLUDED.lsoa_name,
+                    imd_decile = EXCLUDED.imd_decile,
+                    idaci_score = EXCLUDED.idaci_score,
+                    idaci_decile = EXCLUDED.idaci_decile,
+                    source_release = EXCLUDED.source_release
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO area_crime_context (
+                    urn,
+                    month,
+                    crime_category,
+                    incident_count,
+                    radius_meters,
+                    source_month
+                ) VALUES
+                (
+                    '910001',
+                    '2026-01-01',
+                    'violent-crime',
+                    132,
+                    1609.344,
+                    '2026-01'
+                ),
+                (
+                    '910001',
+                    '2026-01-01',
+                    'anti-social-behaviour',
+                    87,
+                    1609.344,
+                    '2026-01'
+                ),
+                (
+                    '910001',
+                    '2025-12-01',
+                    'violent-crime',
+                    101,
+                    1609.344,
+                    '2025-12'
+                )
+                ON CONFLICT (urn, month, crime_category, radius_meters) DO UPDATE SET
+                    incident_count = EXCLUDED.incident_count,
+                    source_month = EXCLUDED.source_month
+                """
+            )
+        )
 
 
 def _cleanup_data(engine: Engine) -> None:
     with engine.begin() as connection:
+        connection.execute(text("DELETE FROM area_crime_context WHERE urn = '910001'"))
+        connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code = 'E01004736'"))
+        connection.execute(text("DELETE FROM ofsted_inspections WHERE urn = '910001'"))
         connection.execute(text("DELETE FROM school_ofsted_latest WHERE urn = '910001'"))
         connection.execute(text("DELETE FROM school_demographics_yearly WHERE urn = '910001'"))
+        connection.execute(text("DELETE FROM postcode_cache WHERE postcode = 'SW1A 1AA'"))
         connection.execute(text("DELETE FROM schools WHERE urn = '910001'"))
 
 
@@ -274,6 +512,31 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.ofsted_latest.overall_effectiveness_label == "Good"
     assert result.ofsted_latest.inspection_start_date == date(2025, 10, 10)
     assert result.ofsted_latest.publication_date == date(2025, 11, 15)
+    assert result.ofsted_timeline is not None
+    assert result.ofsted_timeline.coverage.is_partial_history is False
+    assert result.ofsted_timeline.coverage.earliest_event_date == date(2015, 9, 14)
+    assert result.ofsted_timeline.coverage.latest_event_date == date(2025, 11, 11)
+    assert result.ofsted_timeline.coverage.events_count == 2
+    assert [event.inspection_number for event in result.ofsted_timeline.events] == [
+        "10426709",
+        "10420001",
+    ]
+    assert result.area_context is not None
+    assert result.area_context.coverage.has_deprivation is True
+    assert result.area_context.coverage.has_crime is True
+    assert result.area_context.coverage.crime_months_available == 2
+    assert result.area_context.deprivation is not None
+    assert result.area_context.deprivation.lsoa_code == "E01004736"
+    assert result.area_context.deprivation.imd_decile == 3
+    assert result.area_context.deprivation.idaci_decile == 2
+    assert result.area_context.crime is not None
+    assert result.area_context.crime.radius_miles == pytest.approx(1.0, abs=0.01)
+    assert result.area_context.crime.latest_month == "2026-01"
+    assert result.area_context.crime.total_incidents == 219
+    assert tuple(category.category for category in result.area_context.crime.categories) == (
+        "violent-crime",
+        "anti-social-behaviour",
+    )
 
 
 def test_school_profile_repository_returns_none_for_unknown_urn(engine: Engine) -> None:

@@ -41,7 +41,63 @@ class SchoolProfileOfstedLatestResponse(BaseModel):
     ungraded_outcome: str | None
 
 
+class SchoolProfileOfstedTimelineEventResponse(BaseModel):
+    inspection_number: str
+    inspection_start_date: date
+    publication_date: date | None
+    inspection_type: str | None
+    overall_effectiveness_label: str | None
+    headline_outcome_text: str | None
+    category_of_concern: str | None
+
+
+class SchoolProfileOfstedTimelineCoverageResponse(BaseModel):
+    is_partial_history: bool
+    earliest_event_date: date | None
+    latest_event_date: date | None
+    events_count: int
+
+
+class SchoolProfileOfstedTimelineResponse(BaseModel):
+    events: list[SchoolProfileOfstedTimelineEventResponse]
+    coverage: SchoolProfileOfstedTimelineCoverageResponse
+
+
+class SchoolProfileAreaDeprivationResponse(BaseModel):
+    lsoa_code: str
+    imd_decile: int
+    idaci_score: float
+    idaci_decile: int
+    source_release: str
+
+
+class SchoolProfileAreaCrimeCategoryResponse(BaseModel):
+    category: str
+    incident_count: int
+
+
+class SchoolProfileAreaCrimeResponse(BaseModel):
+    radius_miles: float
+    latest_month: str
+    total_incidents: int
+    categories: list[SchoolProfileAreaCrimeCategoryResponse]
+
+
+class SchoolProfileAreaContextCoverageResponse(BaseModel):
+    has_deprivation: bool
+    has_crime: bool
+    crime_months_available: int
+
+
+class SchoolProfileAreaContextResponse(BaseModel):
+    deprivation: SchoolProfileAreaDeprivationResponse | None
+    crime: SchoolProfileAreaCrimeResponse | None
+    coverage: SchoolProfileAreaContextCoverageResponse
+
+
 class SchoolProfileResponse(BaseModel):
     school: SchoolProfileSchoolResponse
     demographics_latest: SchoolProfileDemographicsLatestResponse | None
     ofsted_latest: SchoolProfileOfstedLatestResponse | None
+    ofsted_timeline: SchoolProfileOfstedTimelineResponse
+    area_context: SchoolProfileAreaContextResponse
