@@ -54,21 +54,38 @@
 
 **Goal:** Add depth to school records with DfE pupil characteristics plus the latest Ofsted headline rating on profile.
 
+### Detailed design
+
+- `.planning/phases/phase-1/README.md`
+- `.planning/phases/phase-1/1A-source-contract-gate.md`
+- `.planning/phases/phase-1/1B-dfe-characteristics-pipeline.md`
+- `.planning/phases/phase-1/1C-ofsted-latest-pipeline.md`
+- `.planning/phases/phase-1/1D-school-profile-api.md`
+- `.planning/phases/phase-1/1E-school-trends-api.md`
+- `.planning/phases/phase-1/1F-web-routing-navigation-foundation.md`
+- `.planning/phases/phase-1/1F1-web-component-expansion-data-viz-baseline.md`
+- `.planning/phases/phase-1/1G-web-school-profile-page.md`
+- `.planning/phases/phase-1/1H-phase-1-quality-gates.md`
+
 ### Deliverables
 
-1. **DfE characteristics pipeline** - Bronze -> Staging -> Gold for pupil demographics (FSM, SEN, ethnicity, languages).
-2. **Ofsted latest pipeline** - Bronze -> Staging -> Gold latest inspection outcome per school (headline rating + date).
-3. **Gold `school_demographics_yearly` table** - typed yearly columns for core demographic metrics (not metric-key EAV).
-4. **Gold `school_ofsted_latest` table** - one latest Ofsted snapshot per school.
-5. **School profile API** - `GET /api/v1/schools/{urn}` returning core info + latest demographics + latest Ofsted headline.
-6. **Trends API** - `GET /api/v1/schools/{urn}/trends` returning 3-5 year history with deltas from typed yearly metrics.
-7. **Frontend: school profile page** - headline stats (including Ofsted badge) plus trend sparklines.
-8. **Frontend: navigation** - results list -> profile page linking.
+1. **Source contract gate (blocking)** - verify all source endpoints are real/callable and required fields are present before source-dependent implementation.
+2. **DfE characteristics pipeline** - Bronze -> Staging -> Gold for verified school-level demographic fields from callable DfE endpoints.
+3. **Ofsted latest pipeline** - Bronze -> Staging -> Gold latest inspection outcome per school (headline rating + date).
+4. **Gold `school_demographics_yearly` table** - typed yearly columns for core demographic metrics (not metric-key EAV) with explicit coverage flags for unsupported source fields.
+5. **Gold `school_ofsted_latest` table** - one latest Ofsted snapshot per school.
+6. **School profile API** - `GET /api/v1/schools/{urn}` returning core info + latest demographics + latest Ofsted headline.
+7. **Trends API** - `GET /api/v1/schools/{urn}/trends` returning available yearly history with deterministic delta behavior and explicit partial-history metadata.
+8. **Frontend: navigation shell and site chrome** - routing, site header/footer, mobile navigation, breadcrumbs, skip-to-content, 404 page, and icon library.
+9. **Frontend: component expansion and data visualization baseline** - expanded shared UI primitives (Badge, Tabs, Tooltip, Toast), bespoke data components (StatCard, TrendIndicator, RatingBadge, Sparkline, MetricGrid), and chart library baseline.
+10. **Frontend: school profile page** - headline stats (including Ofsted badge) plus trend visuals that handle sparse history, composed from shared primitives.
+11. **Frontend: quality gates** - mandatory phase sign-off checklist.
 
 ### Exit criteria
 
 - User can open a school profile and view demographic indicators, trend direction, and latest Ofsted rating.
 - Historical data covers 3+ years where available.
+- Source contract gate is passed and documented for each source-dependent deliverable.
 
 ### Dependencies
 
@@ -190,3 +207,4 @@
 1. **Auth provider** - managed provider vs custom email auth?
 2. **Payment provider** - Stripe assumed but not yet confirmed.
 3. **Typed metrics schema boundaries** - split by domain (`demographics`, `attendance`, `workforce`) or one wider yearly fact table?
+4. **DfE school-level demographics coverage** - which validated callable source will provide direct FSM and ethnicity at school level if not present in current endpoint set?
