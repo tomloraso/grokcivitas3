@@ -31,3 +31,6 @@ apps/web/coverage/
 # Tooling
 playwright-report/
 test-results/
+
+# Local pipeline artifacts
+data/
