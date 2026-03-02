@@ -97,16 +97,29 @@
 
 **Goal:** Add full inspection history timeline and area-level context (crime, deprivation) to profile depth.
 
+### Detailed design
+
+- `.planning/phases/phase-2/README.md`
+- `.planning/phases/phase-2/2A-source-contract-gate.md`
+- `.planning/phases/phase-2/2B-ofsted-timeline-pipeline.md`
+- `.planning/phases/phase-2/2C-ons-imd-pipeline.md`
+- `.planning/phases/phase-2/2D-police-crime-context-pipeline.md`
+- `.planning/phases/phase-2/2E-school-profile-api-extensions.md`
+- `.planning/phases/phase-2/2F-web-profile-area-context-enhancements.md`
+- `.planning/phases/phase-2/2G-phase-2-quality-gates.md`
+
 ### Deliverables
 
-1. **Ofsted timeline pipeline extension** - Bronze -> Staging -> Gold for full inspection record history.
-2. **Gold `ofsted_inspections` table** - full inspection timeline per school.
-3. **ONS IMD pipeline** - Bronze -> Staging -> Gold for deprivation by LSOA.
-4. **Gold `area_deprivation` table** - IMD decile and child poverty by LSOA.
-5. **Police UK pipeline** - Bronze -> Staging -> Gold for aggregated crime context near schools.
-6. **Gold `area_crime_context` table** - monthly crime aggregates per school location.
-7. **School profile API extensions** - include Ofsted timeline, IMD decile, and crime summary.
-8. **Frontend: profile enhancements** - Ofsted badge + timeline, area context section.
+1. **Source contract gate (blocking)** - verify all Phase 2 source endpoints/fields and lock fallback paths before implementation.
+2. **Ofsted timeline pipeline extension** - Bronze -> Staging -> Gold for full inspection record history.
+3. **Gold `ofsted_inspections` table** - full inspection timeline per school.
+4. **ONS IMD pipeline** - Bronze -> Staging -> Gold for deprivation by LSOA.
+5. **Gold `area_deprivation` table** - IMD decile and IDACI child-poverty proxy by LSOA.
+6. **Police UK pipeline** - Bronze -> Staging -> Gold for aggregated crime context near schools.
+7. **Gold `area_crime_context` table** - monthly crime aggregates per school location.
+8. **School profile API extensions** - include Ofsted timeline, IMD decile, and crime summary.
+9. **Frontend: profile enhancements** - Ofsted badge + timeline, area context section.
+10. **Phase 2 quality gates** - mandatory closeout checklist and sign-off sequence.
 
 ### Exit criteria
 
