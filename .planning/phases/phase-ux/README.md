@@ -125,10 +125,13 @@ Coordination point:
 - 2026-03-02: Phase UX map engine changes from Leaflet raster stack to MapLibre vector rendering.
 - 2026-03-02: UX-1 is the mandatory first step; all major map-interaction deliverables depend on it.
 - 2026-03-02: Accessibility and performance rails from earlier phases remain mandatory and non-negotiable.
+- 2026-03-02: Vector tile source for UX-1 is Protomaps free CDN with MapTiler as explicit fallback. Self-hosting deferred post-v1.
+- 2026-03-02: Style authoring starts from Protomaps dark basemap skeleton, stripped and recoloured to Civitas navy palette. Style committed as `civitas-dark.json`.
+- 2026-03-02: Map labels target Space Grotesk glyph range; Noto Sans geometric fallback if glyph hosting is not feasible in v1.
+- 2026-03-02: Map design intent documented in UX-1 — school markers are the only saturated element; all map features live inside the navy palette.
 
 ## Open Decisions
 
-1. Vector tile source strategy: hosted provider first versus self-hosted PMTiles.
-2. Custom style authoring path: fork-and-iterate versus from-scratch Maputnik style.
-3. Mobile bottom-sheet implementation: hand-rolled versus dedicated dependency.
-4. Visual regression tooling: Playwright snapshots versus external tooling.
+1. Space Grotesk glyph hosting: self-hosted glyph PBF range versus Noto Sans CDN fallback.
+2. Mobile bottom-sheet implementation: hand-rolled versus dedicated dependency (UX-3).
+3. Visual regression tooling: Playwright snapshots versus external tooling.
