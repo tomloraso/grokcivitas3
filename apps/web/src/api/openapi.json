@@ -210,6 +210,55 @@
           }
         }
       }
+    },
+    "/api/v1/schools/{urn}/trends": {
+      "get": {
+        "tags": [
+          "tasks",
+          "schools"
+        ],
+        "summary": "Get School Trends",
+        "operationId": "get_school_trends_api_v1_schools__urn__trends_get",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Urn"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolTrendsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "School URN not found."
+          },
+          "503": {
+            "description": "School trends datastore unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -604,6 +653,152 @@
           "distance_miles"
         ],
         "title": "SchoolSearchItemResponse"
+      },
+      "SchoolTrendPointResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "up",
+                  "down",
+                  "flat"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "value",
+          "delta",
+          "direction"
+        ],
+        "title": "SchoolTrendPointResponse"
+      },
+      "SchoolTrendsHistoryQualityResponse": {
+        "properties": {
+          "is_partial_history": {
+            "type": "boolean",
+            "title": "Is Partial History"
+          },
+          "min_years_for_delta": {
+            "type": "integer",
+            "title": "Min Years For Delta"
+          },
+          "years_count": {
+            "type": "integer",
+            "title": "Years Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_partial_history",
+          "min_years_for_delta",
+          "years_count"
+        ],
+        "title": "SchoolTrendsHistoryQualityResponse"
+      },
+      "SchoolTrendsResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "years_available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Years Available"
+          },
+          "history_quality": {
+            "$ref": "#/components/schemas/SchoolTrendsHistoryQualityResponse"
+          },
+          "series": {
+            "$ref": "#/components/schemas/SchoolTrendsSeriesResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "years_available",
+          "history_quality",
+          "series"
+        ],
+        "title": "SchoolTrendsResponse"
+      },
+      "SchoolTrendsSeriesResponse": {
+        "properties": {
+          "disadvantaged_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Disadvantaged Pct"
+          },
+          "sen_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Sen Pct"
+          },
+          "ehcp_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ehcp Pct"
+          },
+          "eal_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Eal Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disadvantaged_pct",
+          "sen_pct",
+          "ehcp_pct",
+          "eal_pct"
+        ],
+        "title": "SchoolTrendsSeriesResponse"
       },
       "SchoolsSearchCenterResponse": {
         "properties": {

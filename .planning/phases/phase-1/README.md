@@ -110,7 +110,36 @@ Phase 1 is split into nine substantial deliverables:
 - 1B DfE characteristics pipeline: completed.
 - 1C Ofsted latest pipeline: completed.
 - 1D School profile API: completed.
-- 1E-1H: pending.
+- 1E School trends API: completed.
+- 1F-1H: pending.
+
+## Tracking Log
+
+- 2026-03-02 (implementation verification checkpoint):
+  - Revalidated Phase 1D backend tests:
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_profile_use_case.py -q`
+    - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_profile_api.py -q`
+    - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_profile_repository.py -q`
+  - Synced backend OpenAPI contract:
+    - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+  - Revalidated repository gates:
+    - `make lint`
+    - `make test`
+  - Result: all commands passed; no additional code changes required for 1D baseline stability.
+- 2026-03-02 (implementation verification checkpoint):
+  - Completed Phase 1E trends implementation and backend wiring:
+    - domain/application/infrastructure/api modules under `school_trends`.
+  - Revalidated Phase 1E tests:
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_trends_use_case.py -q`
+    - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_api.py -q`
+    - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_repository.py -q`
+  - Synced contracts:
+    - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+    - `cd apps/web && npm run generate:types`
+  - Revalidated repository gates:
+    - `make lint`
+    - `make test`
+  - Result: all commands passed; Phase 1E is complete and tracked.
 
 ## Phase 1 Definition Of Done
 

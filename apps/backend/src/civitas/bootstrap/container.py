@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
 from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 from civitas.infrastructure.config.settings import AppSettings, get_settings
@@ -16,6 +17,9 @@ from civitas.infrastructure.persistence.postgres_school_profile_repository impor
 )
 from civitas.infrastructure.persistence.postgres_school_search_repository import (
     PostgresSchoolSearchRepository,
+)
+from civitas.infrastructure.persistence.postgres_school_trends_repository import (
+    PostgresSchoolTrendsRepository,
 )
 from civitas.infrastructure.pipelines import pipeline_registry
 from civitas.infrastructure.pipelines.runner import PipelineRunner, SqlPipelineRunStore
@@ -49,6 +53,12 @@ def school_search_repository() -> PostgresSchoolSearchRepository:
 def school_profile_repository() -> PostgresSchoolProfileRepository:
     settings = app_settings()
     return PostgresSchoolProfileRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def school_trends_repository() -> PostgresSchoolTrendsRepository:
+    settings = app_settings()
+    return PostgresSchoolTrendsRepository(engine=db_engine(settings.database.url))
 
 
 @lru_cache(maxsize=1)
@@ -88,6 +98,12 @@ def search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return GetSchoolProfileUseCase(
         school_profile_repository=school_profile_repository(),
+    )
+
+
+def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
+    return GetSchoolTrendsUseCase(
+        school_trends_repository=school_trends_repository(),
     )
 
 

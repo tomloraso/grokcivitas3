@@ -135,6 +135,13 @@ Path params:
   - unit: `apps/backend/tests/unit/test_get_school_profile_use_case.py`
   - API contract: `apps/backend/tests/integration/test_school_profile_api.py`
   - repository integration: `apps/backend/tests/integration/test_school_profile_repository.py`
+- Completed: verification checkpoint run on 2026-03-02 confirming command pass state:
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_profile_use_case.py -q`
+  - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_profile_api.py -q`
+  - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_profile_repository.py -q`
+  - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+  - `make lint`
+  - `make test`
 
 ## File-Oriented Implementation Plan
 

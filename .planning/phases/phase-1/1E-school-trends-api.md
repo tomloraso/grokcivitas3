@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1A-source-contract-gate.md`
@@ -84,6 +84,7 @@ Expose yearly metric series for a school with deterministic delta and direction 
 ### Errors
 
 - `404`: school URN not found.
+- `503`: school trends datastore unavailable.
 
 ## Decisions
 
@@ -95,6 +96,34 @@ Expose yearly metric series for a school with deterministic delta and direction 
    - `flat` when `delta == 0`
 4. When fewer than 2 years exist, `delta` and `direction` are `null`.
 5. Response always includes `history_quality` so UI can render sparse-history states intentionally.
+6. `is_partial_history` is `true` when fewer than 3 years are available.
+7. School-level existence is checked independently from demographics rows so schools with no demographics history return an empty trends payload instead of 404.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added school trends domain/application layers:
+  - `apps/backend/src/civitas/domain/school_trends/models.py`
+  - `apps/backend/src/civitas/application/school_trends/{dto.py,use_cases.py,errors.py}`
+  - `apps/backend/src/civitas/application/school_trends/ports/school_trends_repository.py`
+- Completed: added Postgres repository adapter:
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_trends_repository.py`
+  - deterministic academic-year ordering and school-exists guard.
+- Completed: added API schema + route + dependency wiring for `GET /api/v1/schools/{urn}/trends`:
+  - `apps/backend/src/civitas/api/schemas/school_trends.py`
+  - `apps/backend/src/civitas/api/{dependencies.py,routes.py}`
+  - `apps/backend/src/civitas/bootstrap/container.py`
+- Completed: added test coverage:
+  - unit: `apps/backend/tests/unit/test_get_school_trends_use_case.py`
+  - API contract: `apps/backend/tests/integration/test_school_trends_api.py`
+  - repository integration: `apps/backend/tests/integration/test_school_trends_repository.py`
+- Completed: verification checkpoint run on 2026-03-02 confirming command pass state:
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_trends_use_case.py -q`
+  - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_api.py -q`
+  - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_repository.py -q`
+  - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+  - `cd apps/web && npm run generate:types`
+  - `make lint`
+  - `make test`
 
 ## Trend Depth Gate (From 1A)
 
@@ -111,7 +140,7 @@ Before shipping sparkline/trend claims:
 ### Ports
 
 - `SchoolTrendsRepository`
-  - `get_demographics_series(urn: str) -> list[DemographicsYearlyRow]`
+  - `get_demographics_series(urn: str) -> SchoolDemographicsSeries | None`
 
 ### Use case
 
@@ -124,6 +153,7 @@ Before shipping sparkline/trend claims:
 ### Infrastructure
 
 - Postgres repository query:
+  - verify school existence in `schools` by `urn`,
   - select all rows from `school_demographics_yearly` by `urn`,
   - order by parsed academic year.
 
@@ -150,7 +180,9 @@ Before shipping sparkline/trend claims:
   - delta and direction behavior,
   - partial history behavior.
 - `apps/backend/tests/integration/test_school_trends_api.py`
-  - response contract and 404 behavior.
+  - response contract and 404/503 behavior.
+- `apps/backend/tests/integration/test_school_trends_repository.py`
+  - deterministic year ordering and empty-series behavior for schools without demographics rows.
 - contract tests for deterministic year ordering.
 
 ### Contract sync

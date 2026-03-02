@@ -73,6 +73,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schools/{urn}/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Trends */
+        get: operations["get_school_trends_api_v1_schools__urn__trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -169,6 +186,46 @@ export interface components {
             lng: number;
             /** Distance Miles */
             distance_miles: number;
+        };
+        /** SchoolTrendPointResponse */
+        SchoolTrendPointResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Value */
+            value: number | null;
+            /** Delta */
+            delta: number | null;
+            /** Direction */
+            direction: ("up" | "down" | "flat") | null;
+        };
+        /** SchoolTrendsHistoryQualityResponse */
+        SchoolTrendsHistoryQualityResponse: {
+            /** Is Partial History */
+            is_partial_history: boolean;
+            /** Min Years For Delta */
+            min_years_for_delta: number;
+            /** Years Count */
+            years_count: number;
+        };
+        /** SchoolTrendsResponse */
+        SchoolTrendsResponse: {
+            /** Urn */
+            urn: string;
+            /** Years Available */
+            years_available: string[];
+            history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
+            series: components["schemas"]["SchoolTrendsSeriesResponse"];
+        };
+        /** SchoolTrendsSeriesResponse */
+        SchoolTrendsSeriesResponse: {
+            /** Disadvantaged Pct */
+            disadvantaged_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Sen Pct */
+            sen_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ehcp Pct */
+            ehcp_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Eal Pct */
+            eal_pct: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {
@@ -400,6 +457,51 @@ export interface operations {
                 };
             };
             /** @description School profile datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_school_trends_api_v1_schools__urn__trends_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolTrendsResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School trends datastore unavailable. */
             503: {
                 headers: {
                     [name: string]: unknown;

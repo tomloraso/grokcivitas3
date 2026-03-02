@@ -6,6 +6,7 @@ from civitas.api.dependencies import (
     get_create_task_use_case,
     get_list_tasks_use_case,
     get_school_profile_use_case,
+    get_school_trends_use_case,
     get_search_schools_by_postcode_use_case,
 )
 from civitas.api.schemas.school_profiles import (
@@ -14,6 +15,12 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileOfstedLatestResponse,
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
+)
+from civitas.api.schemas.school_trends import (
+    SchoolTrendPointResponse,
+    SchoolTrendsHistoryQualityResponse,
+    SchoolTrendsResponse,
+    SchoolTrendsSeriesResponse,
 )
 from civitas.api.schemas.schools import (
     SchoolSearchItemResponse,
@@ -27,6 +34,11 @@ from civitas.application.school_profiles.errors import (
     SchoolProfileNotFoundError,
 )
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.application.school_trends.errors import (
+    SchoolTrendsDataUnavailableError,
+    SchoolTrendsNotFoundError,
+)
+from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
 from civitas.application.schools.errors import (
     InvalidSchoolSearchParametersError,
     PostcodeNotFoundError,
@@ -172,4 +184,73 @@ def get_school_profile(
         ),
         demographics_latest=demographics_latest,
         ofsted_latest=ofsted_latest,
+    )
+
+
+@router.get(
+    "/schools/{urn}/trends",
+    response_model=SchoolTrendsResponse,
+    tags=["schools"],
+    responses={
+        404: {"description": "School URN not found."},
+        503: {"description": "School trends datastore unavailable."},
+    },
+)
+def get_school_trends(
+    urn: str,
+    use_case: GetSchoolTrendsUseCase = Depends(get_school_trends_use_case),
+) -> SchoolTrendsResponse:
+    try:
+        result = use_case.execute(urn=urn)
+    except SchoolTrendsNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except SchoolTrendsDataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return SchoolTrendsResponse(
+        urn=result.urn,
+        years_available=list(result.years_available),
+        history_quality=SchoolTrendsHistoryQualityResponse(
+            is_partial_history=result.history_quality.is_partial_history,
+            min_years_for_delta=result.history_quality.min_years_for_delta,
+            years_count=result.history_quality.years_count,
+        ),
+        series=SchoolTrendsSeriesResponse(
+            disadvantaged_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.disadvantaged_pct
+            ],
+            sen_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.sen_pct
+            ],
+            ehcp_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.ehcp_pct
+            ],
+            eal_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.eal_pct
+            ],
+        ),
     )

@@ -1,4 +1,5 @@
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
 from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 from civitas.bootstrap.container import (
@@ -8,6 +9,9 @@ from civitas.bootstrap.container import (
 )
 from civitas.bootstrap.container import (
     get_school_profile_use_case as build_school_profile_use_case,
+)
+from civitas.bootstrap.container import (
+    get_school_trends_use_case as build_school_trends_use_case,
 )
 
 
@@ -25,3 +29,7 @@ def get_search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:
 
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return build_school_profile_use_case()
+
+
+def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
+    return build_school_trends_use_case()
