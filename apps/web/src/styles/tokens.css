@@ -87,4 +87,6 @@
   --input-padding-inline: var(--space-3);
 
   --panel-blur: 18px;
+  --panel-surface-neutral: rgba(15, 15, 20, 0.85);
+  --panel-surface-neutral-border: rgba(255, 255, 255, 0.08);
 }

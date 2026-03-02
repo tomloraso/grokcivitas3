@@ -35,52 +35,63 @@ const mockSearchResponse = {
 };
 
 async function expectPrimaryControlsVisible(page: Page): Promise<void> {
-  await expect(page.getByRole("heading", { name: "Civitas Schools Discovery" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
   await expect(page.getByLabel("Postcode")).toBeVisible();
   await expect(page.getByLabel("Search radius")).toBeVisible();
   await expect(page.getByRole("button", { name: "Search schools" })).toBeVisible();
 }
 
-test("desktop: split pane keeps list and map side by side", async ({ page }) => {
+async function gotoRoute(page: Page, path: string): Promise<void> {
+  await page.goto(path, { waitUntil: "domcontentloaded" });
+}
+
+test("desktop: map overlay layout renders map canvas with floating panel", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
+  await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
-  const listSection = page.getByLabel("School results");
-  const mapSection = page.getByLabel("Map view");
-  await expect(listSection).toBeVisible();
+  const overlayRoot = page.locator('[data-layout="map-overlay"]');
+  const mapSection = page.getByRole("region", { name: "Map view" });
+  const resultsSection = page.getByLabel("School results");
+
+  await expect(overlayRoot).toBeVisible();
   await expect(mapSection).toBeVisible();
+  await expect(resultsSection).toBeVisible();
 
-  const listBox = await listSection.boundingBox();
   const mapBox = await mapSection.boundingBox();
-  expect(listBox).not.toBeNull();
+  const resultsBox = await resultsSection.boundingBox();
   expect(mapBox).not.toBeNull();
+  expect(resultsBox).not.toBeNull();
 
-  if (!listBox || !mapBox) {
+  if (!mapBox || !resultsBox) {
     return;
   }
 
-  expect(mapBox.x).toBeGreaterThan(listBox.x);
-  expect(Math.abs(mapBox.y - listBox.y)).toBeLessThan(120);
+  expect(mapBox.width).toBeGreaterThan(resultsBox.width);
+  expect(resultsBox.x).toBeLessThan(mapBox.width / 2);
 });
 
-test("tablet: layout stacks without hiding controls", async ({ page }) => {
-  await page.setViewportSize({ width: 768, height: 1024 });
-  await page.goto("/");
+test("mobile: overlay keeps controls visible and scrollable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
-  const listSection = page.getByLabel("School results");
-  const mapSection = page.getByLabel("Map view");
-  const listBox = await listSection.boundingBox();
-  const mapBox = await mapSection.boundingBox();
-  expect(listBox).not.toBeNull();
-  expect(mapBox).not.toBeNull();
+  const overlayRoot = page.locator('[data-layout="map-overlay"]');
+  const resultsSection = page.getByLabel("School results");
+  await expect(overlayRoot).toBeVisible();
+  await expect(resultsSection).toBeVisible();
 
-  if (!listBox || !mapBox) {
+  const overlayBox = await overlayRoot.boundingBox();
+  const resultsBox = await resultsSection.boundingBox();
+  expect(overlayBox).not.toBeNull();
+  expect(resultsBox).not.toBeNull();
+
+  if (!overlayBox || !resultsBox) {
     return;
   }
 
-  expect(mapBox.y).toBeGreaterThan(listBox.y + listBox.height - 1);
+  expect(resultsBox.width).toBeLessThanOrEqual(overlayBox.width);
+  expect(resultsBox.height).toBeGreaterThan(0);
 });
 
 test("desktop: postcode search renders list and keyboard-focusable markers", async ({ page }) => {
@@ -93,7 +104,7 @@ test("desktop: postcode search renders list and keyboard-focusable markers", asy
   });
 
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/");
+  await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
   await page.getByLabel("Postcode").fill("SW1A 1AA");
@@ -101,7 +112,6 @@ test("desktop: postcode search renders list and keyboard-focusable markers", asy
 
   await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
   await expect(page.getByText("Alden Civic Academy")).toBeVisible();
-  await expect(page.getByText("2 markers")).toBeVisible();
 
   const marker = page.locator('.leaflet-interactive[role="button"]').first();
   await expect(marker).toBeVisible();
@@ -111,7 +121,7 @@ test("desktop: postcode search renders list and keyboard-focusable markers", asy
   await expect(page.getByText(/mi from search center/).first()).toBeVisible();
 });
 
-test("mobile: controls remain visible with map below list and touch targets sized", async ({ page }) => {
+test("mobile: map zoom controls retain touch target size", async ({ page }) => {
   await page.route("**/api/v1/schools**", async (route) => {
     await route.fulfill({
       status: 200,
@@ -121,21 +131,8 @@ test("mobile: controls remain visible with map below list and touch targets size
   });
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
-
-  const listSection = page.getByLabel("School results");
-  const mapSection = page.getByLabel("Map view");
-  const listBox = await listSection.boundingBox();
-  const mapBox = await mapSection.boundingBox();
-  expect(listBox).not.toBeNull();
-  expect(mapBox).not.toBeNull();
-
-  if (!listBox || !mapBox) {
-    return;
-  }
-
-  expect(mapBox.y).toBeGreaterThan(listBox.y + listBox.height - 1);
 
   await page.getByRole("button", { name: "Search schools" }).click();
   const zoomIn = page.locator(".leaflet-control-zoom-in");
@@ -151,3 +148,50 @@ test("mobile: controls remain visible with map below list and touch targets size
   expect(zoomBox.height).toBeGreaterThanOrEqual(44);
 });
 
+test("site header and footer are visible on the search page", async ({ page }) => {
+  await gotoRoute(page, "/");
+  await expect(page.getByRole("banner")).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toBeVisible();
+  await expect(page.getByLabel("Civitas - return to home")).toBeVisible();
+});
+
+test("click result navigates to school profile route", async ({ page }) => {
+  await page.route("**/api/v1/schools**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockSearchResponse)
+    });
+  });
+
+  await gotoRoute(page, "/");
+  await page.getByLabel("Postcode").fill("SW1A 1AA");
+  await page.getByRole("button", { name: "Search schools" }).click();
+  await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
+
+  await page.getByLabel("View profile for Camden Bridge Primary School").click();
+  await expect(page).toHaveURL(/\/schools\/100001$/);
+  await expect(page.getByRole("heading", { name: /100001/ })).toBeVisible();
+});
+
+test("browser back returns to search from school profile", async ({ page }) => {
+  await gotoRoute(page, "/");
+  await gotoRoute(page, "/schools/100001");
+  await page.goBack();
+
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
+});
+
+test("header Search link navigates back to search route", async ({ page }) => {
+  await gotoRoute(page, "/schools/100001");
+  await page.getByRole("banner").getByRole("link", { name: "Search", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
+});
+
+test("unknown route renders not-found page", async ({ page }) => {
+  await gotoRoute(page, "/does-not-exist");
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to search" })).toBeVisible();
+});

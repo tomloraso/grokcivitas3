@@ -16,11 +16,11 @@ export function AppShell({ children, className }: AppShellProps): JSX.Element {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-[-12%] top-[-18%] h-72 w-72 rounded-full bg-brand/25 blur-3xl"
+        className="ambient-glow pointer-events-none absolute left-[-12%] top-[-18%] h-72 w-72 rounded-full bg-brand/25 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-[-22%] right-[-10%] h-80 w-80 rounded-full bg-accent/20 blur-3xl"
+        className="ambient-glow pointer-events-none absolute bottom-[-22%] right-[-10%] h-80 w-80 rounded-full bg-accent/20 blur-3xl"
       />
       <div className="relative z-nav">{children}</div>
     </div>

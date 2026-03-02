@@ -111,7 +111,9 @@ Phase 1 is split into nine substantial deliverables:
 - 1C Ofsted latest pipeline: completed.
 - 1D School profile API: completed.
 - 1E School trends API: completed.
-- 1F-1H: pending.
+- 1F Web routing & navigation foundation: completed.
+- 1F1 Web component expansion & data viz baseline: completed.
+- 1G-1H: pending.
 
 ## Tracking Log
 
@@ -140,6 +142,24 @@ Phase 1 is split into nine substantial deliverables:
     - `make lint`
     - `make test`
   - Result: all commands passed; Phase 1E is complete and tracked.
+- 2026-03-02 (implementation verification checkpoint):
+  - Completed Phase 1F Web routing & navigation foundation (prior session).
+- 2026-03-02 (implementation verification checkpoint):
+  - Completed Phase 1F1 Web component expansion & data viz baseline:
+    - Installed `recharts`, `@radix-ui/react-tabs`, `@radix-ui/react-tooltip`, `@radix-ui/react-toast`.
+    - UI primitives: Badge (6 CVA variants), Tabs (Radix compound), Tooltip, Toast (imperative dispatch via context).
+    - Data components: StatCard, TrendIndicator, RatingBadge, Sparkline (hand-rolled SVG), MetricGrid, MetricUnavailable.
+    - Chart theme: `src/shared/charts/chart-theme.ts` mapping Recharts to Civitas tokens.
+    - Tests: 56 new tests (19 UI expansion + 37 data components) — all passing.
+  - Quality gates verified:
+    - `npm run lint` — clean
+    - `npm run typecheck` — clean
+    - `npm run test` — 102 tests passing (11 files)
+    - `npm run build` — production build succeeds
+    - `npm run budget:check` — app shell JS 116.2 KiB (budget 170), CSS 12.6 KiB (budget 35), map chunk 45.2 KiB (budget 260)
+    - `make lint` — clean
+    - `make test` — 80 backend + 102 frontend tests passing
+  - Result: all gates passed; Phase 1F1 is complete.
 
 ## Phase 1 Definition Of Done
 

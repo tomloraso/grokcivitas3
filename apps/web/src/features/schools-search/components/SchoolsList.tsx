@@ -3,6 +3,7 @@ import { ErrorState } from "../../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
 import { Panel } from "../../../components/ui/Card";
 import { ResultCard } from "../../../components/ui/ResultCard";
+import { paths } from "../../../shared/routing/paths";
 import type { SchoolsSearchStatus, SchoolSearchListItem } from "../types";
 
 interface SchoolsListProps {
@@ -58,6 +59,7 @@ export function SchoolsList({
             phase={toDisplayValue(school.phase)}
             postcode={toDisplayValue(school.postcode)}
             distanceMiles={school.distance_miles}
+            href={paths.schoolProfile(school.urn)}
           />
         ))}
       </>

@@ -1,6 +1,4 @@
-import { AppShell } from "../../components/layout/AppShell";
-import { PageContainer } from "../../components/layout/PageContainer";
-import { SplitPaneLayout } from "../../components/layout/SplitPaneLayout";
+import { MapOverlayLayout } from "../../components/layout/MapOverlayLayout";
 import { SearchForm } from "./components/SearchForm";
 import { SchoolsList } from "./components/SchoolsList";
 import { SchoolsMap } from "./components/SchoolsMap";
@@ -10,15 +8,23 @@ export function SchoolsSearchFeature(): JSX.Element {
   const { form, state, setPostcode, setRadius, submitSearch } = useSchoolsSearch();
 
   return (
-    <AppShell>
-      <PageContainer className="space-y-6">
-        <header className="panel-surface rounded-xl p-5 sm:p-7">
+    <MapOverlayLayout
+      map={
+        <SchoolsMap
+          status={state.status}
+          center={state.result?.center ?? null}
+          schools={state.result?.schools ?? []}
+        />
+      }
+    >
+      <div className="space-y-5 p-4 sm:p-5">
+        <header>
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-secondary">
-            Phase 0D2 Search And Map
+            Schools Discovery
           </p>
-          <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">Civitas Schools Discovery</h1>
-          <p className="mt-3 max-w-2xl text-sm text-secondary sm:text-base">
-            Search by UK postcode to explore nearby schools in a shared list and map view.
+          <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">Find schools near you</h1>
+          <p className="mt-3 text-sm text-secondary sm:text-base">
+            Search by UK postcode to explore nearby schools in list and map view.
           </p>
         </header>
 
@@ -31,25 +37,19 @@ export function SchoolsSearchFeature(): JSX.Element {
           onRadiusChange={setRadius}
           onSubmit={submitSearch}
         />
+      </div>
 
-        <SplitPaneLayout
-          listPane={
-            <SchoolsList
-              status={state.status}
-              schools={state.result?.schools ?? []}
-              errorMessage={state.errorMessage}
-              onRetry={submitSearch}
-            />
-          }
-          mapPane={
-            <SchoolsMap
-              status={state.status}
-              center={state.result?.center ?? null}
-              schools={state.result?.schools ?? []}
-            />
-          }
+      <section
+        aria-label="School results"
+        className="space-y-4 border-t border-border-subtle/70 px-4 pb-5 pt-5 sm:px-5"
+      >
+        <SchoolsList
+          status={state.status}
+          schools={state.result?.schools ?? []}
+          errorMessage={state.errorMessage}
+          onRetry={submitSearch}
         />
-      </PageContainer>
-    </AppShell>
+      </section>
+    </MapOverlayLayout>
   );
 }
