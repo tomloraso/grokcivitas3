@@ -6,6 +6,7 @@ from .base import Pipeline, PipelineSource
 from .dfe_characteristics import DfeCharacteristicsPipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
+from .ofsted_timeline import OfstedTimelinePipeline
 
 
 def pipeline_registry(
@@ -26,5 +27,13 @@ def pipeline_registry(
         PipelineSource.OFSTED_LATEST: OfstedLatestPipeline(
             engine=engine,
             source_csv=pipeline_settings.ofsted_latest_source_csv,
+        ),
+        PipelineSource.OFSTED_TIMELINE: OfstedTimelinePipeline(
+            engine=engine,
+            source_index_url=pipeline_settings.ofsted_timeline_source_index_url,
+            source_assets_csv=pipeline_settings.ofsted_timeline_source_assets,
+            include_historical_baseline=(
+                pipeline_settings.ofsted_timeline_include_historical_baseline
+            ),
         ),
     }

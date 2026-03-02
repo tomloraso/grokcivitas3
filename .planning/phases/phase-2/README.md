@@ -109,7 +109,7 @@ Phase 2 is split into eight substantial deliverables:
 ## Progress (2026-03-02)
 
 - 2A Source contract gate: completed.
-- 2B Ofsted timeline pipeline: planned.
+- 2B Ofsted timeline pipeline: completed.
 - 2C ONS IMD pipeline: planned.
 - 2D Police crime context pipeline: planned.
 - 2E School profile API extensions: planned.
@@ -128,6 +128,18 @@ Phase 2 is split into eight substantial deliverables:
   - Revalidated gate command:
     - `uv run --project apps/backend python tools/scripts/verify_phase2_sources.py`
   - Result: Phase 2A gate command passed with live endpoint checks.
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 2B Ofsted timeline pipeline:
+    - added `apps/backend/src/civitas/infrastructure/pipelines/ofsted_timeline.py`,
+    - added migration `apps/backend/alembic/versions/20260302_06_phase2_ofsted_inspections.py`,
+    - added fixtures and tests under `apps/backend/tests/{fixtures,unit,integration}/ofsted_timeline*`.
+  - Updated pipeline/config wiring:
+    - `PipelineSource.OFSTED_TIMELINE` registration in registry + CLI source coverage.
+    - timeline source settings and `.env` / runbook entries.
+  - Revalidated focused backend checks:
+    - `uv run --project apps/backend ruff check apps/backend`
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ofsted_timeline_transforms.py apps/backend/tests/integration/test_ofsted_timeline_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
+  - Result: Phase 2B implementation complete and test-covered.
 
 ## Phase 2 Definition Of Done
 

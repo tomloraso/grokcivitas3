@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/2A-source-contract-gate.md`
@@ -81,6 +81,33 @@ Implement full Ofsted inspection timeline ingest using verified `all_inspections
    - raw headline outcome text (`headline_outcome_text`) for schema-variant compatibility.
 5. Keep `school_ofsted_latest` (Phase 1) as existing latest-headline source while timeline path hardens; parity checks can merge behavior later.
 6. Do not infer a graded Ofsted code when the source only provides textual/section outcomes.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added `OfstedTimelinePipeline`:
+  - `apps/backend/src/civitas/infrastructure/pipelines/ofsted_timeline.py`
+  - supports asset-list ingestion, schema-variant handling, staging dedupe, and Gold upsert.
+- Completed: extended pipeline registration and source enum wiring:
+  - `apps/backend/src/civitas/infrastructure/pipelines/{base.py,__init__.py}`
+- Completed: added settings support for timeline source controls:
+  - `CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL`
+  - `CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS`
+  - `CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE`
+- Completed: added migration for Gold timeline table:
+  - `apps/backend/alembic/versions/20260302_06_phase2_ofsted_inspections.py`
+- Completed: added fixtures and tests:
+  - `apps/backend/tests/fixtures/ofsted_timeline/*`
+  - `apps/backend/tests/unit/test_ofsted_timeline_transforms.py`
+  - `apps/backend/tests/integration/test_ofsted_timeline_pipeline.py`
+- Completed: updated local configuration/runbook + CLI source coverage:
+  - `.env.example`
+  - `docs/runbooks/local-development.md`
+  - `apps/backend/tests/unit/test_pipeline_cli.py`
+  - `apps/backend/tests/unit/test_settings.py`
+- Verification commands executed:
+  - `uv run --project apps/backend ruff check apps/backend`
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ofsted_timeline_transforms.py apps/backend/tests/integration/test_ofsted_timeline_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
+  - `uv run --project apps/backend python tools/scripts/verify_phase2_sources.py`
 
 ## Data Flow
 

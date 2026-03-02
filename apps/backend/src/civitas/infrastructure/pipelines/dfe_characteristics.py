@@ -437,8 +437,6 @@ def _normalize_academic_year(raw_value: str | None) -> str:
     value = (raw_value or "").strip()
     if len(value) == 7 and value[4] == "/" and value[:4].isdigit() and value[5:].isdigit():
         return value
-    if len(value) == 6 and value.isdigit():
-        return f"{value[:4]}/{value[4:]}"
     raise ValueError("invalid academic year")
 
 

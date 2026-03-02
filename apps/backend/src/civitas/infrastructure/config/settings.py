@@ -9,6 +9,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
 DEFAULT_BRONZE_ROOT = Path("data/bronze")
 DEFAULT_DFE_CHARACTERISTICS_DATASET_ID = "019afee4-ba17-73cb-85e0-f88c101bb734"
+DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL = (
+    "https://www.gov.uk/government/statistical-data-sets/"
+    "monthly-management-information-ofsteds-school-inspections-outcomes"
+)
 DEFAULT_POSTCODES_IO_BASE_URL = "https://api.postcodes.io"
 DEFAULT_POSTCODE_CACHE_TTL_DAYS = 30
 
@@ -24,6 +28,9 @@ class PipelineSettings(BaseModel):
     dfe_characteristics_source_csv: str | None = None
     dfe_characteristics_dataset_id: str
     ofsted_latest_source_csv: str | None = None
+    ofsted_timeline_source_index_url: str
+    ofsted_timeline_source_assets: str | None = None
+    ofsted_timeline_include_historical_baseline: bool = True
 
 
 class HttpClientSettings(BaseModel):
@@ -75,6 +82,19 @@ class AppSettings(BaseSettings):
         default=None,
         validation_alias="CIVITAS_OFSTED_LATEST_SOURCE_CSV",
     )
+    ofsted_timeline_source_index_url: str = Field(
+        default=DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL,
+        min_length=1,
+        validation_alias="CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL",
+    )
+    ofsted_timeline_source_assets: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
+    )
+    ofsted_timeline_include_historical_baseline: bool = Field(
+        default=True,
+        validation_alias="CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
+    )
 
     http_timeout_seconds: PositiveFloat = Field(
         default=10.0,
@@ -110,6 +130,11 @@ class AppSettings(BaseSettings):
             dfe_characteristics_source_csv=self.dfe_characteristics_source_csv,
             dfe_characteristics_dataset_id=self.dfe_characteristics_dataset_id,
             ofsted_latest_source_csv=self.ofsted_latest_source_csv,
+            ofsted_timeline_source_index_url=self.ofsted_timeline_source_index_url,
+            ofsted_timeline_source_assets=self.ofsted_timeline_source_assets,
+            ofsted_timeline_include_historical_baseline=(
+                self.ofsted_timeline_include_historical_baseline
+            ),
         )
 
     @property
@@ -132,6 +157,8 @@ class AppSettings(BaseSettings):
         "gias_source_zip",
         "dfe_characteristics_source_csv",
         "ofsted_latest_source_csv",
+        "ofsted_timeline_source_index_url",
+        "ofsted_timeline_source_assets",
         mode="before",
     )
     @classmethod

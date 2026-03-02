@@ -95,9 +95,11 @@ Set `CIVITAS_DATABASE_URL` in `.env` to target a different database.
 
 ```bash
 uv run --project apps/backend python tools/scripts/verify_phase1_sources.py
+uv run --project apps/backend python tools/scripts/verify_phase2_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
+uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 uv run --project apps/backend civitas pipeline run --all
 ```
 
@@ -128,6 +130,19 @@ For Ofsted latest runs, this optional `.env` value overrides landing-page auto-r
 
 ```bash
 CIVITAS_OFSTED_LATEST_SOURCE_CSV=C:\path\to\latest_inspections.csv
+```
+
+For Ofsted timeline runs, these optional `.env` values control source resolution:
+
+```bash
+# Override landing page source
+CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL=https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
+
+# Comma-separated explicit asset list (local paths and/or URLs)
+CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS=C:\path\to\all_inspections_ytd.csv,C:\path\to\all_inspections_historical_2015_2019.csv
+
+# Include 2015-2019 baseline during landing-page resolution
+CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE=true
 ```
 
 For postcode search API behavior, these optional `.env` values control resolver and cache behavior:

@@ -10,6 +10,7 @@ class PipelineSource(str, Enum):
     GIAS = "gias"
     DFE_CHARACTERISTICS = "dfe_characteristics"
     OFSTED_LATEST = "ofsted_latest"
+    OFSTED_TIMELINE = "ofsted_timeline"
 
 
 class PipelineRunStatus(str, Enum):

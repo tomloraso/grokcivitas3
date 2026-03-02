@@ -16,7 +16,7 @@ class FakePipelineRunner:
         return self._result
 
     def available_sources(self) -> tuple[str, ...]:
-        return ("gias", "dfe_characteristics", "ofsted_latest")
+        return ("gias", "dfe_characteristics", "ofsted_latest", "ofsted_timeline")
 
     def run_all(self) -> dict[PipelineSource, PipelineResult]:
         self.ran_all = True
@@ -95,6 +95,18 @@ def test_pipeline_run_ofsted_source_success(monkeypatch: pytest.MonkeyPatch) -> 
     assert result.exit_code == 0
     assert fake_runner.ran_source == "ofsted_latest"
     assert "ofsted_latest: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_ofsted_timeline_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "ofsted_timeline"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "ofsted_timeline"
+    assert "ofsted_timeline: succeeded" in result.stdout.lower()
 
 
 def test_pipeline_run_all(monkeypatch: pytest.MonkeyPatch) -> None:

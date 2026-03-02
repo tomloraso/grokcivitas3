@@ -30,6 +30,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
         "CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
         "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
+        "CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL",
+        "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
+        "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "CIVITAS_HTTP_TIMEOUT_SECONDS",
         "CIVITAS_HTTP_MAX_RETRIES",
         "CIVITAS_HTTP_RETRY_BACKOFF_SECONDS",
@@ -46,6 +49,13 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.gias_source_zip is None
     assert settings.pipeline.dfe_characteristics_source_csv is None
     assert settings.pipeline.ofsted_latest_source_csv is None
+    assert (
+        settings.pipeline.ofsted_timeline_source_index_url
+        == "https://www.gov.uk/government/statistical-data-sets/"
+        "monthly-management-information-ofsteds-school-inspections-outcomes"
+    )
+    assert settings.pipeline.ofsted_timeline_source_assets is None
+    assert settings.pipeline.ofsted_timeline_include_historical_baseline is True
     assert (
         settings.pipeline.dfe_characteristics_dataset_id == DEFAULT_DFE_CHARACTERISTICS_DATASET_ID
     )
@@ -74,6 +84,18 @@ def test_app_settings_reads_environment_overrides(
         "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
         "  https://example.com/ofsted_latest.csv  ",
     )
+    monkeypatch.setenv(
+        "CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL",
+        "  https://example.com/ofsted_timeline_index  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
+        "  https://example.com/ofsted_ytd.csv, https://example.com/ofsted_historical.csv  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
+        "false",
+    )
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "20")
     monkeypatch.setenv("CIVITAS_HTTP_MAX_RETRIES", "5")
     monkeypatch.setenv("CIVITAS_HTTP_RETRY_BACKOFF_SECONDS", "1.25")
@@ -91,6 +113,15 @@ def test_app_settings_reads_environment_overrides(
     )
     assert settings.pipeline.dfe_characteristics_dataset_id == "custom-dataset-id"
     assert settings.pipeline.ofsted_latest_source_csv == "https://example.com/ofsted_latest.csv"
+    assert (
+        settings.pipeline.ofsted_timeline_source_index_url
+        == "https://example.com/ofsted_timeline_index"
+    )
+    assert (
+        settings.pipeline.ofsted_timeline_source_assets
+        == "https://example.com/ofsted_ytd.csv, https://example.com/ofsted_historical.csv"
+    )
+    assert settings.pipeline.ofsted_timeline_include_historical_baseline is False
     assert settings.http_clients.timeout_seconds == 20.0
     assert settings.http_clients.max_retries == 5
     assert settings.http_clients.retry_backoff_seconds == 1.25
