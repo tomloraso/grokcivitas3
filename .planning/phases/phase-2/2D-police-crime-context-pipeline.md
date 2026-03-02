@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/2A-source-contract-gate.md`
@@ -87,6 +87,39 @@ Implement monthly police crime context ingest and spatial aggregation into Gold 
 4. Rows missing `Month`, `Longitude`, or `Latitude` are rejected.
 5. Aggregation radius default is `1 mile` (`1609.344` meters), configurable through settings.
 6. Gold stores category-level counts to support API summary rollups without reprocessing raw points.
+7. `api` source mode is explicit but fail-fast for bulk loads; Phase 2 implementation supports archive-first production ingest and reserves API mode for future targeted recovery tooling.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added `PoliceCrimeContextPipeline`:
+  - `apps/backend/src/civitas/infrastructure/pipelines/police_crime_context.py`
+  - supports archive resolution/download, ZIP extraction, staging validation/rejection logging, and Gold spatial aggregation upsert.
+- Completed: extended pipeline registration and source enum wiring:
+  - `apps/backend/src/civitas/infrastructure/pipelines/{base.py,__init__.py}`
+- Completed: added settings support for police source controls:
+  - `CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL`
+  - `CIVITAS_POLICE_CRIME_SOURCE_MODE`
+  - `CIVITAS_POLICE_CRIME_RADIUS_METERS`
+- Completed: added migration for Gold crime context table:
+  - `apps/backend/alembic/versions/20260302_08_phase2_area_crime_context.py`
+- Completed: added fixtures and tests:
+  - `apps/backend/tests/fixtures/police_crime_context/*`
+  - `apps/backend/tests/unit/test_police_crime_context_transforms.py`
+  - `apps/backend/tests/integration/test_police_crime_context_pipeline.py`
+- Completed: updated local configuration/runbook + CLI/settings coverage:
+  - `.env.example`
+  - `docs/runbooks/local-development.md`
+  - `apps/backend/tests/unit/test_pipeline_cli.py`
+  - `apps/backend/tests/unit/test_settings.py`
+- Completed: hardened integration determinism for shared-database environments:
+  - reset + reseed of test-owned school rows at fixture setup,
+  - fixture coordinates moved to isolated geography to avoid ambient production-like school overlap,
+  - strict `promoted_rows == 3` idempotency assertion restored.
+- Verification commands executed:
+  - `uv run --project apps/backend ruff check apps/backend`
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_police_crime_context_transforms.py apps/backend/tests/integration/test_police_crime_context_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
+  - `make lint`
+  - `make test`
 
 ## Data Flow
 

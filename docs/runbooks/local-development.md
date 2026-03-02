@@ -98,6 +98,8 @@ uv run --project apps/backend python tools/scripts/verify_phase1_sources.py
 uv run --project apps/backend python tools/scripts/verify_phase2_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source ons_imd
+uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 uv run --project apps/backend civitas pipeline run --all
@@ -124,6 +126,29 @@ CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV=C:\path\to\school_characteristics.csv
 
 # Defaults to validated Phase 1 dataset id when not set
 CIVITAS_DFE_CHARACTERISTICS_DATASET_ID=019afee4-ba17-73cb-85e0-f88c101bb734
+```
+
+For ONS IMD runs, these optional `.env` values control release selection and manual source override:
+
+```bash
+# Local CSV file or HTTP URL override
+CIVITAS_IMD_SOURCE_CSV=C:\path\to\File_7_IoD2025.csv
+
+# Release selector used when source override is unset (iod2025 or iod2019)
+CIVITAS_IMD_RELEASE=iod2025
+```
+
+For Police crime context runs, these optional `.env` values control archive source and aggregation behavior:
+
+```bash
+# Explicit archive URL or local ZIP override
+CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL=https://data.police.uk/data/archive/2026-01.zip
+
+# Source mode: archive (default) or api (explicit fail-fast for bulk runs)
+CIVITAS_POLICE_CRIME_SOURCE_MODE=archive
+
+# Radius used by ST_DWithin aggregation into area_crime_context
+CIVITAS_POLICE_CRIME_RADIUS_METERS=1609.344
 ```
 
 For Ofsted latest runs, this optional `.env` value overrides landing-page auto-resolution with a local file or URL:

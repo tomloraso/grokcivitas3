@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/2A-source-contract-gate.md`
@@ -79,6 +79,31 @@ Ingest ONS Indices of Deprivation data into Gold `area_deprivation`, providing v
    - `idaci_decile`.
 4. Preserve source release metadata (`source_release`, `lsoa_vintage`) in Gold.
 5. If school -> LSOA code mapping is unavailable, API returns `null` deprivation context with explicit coverage metadata.
+
+## Implementation Progress (2026-03-02)
+
+- Completed: added `OnsImdPipeline` with Bronze download, staging validation/rejection logging, and Gold promote upsert:
+  - `apps/backend/src/civitas/infrastructure/pipelines/ons_imd.py`
+- Completed: added pipeline source registration and settings wiring for:
+  - `PipelineSource.ONS_IMD`
+  - `CIVITAS_IMD_SOURCE_CSV`
+  - `CIVITAS_IMD_RELEASE`
+- Completed: added Gold migration:
+  - `apps/backend/alembic/versions/20260302_07_phase2_area_deprivation.py`
+- Completed: added fixtures and tests:
+  - `apps/backend/tests/fixtures/ons_imd/*`
+  - `apps/backend/tests/unit/test_ons_imd_transforms.py`
+  - `apps/backend/tests/integration/test_ons_imd_pipeline.py`
+- Completed: updated local configuration/runbook coverage:
+  - `.env.example`
+  - `docs/runbooks/local-development.md`
+  - `apps/backend/tests/unit/test_settings.py`
+  - `apps/backend/tests/unit/test_pipeline_cli.py`
+- Verification commands executed:
+  - `uv run --project apps/backend ruff check apps/backend`
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ons_imd_transforms.py apps/backend/tests/integration/test_ons_imd_pipeline.py apps/backend/tests/unit/test_settings.py apps/backend/tests/unit/test_pipeline_cli.py -q`
+  - `make lint`
+  - `make test`
 
 ## Data Flow
 

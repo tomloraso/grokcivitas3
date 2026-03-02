@@ -11,6 +11,8 @@ class PipelineSource(str, Enum):
     DFE_CHARACTERISTICS = "dfe_characteristics"
     OFSTED_LATEST = "ofsted_latest"
     OFSTED_TIMELINE = "ofsted_timeline"
+    ONS_IMD = "ons_imd"
+    POLICE_CRIME_CONTEXT = "police_crime_context"
 
 
 class PipelineRunStatus(str, Enum):

@@ -1,0 +1,8 @@
+LSOA code (2021),LSOA name (2021),Local Authority District code (2024),Local Authority District name (2024),Index of Multiple Deprivation (IMD) Score,Index of Multiple Deprivation (IMD) Rank (where 1 is most deprived),Index of Multiple Deprivation (IMD) Decile (where 1 is most deprived 10% of LSOAs),Income Deprivation Affecting Children Index (IDACI) Score (rate),Income Deprivation Affecting Children Index (IDACI) Rank (where 1 is most deprived),Income Deprivation Affecting Children Index (IDACI) Decile (where 1 is most deprived 10% of LSOAs)
+E01000001,Alpha 001A,E09000001,Alpha District,25.1,100,1,0.45,120,1
+E01000001,Alpha 001A,E09000001,Alpha District,24.0,95,1,0.40,110,1
+E01000002,Alpha 001B,E09000001,Alpha District,14.2,1200,4,0.18,1600,3
+,Missing Code,E09000001,Alpha District,11.0,1800,5,0.16,2000,4
+E01000003,,E09000001,Alpha District,12.3,1500,5,0.22,1501,4
+E01000004,Alpha 001D,E09000001,Alpha District,10.7,2000,11,0.20,2300,5
+E01000005,Alpha 001E,E09000001,Alpha District,9.4,2200,6,oops,2500,5

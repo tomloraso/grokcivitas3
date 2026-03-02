@@ -1,0 +1,9 @@
+Crime ID,Month,Reported by,Falls within,Longitude,Latitude,Location,LSOA code,LSOA name,Crime type,Last outcome category,Context
+1,2026-01,Example Police,Example Police,-30.0000,0.0000,On or near Alpha Road,E01000001,Alpha LSOA,violent-crime,Under investigation,
+2,2026-01,Example Police,Example Police,-30.0004,0.0003,On or near Alpha Road,E01000001,Alpha LSOA,burglary,Under investigation,
+3,2026-01,Example Police,Example Police,-29.9997,-0.0002,On or near Alpha Road,E01000001,Alpha LSOA,violent-crime,Under investigation,
+4,2026-01,Example Police,Example Police,-30.0302,0.0002,On or near Beta Road,E01000002,Beta LSOA,robbery,Under investigation,
+5,2026-01,Example Police,Example Police,-31.0000,1.0000,On or near Far Road,E01000003,Far LSOA,violent-crime,Under investigation,
+6,2026-01,Example Police,Example Police,,0.0000,On or near Missing Longitude,E01000001,Alpha LSOA,violent-crime,Under investigation,
+7,2026-99,Example Police,Example Police,-30.0000,0.0000,On or near Invalid Month,E01000001,Alpha LSOA,violent-crime,Under investigation,
+8,2026-01,Example Police,Example Police,-30.0000,,On or near Missing Latitude,E01000001,Alpha LSOA,violent-crime,Under investigation,

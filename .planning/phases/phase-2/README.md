@@ -110,8 +110,8 @@ Phase 2 is split into eight substantial deliverables:
 
 - 2A Source contract gate: completed.
 - 2B Ofsted timeline pipeline: completed.
-- 2C ONS IMD pipeline: planned.
-- 2D Police crime context pipeline: planned.
+- 2C ONS IMD pipeline: completed.
+- 2D Police crime context pipeline: completed.
 - 2E School profile API extensions: planned.
 - 2F Web profile area context enhancements: planned.
 - 2G Phase 2 quality gates: planned.
@@ -140,6 +140,39 @@ Phase 2 is split into eight substantial deliverables:
     - `uv run --project apps/backend ruff check apps/backend`
     - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ofsted_timeline_transforms.py apps/backend/tests/integration/test_ofsted_timeline_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
   - Result: Phase 2B implementation complete and test-covered.
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 2C ONS IMD pipeline:
+    - added `apps/backend/src/civitas/infrastructure/pipelines/ons_imd.py`,
+    - added migration `apps/backend/alembic/versions/20260302_07_phase2_area_deprivation.py`,
+    - added fixtures/tests under `apps/backend/tests/{fixtures,unit,integration}/ons_imd*`.
+  - Updated pipeline/config wiring:
+    - `PipelineSource.ONS_IMD` registration in registry + CLI source coverage.
+    - IMD source settings and `.env` / runbook entries.
+  - Revalidated focused backend checks:
+    - `uv run --project apps/backend ruff check apps/backend`
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ons_imd_transforms.py apps/backend/tests/integration/test_ons_imd_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
+  - Result: Phase 2C implementation complete and test-covered.
+- 2026-03-02 (implementation checkpoint):
+  - Completed Phase 2D Police crime context pipeline:
+    - added `apps/backend/src/civitas/infrastructure/pipelines/police_crime_context.py`,
+    - added migration `apps/backend/alembic/versions/20260302_08_phase2_area_crime_context.py`,
+    - added fixtures/tests under `apps/backend/tests/{fixtures,unit,integration}/police_crime_context*`.
+  - Updated pipeline/config wiring:
+    - `PipelineSource.POLICE_CRIME_CONTEXT` registration in registry + CLI source coverage.
+    - police source settings and `.env` / runbook entries.
+  - Revalidated focused backend checks:
+    - `uv run --project apps/backend ruff check apps/backend`
+    - `uv run --project apps/backend pytest apps/backend/tests/unit/test_police_crime_context_transforms.py apps/backend/tests/integration/test_police_crime_context_pipeline.py apps/backend/tests/unit/test_pipeline_cli.py apps/backend/tests/unit/test_settings.py -q`
+  - Result: Phase 2D implementation complete and test-covered.
+- 2026-03-02 (hardening checkpoint):
+  - Tightened Phase 2D integration test determinism in shared database environments:
+    - fixture setup now cleans and reseeds test-owned rows before execution,
+    - police fixture coordinates moved to isolated geography to avoid overlap with ambient schools,
+    - strict `promoted_rows == 3` assertions restored for first and rerun promote stages.
+  - Revalidated quality gates:
+    - `make lint`
+    - `make test`
+  - Result: end-to-end gates green with deterministic Phase 2D coverage.
 
 ## Phase 2 Definition Of Done
 

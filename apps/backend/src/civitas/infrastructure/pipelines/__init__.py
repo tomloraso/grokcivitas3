@@ -7,6 +7,8 @@ from .dfe_characteristics import DfeCharacteristicsPipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
+from .ons_imd import OnsImdPipeline
+from .police_crime_context import PoliceCrimeContextPipeline
 
 
 def pipeline_registry(
@@ -35,5 +37,16 @@ def pipeline_registry(
             include_historical_baseline=(
                 pipeline_settings.ofsted_timeline_include_historical_baseline
             ),
+        ),
+        PipelineSource.ONS_IMD: OnsImdPipeline(
+            engine=engine,
+            source_csv=pipeline_settings.imd_source_csv,
+            source_release=pipeline_settings.imd_release,
+        ),
+        PipelineSource.POLICE_CRIME_CONTEXT: PoliceCrimeContextPipeline(
+            engine=engine,
+            source_archive_url=pipeline_settings.police_crime_source_archive_url,
+            source_mode=pipeline_settings.police_crime_source_mode,
+            crime_radius_meters=pipeline_settings.police_crime_radius_meters,
         ),
     }

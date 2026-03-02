@@ -16,7 +16,14 @@ class FakePipelineRunner:
         return self._result
 
     def available_sources(self) -> tuple[str, ...]:
-        return ("gias", "dfe_characteristics", "ofsted_latest", "ofsted_timeline")
+        return (
+            "gias",
+            "dfe_characteristics",
+            "ofsted_latest",
+            "ofsted_timeline",
+            "ons_imd",
+            "police_crime_context",
+        )
 
     def run_all(self) -> dict[PipelineSource, PipelineResult]:
         self.ran_all = True
@@ -107,6 +114,32 @@ def test_pipeline_run_ofsted_timeline_source_success(monkeypatch: pytest.MonkeyP
     assert result.exit_code == 0
     assert fake_runner.ran_source == "ofsted_timeline"
     assert "ofsted_timeline: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_ons_imd_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "ons_imd"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "ons_imd"
+    assert "ons_imd: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_police_crime_context_source_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "police_crime_context"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "police_crime_context"
+    assert "police_crime_context: succeeded" in result.stdout.lower()
 
 
 def test_pipeline_run_all(monkeypatch: pytest.MonkeyPatch) -> None:

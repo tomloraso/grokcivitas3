@@ -10,6 +10,9 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_BRONZE_ROOT,
     DEFAULT_DATABASE_URL,
     DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
+    DEFAULT_IMD_RELEASE,
+    DEFAULT_POLICE_CRIME_RADIUS_METERS,
+    DEFAULT_POLICE_CRIME_SOURCE_MODE,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
     DEFAULT_POSTCODES_IO_BASE_URL,
     AppSettings,
@@ -29,6 +32,11 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_GIAS_SOURCE_ZIP",
         "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
         "CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+        "CIVITAS_IMD_SOURCE_CSV",
+        "CIVITAS_IMD_RELEASE",
+        "CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL",
+        "CIVITAS_POLICE_CRIME_SOURCE_MODE",
+        "CIVITAS_POLICE_CRIME_RADIUS_METERS",
         "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
         "CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL",
         "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
@@ -48,6 +56,11 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.gias_source_csv is None
     assert settings.pipeline.gias_source_zip is None
     assert settings.pipeline.dfe_characteristics_source_csv is None
+    assert settings.pipeline.imd_source_csv is None
+    assert settings.pipeline.imd_release == DEFAULT_IMD_RELEASE
+    assert settings.pipeline.police_crime_source_archive_url is None
+    assert settings.pipeline.police_crime_source_mode == DEFAULT_POLICE_CRIME_SOURCE_MODE
+    assert settings.pipeline.police_crime_radius_meters == DEFAULT_POLICE_CRIME_RADIUS_METERS
     assert settings.pipeline.ofsted_latest_source_csv is None
     assert (
         settings.pipeline.ofsted_timeline_source_index_url
@@ -80,6 +93,14 @@ def test_app_settings_reads_environment_overrides(
         "  https://example.com/dfe_characteristics.csv  ",
     )
     monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " custom-dataset-id ")
+    monkeypatch.setenv("CIVITAS_IMD_SOURCE_CSV", "  https://example.com/file_7.csv  ")
+    monkeypatch.setenv("CIVITAS_IMD_RELEASE", " IOD2019 ")
+    monkeypatch.setenv(
+        "CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL",
+        "  https://data.police.uk/data/archive/2026-01.zip  ",
+    )
+    monkeypatch.setenv("CIVITAS_POLICE_CRIME_SOURCE_MODE", " archive ")
+    monkeypatch.setenv("CIVITAS_POLICE_CRIME_RADIUS_METERS", "2000")
     monkeypatch.setenv(
         "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
         "  https://example.com/ofsted_latest.csv  ",
@@ -112,6 +133,14 @@ def test_app_settings_reads_environment_overrides(
         == "https://example.com/dfe_characteristics.csv"
     )
     assert settings.pipeline.dfe_characteristics_dataset_id == "custom-dataset-id"
+    assert settings.pipeline.imd_source_csv == "https://example.com/file_7.csv"
+    assert settings.pipeline.imd_release == "iod2019"
+    assert (
+        settings.pipeline.police_crime_source_archive_url
+        == "https://data.police.uk/data/archive/2026-01.zip"
+    )
+    assert settings.pipeline.police_crime_source_mode == "archive"
+    assert settings.pipeline.police_crime_radius_meters == 2000.0
     assert settings.pipeline.ofsted_latest_source_csv == "https://example.com/ofsted_latest.csv"
     assert (
         settings.pipeline.ofsted_timeline_source_index_url
@@ -134,6 +163,9 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "-1")
     monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "0")
     monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " ")
+    monkeypatch.setenv("CIVITAS_IMD_RELEASE", "not-a-release")
+    monkeypatch.setenv("CIVITAS_POLICE_CRIME_SOURCE_MODE", "invalid")
+    monkeypatch.setenv("CIVITAS_POLICE_CRIME_RADIUS_METERS", "0")
 
     with pytest.raises(ValidationError):
         AppSettings(_env_file=None)
