@@ -133,6 +133,48 @@
 
 ---
 
+## Phase H - Hardening (data reliability + completeness + resilience)
+
+**Goal:** Convert data-quality RCA findings into production-grade hardening across ingestion correctness, historical depth, completeness transparency, and operational safety.
+
+### Detailed design
+
+- `.planning/phases/phase-hardening/README.md`
+- `.planning/phases/phase-hardening/H1-pipeline-run-policy-quality-gates.md`
+- `.planning/phases/phase-hardening/H2-source-normalization-contracts.md`
+- `.planning/phases/phase-hardening/H3-historical-demographics-backfill-lookback.md`
+- `.planning/phases/phase-hardening/H4-data-completeness-contract-api-ui.md`
+- `.planning/phases/phase-hardening/H5-operational-observability-freshness-coverage-drift.md`
+- `.planning/phases/phase-hardening/H6-pipeline-resilience-performance-hardening.md`
+- `.planning/phases/phase-hardening/H7-hardening-quality-gates-signoff.md`
+
+### Deliverables
+
+1. **H1: Pipeline run policy and quality gates** - deterministic run outcomes with hard-fail protection when downloaded/staged/promoted counters violate quality rules.
+2. **H2: Source normalization contracts** - versioned per-source normalization and schema drift controls at the Bronze -> Staging boundary.
+3. **H3: Historical demographics backfill** - configurable lookback and idempotent historical ingestion for trend depth where source data exists.
+4. **H4: Data completeness contract** - explicit section-level availability/reason metadata in profile/trends API and user-facing UI states.
+5. **H5: Operational observability** - freshness, coverage, and drift metrics with actionable alerting and runbook support.
+6. **H6: Pipeline resilience and performance** - retries, checkpoints, resume support, chunked processing, and throughput/recovery hardening.
+7. **H7: Hardening quality gates** - mandatory sign-off gates proving hardening outcomes in one repository state.
+
+### Exit criteria
+
+- Pipeline runs cannot silently succeed when staged/promoted data quality fails.
+- Source normalization is contract-driven, versioned, and test-covered for every active feed.
+- Historical demographics support configurable lookback and produce multi-year trends where available.
+- API and UI expose clear completeness metadata with user-friendly messaging.
+- Freshness and coverage drift are continuously monitored with alerting.
+- Recovery and performance drills pass for large-source and interruption scenarios.
+- Hardening quality gates pass (`H7`) with evidence captured.
+
+### Dependencies
+
+- Phase 2 for complete profile and source surface area.
+- Can run alongside late UX polish only when API contract changes are coordinated.
+
+---
+
 ## Phase UX - Visual quality + interaction uplift (web cross-cutting)
 
 **Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys.
@@ -248,6 +290,7 @@
 | 0 | Data foundation + GIAS | Search by postcode with production-grade web foundations and schools on map | Foundation / largest setup effort |
 | 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
+| H | Hardening | Deterministic pipeline quality, completeness transparency, and operational resilience | Large (cross-cutting) |
 | UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
