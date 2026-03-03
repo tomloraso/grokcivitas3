@@ -118,6 +118,9 @@ CIVITAS_GIAS_SOURCE_ZIP=C:\path\to\extract.zip
 CIVITAS_GIAS_SOURCE_CSV=https://example.com/edubasealldata.csv
 ```
 
+GIAS staging accepts `OpenDate` / `CloseDate` values in both `DD/MM/YYYY` and
+`DD-MM-YYYY` formats (with optional time components) to match current upstream extracts.
+
 For DfE characteristics runs, these optional `.env` values control dataset selection and manual CSV override:
 
 ```bash
@@ -163,8 +166,12 @@ For Ofsted timeline runs, these optional `.env` values control source resolution
 # Override landing page source
 CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL=https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
 
-# Comma-separated explicit asset list (local paths and/or URLs)
-CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS=C:\path\to\all_inspections_ytd.csv,C:\path\to\all_inspections_historical_2015_2019.csv
+# Rolling academic-year window used when selecting all_inspections assets
+# (default 10 years; set to 5 for lighter local runs)
+CIVITAS_OFSTED_TIMELINE_YEARS=10
+
+# Comma-separated explicit asset list (local paths and/or URLs) for emergency pinning
+# CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS=C:\path\to\all_inspections_2024.csv,C:\path\to\all_inspections_2025.csv
 
 # Include 2015-2019 baseline during landing-page resolution
 CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE=true
@@ -176,3 +183,11 @@ For postcode search API behavior, these optional `.env` values control resolver 
 CIVITAS_POSTCODES_IO_BASE_URL=https://api.postcodes.io
 CIVITAS_POSTCODE_CACHE_TTL_DAYS=30
 ```
+
+`postcode_cache` stores both `lsoa` (name) and `lsoa_code`. If a cached row predates
+`lsoa_code` backfill, the resolver automatically refreshes it from Postcodes.io on the next
+postcode search.
+
+`GET /api/v1/schools/{urn}` also performs a best-effort postcode context refresh when
+deprivation is missing for a school postcode, so profile area context does not depend on
+whether a user has run postcode search first.

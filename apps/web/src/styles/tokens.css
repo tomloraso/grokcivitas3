@@ -47,6 +47,8 @@
   --ref-color-accent-400: #22d3ee;
   --ref-color-accent-500: #06b6d4;
   --ref-color-phase-secondary: #E879F9;
+  --ref-color-phase-all-through: #22d3ee;
+  --ref-color-phase-default: #64748b;
 
   --ref-color-success-500: #22c55e;
   --ref-color-warning-500: #f59e0b;
@@ -87,6 +89,8 @@
   --color-state-info: var(--ref-color-info-500);
   --color-phase-primary: var(--ref-color-brand-500);
   --color-phase-secondary: var(--ref-color-phase-secondary);
+  --color-phase-all-through: var(--ref-color-phase-all-through);
+  --color-phase-default: var(--ref-color-phase-default);
   --marker-glow: rgba(168, 85, 247, 0.4);
   --marker-glow-active: rgba(168, 85, 247, 0.55);
 
@@ -133,10 +137,10 @@
   --panel-surface-neutral: rgba(15, 15, 20, 0.72);
   --panel-surface-neutral-border: rgba(255, 255, 255, 0.10);
 
-  /* Panel overlay */
-  --panel-collapsed-width: 56px;
-  --panel-expanded-width: min(420px, 100%);
-  --panel-collapse-duration: var(--motion-base);
+  /* Panel overlay (desktop resize) */
+  --panel-min-width: 280px;
+  --panel-max-width: 480px;
+  --panel-default-width: 380px;
 
   /* Bottom-sheet (mobile) */
   --sheet-peek-height: 220px;

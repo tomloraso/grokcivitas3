@@ -1,7 +1,16 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import * as React from "react";
 import { useEffect, useMemo, useState, useRef } from "react";
-import Map, { Marker, Popup, NavigationControl, ViewStateChangeEvent, Source, Layer, MapRef } from "react-map-gl/maplibre";
+import Map, {
+  Marker,
+  Popup,
+  NavigationControl,
+  ViewStateChangeEvent,
+  Source,
+  Layer,
+  MapRef,
+  MapLayerMouseEvent
+} from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import circle from '@turf/circle';
@@ -49,6 +58,11 @@ function useMarkerSize(): number {
 }
 
 const SEARCH_RESULTS_ZOOM = 12;
+const UNCLUSTERED_LAYER_ID = "unclustered-schools";
+const CLUSTERS_LAYER_ID = "clusters";
+const CLUSTER_COUNTS_LAYER_ID = "cluster-counts";
+const CLUSTER_SOURCE_ID = "school-markers";
+const REACT_MARKER_ZOOM_THRESHOLD = 14;
 
 interface MapPanelMapLibreProps {
   center: { lat: number; lng: number };
@@ -56,6 +70,7 @@ interface MapPanelMapLibreProps {
   markers: MapMarker[];
   activeMarkerId?: string | null;
   onMarkerHover?: (id: string | null) => void;
+  fitBounds?: boolean;
 }
 
 export default function MapPanelMapLibre({
@@ -63,11 +78,16 @@ export default function MapPanelMapLibre({
   radiusMiles,
   activeMarkerId,
   onMarkerHover,
-  markers
+  markers,
+  fitBounds
 }: MapPanelMapLibreProps): JSX.Element {
   const mapStyle = useMemo(() => getMapStyle(), []);
   const markerSize = useMarkerSize();
   const [popupInfo, setPopupInfo] = useState<MapMarker | null>(null);
+  const markerById = useMemo(
+    () => new globalThis.Map(markers.map((marker) => [marker.id, marker])),
+    [markers]
+  );
 
   // Keep track of the view state
   const targetZoom = markers.length > 0 ? SEARCH_RESULTS_ZOOM : MAP_BOUNDS.DEFAULT_ZOOM;
@@ -92,7 +112,20 @@ export default function MapPanelMapLibre({
     
     if (mapRef.current) {
       const map = mapRef.current.getMap();
-      
+
+      // Name-search mode: fit map to marker bounds
+      if (fitBounds && markers.length > 0) {
+        const lngs = markers.map(m => m.lng);
+        const lats = markers.map(m => m.lat);
+        const bounds = new maplibregl.LngLatBounds(
+          [Math.min(...lngs), Math.min(...lats)],
+          [Math.max(...lngs), Math.max(...lats)]
+        );
+        map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: prefersReducedMotion ? 0 : 1200 });
+        return;
+      }
+
+      // Postcode-search mode: fly/jump to center
       const targetState = {
         center: [center.lng, center.lat] as [number, number],
         zoom: targetZoom
@@ -108,11 +141,66 @@ export default function MapPanelMapLibre({
         });
       }
     }
-  }, [center.lng, center.lat, targetZoom, prefersReducedMotion]);
+  }, [center.lng, center.lat, targetZoom, prefersReducedMotion, fitBounds, markers]);
 
   const onMove = React.useCallback((evt: ViewStateChangeEvent) => {
     setViewState(evt.viewState);
   }, []);
+
+  const handleMapClick = React.useCallback((event: MapLayerMouseEvent) => {
+    const [feature] = event.features ?? [];
+    if (!feature) {
+      return;
+    }
+
+    if (feature.layer.id === CLUSTERS_LAYER_ID) {
+      const clusterIdRaw = feature.properties?.cluster_id;
+      const clusterId = Number(clusterIdRaw);
+      const coordinates = feature.geometry.type === "Point" ? feature.geometry.coordinates : null;
+      if (!mapRef.current || !coordinates || !Number.isFinite(clusterId)) {
+        return;
+      }
+
+      const source = mapRef.current.getSource(CLUSTER_SOURCE_ID) as maplibregl.GeoJSONSource & {
+        getClusterExpansionZoom: (clusterId: number, callback: (error: Error | null, zoom: number) => void) => void;
+      };
+
+      source.getClusterExpansionZoom(clusterId, (error, zoom) => {
+        if (error) return;
+        mapRef.current?.flyTo({
+          center: [coordinates[0], coordinates[1]],
+          zoom,
+          duration: prefersReducedMotion ? 0 : 400,
+          essential: true,
+        });
+      });
+      return;
+    }
+
+    if (feature.layer.id !== UNCLUSTERED_LAYER_ID) {
+      return;
+    }
+
+    const markerId = feature.properties?.id;
+    if (markerId == null) {
+      return;
+    }
+    const marker = markerById.get(String(markerId));
+    if (marker) {
+      setPopupInfo(marker);
+      onMarkerHover?.(marker.id);
+    }
+  }, [markerById, onMarkerHover, prefersReducedMotion]);
+
+  const handleMapMouseMove = React.useCallback((event: MapLayerMouseEvent) => {
+    const hoveredSchool = (event.features ?? []).find((feature) => feature.layer.id === UNCLUSTERED_LAYER_ID);
+    const markerId = hoveredSchool?.properties?.id;
+    if (markerId == null) {
+      onMarkerHover?.(null);
+      return;
+    }
+    onMarkerHover?.(String(markerId));
+  }, [onMarkerHover]);
 
   // For keyboard a11y on markers
   const handleMarkerKeyDown = (e: React.KeyboardEvent, marker: MapMarker) => {
@@ -136,6 +224,7 @@ export default function MapPanelMapLibre({
         },
         properties: {
           ...marker,
+          markerColor: markerColor(marker.ofstedRating, marker.phase),
           isActive: marker.isHovered || activeMarkerId === marker.id
         }
       }))
@@ -159,8 +248,12 @@ export default function MapPanelMapLibre({
         minZoom={MAP_BOUNDS.MIN_ZOOM}
         maxZoom={MAP_BOUNDS.MAX_ZOOM}
         maxBounds={MAP_BOUNDS.UK_BBOX}
-        maplibreLogo={true}
+        maplibreLogo={false}
         attributionControl={false}
+        interactiveLayerIds={[CLUSTERS_LAYER_ID, UNCLUSTERED_LAYER_ID]}
+        onClick={handleMapClick}
+        onMouseMove={handleMapMouseMove}
+        onMouseLeave={() => onMarkerHover?.(null)}
       >
         {radiusFeature && (
           <Source type="geojson" data={radiusFeature}>
@@ -189,7 +282,7 @@ export default function MapPanelMapLibre({
 
         {/* Source for clustered points */}
         <Source
-          id="school-markers"
+          id={CLUSTER_SOURCE_ID}
           type="geojson"
           data={geojsonMarkers}
           cluster={true}
@@ -198,7 +291,7 @@ export default function MapPanelMapLibre({
         >
           {/* Cluster circles */}
           <Layer
-            id="clusters"
+            id={CLUSTERS_LAYER_ID}
             type="circle"
             filter={["has", "point_count"]}
             paint={{
@@ -220,7 +313,7 @@ export default function MapPanelMapLibre({
 
           {/* Cluster count labels */}
           <Layer
-            id="cluster-counts"
+            id={CLUSTER_COUNTS_LAYER_ID}
             type="symbol"
             filter={["has", "point_count"]}
             layout={{
@@ -233,10 +326,39 @@ export default function MapPanelMapLibre({
               "text-color": MAP_TEXT_ON_BRAND
             }}
           />
+
+          {/* Render singleton points at lower zoom so list counts and map remain in sync */}
+          <Layer
+            id={UNCLUSTERED_LAYER_ID}
+            type="circle"
+            filter={["!", ["has", "point_count"]]}
+            maxzoom={REACT_MARKER_ZOOM_THRESHOLD}
+            paint={{
+              "circle-color": [
+                "coalesce",
+                ["get", "markerColor"],
+                MAP_BRAND
+              ],
+              "circle-radius": [
+                "case",
+                ["boolean", ["get", "isActive"], false],
+                9,
+                7
+              ],
+              "circle-stroke-width": [
+                "case",
+                ["boolean", ["get", "isActive"], false],
+                2.5,
+                1.5
+              ],
+              "circle-stroke-color": MAP_BG,
+              "circle-opacity": 0.95
+            }}
+          />
         </Source>
 
         {/* Individual unclustered markers */}
-        {viewState.zoom > 14 ? markers.map((marker) => {
+        {viewState.zoom >= REACT_MARKER_ZOOM_THRESHOLD ? markers.map((marker) => {
           const isActive = marker.isHovered || activeMarkerId === marker.id;
           const ariaLabel = marker.distanceMiles !== undefined
             ? `${marker.label}, ${marker.distanceMiles.toFixed(2)} miles from search center`
@@ -255,29 +377,36 @@ export default function MapPanelMapLibre({
                 setPopupInfo(marker);
               }}
             >
-              <div
-                className="civitas-map-marker"
-                tabIndex={0}
-                role="button"
-                aria-label={ariaLabel}
-                onMouseEnter={() => onMarkerHover?.(marker.id)}
-                onMouseLeave={() => onMarkerHover?.(null)}
-                onKeyDown={(e) => handleMarkerKeyDown(e, marker)}
-                style={{
-                  width: `${markerSize}px`,
-                  height: `${markerSize}px`,
-                  borderRadius: "50%",
-                  backgroundColor: markerColor(marker.ofstedRating, marker.phase),
-                  border: `2px solid var(--ref-color-navy-950, ${MAP_BG})`,
-                  boxShadow: isActive
-                    ? "0 0 12px 5px var(--marker-glow-active)"
-                    : "0 0 8px 3px var(--marker-glow)",
-                  transform: isActive ? "scale(1.15)" : "scale(1)",
-                  opacity: 0.95,
-                  cursor: "pointer",
-                  transition: "transform 120ms ease, box-shadow 120ms ease"
-                }}
-              />
+              {(() => {
+                const color = markerColor(marker.ofstedRating, marker.phase);
+                const glow = `${color}66`; // 40 % opacity hex suffix
+                const glowActive = `${color}8C`; // 55 % opacity
+                return (
+                  <div
+                    className="civitas-map-marker"
+                    tabIndex={0}
+                    role="button"
+                    aria-label={ariaLabel}
+                    onMouseEnter={() => onMarkerHover?.(marker.id)}
+                    onMouseLeave={() => onMarkerHover?.(null)}
+                    onKeyDown={(e) => handleMarkerKeyDown(e, marker)}
+                    style={{
+                      width: `${markerSize}px`,
+                      height: `${markerSize}px`,
+                      borderRadius: "50%",
+                      backgroundColor: color,
+                      border: `2px solid var(--ref-color-navy-950, ${MAP_BG})`,
+                      boxShadow: isActive
+                        ? `0 0 12px 5px ${glowActive}`
+                        : `0 0 8px 3px ${glow}`,
+                      transform: isActive ? "scale(1.15)" : "scale(1)",
+                      opacity: 0.95,
+                      cursor: "pointer",
+                      transition: "transform 120ms ease, box-shadow 120ms ease"
+                    }}
+                  />
+                );
+              })()}
             </Marker>
           );
         }) : null}

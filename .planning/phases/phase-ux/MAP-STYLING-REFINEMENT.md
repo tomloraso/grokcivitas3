@@ -5,7 +5,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Complete
 - Last updated: 2026-03-03
 - Depends on:
   - `.planning/phases/phase-ux/UX-1-maplibre-migration-uk-bounds-landing-state.md`

@@ -70,7 +70,11 @@ export function SchoolProfileFeature(): JSX.Element {
           <Breadcrumbs
             segments={[
               ...(fromSearch
-                ? [{ label: fromSearch.postcode, href: paths.home }]
+                ? [{
+                    label: `${fromSearch.postcode} · ${fromSearch.radius} mi`,
+                    href: paths.home,
+                    state: { restoreSearch: fromSearch },
+                  }]
                 : []),
               { label: profile.school.name },
             ]}

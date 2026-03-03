@@ -1,4 +1,5 @@
 from civitas.application.schools.dto import (
+    SchoolNameSearchResponseDto,
     SchoolSearchQueryDto,
     SchoolsSearchResponseDto,
     SearchCenterDto,
@@ -10,6 +11,8 @@ from civitas.domain.schools.value_objects import InvalidPostcodeError, normalize
 
 DEFAULT_RADIUS_MILES = 5.0
 MAX_RADIUS_MILES = 25.0
+DEFAULT_NAME_SEARCH_LIMIT = 50
+MIN_NAME_LENGTH = 3
 
 
 class SearchSchoolsByPostcodeUseCase:
@@ -63,3 +66,28 @@ def _validate_radius(radius_miles: float | None) -> float:
     if radius_miles <= 0 or radius_miles > MAX_RADIUS_MILES:
         raise InvalidSchoolSearchParametersError("radius must be between 0 and 25 miles")
     return radius_miles
+
+
+class SearchSchoolsByNameUseCase:
+    def __init__(
+        self,
+        school_search_repository: SchoolSearchRepository,
+    ) -> None:
+        self._school_search_repository = school_search_repository
+
+    def execute(
+        self,
+        *,
+        name: str,
+        limit: int = DEFAULT_NAME_SEARCH_LIMIT,
+    ) -> SchoolNameSearchResponseDto:
+        stripped = name.strip()
+        if len(stripped) < MIN_NAME_LENGTH:
+            raise InvalidSchoolSearchParametersError("name must be at least 3 characters.")
+        schools = list(
+            self._school_search_repository.search_by_name(
+                name=stripped,
+                limit=limit,
+            )
+        )
+        return SchoolNameSearchResponseDto(schools=tuple(schools))

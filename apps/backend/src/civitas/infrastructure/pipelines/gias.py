@@ -420,9 +420,12 @@ def _parse_optional_date(raw_value: str | None) -> date | None:
 
     supported_formats = (
         "%d/%m/%Y",
+        "%d-%m-%Y",
         "%Y-%m-%d",
         "%d/%m/%Y %H:%M:%S",
         "%d/%m/%Y %H:%M",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M",
     )
     for date_format in supported_formats:
         try:

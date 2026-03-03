@@ -5,6 +5,8 @@ import { cn } from "../../shared/utils/cn";
 import { Card } from "./Card";
 
 interface ResultCardProps {
+  /** Unique identifier for hover-linking with map markers */
+  id?: string;
   name: string;
   type: string;
   phase: string;
@@ -16,9 +18,14 @@ interface ResultCardProps {
   /** Optional animation delay for staggered entry */
   style?: React.CSSProperties;
   className?: string;
+  /** Whether this card is highlighted via map interaction */
+  isActive?: boolean;
+  /** Callback when the card gains/loses hover or keyboard focus */
+  onHover?: (id: string | null) => void;
 }
 
 export function ResultCard({
+  id,
   name,
   type,
   phase,
@@ -28,7 +35,17 @@ export function ResultCard({
   linkState,
   style,
   className,
+  isActive,
+  onHover,
 }: ResultCardProps): JSX.Element {
+  const hoverHandlers = id && onHover
+    ? {
+        onMouseEnter: () => onHover(id),
+        onMouseLeave: () => onHover(null),
+        onFocus: () => onHover(id),
+        onBlur: () => onHover(null),
+      }
+    : {};
   const content = (
     <>
       <div className="grid grid-cols-[1fr_auto] items-start gap-3">
@@ -54,6 +71,10 @@ export function ResultCard({
     </>
   );
 
+  const activeRing = isActive
+    ? "border-brand/40 shadow-[0_0_20px_rgba(139,92,246,0.18)] scale-[1.01]"
+    : "";
+
   if (href) {
     return (
       <Link
@@ -62,8 +83,9 @@ export function ResultCard({
         className={cn("group block result-card-enter", className)}
         aria-label={`View profile for ${name}`}
         style={style}
+        {...hoverHandlers}
       >
-        <Card className="space-y-3 transition-all duration-fast group-hover:scale-[1.01] group-hover:border-brand/30 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]">
+        <Card className={cn("space-y-3 transition-all duration-fast group-hover:scale-[1.01] group-hover:border-brand/30 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]", activeRing)}>
           {content}
         </Card>
       </Link>
@@ -71,7 +93,7 @@ export function ResultCard({
   }
 
   return (
-    <Card className={cn("space-y-3 result-card-enter", className)} style={style}>
+    <Card className={cn("space-y-3 result-card-enter", activeRing, className)} style={style} {...hoverHandlers}>
       {content}
     </Card>
   );

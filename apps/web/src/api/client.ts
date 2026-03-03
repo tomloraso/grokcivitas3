@@ -1,6 +1,7 @@
 import type {
   CreateTaskRequest,
   HealthResponse,
+  SchoolNameSearchResponse,
   SchoolProfileResponse,
   SchoolTrendsResponse,
   SearchSchoolsQuery,
@@ -56,6 +57,11 @@ export async function searchSchools({
   }
 
   return request<SchoolsSearchResponse>(`/api/v1/schools?${params.toString()}`);
+}
+
+export async function searchSchoolsByName(name: string): Promise<SchoolNameSearchResponse> {
+  const params = new URLSearchParams({ name });
+  return request<SchoolNameSearchResponse>(`/api/v1/schools/search?${params.toString()}`);
 }
 
 export async function getSchoolProfile(urn: string): Promise<SchoolProfileResponse> {

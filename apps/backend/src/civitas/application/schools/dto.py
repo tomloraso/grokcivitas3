@@ -24,3 +24,12 @@ class SchoolsSearchResponseDto:
     @property
     def count(self) -> int:
         return len(self.schools)
+
+
+@dataclass(frozen=True)
+class SchoolNameSearchResponseDto:
+    schools: tuple[SchoolSearchResult, ...]
+
+    @property
+    def count(self) -> int:
+        return len(self.schools)

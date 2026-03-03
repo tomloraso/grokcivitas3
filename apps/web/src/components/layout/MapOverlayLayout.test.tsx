@@ -49,8 +49,8 @@ describe("MapOverlayLayout", () => {
     expect(screen.getByRole("region", { name: "Map view" })).toBeInTheDocument();
   });
 
-  describe("desktop collapse/expand", () => {
-    it("starts expanded and can collapse", () => {
+  describe("desktop resizable panel", () => {
+    it("renders panel at default width", () => {
       render(
         <MapOverlayLayout map={<div />}>
           <p>Panel content</p>
@@ -59,56 +59,63 @@ describe("MapOverlayLayout", () => {
 
       const panel = screen.getByRole("region", { name: "Results panel" });
       expect(panel).toBeVisible();
+      expect(panel.style.width).toBe("380px");
       expect(screen.getByText("Panel content")).toBeInTheDocument();
-
-      // Click collapse button
-      const collapseBtn = screen.getByRole("button", { name: "Collapse results panel" });
-      fireEvent.click(collapseBtn);
-
-      // Now aria label switches to "Expand"
-      expect(screen.getByRole("button", { name: "Expand results panel" })).toBeInTheDocument();
-      // Content should be hidden in collapsed state
-      expect(screen.queryByText("Panel content")).not.toBeInTheDocument();
     });
 
-    it("persists collapsed state to localStorage", () => {
+    it("restores persisted width from localStorage", () => {
+      localStorage.setItem("civitas:panel-width", "320");
+
       render(
         <MapOverlayLayout map={<div />}>
           <p>Panel content</p>
         </MapOverlayLayout>
       );
 
-      const collapseBtn = screen.getByRole("button", { name: "Collapse results panel" });
-      fireEvent.click(collapseBtn);
-
-      expect(localStorage.getItem("civitas:panel-collapsed")).toBe("true");
+      const panel = screen.getByRole("region", { name: "Results panel" });
+      expect(panel.style.width).toBe("320px");
     });
 
-    it("shows summary in collapsed rail", () => {
+    it("clamps persisted width within bounds", () => {
+      localStorage.setItem("civitas:panel-width", "600");
+
       render(
-        <MapOverlayLayout map={<div />} summary={<span data-testid="summary">5 schools</span>}>
+        <MapOverlayLayout map={<div />}>
           <p>Panel content</p>
         </MapOverlayLayout>
       );
 
-      const collapseBtn = screen.getByRole("button", { name: "Collapse results panel" });
-      fireEvent.click(collapseBtn);
-
-      expect(screen.getByTestId("summary")).toBeInTheDocument();
+      const panel = screen.getByRole("region", { name: "Results panel" });
+      // 600 should be clamped to max 480
+      expect(panel.style.width).toBe("480px");
     });
 
-    it("announces state change to screen readers", () => {
+    it("renders resize handle with ARIA separator role", () => {
       render(
         <MapOverlayLayout map={<div />}>
           <p>Content</p>
         </MapOverlayLayout>
       );
 
-      // Expanded state announced
-      expect(screen.getByText("Results panel expanded")).toBeInTheDocument();
+      const handle = screen.getByRole("separator", { name: /Resize panel/ });
+      expect(handle).toBeInTheDocument();
+      expect(handle).toHaveAttribute("aria-orientation", "vertical");
+      expect(handle).toHaveAttribute("aria-valuemin", "280");
+      expect(handle).toHaveAttribute("aria-valuemax", "480");
+    });
 
-      fireEvent.click(screen.getByRole("button", { name: "Collapse results panel" }));
-      expect(screen.getByText("Results panel collapsed")).toBeInTheDocument();
+    it("always shows panel content (no collapsed state)", () => {
+      render(
+        <MapOverlayLayout map={<div />}>
+          <p>Always visible</p>
+        </MapOverlayLayout>
+      );
+
+      // No collapse/expand buttons
+      expect(screen.queryByRole("button", { name: /Collapse/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Expand/ })).not.toBeInTheDocument();
+      // Content always visible
+      expect(screen.getByText("Always visible")).toBeVisible();
     });
   });
 
@@ -122,10 +129,11 @@ describe("MapOverlayLayout", () => {
       );
 
       expect(screen.getByText("Mobile content")).toBeInTheDocument();
+      // Drag handle button serves as expand/collapse toggle
       expect(screen.getByRole("button", { name: "Expand results panel" })).toBeInTheDocument();
     });
 
-    it("toggles between peek and expanded", () => {
+    it("toggles between peek and expanded via drag handle button", () => {
       setMobile(true);
       render(
         <MapOverlayLayout map={<div />}>

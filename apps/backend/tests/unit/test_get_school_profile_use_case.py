@@ -19,16 +19,45 @@ from civitas.domain.school_profiles.models import (
     SchoolProfile,
     SchoolProfileSchool,
 )
+from civitas.domain.schools.models import PostcodeCoordinates
 
 
 class FakeSchoolProfileRepository:
-    def __init__(self, profile: SchoolProfile | None) -> None:
+    def __init__(
+        self,
+        profile: SchoolProfile | None = None,
+        profile_sequence: tuple[SchoolProfile | None, ...] | None = None,
+    ) -> None:
         self._profile = profile
+        self._profile_sequence = list(profile_sequence) if profile_sequence is not None else None
         self.received_urns: list[str] = []
 
     def get_school_profile(self, urn: str) -> SchoolProfile | None:
         self.received_urns.append(urn)
+        if self._profile_sequence is not None:
+            if len(self._profile_sequence) > 1:
+                return self._profile_sequence.pop(0)
+            return self._profile_sequence[0]
         return self._profile
+
+
+class FakePostcodeContextResolver:
+    def __init__(self, error: Exception | None = None) -> None:
+        self._error = error
+        self.calls: list[str] = []
+
+    def resolve(self, postcode: str) -> PostcodeCoordinates:
+        self.calls.append(postcode)
+        if self._error is not None:
+            raise self._error
+        return PostcodeCoordinates(
+            postcode=postcode,
+            lat=51.5,
+            lng=-0.14,
+            lsoa="Westminster 018C",
+            admin_district="Westminster",
+            lsoa_code="E01004736",
+        )
 
 
 def _profile(
@@ -188,3 +217,68 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.area_context is not None
     assert result.area_context.deprivation is None
     assert result.area_context.crime is None
+
+
+def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing() -> None:
+    repository = FakeSchoolProfileRepository(
+        profile_sequence=(
+            _profile(),
+            _profile(
+                area_context=SchoolAreaContext(
+                    deprivation=SchoolAreaDeprivation(
+                        lsoa_code="E01004736",
+                        imd_decile=3,
+                        idaci_score=0.241,
+                        idaci_decile=2,
+                        source_release="IoD2025",
+                    ),
+                    crime=SchoolAreaCrime(
+                        radius_miles=1.0,
+                        latest_month="2026-01",
+                        total_incidents=486,
+                        categories=(
+                            SchoolAreaCrimeCategory(
+                                category="violent-crime",
+                                incident_count=132,
+                            ),
+                        ),
+                    ),
+                    coverage=SchoolAreaContextCoverage(
+                        has_deprivation=True,
+                        has_crime=True,
+                        crime_months_available=12,
+                    ),
+                ),
+            ),
+        )
+    )
+    resolver = FakePostcodeContextResolver()
+    use_case = GetSchoolProfileUseCase(
+        school_profile_repository=repository,
+        postcode_context_resolver=resolver,
+    )
+
+    result = use_case.execute(urn="123456")
+
+    assert repository.received_urns == ["123456", "123456"]
+    assert resolver.calls == ["SW1A 1AA"]
+    assert result.area_context is not None
+    assert result.area_context.coverage.has_deprivation is True
+    assert result.area_context.deprivation is not None
+    assert result.area_context.deprivation.lsoa_code == "E01004736"
+
+
+def test_get_school_profile_keeps_profile_when_context_rehydrate_fails() -> None:
+    repository = FakeSchoolProfileRepository(profile=_profile())
+    resolver = FakePostcodeContextResolver(error=RuntimeError("resolver unavailable"))
+    use_case = GetSchoolProfileUseCase(
+        school_profile_repository=repository,
+        postcode_context_resolver=resolver,
+    )
+
+    result = use_case.execute(urn="123456")
+
+    assert repository.received_urns == ["123456"]
+    assert resolver.calls == ["SW1A 1AA"]
+    assert result.area_context is not None
+    assert result.area_context.coverage.has_deprivation is False

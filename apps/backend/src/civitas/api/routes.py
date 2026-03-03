@@ -7,6 +7,7 @@ from civitas.api.dependencies import (
     get_list_tasks_use_case,
     get_school_profile_use_case,
     get_school_trends_use_case,
+    get_search_schools_by_name_use_case,
     get_search_schools_by_postcode_use_case,
 )
 from civitas.api.schemas.school_profiles import (
@@ -31,6 +32,7 @@ from civitas.api.schemas.school_trends import (
     SchoolTrendsSeriesResponse,
 )
 from civitas.api.schemas.schools import (
+    SchoolNameSearchResponse,
     SchoolSearchItemResponse,
     SchoolsSearchCenterResponse,
     SchoolsSearchQueryResponse,
@@ -52,7 +54,10 @@ from civitas.application.schools.errors import (
     PostcodeNotFoundError,
     PostcodeResolverUnavailableError,
 )
-from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
+from civitas.application.schools.use_cases import (
+    SearchSchoolsByNameUseCase,
+    SearchSchoolsByPostcodeUseCase,
+)
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 
 router = APIRouter(prefix="/api/v1", tags=["tasks"])
@@ -113,6 +118,41 @@ def search_schools(
             lat=result.center.lat,
             lng=result.center.lng,
         ),
+        count=result.count,
+        schools=[
+            SchoolSearchItemResponse(
+                urn=school.urn,
+                name=school.name,
+                type=school.school_type,
+                phase=school.phase,
+                postcode=school.postcode,
+                lat=school.lat,
+                lng=school.lng,
+                distance_miles=school.distance_miles,
+            )
+            for school in result.schools
+        ],
+    )
+
+
+@router.get(
+    "/schools/search",
+    response_model=SchoolNameSearchResponse,
+    tags=["schools"],
+    responses={
+        400: {"description": "Invalid name search parameter."},
+    },
+)
+def search_schools_by_name(
+    name: str = Query(..., min_length=3),
+    use_case: SearchSchoolsByNameUseCase = Depends(get_search_schools_by_name_use_case),
+) -> SchoolNameSearchResponse:
+    try:
+        result = use_case.execute(name=name)
+    except InvalidSchoolSearchParametersError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return SchoolNameSearchResponse(
         count=result.count,
         schools=[
             SchoolSearchItemResponse(

@@ -5,6 +5,7 @@ import { Field } from "../../../components/ui/Field";
 import { Panel } from "../../../components/ui/Card";
 import { Select } from "../../../components/ui/Select";
 import { TextInput } from "../../../components/ui/TextInput";
+import type { SearchMode } from "../types";
 
 const RADIUS_OPTIONS = [
   { value: "1", label: "1 mile" },
@@ -15,21 +16,23 @@ const RADIUS_OPTIONS = [
 ];
 
 interface SearchFormProps {
-  postcode: string;
+  searchText: string;
   radius: string;
-  postcodeError: string | null;
+  searchError: string | null;
+  searchMode: SearchMode;
   isSubmitting: boolean;
-  onPostcodeChange: (value: string) => void;
+  onSearchTextChange: (value: string) => void;
   onRadiusChange: (value: string) => void;
   onSubmit: () => Promise<void>;
 }
 
 export function SearchForm({
-  postcode,
+  searchText,
   radius,
-  postcodeError,
+  searchError,
+  searchMode,
   isSubmitting,
-  onPostcodeChange,
+  onSearchTextChange,
   onRadiusChange,
   onSubmit
 }: SearchFormProps): JSX.Element {
@@ -37,6 +40,16 @@ export function SearchForm({
     event.preventDefault();
     await onSubmit();
   };
+
+  const isPostcode = searchMode === "postcode";
+  const trimmed = searchText.trim();
+  const helperText = isPostcode
+    ? "Postcode search mode."
+    : trimmed.length === 0
+      ? "Use a full UK postcode or type a school name."
+      : trimmed.length < 3
+        ? "Type at least 3 characters for school name search."
+        : "School name search mode.";
 
   return (
     <Panel>
@@ -46,34 +59,36 @@ export function SearchForm({
         onSubmit={handleSubmit}
       >
         <Field
-          label="Postcode"
-          htmlFor="postcode"
-          helperText="Use a full UK postcode format."
-          errorText={postcodeError ?? undefined}
+          label="Search"
+          htmlFor="search-text"
+          helperText={helperText}
+          errorText={searchError ?? undefined}
           required
         >
           <TextInput
-            id="postcode"
-            name="postcode"
-            autoComplete="postal-code"
-            value={postcode}
-            onChange={(event) => onPostcodeChange(event.target.value)}
-            aria-invalid={postcodeError ? "true" : "false"}
-            aria-describedby={postcodeError ? "postcode-error" : "postcode-helper"}
-            placeholder="SW1A 1AA"
+            id="search-text"
+            name="search-text"
+            autoComplete="off"
+            value={searchText}
+            onChange={(event) => onSearchTextChange(event.target.value)}
+            aria-invalid={searchError ? "true" : "false"}
+            aria-describedby={searchError ? "search-text-error" : "search-text-helper"}
+            placeholder="Search by postcode or school name..."
           />
         </Field>
-        <div className="grid grid-cols-[1fr_auto] items-end gap-3">
-          <Field label="Radius" htmlFor="radius-select">
-            <Select
-              id="radius-select"
-              name="radius"
-              ariaLabel="Search radius"
-              value={radius}
-              onValueChange={onRadiusChange}
-              options={RADIUS_OPTIONS}
-            />
-          </Field>
+        <div className={`grid items-end gap-3 ${isPostcode ? "grid-cols-[1fr_auto]" : ""}`}>
+          {isPostcode && (
+            <Field label="Radius" htmlFor="radius-select">
+              <Select
+                id="radius-select"
+                name="radius"
+                ariaLabel="Search radius"
+                value={radius}
+                onValueChange={onRadiusChange}
+                options={RADIUS_OPTIONS}
+              />
+            </Field>
+          )}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Searching..." : "Search schools"}
           </Button>

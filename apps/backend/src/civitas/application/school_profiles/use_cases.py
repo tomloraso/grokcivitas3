@@ -14,20 +14,33 @@ from civitas.application.school_profiles.dto import (
     SchoolProfileSchoolDto,
 )
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
+from civitas.application.school_profiles.ports.postcode_context_resolver import (
+    PostcodeContextResolver,
+)
 from civitas.application.school_profiles.ports.school_profile_repository import (
     SchoolProfileRepository,
 )
+from civitas.domain.school_profiles.models import SchoolProfile
 
 
 class GetSchoolProfileUseCase:
-    def __init__(self, school_profile_repository: SchoolProfileRepository) -> None:
+    def __init__(
+        self,
+        school_profile_repository: SchoolProfileRepository,
+        postcode_context_resolver: PostcodeContextResolver | None = None,
+    ) -> None:
         self._school_profile_repository = school_profile_repository
+        self._postcode_context_resolver = postcode_context_resolver
 
     def execute(self, *, urn: str) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
         profile = self._school_profile_repository.get_school_profile(normalized_urn)
         if profile is None:
             raise SchoolProfileNotFoundError(normalized_urn)
+        profile = self._refresh_profile_context_if_needed(
+            urn=normalized_urn,
+            profile=profile,
+        )
 
         demographics_latest = None
         if profile.demographics_latest is not None:
@@ -134,3 +147,31 @@ class GetSchoolProfileUseCase:
             ofsted_timeline=ofsted_timeline,
             area_context=area_context,
         )
+
+    def _refresh_profile_context_if_needed(
+        self,
+        *,
+        urn: str,
+        profile: SchoolProfile,
+    ) -> SchoolProfile:
+        if self._postcode_context_resolver is None:
+            return profile
+
+        postcode = profile.school.postcode
+        if postcode is None or not postcode.strip():
+            return profile
+
+        area_context = profile.area_context
+        has_deprivation = area_context is not None and area_context.coverage.has_deprivation
+        if has_deprivation:
+            return profile
+
+        try:
+            self._postcode_context_resolver.resolve(postcode)
+        except Exception:
+            return profile
+
+        refreshed_profile = self._school_profile_repository.get_school_profile(urn)
+        if refreshed_profile is None:
+            return profile
+        return refreshed_profile

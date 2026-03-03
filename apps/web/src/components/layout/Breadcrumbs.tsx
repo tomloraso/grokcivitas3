@@ -4,6 +4,8 @@ import { ChevronRight, Home } from "lucide-react";
 export interface BreadcrumbSegment {
   label: string;
   href?: string;
+  /** Optional navigation state passed to react-router Link */
+  state?: Record<string, unknown>;
 }
 
 interface BreadcrumbsProps {
@@ -37,6 +39,7 @@ export function Breadcrumbs({ segments }: BreadcrumbsProps): JSX.Element {
               ) : (
                 <Link
                   to={segment.href}
+                  state={segment.state}
                   className="text-disabled transition-colors duration-fast hover:text-secondary"
                 >
                   {segment.label}

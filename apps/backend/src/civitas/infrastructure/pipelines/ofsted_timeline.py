@@ -59,23 +59,34 @@ OVERALL_EFFECTIVENESS_LABEL_TO_CODE: dict[str, str] = {
 _HREF_PATTERN = re.compile(r"""href=["']([^"']+)["']""", re.IGNORECASE)
 _ASSET_URL_PREFIX = "https://assets.publishing.service.gov.uk/"
 _ASSET_DATE_PATTERN = re.compile(
-    r"_(?P<day>\d{1,2})_(?P<month>[A-Za-z]{3})_(?P<year>\d{4})\.csv$",
+    r"_(?P<day>\d{1,2})_(?P<month>[A-Za-z]{3,9})_(?P<year>\d{4})\.csv$",
     re.IGNORECASE,
 )
 _HISTORICAL_ASSET_TOKEN = "1_september_2015_to_31_august_2019"
 _MONTH_ABBR_TO_NUMBER: dict[str, int] = {
     "jan": 1,
+    "january": 1,
     "feb": 2,
+    "february": 2,
     "mar": 3,
+    "march": 3,
     "apr": 4,
+    "april": 4,
     "may": 5,
     "jun": 6,
+    "june": 6,
     "jul": 7,
+    "july": 7,
     "aug": 8,
+    "august": 8,
     "sep": 9,
+    "september": 9,
     "oct": 10,
+    "october": 10,
     "nov": 11,
+    "november": 11,
     "dec": 12,
+    "december": 12,
 }
 
 
@@ -105,6 +116,13 @@ class OfstedTimelineAsset:
     source_asset_month: str | None
 
 
+@dataclass(frozen=True)
+class OfstedTimelineLandingAssets:
+    all_inspections_urls: tuple[str, ...]
+    latest_inspections_urls: tuple[str, ...]
+    historical_url: str | None
+
+
 def validate_ofsted_timeline_headers(headers: Sequence[str], *, schema_version: str) -> None:
     required_headers = (
         REQUIRED_OFSTED_TIMELINE_HISTORICAL_HEADERS
@@ -121,9 +139,9 @@ def validate_ofsted_timeline_headers(headers: Sequence[str], *, schema_version: 
         )
 
 
-def extract_ofsted_timeline_asset_urls(
+def extract_ofsted_timeline_landing_assets(
     landing_page_html: str,
-) -> tuple[str, str, str | None]:
+) -> OfstedTimelineLandingAssets:
     matched_urls: list[str] = []
     seen_urls: set[str] = set()
     for match in _HREF_PATTERN.finditer(landing_page_html):
@@ -151,16 +169,31 @@ def extract_ofsted_timeline_asset_urls(
         url for url in matched_urls if _HISTORICAL_ASSET_TOKEN in url.casefold()
     ]
 
-    all_inspections_url = _select_latest_dated_asset_url(all_inspections_candidates)
-    latest_inspections_url = _select_latest_dated_asset_url(latest_inspections_candidates)
-    historical_url = historical_candidates[0] if historical_candidates else None
+    if not all_inspections_candidates:
+        raise ValueError("Unable to resolve Ofsted all_inspections timeline CSV asset URL.")
+    if not latest_inspections_candidates:
+        raise ValueError("Unable to resolve Ofsted latest_inspections CSV asset URL.")
+
+    return OfstedTimelineLandingAssets(
+        all_inspections_urls=tuple(all_inspections_candidates),
+        latest_inspections_urls=tuple(latest_inspections_candidates),
+        historical_url=historical_candidates[0] if historical_candidates else None,
+    )
+
+
+def extract_ofsted_timeline_asset_urls(
+    landing_page_html: str,
+) -> tuple[str, str, str | None]:
+    landing_assets = extract_ofsted_timeline_landing_assets(landing_page_html)
+    all_inspections_url = _select_latest_dated_asset_url(landing_assets.all_inspections_urls)
+    latest_inspections_url = _select_latest_dated_asset_url(landing_assets.latest_inspections_urls)
 
     if all_inspections_url is None:
         raise ValueError("Unable to resolve Ofsted all_inspections timeline CSV asset URL.")
     if latest_inspections_url is None:
         raise ValueError("Unable to resolve Ofsted latest_inspections CSV asset URL.")
 
-    return all_inspections_url, latest_inspections_url, historical_url
+    return all_inspections_url, latest_inspections_url, landing_assets.historical_url
 
 
 def normalize_ofsted_timeline_row(
@@ -253,11 +286,13 @@ class OfstedTimelinePipeline:
         *,
         source_index_url: str = OFSTED_LANDING_PAGE_URL,
         source_assets_csv: str | None = None,
+        timeline_years: int = 10,
         include_historical_baseline: bool = True,
     ) -> None:
         self._engine = engine
         self._source_index_url = source_index_url
         self._source_assets_csv = source_assets_csv
+        self._timeline_years = timeline_years
         self._include_historical_baseline = include_historical_baseline
 
     def download(self, context: PipelineRunContext) -> int:
@@ -581,17 +616,22 @@ class OfstedTimelinePipeline:
             return [_asset_from_source(asset_url) for asset_url in asset_urls]
 
         landing_page_html = _download_text(self._source_index_url)
-        all_inspections_url, _, historical_url = extract_ofsted_timeline_asset_urls(
-            landing_page_html
+        landing_assets = extract_ofsted_timeline_landing_assets(landing_page_html)
+        selected_all_inspections = _select_all_inspections_assets_for_years(
+            landing_assets.all_inspections_urls,
+            years=self._timeline_years,
         )
 
-        assets = [_asset_from_source(all_inspections_url)]
-        if self._include_historical_baseline:
-            if historical_url is None:
+        assets = [_asset_from_source(asset_url) for asset_url in selected_all_inspections]
+        if self._include_historical_baseline and _needs_historical_baseline(
+            selected_all_inspections,
+            years=self._timeline_years,
+        ):
+            if landing_assets.historical_url is None:
                 raise ValueError(
                     "Historical Ofsted baseline asset (2015-2019) was not found on landing page."
                 )
-            assets.append(_asset_from_source(historical_url))
+            assets.insert(0, _asset_from_source(landing_assets.historical_url))
 
         return assets
 
@@ -611,6 +651,58 @@ def _asset_from_source(source_asset_url: str) -> OfstedTimelineAsset:
 
 def _parse_source_assets_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _select_all_inspections_assets_for_years(
+    all_inspections_urls: Sequence[str],
+    *,
+    years: int,
+) -> list[str]:
+    if years <= 0:
+        raise ValueError("Ofsted timeline years must be greater than 0.")
+
+    grouped_by_academic_end_year: dict[int, tuple[date, str]] = {}
+    for asset_url in all_inspections_urls:
+        asset_date = _parse_asset_date(asset_url)
+        if asset_date is None:
+            continue
+        academic_year_end = _academic_year_end_year(asset_date)
+        existing = grouped_by_academic_end_year.get(academic_year_end)
+        if existing is None or asset_date > existing[0]:
+            grouped_by_academic_end_year[academic_year_end] = (asset_date, asset_url)
+
+    if not grouped_by_academic_end_year:
+        raise ValueError("Unable to resolve dated Ofsted all_inspections timeline assets.")
+
+    latest_end_year = max(grouped_by_academic_end_year)
+    earliest_end_year = latest_end_year - years + 1
+    selected: list[tuple[date, str]] = []
+    for end_year, candidate in grouped_by_academic_end_year.items():
+        if end_year < earliest_end_year:
+            continue
+        selected.append(candidate)
+
+    selected.sort(key=lambda item: item[0])
+    return [asset_url for _, asset_url in selected]
+
+
+def _needs_historical_baseline(
+    selected_all_inspections_urls: Sequence[str],
+    *,
+    years: int,
+) -> bool:
+    latest_end_year: int | None = None
+    for asset_url in selected_all_inspections_urls:
+        asset_date = _parse_asset_date(asset_url)
+        if asset_date is None:
+            continue
+        end_year = _academic_year_end_year(asset_date)
+        if latest_end_year is None or end_year > latest_end_year:
+            latest_end_year = end_year
+    if latest_end_year is None:
+        return False
+    earliest_requested_end_year = latest_end_year - years + 1
+    return earliest_requested_end_year <= 2019
 
 
 def _build_bronze_asset_file_name(source_asset_url: str, *, index: int) -> str:
@@ -666,10 +758,11 @@ def _read_csv_rows(
 
 
 def _detect_header_index(rows: list[list[str]]) -> int:
-    if rows and _looks_like_timeline_header(rows[0]):
-        return 0
-    if len(rows) > 1 and _looks_like_timeline_header(rows[1]):
-        return 1
+    for index, row in enumerate(rows):
+        if not any(_clean_header_value(value) for value in row):
+            continue
+        if _looks_like_timeline_header(row):
+            return index
     raise ValueError("Ofsted timeline CSV header could not be detected.")
 
 
@@ -729,19 +822,32 @@ def _is_more_recent_timeline_row(
     return candidate_key > existing_key
 
 
-def _infer_source_asset_month(source_asset_url: str | None) -> str | None:
-    if source_asset_url is None:
-        return None
+def _parse_asset_date(source_asset_url: str) -> date | None:
     match = _ASSET_DATE_PATTERN.search(source_asset_url)
     if match is None:
         return None
-
     month_token = match.group("month").strip().casefold()
     month_number = _MONTH_ABBR_TO_NUMBER.get(month_token)
     if month_number is None:
         return None
     year = int(match.group("year"))
-    return f"{year:04d}-{month_number:02d}"
+    day = int(match.group("day"))
+    with suppress(ValueError):
+        return date(year, month_number, day)
+    return None
+
+
+def _academic_year_end_year(asset_date: date) -> int:
+    return asset_date.year + 1 if asset_date.month >= 9 else asset_date.year
+
+
+def _infer_source_asset_month(source_asset_url: str | None) -> str | None:
+    if source_asset_url is None:
+        return None
+    asset_date = _parse_asset_date(source_asset_url)
+    if asset_date is None:
+        return None
+    return asset_date.strftime("%Y-%m")
 
 
 def _select_latest_dated_asset_url(candidates: Sequence[str]) -> str | None:
@@ -756,16 +862,10 @@ def _select_latest_dated_asset_url(candidates: Sequence[str]) -> str | None:
 
 
 def _asset_sort_date(source_asset_url: str) -> tuple[int, int, int]:
-    match = _ASSET_DATE_PATTERN.search(source_asset_url)
-    if match is None:
+    asset_date = _parse_asset_date(source_asset_url)
+    if asset_date is None:
         return (0, 0, 0)
-    month_token = match.group("month").strip().casefold()
-    month_number = _MONTH_ABBR_TO_NUMBER.get(month_token)
-    if month_number is None:
-        return (0, 0, 0)
-    year = int(match.group("year"))
-    day = int(match.group("day"))
-    return (year, month_number, day)
+    return (asset_date.year, asset_date.month, asset_date.day)
 
 
 def _normalize_asset_href(raw_href: str) -> str | None:

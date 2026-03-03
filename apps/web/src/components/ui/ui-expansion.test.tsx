@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -202,8 +202,11 @@ describe("Toast", () => {
     const user = userEvent.setup();
     const { container } = renderWithProviders(<ToastExample />);
 
-    await user.click(screen.getByRole("button", { name: "Show toast" }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: "Show toast" }));
+    });
     await screen.findByText("Saved");
+    await screen.findByLabelText("Close notification");
 
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();

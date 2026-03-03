@@ -86,10 +86,19 @@ def _ensure_schema(engine: Engine) -> None:
                     postcode text PRIMARY KEY,
                     lat double precision NOT NULL,
                     lng double precision NOT NULL,
+                    lsoa_code text NULL,
                     lsoa text NULL,
                     admin_district text NULL,
                     cached_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                ALTER TABLE postcode_cache
+                ADD COLUMN IF NOT EXISTS lsoa_code text NULL
                 """
             )
         )
@@ -234,18 +243,21 @@ def _seed_data(engine: Engine) -> None:
                     postcode,
                     lat,
                     lng,
+                    lsoa_code,
                     lsoa,
                     admin_district
                 ) VALUES (
                     'SW1A 1AA',
                     51.5010,
                     -0.1416,
-                    'Westminster 018C',
+                    'E01004736',
+                    'This name does not match deprivation LSOA',
                     'Westminster'
                 )
                 ON CONFLICT (postcode) DO UPDATE SET
                     lat = EXCLUDED.lat,
                     lng = EXCLUDED.lng,
+                    lsoa_code = EXCLUDED.lsoa_code,
                     lsoa = EXCLUDED.lsoa,
                     admin_district = EXCLUDED.admin_district,
                     cached_at = timezone('utc', now())

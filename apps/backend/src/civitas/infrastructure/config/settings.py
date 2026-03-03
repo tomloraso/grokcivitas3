@@ -12,6 +12,7 @@ DEFAULT_DFE_CHARACTERISTICS_DATASET_ID = "019afee4-ba17-73cb-85e0-f88c101bb734"
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
+DEFAULT_OFSTED_TIMELINE_YEARS = 10
 DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL = (
     "https://www.gov.uk/government/statistical-data-sets/"
     "monthly-management-information-ofsteds-school-inspections-outcomes"
@@ -38,6 +39,7 @@ class PipelineSettings(BaseModel):
     ofsted_latest_source_csv: str | None = None
     ofsted_timeline_source_index_url: str
     ofsted_timeline_source_assets: str | None = None
+    ofsted_timeline_years: PositiveInt
     ofsted_timeline_include_historical_baseline: bool = True
 
 
@@ -121,6 +123,10 @@ class AppSettings(BaseSettings):
         default=None,
         validation_alias="CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
     )
+    ofsted_timeline_years: PositiveInt = Field(
+        default=DEFAULT_OFSTED_TIMELINE_YEARS,
+        validation_alias="CIVITAS_OFSTED_TIMELINE_YEARS",
+    )
     ofsted_timeline_include_historical_baseline: bool = Field(
         default=True,
         validation_alias="CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
@@ -167,6 +173,7 @@ class AppSettings(BaseSettings):
             ofsted_latest_source_csv=self.ofsted_latest_source_csv,
             ofsted_timeline_source_index_url=self.ofsted_timeline_source_index_url,
             ofsted_timeline_source_assets=self.ofsted_timeline_source_assets,
+            ofsted_timeline_years=self.ofsted_timeline_years,
             ofsted_timeline_include_historical_baseline=(
                 self.ofsted_timeline_include_historical_baseline
             ),

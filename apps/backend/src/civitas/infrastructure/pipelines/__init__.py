@@ -34,6 +34,7 @@ def pipeline_registry(
             engine=engine,
             source_index_url=pipeline_settings.ofsted_timeline_source_index_url,
             source_assets_csv=pipeline_settings.ofsted_timeline_source_assets,
+            timeline_years=pipeline_settings.ofsted_timeline_years,
             include_historical_baseline=(
                 pipeline_settings.ofsted_timeline_include_historical_baseline
             ),

@@ -11,46 +11,12 @@ import { renderWithProviders } from "../../test/render";
 import { runA11yAudit } from "../../test/accessibility";
 
 describe("SiteHeader", () => {
-  it("renders brand mark and primary navigation", () => {
+  it("renders brand mark in header banner", () => {
     renderWithProviders(<SiteHeader />);
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByLabelText("Civitas - return to home")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Primary" })).toBeInTheDocument();
-  });
-
-  it("highlights active nav link based on current route", () => {
-    renderWithProviders(<SiteHeader />, { initialEntries: ["/"] });
-
-    const searchLink = screen.getByRole("link", { name: "Search" });
-    expect(searchLink).toHaveAttribute("aria-current", "page");
-  });
-
-  it("renders mobile hamburger button on small viewports", () => {
-    renderWithProviders(<SiteHeader />);
-
-    const menuButton = screen.getByLabelText("Open navigation menu");
-    expect(menuButton).toBeInTheDocument();
-  });
-
-  it("opens mobile navigation drawer when hamburger is clicked", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<SiteHeader />);
-
-    await user.click(screen.getByLabelText("Open navigation menu"));
-    expect(screen.getByRole("navigation", { name: "Mobile navigation" })).toBeInTheDocument();
-  });
-
-  it("closes mobile navigation when close button is clicked", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<SiteHeader />);
-
-    await user.click(screen.getByLabelText("Open navigation menu"));
-    expect(screen.getByLabelText("Close navigation menu")).toBeInTheDocument();
-
-    await user.click(screen.getByLabelText("Close navigation menu"));
-    // After close the mobile nav dialog should be dismissed
-    expect(screen.queryByRole("navigation", { name: "Mobile navigation" })).not.toBeInTheDocument();
+    expect(screen.getByText("CIVITAS")).toBeInTheDocument();
   });
 
   it("passes accessibility smoke check", async () => {
@@ -66,7 +32,7 @@ describe("SiteFooter", () => {
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Footer" })).toBeInTheDocument();
-    expect(screen.getByText(/Civitas. All data sourced/)).toBeInTheDocument();
+    expect(screen.getByText(/CIVITAS. All data sourced/)).toBeInTheDocument();
   });
 
   it("renders footer links", () => {

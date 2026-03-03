@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Draft
-- Last updated: 2026-03-02
+- Status: Complete
+- Last updated: 2026-03-03
 - Depends on:
   - `.planning/phases/phase-1/1F-web-routing-navigation-foundation.md`
   - `.planning/phases/phase-ux/UX-1-maplibre-migration-uk-bounds-landing-state.md`

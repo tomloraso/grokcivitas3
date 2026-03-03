@@ -9,7 +9,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ school }: ProfileHeaderProps): JSX.Element {
   return (
-    <header className="space-y-5">
+    <header className="space-y-5 border-b border-border-subtle/50 pb-8">
       {/* School name */}
       <div className="space-y-2">
         <p className="eyebrow">

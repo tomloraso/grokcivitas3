@@ -101,6 +101,11 @@ def _parse_lookup_payload(*, postcode: str, payload: Mapping[str, Any]) -> Postc
 
     lsoa = result.get("lsoa")
     admin_district = result.get("admin_district")
+    codes = result.get("codes")
+    lsoa_code: str | None = None
+    if isinstance(codes, Mapping):
+        raw_lsoa_code = codes.get("lsoa")
+        lsoa_code = raw_lsoa_code if isinstance(raw_lsoa_code, str) else None
 
     return PostcodeCoordinates(
         postcode=canonical_postcode,
@@ -108,6 +113,7 @@ def _parse_lookup_payload(*, postcode: str, payload: Mapping[str, Any]) -> Postc
         lng=lng,
         lsoa=lsoa if isinstance(lsoa, str) else None,
         admin_district=admin_district if isinstance(admin_district, str) else None,
+        lsoa_code=lsoa_code,
     )
 
 

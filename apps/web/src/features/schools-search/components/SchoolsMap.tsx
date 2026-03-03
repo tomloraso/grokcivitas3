@@ -11,6 +11,8 @@ interface SchoolsMapProps {
   schools: SchoolSearchListItem[];
   activeSchoolId?: string | null;
   onSchoolHover?: (schoolId: string | null) => void;
+  /** When true, the map fits the bounds of all markers instead of centering on a point + radius. */
+  fitBounds?: boolean;
 }
 
 export function SchoolsMap({
@@ -19,7 +21,8 @@ export function SchoolsMap({
   radiusMiles,
   schools,
   activeSchoolId,
-  onSchoolHover
+  onSchoolHover,
+  fitBounds,
 }: SchoolsMapProps): JSX.Element {
   const markers = useMemo<MapMarker[]>(
     () =>
@@ -30,6 +33,7 @@ export function SchoolsMap({
         label: school.name,
         distanceMiles: school.distance_miles,
         phase: school.phase ?? undefined,
+        ofstedRating: undefined,
         isHovered: activeSchoolId === school.urn
       })),
     [activeSchoolId, schools]
@@ -45,6 +49,7 @@ export function SchoolsMap({
         markers={markers}
         activeMarkerId={activeSchoolId}
         onMarkerHover={onSchoolHover}
+        fitBounds={fitBounds}
       />
       {status === "loading" && (
         <div

@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Draft
-- Last updated: 2026-03-02
+- Status: Complete
+- Last updated: 2026-03-03
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Reference standard: [The Refugee Project](https://www.therefugeeproject.org/)
@@ -93,15 +93,45 @@ Coordination point:
 
 - As Phase 2 profile enhancements land (`2F`), apply `UX-4` typography and spacing standards immediately to prevent style drift.
 
-## Progress (2026-03-02)
+## Progress (2026-03-03)
 
-- UX-1 MapLibre migration, UK bounds, landing state: planned.
-- UX-2 Map interaction depth: planned.
-- UX-3 Overlay panel refinement: planned.
-- UX-4 Typography, spacing, and visual hierarchy: planned.
-- UX-5 Transitions and motion: planned.
-- UX-6 Navigation and site chrome refinement: planned.
-- UX-7 Loading and empty state polish: planned.
+- UX-1 MapLibre migration, UK bounds, landing state: **complete.**
+  - MapLibre GL JS + react-map-gl/maplibre rendering with Protomaps vector tiles.
+  - Custom `civitas-dark.json` style committed with full navy palette.
+  - UK bounds, min/max zoom, default landing view enforced.
+  - Leaflet stack fully removed (deps, CSS, dead `map-tiles` modules).
+- UX-2 Map interaction depth: **complete.**
+  - Fly-to animation on search (with reduced-motion `jumpTo` fallback).
+  - Radius overlay via `@turf/circle` GeoJSON fill + dashed line.
+  - Bi-directional list-marker hover/focus linking (`activeSchoolId` wired through feature orchestrator to both `SchoolsMap` and `SchoolsList`/`ResultCard`).
+  - Marker clustering via MapLibre native GeoJSON clustering.
+  - Data-driven marker colouring via phase (Ofsted rating ready when backend adds field to search response).
+  - Compact popup card with school name, phase, distance, Ofsted rating.
+- UX-3 Overlay panel refinement: **complete.**
+  - Hidden scrollbars with scroll-shadow affordance.
+  - Desktop collapse/expand with persistent session state.
+  - Mobile bottom-sheet with peek/expanded/drag interaction.
+  - Result context summary in collapsed rail and inline.
+- UX-4 Typography, spacing, and visual hierarchy: **complete.**
+  - Token-driven typography scale, editorial heading hierarchy.
+  - ResultCard visual hierarchy refinement.
+  - StatCard large-value treatment.
+- UX-5 Transitions and motion: **complete.**
+  - `useReducedMotion` hook with reactive `matchMedia` listener.
+  - Route transition wrapper (`RouteTransition` cross-fade on pathname change).
+  - Panel content reveal and results-reveal animations.
+  - Marker entrance animation (`marker-enter` scale+opacity keyframe).
+  - Full `prefers-reduced-motion` blanket disable.
+- UX-6 Navigation and site chrome refinement: **complete.**
+  - Transparent header on search map route, solid on profile/static.
+  - Footer suppressed on search route.
+  - Breadcrumbs with postcode context on profile route.
+  - Active search context chip in header.
+- UX-7 Loading and empty state polish: **complete.**
+  - Shaped `result-card` skeleton variant matching card geometry.
+  - `MapEmptyState` component with context-aware messaging (postcode + radius).
+  - Error state with non-destructive retry and last-known context preservation.
+  - Map loading pulse indicator.
 
 ## Phase UX Definition Of Done
 
@@ -129,9 +159,14 @@ Coordination point:
 - 2026-03-02: Style authoring starts from Protomaps dark basemap skeleton, stripped and recoloured to Civitas navy palette. Style committed as `civitas-dark.json`.
 - 2026-03-02: Map labels target Space Grotesk glyph range; Noto Sans geometric fallback if glyph hosting is not feasible in v1.
 - 2026-03-02: Map design intent documented in UX-1 — school markers are the only saturated element; all map features live inside the navy palette.
+- 2026-03-03: All seven UX deliverables implemented and verified (lint, typecheck, 278 tests, build, budget).
+- 2026-03-03: Leaflet stack fully removed — deps, CSS selectors, and dead `map-tiles.ts` modules deleted.
+- 2026-03-03: Mobile bottom-sheet implemented hand-rolled (no third-party dependency).
+- 2026-03-03: Noto Sans used as map label font — Space Grotesk glyph hosting deferred to post-v1.
+- 2026-03-03: Ofsted rating marker colouring is architecturally wired but requires backend to add `ofsted_rating` field to `SchoolSearchItemResponse`; phase-based colouring active as designed fallback.
 
 ## Open Decisions
 
-1. Space Grotesk glyph hosting: self-hosted glyph PBF range versus Noto Sans CDN fallback.
-2. Mobile bottom-sheet implementation: hand-rolled versus dedicated dependency (UX-3).
-3. Visual regression tooling: Playwright snapshots versus external tooling.
+1. Space Grotesk glyph hosting: deferred post-v1. Using Noto Sans CDN fallback.
+2. Visual regression tooling: not yet selected. Playwright snapshots recommended as first step.
+3. Backend expansion: add `ofsted_rating` to search API response to enable full data-driven marker colouring.

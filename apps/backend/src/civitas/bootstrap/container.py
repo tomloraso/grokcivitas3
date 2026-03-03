@@ -2,7 +2,10 @@ from functools import lru_cache
 
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
-from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
+from civitas.application.schools.use_cases import (
+    SearchSchoolsByNameUseCase,
+    SearchSchoolsByPostcodeUseCase,
+)
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 from civitas.infrastructure.config.settings import AppSettings, get_settings
 from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
@@ -95,9 +98,16 @@ def search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:
     )
 
 
+def search_schools_by_name_use_case() -> SearchSchoolsByNameUseCase:
+    return SearchSchoolsByNameUseCase(
+        school_search_repository=school_search_repository(),
+    )
+
+
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return GetSchoolProfileUseCase(
         school_profile_repository=school_profile_repository(),
+        postcode_context_resolver=postcode_resolver(),
     )
 
 

@@ -32,6 +32,7 @@ class PostgresPostcodeCacheRepository:
                         postcode,
                         lat,
                         lng,
+                        lsoa_code,
                         lsoa,
                         admin_district
                     FROM postcode_cache
@@ -59,6 +60,7 @@ class PostgresPostcodeCacheRepository:
             admin_district=(
                 str(row["admin_district"]) if row["admin_district"] is not None else None
             ),
+            lsoa_code=str(row["lsoa_code"]) if row["lsoa_code"] is not None else None,
         )
 
     def upsert(
@@ -69,6 +71,7 @@ class PostgresPostcodeCacheRepository:
             "postcode": coordinates.postcode,
             "lat": coordinates.lat,
             "lng": coordinates.lng,
+            "lsoa_code": coordinates.lsoa_code,
             "lsoa": coordinates.lsoa,
             "admin_district": coordinates.admin_district,
             "cached_at": cached_timestamp,
@@ -82,6 +85,7 @@ class PostgresPostcodeCacheRepository:
                     SET
                         lat = :lat,
                         lng = :lng,
+                        lsoa_code = :lsoa_code,
                         lsoa = :lsoa,
                         admin_district = :admin_district,
                         cached_at = :cached_at
@@ -101,6 +105,7 @@ class PostgresPostcodeCacheRepository:
                             postcode,
                             lat,
                             lng,
+                            lsoa_code,
                             lsoa,
                             admin_district,
                             cached_at
@@ -108,6 +113,7 @@ class PostgresPostcodeCacheRepository:
                             :postcode,
                             :lat,
                             :lng,
+                            :lsoa_code,
                             :lsoa,
                             :admin_district,
                             :cached_at
@@ -124,6 +130,7 @@ class PostgresPostcodeCacheRepository:
                         SET
                             lat = :lat,
                             lng = :lng,
+                            lsoa_code = :lsoa_code,
                             lsoa = :lsoa,
                             admin_district = :admin_district,
                             cached_at = :cached_at

@@ -1,69 +1,132 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const STORAGE_KEY = "civitas:panel-collapsed";
+/* ── Constants ─────────────────────────────────────────────── */
+
+const WIDTH_STORAGE_KEY = "civitas:panel-width";
+const DEFAULT_WIDTH = 380;
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 480;
 const PEEK_THRESHOLD = 40; // px drag past peek to snap expanded/collapsed
 
 export type SheetMode = "peek" | "expanded";
 
+export { MIN_WIDTH as PANEL_MIN_WIDTH, MAX_WIDTH as PANEL_MAX_WIDTH };
+
+/* ── Types ─────────────────────────────────────────────────── */
+
 interface PanelState {
-  /** Desktop: panel collapsed to rail */
-  collapsed: boolean;
+  /** Desktop: panel width in px */
+  panelWidth: number;
   /** Mobile: bottom-sheet mode */
   sheetMode: SheetMode;
 }
 
 interface UsePanelStateResult {
-  collapsed: boolean;
+  /** Desktop: current panel width in px */
+  panelWidth: number;
+  /** Mobile: bottom-sheet mode */
   sheetMode: SheetMode;
-  toggleCollapsed: () => void;
   setSheetMode: (mode: SheetMode) => void;
+  /** Drag handler props for desktop resize handle */
+  resizeHandlers: {
+    onPointerDown: (e: React.PointerEvent) => void;
+  };
   /** Drag handler props for mobile sheet drag handle */
-  dragHandlers: {
+  sheetDragHandlers: {
     onPointerDown: (e: React.PointerEvent) => void;
   };
   /** Ref to attach to the mobile sheet element for drag calculation */
   sheetRef: React.RefObject<HTMLDivElement>;
+  /** Whether the user is currently dragging the resize handle */
+  isResizing: boolean;
 }
 
-function readCollapsed(): boolean {
+/* ── Persistence helpers ──────────────────────────────────── */
+
+function readWidth(): number {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "true";
+    const raw = localStorage.getItem(WIDTH_STORAGE_KEY);
+    if (raw === null) return DEFAULT_WIDTH;
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed)) {
+      return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, parsed));
+    }
+    return DEFAULT_WIDTH;
   } catch {
-    return false;
+    return DEFAULT_WIDTH;
   }
 }
 
-function writeCollapsed(value: boolean): void {
+function writeWidth(value: number): void {
   try {
-    localStorage.setItem(STORAGE_KEY, String(value));
+    localStorage.setItem(WIDTH_STORAGE_KEY, String(Math.round(value)));
   } catch {
     // ignore storage errors
   }
 }
 
+/* ── Hook ─────────────────────────────────────────────────── */
+
 export function usePanelState(): UsePanelStateResult {
   const [state, setState] = useState<PanelState>({
-    collapsed: readCollapsed(),
+    panelWidth: readWidth(),
     sheetMode: "peek",
   });
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const dragStartY = useRef(0);
-
-  const toggleCollapsed = useCallback(() => {
-    setState((prev) => {
-      const next = !prev.collapsed;
-      writeCollapsed(next);
-      return { ...prev, collapsed: next };
-    });
-  }, []);
+  const isResizingRef = useRef(false);
+  const [isResizing, setIsResizing] = useState(false);
 
   const setSheetMode = useCallback((mode: SheetMode) => {
     setState((prev) => ({ ...prev, sheetMode: mode }));
   }, []);
 
-  // Drag-to-expand/collapse for mobile sheet
-  const onPointerDown = useCallback(
+  /* ── Desktop resize drag ────────────────────────────────── */
+
+  const onResizePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      const startX = e.clientX;
+      const startWidth = state.panelWidth;
+      const target = e.currentTarget as HTMLElement;
+      target.setPointerCapture(e.pointerId);
+      isResizingRef.current = true;
+      setIsResizing(true);
+
+      // Disable text selection during drag
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "col-resize";
+
+      const onMove = (me: PointerEvent): void => {
+        const dx = me.clientX - startX;
+        const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth + dx));
+        setState((prev) => ({ ...prev, panelWidth: newWidth }));
+      };
+
+      const onUp = (): void => {
+        target.removeEventListener("pointermove", onMove);
+        target.removeEventListener("pointerup", onUp);
+        isResizingRef.current = false;
+        setIsResizing(false);
+        document.body.style.userSelect = "";
+        document.body.style.cursor = "";
+        // Persist final width
+        setState((prev) => {
+          writeWidth(prev.panelWidth);
+          return prev;
+        });
+      };
+
+      target.addEventListener("pointermove", onMove);
+      target.addEventListener("pointerup", onUp);
+    },
+    [state.panelWidth]
+  );
+
+  /* ── Mobile sheet drag ──────────────────────────────────── */
+
+  const onSheetPointerDown = useCallback(
     (e: React.PointerEvent) => {
       dragStartY.current = e.clientY;
       const target = e.currentTarget as HTMLElement;
@@ -71,7 +134,6 @@ export function usePanelState(): UsePanelStateResult {
 
       const onMove = (me: PointerEvent): void => {
         const dy = dragStartY.current - me.clientY;
-        // Visual feedback could be added here; we keep it simple for now
         const sheet = sheetRef.current;
         if (sheet) {
           const clampedDy = Math.max(-200, Math.min(200, dy));
@@ -102,15 +164,16 @@ export function usePanelState(): UsePanelStateResult {
 
   // Sync with localStorage on mount (handles SSR / stale closures)
   useEffect(() => {
-    setState((prev) => ({ ...prev, collapsed: readCollapsed() }));
+    setState((prev) => ({ ...prev, panelWidth: readWidth() }));
   }, []);
 
   return {
-    collapsed: state.collapsed,
+    panelWidth: state.panelWidth,
     sheetMode: state.sheetMode,
-    toggleCollapsed,
     setSheetMode,
-    dragHandlers: { onPointerDown },
+    resizeHandlers: { onPointerDown: onResizePointerDown },
+    sheetDragHandlers: { onPointerDown: onSheetPointerDown },
     sheetRef,
+    isResizing,
   };
 }

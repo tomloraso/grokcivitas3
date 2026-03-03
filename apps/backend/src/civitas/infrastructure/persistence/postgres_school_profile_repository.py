@@ -134,7 +134,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                     deprivation.source_release
                                 FROM postcode_cache AS cache
                                 INNER JOIN area_deprivation AS deprivation
-                                    ON lower(deprivation.lsoa_name) = lower(cache.lsoa)
+                                    ON deprivation.lsoa_code = cache.lsoa_code
                                 WHERE replace(upper(cache.postcode), ' ', '') =
                                       replace(upper(:postcode), ' ', '')
                                 ORDER BY cache.cached_at DESC

@@ -68,3 +68,72 @@ class PostgresSchoolSearchRepository(SchoolSearchRepository):
                 )
                 for row in rows
             )
+
+    def search_by_name(
+        self,
+        *,
+        name: str,
+        limit: int,
+    ) -> tuple[SchoolSearchResult, ...]:
+        normalized_name = " ".join(name.split())
+        tokens = [token.lower() for token in normalized_name.split(" ") if token]
+        if not tokens:
+            return ()
+
+        token_conditions = " AND ".join(
+            f"LOWER(name) LIKE :token_{index}" for index, _ in enumerate(tokens)
+        )
+
+        with self._engine.connect() as connection:
+            rows = connection.execute(
+                text(
+                    """
+                    SELECT
+                        urn,
+                        name,
+                        type,
+                        phase,
+                        postcode,
+                        ST_Y(location::geometry) AS lat,
+                        ST_X(location::geometry) AS lng
+                    FROM schools
+                    WHERE LOWER(COALESCE(status, '')) LIKE 'open%'
+                      AND """
+                    + token_conditions
+                    + """
+                    ORDER BY
+                        CASE
+                            WHEN LOWER(name) = LOWER(:exact_name) THEN 0
+                            WHEN LOWER(name) LIKE LOWER(:prefix_name) THEN 1
+                            WHEN LOWER(name) LIKE LOWER(:word_prefix_name) THEN 2
+                            ELSE 3
+                        END ASC,
+                        POSITION(LOWER(:needle_name) IN LOWER(name)) ASC,
+                        LENGTH(name) ASC,
+                        urn ASC
+                    LIMIT :limit
+                    """
+                ),
+                {
+                    "exact_name": normalized_name,
+                    "prefix_name": f"{normalized_name}%",
+                    "word_prefix_name": f"% {normalized_name}%",
+                    "needle_name": normalized_name,
+                    "limit": limit,
+                    **{f"token_{index}": f"%{token}%" for index, token in enumerate(tokens)},
+                },
+            ).mappings()
+
+            return tuple(
+                SchoolSearchResult(
+                    urn=str(row["urn"]),
+                    name=str(row["name"]),
+                    school_type=str(row["type"]) if row["type"] is not None else None,
+                    phase=str(row["phase"]) if row["phase"] is not None else None,
+                    postcode=str(row["postcode"]) if row["postcode"] is not None else None,
+                    lat=float(row["lat"]),
+                    lng=float(row["lng"]),
+                    distance_miles=0.0,
+                )
+                for row in rows
+            )

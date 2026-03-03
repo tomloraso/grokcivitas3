@@ -10,11 +10,13 @@ export interface SearchSnapshot {
 interface SearchContextValue {
   search: SearchSnapshot | null;
   setSearch: (snapshot: SearchSnapshot) => void;
+  clearSearch: () => void;
 }
 
 const SearchCtx = createContext<SearchContextValue>({
   search: null,
   setSearch: () => {},
+  clearSearch: () => {},
 });
 
 export function useSearchContext(): SearchContextValue {
@@ -35,8 +37,12 @@ export function SearchContextProvider({
     setSearchState(snapshot);
   }, []);
 
+  const clearSearch = useCallback(() => {
+    setSearchState(null);
+  }, []);
+
   return (
-    <SearchCtx.Provider value={{ search, setSearch }}>
+    <SearchCtx.Provider value={{ search, setSearch, clearSearch }}>
       {children}
     </SearchCtx.Provider>
   );

@@ -301,7 +301,7 @@ test("browser back returns to search from school profile", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
 });
 
-test("header Search link navigates back to search route", async ({ page }) => {
+test("header brand link navigates back to search route", async ({ page }) => {
   await page.route("**/api/v1/schools/100001", async (route) => {
     await route.fulfill({
       status: 200,
@@ -318,7 +318,7 @@ test("header Search link navigates back to search route", async ({ page }) => {
   });
 
   await gotoRoute(page, "/schools/100001");
-  await page.getByRole("banner").getByRole("link", { name: "Search", exact: true }).click();
+  await page.getByLabel("Civitas - return to home").click();
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
 });

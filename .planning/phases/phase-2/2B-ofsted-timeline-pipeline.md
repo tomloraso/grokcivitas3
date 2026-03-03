@@ -21,7 +21,7 @@ Implement full Ofsted inspection timeline ingest using verified `all_inspections
 ### In scope
 
 - Resolve callable Ofsted timeline assets from the landing page.
-- Bronze archive for timeline assets (latest YTD + historical baseline).
+- Bronze archive for timeline assets (rolling academic-year window + optional historical baseline).
 - Staging normalization across schema variants.
 - Gold upsert into `ofsted_inspections` with deterministic deduplication.
 - Idempotent rerun behavior.
@@ -67,6 +67,7 @@ Implement full Ofsted inspection timeline ingest using verified `all_inspections
 
 - `CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL` override for landing page/index source.
 - `CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS` override for explicit timeline CSV asset list.
+- `CIVITAS_OFSTED_TIMELINE_YEARS` rolling academic-year window size (default 10).
 - `CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE` toggle for controlled backfill behavior.
 
 ## Decisions

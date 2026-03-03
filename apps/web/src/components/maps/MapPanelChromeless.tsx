@@ -13,6 +13,8 @@ interface MapPanelChromelessProps {
   className?: string;
   activeMarkerId?: string | null;
   onMarkerHover?: (id: string | null) => void;
+  /** When true, fit map to marker bounds instead of centering on center + radius. */
+  fitBounds?: boolean;
 }
 
 /**
@@ -26,7 +28,8 @@ export function MapPanelChromeless({
   markers,
   className,
   activeMarkerId,
-  onMarkerHover
+  onMarkerHover,
+  fitBounds
 }: MapPanelChromelessProps): JSX.Element {
   const mapCenter = useMemo(() => center ?? {
     lat: MAP_BOUNDS.DEFAULT_CENTER[1],
@@ -42,6 +45,7 @@ export function MapPanelChromeless({
           markers={markers} 
           activeMarkerId={activeMarkerId}
           onMarkerHover={onMarkerHover}
+          fitBounds={fitBounds}
         />
       </Suspense>
     </div>

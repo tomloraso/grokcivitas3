@@ -61,6 +61,15 @@ def test_normalize_gias_row_returns_typed_record_for_valid_input() -> None:
     assert normalized.capacity == 420
 
 
+def test_normalize_gias_row_accepts_hyphenated_uk_dates() -> None:
+    normalized, rejection = normalize_gias_row(_row(OpenDate="01-04-2011", CloseDate="31-08-2020"))
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.open_date == date(2011, 4, 1)
+    assert normalized.close_date == date(2020, 8, 31)
+
+
 def test_normalize_gias_row_handles_numeric_sentinels_as_null() -> None:
     normalized, rejection = normalize_gias_row(_row(NumberOfPupils="SUPP", SchoolCapacity="NE"))
 

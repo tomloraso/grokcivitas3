@@ -11,6 +11,7 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_DATABASE_URL,
     DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
     DEFAULT_IMD_RELEASE,
+    DEFAULT_OFSTED_TIMELINE_YEARS,
     DEFAULT_POLICE_CRIME_RADIUS_METERS,
     DEFAULT_POLICE_CRIME_SOURCE_MODE,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
@@ -40,6 +41,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_OFSTED_LATEST_SOURCE_CSV",
         "CIVITAS_OFSTED_TIMELINE_SOURCE_INDEX_URL",
         "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
+        "CIVITAS_OFSTED_TIMELINE_YEARS",
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "CIVITAS_HTTP_TIMEOUT_SECONDS",
         "CIVITAS_HTTP_MAX_RETRIES",
@@ -68,6 +70,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "monthly-management-information-ofsteds-school-inspections-outcomes"
     )
     assert settings.pipeline.ofsted_timeline_source_assets is None
+    assert settings.pipeline.ofsted_timeline_years == DEFAULT_OFSTED_TIMELINE_YEARS
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is True
     assert (
         settings.pipeline.dfe_characteristics_dataset_id == DEFAULT_DFE_CHARACTERISTICS_DATASET_ID
@@ -113,6 +116,7 @@ def test_app_settings_reads_environment_overrides(
         "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
         "  https://example.com/ofsted_ytd.csv, https://example.com/ofsted_historical.csv  ",
     )
+    monkeypatch.setenv("CIVITAS_OFSTED_TIMELINE_YEARS", "5")
     monkeypatch.setenv(
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "false",
@@ -150,6 +154,7 @@ def test_app_settings_reads_environment_overrides(
         settings.pipeline.ofsted_timeline_source_assets
         == "https://example.com/ofsted_ytd.csv, https://example.com/ofsted_historical.csv"
     )
+    assert settings.pipeline.ofsted_timeline_years == 5
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is False
     assert settings.http_clients.timeout_seconds == 20.0
     assert settings.http_clients.max_retries == 5
@@ -166,6 +171,7 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", "not-a-release")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_SOURCE_MODE", "invalid")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_RADIUS_METERS", "0")
+    monkeypatch.setenv("CIVITAS_OFSTED_TIMELINE_YEARS", "0")
 
     with pytest.raises(ValidationError):
         AppSettings(_env_file=None)

@@ -27,3 +27,8 @@ class SchoolsSearchResponse(BaseModel):
     center: SchoolsSearchCenterResponse
     count: int
     schools: list[SchoolSearchItemResponse]
+
+
+class SchoolNameSearchResponse(BaseModel):
+    count: int
+    schools: list[SchoolSearchItemResponse]

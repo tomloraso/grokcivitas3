@@ -1,9 +1,14 @@
 import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
 import "vitest-axe/extend-expect";
 import * as axeMatchers from "vitest-axe/matchers";
-import { expect } from "vitest";
+import { afterEach, expect } from "vitest";
 
 expect.extend(axeMatchers);
+
+afterEach(() => {
+  cleanup();
+});
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,

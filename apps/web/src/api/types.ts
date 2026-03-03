@@ -11,6 +11,8 @@ export type SchoolsSearchResponse = components["schemas"]["SchoolsSearchResponse
 
 export type SchoolSearchResultItem = components["schemas"]["SchoolSearchItemResponse"];
 
+export type SchoolNameSearchResponse = components["schemas"]["SchoolNameSearchResponse"];
+
 export type SearchSchoolsQuery =
   operations["search_schools_api_v1_schools_get"]["parameters"]["query"];
 

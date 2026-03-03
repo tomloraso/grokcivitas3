@@ -18,6 +18,8 @@ const ref = {
   navy900: "#0c1222",
   brand500: "#A855F7",
   phaseSecondary: "#E879F9",
+  phaseAllThrough: "#22d3ee",
+  phaseDefault: "#64748b",
   success500: "#22c55e",
   info500: "#3b82f6",
   warning500: "#f59e0b",
@@ -52,15 +54,33 @@ export const OFSTED_COLORS = {
 /* School phase palette                                                */
 /* ------------------------------------------------------------------ */
 
-export const PHASE_COLORS = {
+export const PHASE_COLORS: Record<string, string> = {
   Primary: ref.brand500,
+  "Middle deemed primary": ref.brand500,
   Secondary: ref.phaseSecondary,
+  "Middle deemed secondary": ref.phaseSecondary,
+  "All-through": ref.phaseAllThrough,
+  Nursery: ref.phaseDefault,
+  "16 plus": ref.phaseDefault,
+  "Not applicable": ref.phaseDefault,
 } as const;
 
+/** Default phase colour for phases not in the lookup. */
+export const PHASE_COLOR_DEFAULT = ref.phaseDefault;
+
 /* ------------------------------------------------------------------ */
-/* Convenience: resolve a marker colour from rating → phase → fallback */
+/* Convenience helpers                                                  */
 /* ------------------------------------------------------------------ */
 
+/** Resolve phase → colour (always returns a value). */
+export function phaseColor(phase: string | undefined | null): string {
+  if (phase && phase in PHASE_COLORS) {
+    return PHASE_COLORS[phase];
+  }
+  return PHASE_COLOR_DEFAULT;
+}
+
+/** Resolve a marker colour: Ofsted rating → phase → brand fallback. */
 export function markerColor(
   ofstedRating: string | undefined | null,
   phase: string | undefined | null,
@@ -68,8 +88,5 @@ export function markerColor(
   if (ofstedRating && ofstedRating in OFSTED_COLORS) {
     return OFSTED_COLORS[ofstedRating as keyof typeof OFSTED_COLORS];
   }
-  if (phase && phase in PHASE_COLORS) {
-    return PHASE_COLORS[phase as keyof typeof PHASE_COLORS];
-  }
-  return MAP_BRAND;
+  return phaseColor(phase);
 }
