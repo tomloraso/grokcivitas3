@@ -54,21 +54,54 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
     ungraded_outcome: null
   },
   ofsted_timeline: {
-    events: [],
+    events: [
+      {
+        inspection_number: "10426708",
+        inspection_start_date: "2024-01-10",
+        publication_date: "2024-02-03",
+        inspection_type: "Section 5",
+        overall_effectiveness_label: "Good",
+        headline_outcome_text: null,
+        category_of_concern: null
+      },
+      {
+        inspection_number: "10426709",
+        inspection_start_date: "2025-11-11",
+        publication_date: "2026-01-11",
+        inspection_type: "Section 8",
+        overall_effectiveness_label: null,
+        headline_outcome_text: "Strong standard",
+        category_of_concern: null
+      }
+    ],
     coverage: {
-      is_partial_history: true,
-      earliest_event_date: null,
-      latest_event_date: null,
-      events_count: 0
+      is_partial_history: false,
+      earliest_event_date: "2015-09-14",
+      latest_event_date: "2026-01-15",
+      events_count: 9
     }
   },
   area_context: {
-    deprivation: null,
-    crime: null,
+    deprivation: {
+      lsoa_code: "E01004736",
+      imd_decile: 3,
+      idaci_score: 0.241,
+      idaci_decile: 2,
+      source_release: "IoD2025"
+    },
+    crime: {
+      radius_miles: 1.0,
+      latest_month: "2026-01",
+      total_incidents: 486,
+      categories: [
+        { category: "violent-crime", incident_count: 132 },
+        { category: "anti-social-behaviour", incident_count: 97 }
+      ]
+    },
     coverage: {
-      has_deprivation: false,
-      has_crime: false,
-      crime_months_available: 0
+      has_deprivation: true,
+      has_crime: true,
+      crime_months_available: 12
     }
   }
 };
@@ -197,6 +230,68 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Trends");
     expect(screen.getByLabelText("Disadvantaged trend line")).toBeInTheDocument();
+  });
+
+  it("renders Ofsted timeline section with newest event first", async () => {
+    profileMock.mockResolvedValue(PROFILE_RESPONSE);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Ofsted Timeline");
+    expect(screen.getByText("11 Nov 2025")).toBeInTheDocument();
+    expect(screen.getByText("10 Jan 2024")).toBeInTheDocument();
+    expect(screen.getByText("Strong standard")).toBeInTheDocument();
+  });
+
+  it("renders area context sections when data is available", async () => {
+    profileMock.mockResolvedValue(PROFILE_RESPONSE);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Area Deprivation");
+    expect(screen.getByText("IMD Decile")).toBeInTheDocument();
+    expect(screen.getByText("IDACI Score")).toBeInTheDocument();
+    expect(screen.getByText("0.241")).toBeInTheDocument();
+
+    await screen.findByText("Area Crime");
+    expect(screen.getByText("486")).toBeInTheDocument();
+    expect(screen.getByText("Violent Crime")).toBeInTheDocument();
+    expect(screen.getByText("Total incidents (Jan 2026)")).toBeInTheDocument();
+  });
+
+  it("renders explicit unavailable states for area context and timeline", async () => {
+    const unavailableProfile: SchoolProfileResponse = {
+      ...PROFILE_RESPONSE,
+      ofsted_timeline: {
+        events: [],
+        coverage: {
+          is_partial_history: true,
+          earliest_event_date: null,
+          latest_event_date: null,
+          events_count: 0
+        }
+      },
+      area_context: {
+        deprivation: null,
+        crime: null,
+        coverage: {
+          has_deprivation: false,
+          has_crime: false,
+          crime_months_available: 0
+        }
+      }
+    };
+    profileMock.mockResolvedValue(unavailableProfile);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Ofsted Timeline");
+    expect(screen.getByLabelText("Ofsted timeline events data is not available")).toBeInTheDocument();
+    expect(screen.getByLabelText("Area deprivation context data is not available")).toBeInTheDocument();
+    expect(screen.getByLabelText("Area crime context data is not available")).toBeInTheDocument();
   });
 
   it("handles single-year trend series correctly", async () => {

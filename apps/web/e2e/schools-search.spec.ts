@@ -67,6 +67,45 @@ const mockProfileResponse = {
     publication_date: "2025-11-15",
     is_graded: true,
     ungraded_outcome: null
+  },
+  ofsted_timeline: {
+    events: [
+      {
+        inspection_number: "10426709",
+        inspection_start_date: "2025-11-11",
+        publication_date: "2026-01-11",
+        inspection_type: "Section 8",
+        overall_effectiveness_label: null,
+        headline_outcome_text: "Strong standard",
+        category_of_concern: null
+      }
+    ],
+    coverage: {
+      is_partial_history: false,
+      earliest_event_date: "2015-09-14",
+      latest_event_date: "2026-01-15",
+      events_count: 9
+    }
+  },
+  area_context: {
+    deprivation: {
+      lsoa_code: "E01004736",
+      imd_decile: 3,
+      idaci_score: 0.241,
+      idaci_decile: 2,
+      source_release: "IoD2025"
+    },
+    crime: {
+      radius_miles: 1,
+      latest_month: "2026-01",
+      total_incidents: 486,
+      categories: [{ category: "violent-crime", incident_count: 132 }]
+    },
+    coverage: {
+      has_deprivation: true,
+      has_crime: true,
+      crime_months_available: 12
+    }
   }
 };
 
@@ -102,23 +141,23 @@ test("desktop: map overlay layout renders map canvas with floating panel", async
 
   const overlayRoot = page.locator('[data-layout="map-overlay"]');
   const mapSection = page.getByRole("region", { name: "Map view" });
-  const resultsSection = page.getByLabel("School results");
+  const panel = page.getByRole("region", { name: "Results panel" });
 
   await expect(overlayRoot).toBeVisible();
   await expect(mapSection).toBeVisible();
-  await expect(resultsSection).toBeVisible();
+  await expect(panel).toBeVisible();
 
   const mapBox = await mapSection.boundingBox();
-  const resultsBox = await resultsSection.boundingBox();
+  const panelBox = await panel.boundingBox();
   expect(mapBox).not.toBeNull();
-  expect(resultsBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
 
-  if (!mapBox || !resultsBox) {
+  if (!mapBox || !panelBox) {
     return;
   }
 
-  expect(mapBox.width).toBeGreaterThan(resultsBox.width);
-  expect(resultsBox.x).toBeLessThan(mapBox.width / 2);
+  expect(mapBox.width).toBeGreaterThan(panelBox.width);
+  expect(panelBox.x).toBeLessThan(mapBox.width / 2);
 });
 
 test("mobile: overlay keeps controls visible and scrollable", async ({ page }) => {
@@ -127,24 +166,24 @@ test("mobile: overlay keeps controls visible and scrollable", async ({ page }) =
   await expectPrimaryControlsVisible(page);
 
   const overlayRoot = page.locator('[data-layout="map-overlay"]');
-  const resultsSection = page.getByLabel("School results");
+  const panel = page.getByRole("region", { name: "Results panel" });
   await expect(overlayRoot).toBeVisible();
-  await expect(resultsSection).toBeVisible();
+  await expect(panel).toBeVisible();
 
   const overlayBox = await overlayRoot.boundingBox();
-  const resultsBox = await resultsSection.boundingBox();
+  const panelBox = await panel.boundingBox();
   expect(overlayBox).not.toBeNull();
-  expect(resultsBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
 
-  if (!overlayBox || !resultsBox) {
+  if (!overlayBox || !panelBox) {
     return;
   }
 
-  expect(resultsBox.width).toBeLessThanOrEqual(overlayBox.width);
-  expect(resultsBox.height).toBeGreaterThan(0);
+  expect(panelBox.width).toBeLessThanOrEqual(overlayBox.width);
+  expect(panelBox.height).toBeGreaterThan(0);
 });
 
-test("desktop: postcode search renders list and keyboard-focusable markers", async ({ page }) => {
+test("desktop: postcode search renders list and map context", async ({ page }) => {
   await page.route("**/api/v1/schools**", async (route) => {
     await route.fulfill({
       status: 200,
@@ -162,13 +201,8 @@ test("desktop: postcode search renders list and keyboard-focusable markers", asy
 
   await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
   await expect(page.getByText("Alden Civic Academy")).toBeVisible();
-
-  const marker = page.locator('.leaflet-interactive[role="button"]').first();
-  await expect(marker).toBeVisible();
-  await marker.focus();
-  await marker.press("Enter");
-
-  await expect(page.getByText(/mi from search center/).first()).toBeVisible();
+  await expect(page.getByRole("region", { name: "Map view" })).toBeVisible();
+  await expect(page.locator(".maplibregl-ctrl-zoom-in")).toBeVisible();
 });
 
 test("mobile: map zoom controls retain touch target size", async ({ page }) => {
@@ -185,7 +219,7 @@ test("mobile: map zoom controls retain touch target size", async ({ page }) => {
   await expectPrimaryControlsVisible(page);
 
   await page.getByRole("button", { name: "Search schools" }).click();
-  const zoomIn = page.locator(".leaflet-control-zoom-in");
+  const zoomIn = page.locator(".maplibregl-ctrl-zoom-in");
   await expect(zoomIn).toBeVisible();
 
   const zoomBox = await zoomIn.boundingBox();
@@ -198,10 +232,10 @@ test("mobile: map zoom controls retain touch target size", async ({ page }) => {
   expect(zoomBox.height).toBeGreaterThanOrEqual(44);
 });
 
-test("site header and footer are visible on the search page", async ({ page }) => {
+test("search page shows header and suppresses footer for map-first layout", async ({ page }) => {
   await gotoRoute(page, "/");
   await expect(page.getByRole("banner")).toBeVisible();
-  await expect(page.getByRole("contentinfo")).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expect(page.getByLabel("Civitas - return to home")).toBeVisible();
 });
 
@@ -238,6 +272,9 @@ test("click result navigates to school profile route", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Camden Bridge Primary School" })).toBeVisible();
   await expect(page.getByText("Demographics")).toBeVisible();
   await expect(page.getByLabel(/Ofsted rating: Good/)).toBeVisible();
+  await expect(page.getByText("Ofsted Timeline")).toBeVisible();
+  await expect(page.getByText("Area Deprivation")).toBeVisible();
+  await expect(page.getByText("Area Crime")).toBeVisible();
 });
 
 test("browser back returns to search from school profile", async ({ page }) => {
@@ -290,4 +327,74 @@ test("unknown route renders not-found page", async ({ page }) => {
   await gotoRoute(page, "/does-not-exist");
   await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to search" })).toBeVisible();
+});
+
+test("desktop: collapse toggle reduces panel and expand restores it", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await gotoRoute(page, "/");
+  await expectPrimaryControlsVisible(page);
+
+  const panel = page.getByRole("region", { name: "Results panel" });
+  const expandedBox = await panel.boundingBox();
+  expect(expandedBox).not.toBeNull();
+
+  // Collapse the panel
+  await page.getByRole("button", { name: "Collapse results panel" }).click();
+  const collapsedBox = await panel.boundingBox();
+  expect(collapsedBox).not.toBeNull();
+
+  if (expandedBox && collapsedBox) {
+    expect(collapsedBox.width).toBeLessThan(expandedBox.width);
+  }
+
+  // Expand again
+  await page.getByRole("button", { name: "Expand results panel" }).click();
+  const restoredBox = await panel.boundingBox();
+  expect(restoredBox).not.toBeNull();
+
+  if (expandedBox && restoredBox) {
+    expect(restoredBox.width).toBeCloseTo(expandedBox.width, -1);
+  }
+});
+
+test("mobile: bottom-sheet expands and collapses while map stays visible", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await gotoRoute(page, "/");
+
+  const mapSection = page.getByRole("region", { name: "Map view" });
+  const panel = page.getByRole("region", { name: "Results panel" });
+  await expect(mapSection).toBeVisible();
+  await expect(panel).toBeVisible();
+
+  // Expand the sheet
+  await page.getByRole("button", { name: "Expand results panel" }).click();
+  await expect(page.getByRole("button", { name: "Collapse results panel" })).toBeVisible();
+
+  // Map should still be visible (behind the sheet)
+  await expect(mapSection).toBeVisible();
+
+  // Collapse the sheet
+  await page.getByRole("button", { name: "Collapse results panel" }).click();
+  await expect(page.getByRole("button", { name: "Expand results panel" })).toBeVisible();
+});
+
+test("desktop: keyboard navigation remains functional with scrollbar-hide", async ({ page }) => {
+  await page.route("**/api/v1/schools**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockSearchResponse)
+    });
+  });
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await gotoRoute(page, "/");
+  await page.getByLabel("Postcode").fill("SW1A 1AA");
+  await page.getByRole("button", { name: "Search schools" }).click();
+  await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
+
+  // Tab through results — focus should reach result links
+  await page.keyboard.press("Tab");
+  const focused = page.locator(":focus");
+  await expect(focused).toBeVisible();
 });

@@ -38,21 +38,54 @@ const BASE_PROFILE: SchoolProfileResponse = {
     ungraded_outcome: null
   },
   ofsted_timeline: {
-    events: [],
+    events: [
+      {
+        inspection_number: "10426708",
+        inspection_start_date: "2024-01-10",
+        publication_date: "2024-02-03",
+        inspection_type: "Section 5",
+        overall_effectiveness_label: "Good",
+        headline_outcome_text: null,
+        category_of_concern: null
+      },
+      {
+        inspection_number: "10426709",
+        inspection_start_date: "2025-11-11",
+        publication_date: "2026-01-11",
+        inspection_type: "Section 8",
+        overall_effectiveness_label: null,
+        headline_outcome_text: "Strong standard",
+        category_of_concern: null
+      }
+    ],
     coverage: {
-      is_partial_history: true,
-      earliest_event_date: null,
-      latest_event_date: null,
-      events_count: 0
+      is_partial_history: false,
+      earliest_event_date: "2015-09-14",
+      latest_event_date: "2026-01-15",
+      events_count: 9
     }
   },
   area_context: {
-    deprivation: null,
-    crime: null,
+    deprivation: {
+      lsoa_code: "E01004736",
+      imd_decile: 3,
+      idaci_score: 0.241,
+      idaci_decile: 2,
+      source_release: "IoD2025"
+    },
+    crime: {
+      radius_miles: 1.0,
+      latest_month: "2026-01",
+      total_incidents: 486,
+      categories: [
+        { category: "violent-crime", incident_count: 132 },
+        { category: "anti-social-behaviour", incident_count: 97 }
+      ]
+    },
     coverage: {
-      has_deprivation: false,
-      has_crime: false,
-      crime_months_available: 0
+      has_deprivation: true,
+      has_crime: true,
+      crime_months_available: 12
     }
   }
 };
@@ -212,6 +245,68 @@ describe("mapProfileToVM", () => {
   it("returns null trends when not provided", () => {
     const vm = mapProfileToVM(BASE_PROFILE, null);
     expect(vm.trends).toBeNull();
+  });
+
+  it("maps timeline events and sorts them newest-first", () => {
+    const vm = mapProfileToVM(BASE_PROFILE, null);
+    expect(vm.ofstedTimeline.events).toHaveLength(2);
+    expect(vm.ofstedTimeline.events[0]!.inspectionNumber).toBe("10426709");
+    expect(vm.ofstedTimeline.events[1]!.inspectionNumber).toBe("10426708");
+    expect(vm.ofstedTimeline.coverage.isPartialHistory).toBe(false);
+    expect(vm.ofstedTimeline.coverage.earliestEventDate).toMatch(/14.*Sep.*2015/);
+    expect(vm.ofstedTimeline.coverage.latestEventDate).toMatch(/15.*Jan.*2026/);
+    expect(vm.ofstedTimeline.coverage.eventsCount).toBe(9);
+  });
+
+  it("maps area context with deprivation and crime summaries", () => {
+    const vm = mapProfileToVM(BASE_PROFILE, null);
+    expect(vm.areaContext.coverage).toEqual({
+      hasDeprivation: true,
+      hasCrime: true,
+      crimeMonthsAvailable: 12
+    });
+
+    expect(vm.areaContext.deprivation).toEqual({
+      lsoaCode: "E01004736",
+      imdDecile: 3,
+      idaciScore: 0.241,
+      idaciDecile: 2,
+      sourceRelease: "IoD2025"
+    });
+
+    expect(vm.areaContext.crime).toEqual({
+      radiusMiles: 1,
+      latestMonth: "Jan 2026",
+      totalIncidents: 486,
+      categories: [
+        { category: "Violent Crime", incidentCount: 132 },
+        { category: "Anti Social Behaviour", incidentCount: 97 }
+      ]
+    });
+  });
+
+  it("maps area context unavailable states explicitly", () => {
+    const unavailable: SchoolProfileResponse = {
+      ...BASE_PROFILE,
+      area_context: {
+        deprivation: null,
+        crime: null,
+        coverage: {
+          has_deprivation: false,
+          has_crime: false,
+          crime_months_available: 0
+        }
+      }
+    };
+
+    const vm = mapProfileToVM(unavailable, null);
+    expect(vm.areaContext.deprivation).toBeNull();
+    expect(vm.areaContext.crime).toBeNull();
+    expect(vm.areaContext.coverage).toEqual({
+      hasDeprivation: false,
+      hasCrime: false,
+      crimeMonthsAvailable: 0
+    });
   });
 
   it("maps trends with series and history quality", () => {

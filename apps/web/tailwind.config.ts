@@ -20,7 +20,10 @@ const config: Config = {
         success: "var(--color-state-success)",
         warning: "var(--color-state-warning)",
         danger: "var(--color-state-danger)",
-        info: "var(--color-state-info)"
+        info: "var(--color-state-info)",
+        "map-label": "var(--map-label-secondary)",
+        "map-label-muted": "var(--map-label-muted)",
+        "map-water": "var(--map-surface-water)"
       },
       fontFamily: {
         display: ["var(--font-family-display)", "sans-serif"],

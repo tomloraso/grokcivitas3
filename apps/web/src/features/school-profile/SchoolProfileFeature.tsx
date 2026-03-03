@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
@@ -9,12 +9,17 @@ import { paths } from "../../shared/routing/paths";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsSummary } from "./components/DemographicsSummary";
 import { OfstedHeadlineCard } from "./components/OfstedHeadlineCard";
+import { OfstedTimelineCard } from "./components/OfstedTimelineCard";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { TrendPanel } from "./components/TrendPanel";
+import { AreaDeprivationCard } from "./components/AreaDeprivationCard";
+import { AreaCrimeSummaryCard } from "./components/AreaCrimeSummaryCard";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
+  const location = useLocation();
+  const fromSearch = (location.state as { fromSearch?: { postcode: string; radius: number } } | null)?.fromSearch;
   const { status, profile, errorMessage, retry } = useSchoolProfile(urn);
 
   return (
@@ -62,9 +67,16 @@ export function SchoolProfileFeature(): JSX.Element {
       {/* Success */}
       {status === "success" && profile ? (
         <>
-          <Breadcrumbs segments={[{ label: profile.school.name }]} />
+          <Breadcrumbs
+            segments={[
+              ...(fromSearch
+                ? [{ label: fromSearch.postcode, href: paths.home }]
+                : []),
+              { label: profile.school.name },
+            ]}
+          />
 
-          <div className="space-y-8 sm:space-y-10">
+          <div className="space-y-10 sm:space-y-12">
             {/* School identity header */}
             <ProfileHeader school={profile.school} />
 
@@ -88,6 +100,15 @@ export function SchoolProfileFeature(): JSX.Element {
             {profile.trends && profile.trends.series.length > 0 ? (
               <TrendPanel trends={profile.trends} />
             ) : null}
+
+            {/* Ofsted timeline */}
+            <OfstedTimelineCard timeline={profile.ofstedTimeline} />
+
+            {/* Area context */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <AreaDeprivationCard areaContext={profile.areaContext} />
+              <AreaCrimeSummaryCard areaContext={profile.areaContext} />
+            </div>
 
             {/* Coverage notice */}
             <CoverageNotice unsupportedMetrics={profile.unsupportedMetrics} />

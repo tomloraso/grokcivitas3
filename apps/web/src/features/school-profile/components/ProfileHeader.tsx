@@ -9,13 +9,13 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ school }: ProfileHeaderProps): JSX.Element {
   return (
-    <header className="space-y-4">
+    <header className="space-y-5">
       {/* School name */}
-      <div>
-        <p className="font-mono text-xs uppercase tracking-[0.14em] text-secondary">
+      <div className="space-y-2">
+        <p className="eyebrow">
           School Profile
         </p>
-        <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-primary sm:text-4xl lg:text-5xl">
+        <h1 className="text-3xl font-bold leading-tight tracking-tight text-primary sm:text-4xl lg:text-5xl">
           {school.name}
         </h1>
       </div>

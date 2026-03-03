@@ -94,11 +94,11 @@ export function useSchoolsSearch(): UseSchoolsSearchResult {
         postcodeError: null
       }));
     } catch (error) {
-      setState({
+      setState((current) => ({
         status: "error",
-        result: null,
+        result: current.result,
         errorMessage: getErrorMessage(error)
-      });
+      }));
     }
   }, [form.postcode, form.radius]);
 

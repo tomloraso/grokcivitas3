@@ -2,16 +2,17 @@ import { lazy, Suspense, useMemo } from "react";
 
 import { LoadingSkeleton } from "../ui/LoadingSkeleton";
 import type { MapMarker } from "./MapPanel";
+import { MAP_BOUNDS } from "../../shared/maps/map-bounds";
 
-const MapPanelLeaflet = lazy(async () => import("./MapPanelLeaflet"));
-
-/** Geographic center of England/Wales — used as the landing view */
-const UK_DEFAULT_CENTER = { lat: 54.0, lng: -2.5 };
+const MapPanelMapLibre = lazy(async () => import("./MapPanelMapLibre"));
 
 interface MapPanelChromelessProps {
   center: { lat: number; lng: number } | null;
+  radiusMiles?: number;
   markers: MapMarker[];
   className?: string;
+  activeMarkerId?: string | null;
+  onMarkerHover?: (id: string | null) => void;
 }
 
 /**
@@ -21,15 +22,27 @@ interface MapPanelChromelessProps {
  */
 export function MapPanelChromeless({
   center,
+  radiusMiles,
   markers,
-  className
+  className,
+  activeMarkerId,
+  onMarkerHover
 }: MapPanelChromelessProps): JSX.Element {
-  const mapCenter = useMemo(() => center ?? UK_DEFAULT_CENTER, [center]);
+  const mapCenter = useMemo(() => center ?? {
+    lat: MAP_BOUNDS.DEFAULT_CENTER[1],
+    lng: MAP_BOUNDS.DEFAULT_CENTER[0]
+  }, [center]);
 
   return (
     <div className={className ?? "h-full w-full"}>
       <Suspense fallback={<LoadingSkeleton lines={5} className="m-4" />}>
-        <MapPanelLeaflet center={mapCenter} markers={markers} />
+        <MapPanelMapLibre 
+          center={mapCenter} 
+          radiusMiles={radiusMiles}
+          markers={markers} 
+          activeMarkerId={activeMarkerId}
+          onMarkerHover={onMarkerHover}
+        />
       </Suspense>
     </div>
   );

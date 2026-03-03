@@ -12,7 +12,7 @@ export function OfstedHeadlineCard({ ofsted }: OfstedHeadlineCardProps): JSX.Ele
   const isUngraded = !ofsted.isGraded;
 
   return (
-    <Card className="space-y-4 p-5 sm:p-6">
+    <Card className="space-y-5 p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">

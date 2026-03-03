@@ -4,6 +4,8 @@ import { AppShell } from "../components/layout/AppShell";
 import { SiteHeader } from "../components/layout/SiteHeader";
 import { SiteFooter } from "../components/layout/SiteFooter";
 import { SkipToContent } from "../components/layout/SkipToContent";
+import { SearchContextProvider } from "../shared/context/SearchContext";
+import { RouteTransition } from "./RouteTransition";
 import { paths } from "../shared/routing/paths";
 
 /**
@@ -16,13 +18,17 @@ export function RootLayout(): JSX.Element {
   const isMapPage = location.pathname === paths.home;
 
   return (
-    <AppShell>
-      <SkipToContent />
-      <SiteHeader />
-      <main id="main-content">
-        <Outlet />
-      </main>
-      {!isMapPage && <SiteFooter />}
-    </AppShell>
+    <SearchContextProvider>
+      <AppShell>
+        <SkipToContent />
+        <SiteHeader />
+        <main id="main-content">
+          <RouteTransition>
+            <Outlet />
+          </RouteTransition>
+        </main>
+        {!isMapPage && <SiteFooter />}
+      </AppShell>
+    </SearchContextProvider>
   );
 }

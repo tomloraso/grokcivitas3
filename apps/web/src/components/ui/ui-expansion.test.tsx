@@ -83,8 +83,9 @@ describe("Tabs", () => {
     const user = userEvent.setup();
     renderWithProviders(<TabsExample />);
 
-    // Focus the first tab
-    screen.getByRole("tab", { name: "Demographics" }).focus();
+    // Move focus to the first tab through user interaction to keep updates in act().
+    await user.tab();
+    expect(screen.getByRole("tab", { name: "Demographics" })).toHaveFocus();
 
     // Arrow right moves to next tab
     await user.keyboard("{ArrowRight}");

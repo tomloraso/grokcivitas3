@@ -71,6 +71,25 @@ describe("UI primitives", () => {
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
+  it("renders shaped result-card skeleton variant", () => {
+    renderWithProviders(<LoadingSkeleton variant="result-card" count={3} />);
+
+    expect(screen.getByRole("status")).toHaveAttribute("aria-label", "Loading results");
+  });
+
+  it("renders empty state with icon slot", () => {
+    renderWithProviders(
+      <EmptyState
+        title="No results"
+        description="Try again."
+        icon={<span data-testid="empty-icon">icon</span>}
+      />
+    );
+
+    expect(screen.getByTestId("empty-icon")).toBeInTheDocument();
+    expect(screen.getByText("No results")).toBeInTheDocument();
+  });
+
   it("renders card wrappers and result shell content", () => {
     renderWithProviders(
       <div>

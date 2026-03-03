@@ -4,9 +4,11 @@
  */
 import type { SchoolProfileResponse, SchoolTrendsResponse } from "../../../api/types";
 import type {
+  AreaContextVM,
   DemographicMetricVM,
   DemographicsVM,
   OfstedVM,
+  OfstedTimelineVM,
   SchoolIdentityVM,
   SchoolProfileVM,
   TrendPointVM,
@@ -42,6 +44,39 @@ function fmtDate(iso: string | null): string | null {
     year: "numeric",
     timeZone: "UTC"
   });
+}
+
+function fmtMonth(month: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) {
+    return month;
+  }
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const date = new Date(Date.UTC(year, monthIndex, 1));
+  if (Number.isNaN(date.getTime())) {
+    return month;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC"
+  });
+}
+
+function dateKey(iso: string): number {
+  const parsed = Date.parse(`${iso}T00:00:00Z`);
+  return Number.isNaN(parsed) ? -1 : parsed;
+}
+
+function formatCrimeCategory(category: string): string {
+  return category
+    .split(/[-_]/g)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
 }
 
 interface MetricDef {
@@ -136,6 +171,97 @@ function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
   };
 }
 
+function mapOfstedTimeline(profile: SchoolProfileResponse): OfstedTimelineVM {
+  const timeline = profile.ofsted_timeline;
+
+  if (!timeline) {
+    return {
+      events: [],
+      coverage: {
+        isPartialHistory: true,
+        earliestEventDate: null,
+        latestEventDate: null,
+        eventsCount: 0
+      }
+    };
+  }
+
+  const events = [...(timeline.events || [])]
+    .sort(
+      (left, right) =>
+        dateKey(right.inspection_start_date) - dateKey(left.inspection_start_date)
+    )
+    .map((event) => ({
+      inspectionNumber: event.inspection_number,
+      inspectionDate: fmtDate(event.inspection_start_date) ?? event.inspection_start_date,
+      publicationDate: fmtDate(event.publication_date),
+      inspectionType: fallback(event.inspection_type, "Inspection"),
+      outcomeLabel: event.overall_effectiveness_label,
+      headlineOutcome: event.headline_outcome_text,
+      categoryOfConcern: event.category_of_concern
+    }));
+
+  return {
+    events,
+    coverage: {
+      isPartialHistory: timeline.coverage.is_partial_history,
+      earliestEventDate: fmtDate(timeline.coverage.earliest_event_date),
+      latestEventDate: fmtDate(timeline.coverage.latest_event_date),
+      eventsCount: timeline.coverage.events_count
+    }
+  };
+}
+
+function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
+  const area = profile.area_context;
+
+  if (!area) {
+    return {
+      deprivation: null,
+      crime: null,
+      coverage: {
+        hasDeprivation: false,
+        hasCrime: false,
+        crimeMonthsAvailable: 0
+      }
+    };
+  }
+
+  return {
+    deprivation: area.deprivation
+      ? {
+          lsoaCode: area.deprivation.lsoa_code,
+          imdDecile: area.deprivation.imd_decile,
+          idaciScore: area.deprivation.idaci_score,
+          idaciDecile: area.deprivation.idaci_decile,
+          sourceRelease: area.deprivation.source_release
+        }
+      : null,
+    crime: area.crime
+      ? {
+          radiusMiles: area.crime.radius_miles,
+          latestMonth: fmtMonth(area.crime.latest_month),
+          totalIncidents: area.crime.total_incidents,
+          categories: [...area.crime.categories]
+            .sort(
+              (left, right) =>
+                right.incident_count - left.incident_count ||
+                left.category.localeCompare(right.category)
+            )
+            .map((category) => ({
+              category: formatCrimeCategory(category.category),
+              incidentCount: category.incident_count
+            }))
+        }
+      : null,
+    coverage: {
+      hasDeprivation: area.coverage.has_deprivation,
+      hasCrime: area.coverage.has_crime,
+      crimeMonthsAvailable: area.coverage.crime_months_available
+    }
+  };
+}
+
 function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
   if (!trends) {
     return null;
@@ -197,9 +323,11 @@ export function mapProfileToVM(
     school: mapSchool(profile),
     demographics: mapDemographics(profile),
     ofsted: mapOfsted(profile),
+    ofstedTimeline: mapOfstedTimeline(profile),
+    areaContext: mapAreaContext(profile),
     trends: mapTrends(trends),
     unsupportedMetrics: mapUnsupported(profile)
   };
 }
 
-export { fallback, fmtDate, fmtPct };
+export { fallback, fmtDate, fmtMonth, fmtPct };

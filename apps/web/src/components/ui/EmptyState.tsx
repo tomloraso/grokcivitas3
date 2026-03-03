@@ -6,6 +6,8 @@ interface EmptyStateProps {
   title: string;
   description: string;
   action?: ReactNode;
+  /** Optional icon displayed above the title */
+  icon?: ReactNode;
   className?: string;
 }
 
@@ -13,6 +15,7 @@ export function EmptyState({
   title,
   description,
   action,
+  icon,
   className
 }: EmptyStateProps): JSX.Element {
   return (
@@ -23,6 +26,7 @@ export function EmptyState({
         className
       )}
     >
+      {icon ? <div className="mx-auto mb-3 w-fit text-disabled">{icon}</div> : null}
       <h2 className="text-lg font-semibold text-primary">{title}</h2>
       <p className="mt-2 text-sm text-secondary">{description}</p>
       {action ? <div className="mt-4 flex justify-center">{action}</div> : null}

@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 
 import { cn } from "../../shared/utils/cn";
+import { useSearchContext } from "../../shared/context/SearchContext";
 import { paths } from "../../shared/routing/paths";
 import { MobileNav } from "./MobileNav";
 
@@ -12,6 +13,7 @@ export function SiteHeader(): JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const isMapPage = location.pathname === paths.home;
+  const { search } = useSearchContext();
 
   return (
     <header
@@ -34,6 +36,19 @@ export function SiteHeader(): JSX.Element {
           </span>
           <span>Civitas</span>
         </Link>
+
+        {isMapPage && search ? (
+          <div
+            className="hidden items-center gap-1.5 rounded-full border border-border-subtle/40 bg-surface/60 px-3 py-1 text-xs text-secondary backdrop-blur sm:flex"
+            aria-label={`Searching ${search.postcode} within ${search.radius} miles`}
+          >
+            <span className="font-mono font-medium text-primary">{search.postcode}</span>
+            <span className="text-disabled" aria-hidden>·</span>
+            <span>{search.radius} mi</span>
+            <span className="text-disabled" aria-hidden>·</span>
+            <span>{search.count} {search.count === 1 ? "result" : "results"}</span>
+          </div>
+        ) : null}
 
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => {

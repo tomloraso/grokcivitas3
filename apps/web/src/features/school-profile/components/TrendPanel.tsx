@@ -15,12 +15,12 @@ export function TrendPanel({ trends }: TrendPanelProps): JSX.Element {
 
   return (
     <section aria-labelledby="trends-heading">
-      <div className="mb-4 flex items-baseline justify-between gap-3">
+      <div className="mb-5 flex items-baseline justify-between gap-3">
         <h2 id="trends-heading" className="text-lg font-semibold text-primary sm:text-xl">
           Trends
         </h2>
         {trends.yearsAvailable.length > 0 ? (
-          <span className="text-xs text-secondary">
+          <span className="text-xs text-secondary" style={{ opacity: "var(--text-opacity-muted)" }}>
             {trends.yearsAvailable[0]}
             {trends.yearsAvailable.length > 1
               ? ` - ${trends.yearsAvailable[trends.yearsAvailable.length - 1]}`

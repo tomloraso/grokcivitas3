@@ -6,6 +6,7 @@ import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import { SkipToContent } from "./SkipToContent";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { SearchContextProvider } from "../../shared/context/SearchContext";
 import { renderWithProviders } from "../../test/render";
 import { runA11yAudit } from "../../test/accessibility";
 
@@ -134,6 +135,60 @@ describe("Breadcrumbs", () => {
     );
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();
+  });
+});
+
+describe("SiteHeader - search context", () => {
+  it("shows search context chip on map page when search is active", () => {
+    renderWithProviders(
+      <SearchContextProvider initialSearch={{ postcode: "SW1A 1AA", radius: 5, count: 12 }}>
+        <SiteHeader />
+      </SearchContextProvider>,
+      { initialEntries: ["/"] }
+    );
+
+    expect(screen.getByLabelText(/Searching SW1A 1AA within 5 miles/)).toBeInTheDocument();
+    expect(screen.getByText("SW1A 1AA")).toBeInTheDocument();
+    expect(screen.getByText("5 mi")).toBeInTheDocument();
+    expect(screen.getByText("12 results")).toBeInTheDocument();
+  });
+
+  it("hides search context chip on non-map routes", () => {
+    renderWithProviders(
+      <SearchContextProvider initialSearch={{ postcode: "SW1A 1AA", radius: 5, count: 12 }}>
+        <SiteHeader />
+      </SearchContextProvider>,
+      { initialEntries: ["/schools/100000"] }
+    );
+
+    expect(screen.queryByLabelText(/Searching/)).not.toBeInTheDocument();
+  });
+
+  it("hides search context chip when no search is active", () => {
+    renderWithProviders(
+      <SearchContextProvider>
+        <SiteHeader />
+      </SearchContextProvider>,
+      { initialEntries: ["/"] }
+    );
+
+    expect(screen.queryByLabelText(/Searching/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Breadcrumbs - search context", () => {
+  it("renders postcode breadcrumb linking back to search", () => {
+    renderWithProviders(
+      <Breadcrumbs
+        segments={[
+          { label: "SW1A 1AA", href: "/" },
+          { label: "Test School" },
+        ]}
+      />
+    );
+
+    expect(screen.getByRole("link", { name: "SW1A 1AA" })).toHaveAttribute("href", "/");
+    expect(screen.getByText("Test School")).toHaveAttribute("aria-current", "page");
   });
 });
 

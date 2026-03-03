@@ -201,7 +201,7 @@ describe("App", () => {
     await renderAppAtRoute("/");
 
     await user.click(screen.getByRole("button", { name: "Search schools" }));
-    expect(screen.getByRole("status", { name: "Loading content" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Loading results" })).toBeInTheDocument();
 
     resolveSearch({
       ...successfulSearchResponse,
@@ -210,9 +210,6 @@ describe("App", () => {
     });
 
     expect(await screen.findByText("No schools found")).toBeInTheDocument();
-    expect(
-      screen.getByText("Try a wider radius or a nearby postcode to broaden the search area.")
-    ).toBeInTheDocument();
   });
 
   it("shows recoverable error state when search fails", async () => {

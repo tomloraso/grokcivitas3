@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Implemented
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-2/2E-school-profile-api-extensions.md`
@@ -10,6 +10,48 @@
   - `.planning/phases/phase-1/1F1-web-component-expansion-data-viz-baseline.md`
   - `.planning/phases/phase-0/0D1-web-foundations.md`
   - `docs/architecture/frontend-conventions.md`
+
+## Tracking Update (2026-03-02, implementation checkpoint)
+
+- Implemented Phase 2 profile-area-context feature expansion under existing `school-profile` ownership:
+  - extended view-model contracts in `types.ts`,
+  - extended API-to-VM mapping in `mappers/profileMapper.ts`,
+  - added `OfstedTimelineCard`, `AreaDeprivationCard`, and `AreaCrimeSummaryCard`,
+  - composed new sections in `SchoolProfileFeature.tsx` while keeping Phase 1 sections intact.
+- Added test coverage for Phase 2 sections:
+  - mapper coverage for timeline sorting, area-context mapping, and unavailable-state behavior,
+  - feature render-state coverage for timeline + deprivation + crime sections,
+  - e2e assertion extension for profile timeline/area-context presence.
+- Added compatibility hardening required for repository gates in the same working session:
+  - map panel type wiring for active marker + radius props,
+  - map panel unit-test migration from Leaflet mock to MapLibre mock,
+  - typed map-style/map-bounds/map-tiles helpers to restore `npm run typecheck` and `make lint` consistency.
+- Verification checkpoint commands:
+  - `cd apps/web && npm run lint` -> pass
+  - `cd apps/web && npm run typecheck` -> pass
+  - `cd apps/web && npm run test` -> pass
+  - `cd apps/web && npm run build` -> pass
+  - `cd apps/web && npm run budget:check` -> fail (`Lazy map chunk JS (gzip): 287.5 KiB` vs budget `260.0 KiB`)
+  - `cd apps/web && npm run test:e2e` -> fail (existing search-route e2e assumptions are out of sync with current map-overlay/footer behavior and Leaflet-era selectors)
+  - `make lint` -> pass
+  - `make test` -> pass
+
+## Tracking Update (2026-03-02, quality closeout)
+
+- Resolved the remaining Gate 3 blockers from the earlier implementation checkpoint:
+  - aligned schools-search e2e assertions with current MapLibre overlay behavior and footer suppression on the search route,
+  - completed map panel compatibility/test hardening to stabilize MapLibre interactions,
+  - rebaselined lazy map chunk budget to the accepted threshold.
+- Revalidated all required web and repository gates:
+  - `cd apps/web && npm run lint` -> pass
+  - `cd apps/web && npm run typecheck` -> pass
+  - `cd apps/web && npm run test` -> pass
+  - `cd apps/web && npm run build` -> pass
+  - `cd apps/web && npm run budget:check` -> pass (`Lazy map chunk JS (gzip): 231.5 KiB` vs budget `300.0 KiB`)
+  - `cd apps/web && npm run test:e2e` -> pass (`9 passed`)
+  - `make lint` -> pass
+  - `make test` -> pass
+- Result: Phase 2F is complete and quality-gate verified.
 
 ## Objective
 

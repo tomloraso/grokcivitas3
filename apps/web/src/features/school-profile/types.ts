@@ -57,6 +57,64 @@ export interface OfstedVM {
   ungradedOutcome: string | null;
 }
 
+export interface OfstedTimelineEventVM {
+  inspectionNumber: string;
+  inspectionDate: string;
+  publicationDate: string | null;
+  inspectionType: string;
+  outcomeLabel: string | null;
+  headlineOutcome: string | null;
+  categoryOfConcern: string | null;
+}
+
+export interface OfstedTimelineCoverageVM {
+  isPartialHistory: boolean;
+  earliestEventDate: string | null;
+  latestEventDate: string | null;
+  eventsCount: number;
+}
+
+export interface OfstedTimelineVM {
+  events: OfstedTimelineEventVM[];
+  coverage: OfstedTimelineCoverageVM;
+}
+
+/* ------------------------------------------------------------------ */
+/* Area context                                                        */
+/* ------------------------------------------------------------------ */
+
+export interface AreaDeprivationVM {
+  lsoaCode: string;
+  imdDecile: number;
+  idaciScore: number;
+  idaciDecile: number;
+  sourceRelease: string;
+}
+
+export interface AreaCrimeCategoryVM {
+  category: string;
+  incidentCount: number;
+}
+
+export interface AreaCrimeVM {
+  radiusMiles: number;
+  latestMonth: string;
+  totalIncidents: number;
+  categories: AreaCrimeCategoryVM[];
+}
+
+export interface AreaContextCoverageVM {
+  hasDeprivation: boolean;
+  hasCrime: boolean;
+  crimeMonthsAvailable: number;
+}
+
+export interface AreaContextVM {
+  deprivation: AreaDeprivationVM | null;
+  crime: AreaCrimeVM | null;
+  coverage: AreaContextCoverageVM;
+}
+
 /* ------------------------------------------------------------------ */
 /* Trends                                                              */
 /* ------------------------------------------------------------------ */
@@ -100,6 +158,8 @@ export interface SchoolProfileVM {
   school: SchoolIdentityVM;
   demographics: DemographicsVM | null;
   ofsted: OfstedVM | null;
+  ofstedTimeline: OfstedTimelineVM;
+  areaContext: AreaContextVM;
   trends: TrendsVM | null;
   unsupportedMetrics: UnsupportedMetricVM[];
 }
