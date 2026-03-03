@@ -16,8 +16,8 @@
 const ref = {
   navy950: "#060a13",
   navy900: "#0c1222",
-  brand500: "#8b5cf6",
-  phaseSecondary: "#d946ef",
+  brand500: "#A855F7",
+  phaseSecondary: "#E879F9",
   success500: "#22c55e",
   info500: "#3b82f6",
   warning500: "#f59e0b",

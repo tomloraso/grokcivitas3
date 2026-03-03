@@ -41,12 +41,12 @@
   --ref-color-grey-400: #94a3b8;
   --ref-color-grey-500: #64748b;
 
-  --ref-color-brand-500: #8b5cf6;
-  --ref-color-brand-400: #a78bfa;
-  --ref-color-brand-600: #7c3aed;
+  --ref-color-brand-500: #A855F7;
+  --ref-color-brand-400: #C084FC;
+  --ref-color-brand-600: #8B2FC9;
   --ref-color-accent-400: #22d3ee;
   --ref-color-accent-500: #06b6d4;
-  --ref-color-phase-secondary: #d946ef;
+  --ref-color-phase-secondary: #E879F9;
 
   --ref-color-success-500: #22c55e;
   --ref-color-warning-500: #f59e0b;
@@ -87,8 +87,8 @@
   --color-state-info: var(--ref-color-info-500);
   --color-phase-primary: var(--ref-color-brand-500);
   --color-phase-secondary: var(--ref-color-phase-secondary);
-  --marker-glow: rgba(139, 92, 246, 0.4);
-  --marker-glow-active: rgba(139, 92, 246, 0.55);
+  --marker-glow: rgba(168, 85, 247, 0.4);
+  --marker-glow-active: rgba(168, 85, 247, 0.55);
 
   --space-1: 4px;
   --space-2: 8px;
