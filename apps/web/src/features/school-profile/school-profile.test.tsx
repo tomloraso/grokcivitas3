@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiClientError, getSchoolProfile, getSchoolTrends } from "../../api/client";
 import type { SchoolProfileResponse, SchoolTrendsResponse } from "../../api/types";
+import { TooltipProvider } from "../../components/ui/Tooltip";
 import { runA11yAudit } from "../../test/accessibility";
 import { SchoolProfileFeature } from "./SchoolProfileFeature";
 
@@ -188,7 +189,11 @@ function renderProfileAtUrn(urn: string) {
     ],
     { initialEntries: [`/schools/${urn}`] }
   );
-  return render(<RouterProvider router={router} />);
+  return render(
+    <TooltipProvider>
+      <RouterProvider router={router} />
+    </TooltipProvider>
+  );
 }
 
 describe("SchoolProfileFeature", () => {
@@ -219,13 +224,12 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByText("Academy")).toBeInTheDocument();
     expect(screen.getByText("NW1 8NH")).toBeInTheDocument();
 
-    expect(screen.getByLabelText(/Ofsted rating: Good/)).toBeInTheDocument();
+    expect(screen.getAllByLabelText(/Ofsted rating: Good/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Graded")).toBeInTheDocument();
 
     expect(screen.getByText("Demographics")).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Disadvantaged").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Some sections have partial or unavailable data right now.")).toBeInTheDocument();
   });
 
   it("renders Ofsted ungraded state", async () => {
@@ -269,7 +273,6 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Trends");
     expect(screen.getByLabelText("Disadvantaged trend line")).toBeInTheDocument();
-    expect(screen.getByText(/Limited history available \(2 years\)/)).toBeInTheDocument();
   });
 
   it("renders Ofsted timeline section with newest event first", async () => {
@@ -351,7 +354,7 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Ofsted Timeline");
     expect(screen.getByLabelText("Ofsted timeline events data is not available")).toBeInTheDocument();
-    expect(screen.getByLabelText("Area deprivation context data is not available")).toBeInTheDocument();
+    expect(screen.getByLabelText("Area deprivation data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Area crime context data is not available")).toBeInTheDocument();
   });
 
@@ -382,11 +385,9 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    await screen.findByText("Trends");
-    expect(screen.getByText(/Limited history available/)).toBeInTheDocument();
-    expect(
-      screen.getByText("Limited history available (1 year). Trend deltas require at least 2 years of data.")
-    ).toBeInTheDocument();
+    // With only 1 year of data, TrendPanel suppresses entirely
+    await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
+    expect(screen.queryByRole("heading", { name: "Trends" })).not.toBeInTheDocument();
   });
 
   it("renders explicit empty trend state when all trend series are empty", async () => {
@@ -416,9 +417,9 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
+    // With 0 years of data, TrendPanel suppresses entirely
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    expect(screen.getByText("No trend data available for this school.")).toBeInTheDocument();
-    expect(screen.getByText("No historical years are available yet for trend analysis.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Trends" })).not.toBeInTheDocument();
   });
 
   it("renders coverage notice for unsupported metrics", async () => {

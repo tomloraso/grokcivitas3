@@ -1,5 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 
+import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
 import { cn } from "../../../shared/utils/cn";
 import type { SectionCompletenessVM } from "../types";
 
@@ -9,13 +10,24 @@ interface SectionCompletenessNoticeProps {
   className?: string;
 }
 
+/**
+ * Parent-friendly copy for completeness reason codes.
+ * Technical detail is intentionally removed; if a "Learn more"
+ * link is needed later it can be added per-reason.
+ */
 const REASON_COPY: Record<NonNullable<SectionCompletenessVM["messageKey"]>, string> = {
-  missing: "Some source data has not yet been published for this section.",
-  notProvided: "The source publishes only part of this section for this school.",
-  validationRejected: "Some source records were excluded because they did not meet quality checks.",
-  notJoinedYet: "We are still linking this section to the school location.",
-  pipelineFailedRecently: "This section is temporarily unavailable while data refresh catches up.",
-  notApplicable: "This section does not apply to this school."
+  missing:
+    "This information hasn't been published by the data source yet.",
+  notProvided:
+    "The data source only records some of this information for this school.",
+  validationRejected:
+    "Some information was excluded because it didn't pass our quality checks.",
+  notJoinedYet:
+    "We're still connecting this information to the school's location.",
+  pipelineFailedRecently:
+    "This information is temporarily unavailable while we update our records.",
+  notApplicable:
+    "This section doesn't apply to this type of school."
 };
 
 function statusLead(status: SectionCompletenessVM["status"]): string {
@@ -50,13 +62,18 @@ export function SectionCompletenessNotice({
       role="status"
       aria-label={`${sectionLabel} data is ${completeness.status}`}
     >
-      <p className="inline-flex items-center gap-1.5 font-medium text-primary">
-        <Icon className="h-4 w-4 text-warning" aria-hidden />
-        <span>{statusLead(completeness.status)}</span>
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="inline-flex items-center gap-1.5 font-medium text-primary">
+          <Icon className="h-4 w-4 text-warning" aria-hidden />
+          <span>{statusLead(completeness.status)}</span>
+        </p>
+        <DataStatusBadge status={completeness.status} />
+      </div>
       {reasonCopy ? <p>{reasonCopy}</p> : null}
       {yearsCopy ? <p>{yearsCopy}</p> : null}
-      {completeness.lastUpdatedAt ? <p>Last refreshed: {completeness.lastUpdatedAt}</p> : null}
+      {completeness.lastUpdatedAt ? (
+        <p className="text-xs text-disabled">Last refreshed: {completeness.lastUpdatedAt}</p>
+      ) : null}
     </div>
   );
 }

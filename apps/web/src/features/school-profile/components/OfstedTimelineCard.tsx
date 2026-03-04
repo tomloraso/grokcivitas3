@@ -1,5 +1,6 @@
 import { CalendarDays, Clock3 } from "lucide-react";
 
+import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Badge } from "../../../components/ui/Badge";
 import { Card } from "../../../components/ui/Card";
@@ -27,22 +28,25 @@ export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCar
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold text-primary sm:text-xl">Ofsted Timeline</h2>
-          <Badge variant="outline" className="text-xs">
-            {timeline.coverage.eventsCount} events
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              {timeline.coverage.eventsCount} {timeline.coverage.eventsCount === 1 ? "event" : "events"}
+            </Badge>
+            <DataStatusBadge status={completeness.status} />
+          </div>
         </div>
 
         {timeline.coverage.isPartialHistory ? (
           <p className="text-sm text-secondary">
-            Timeline history is partial for this school.
+            This is a partial inspection history. Earlier inspections may not be shown.
           </p>
         ) : null}
 
         {timeline.coverage.earliestEventDate ? (
-          <p className="text-xs text-secondary">
-            Coverage: {timeline.coverage.earliestEventDate}
+          <p className="text-xs text-disabled">
+            Covers: {timeline.coverage.earliestEventDate}
             {timeline.coverage.latestEventDate
-              ? ` - ${timeline.coverage.latestEventDate}`
+              ? ` – ${timeline.coverage.latestEventDate}`
               : ""}
           </p>
         ) : null}

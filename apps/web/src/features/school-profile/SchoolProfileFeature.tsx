@@ -6,31 +6,16 @@ import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
+import { AreaCrimeSummaryCard } from "./components/AreaCrimeSummaryCard";
+import { AreaDeprivationCard } from "./components/AreaDeprivationCard";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsSummary } from "./components/DemographicsSummary";
+import { KeyFactsSummary } from "./components/KeyFactsSummary";
 import { OfstedHeadlineCard } from "./components/OfstedHeadlineCard";
 import { OfstedTimelineCard } from "./components/OfstedTimelineCard";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { TrendPanel } from "./components/TrendPanel";
-import { AreaDeprivationCard } from "./components/AreaDeprivationCard";
-import { AreaCrimeSummaryCard } from "./components/AreaCrimeSummaryCard";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
-import type { ProfileCompletenessVM } from "./types";
-
-const COMPLETENESS_SECTION_LABELS: Record<keyof ProfileCompletenessVM, string> = {
-  demographics: "Demographics",
-  trends: "Trends",
-  ofstedLatest: "Ofsted rating",
-  ofstedTimeline: "Ofsted timeline",
-  areaDeprivation: "Area deprivation",
-  areaCrime: "Area crime"
-};
-
-function incompleteSections(completeness: ProfileCompletenessVM): string[] {
-  return (Object.keys(completeness) as (keyof ProfileCompletenessVM)[])
-    .filter((key) => completeness[key].status !== "available")
-    .map((key) => COMPLETENESS_SECTION_LABELS[key]);
-}
 
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
@@ -99,18 +84,13 @@ export function SchoolProfileFeature(): JSX.Element {
           <div className="space-y-10 sm:space-y-12">
             {/* School identity header */}
             <ProfileHeader school={profile.school} />
-            {incompleteSections(profile.completeness).length > 0 ? (
-              <section
-                className="rounded-lg border border-border-subtle/80 bg-surface/60 px-4 py-3 text-sm text-secondary"
-                role="status"
-                aria-label="Profile data completeness summary"
-              >
-                <p className="font-medium text-primary">
-                  Some sections have partial or unavailable data right now.
-                </p>
-                <p>{incompleteSections(profile.completeness).join(" · ")}</p>
-              </section>
-            ) : null}
+
+            {/* Key facts — prominent at-a-glance summary */}
+            <KeyFactsSummary
+              ofsted={profile.ofsted}
+              demographics={profile.demographics}
+              areaContext={profile.areaContext}
+            />
 
             {/* Ofsted + demographics row on larger screens */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
@@ -120,15 +100,14 @@ export function SchoolProfileFeature(): JSX.Element {
                 completeness={profile.completeness.ofstedLatest}
               />
 
-              {/* Demographics summary */}
+              {/* Demographics summary — current-year values only */}
               <DemographicsSummary
                 demographics={profile.demographics}
-                trends={profile.trends}
                 completeness={profile.completeness.demographics}
               />
             </div>
 
-            {/* Trends */}
+            {/* Trends — directional change only, suppressed when < 2 years */}
             <TrendPanel trends={profile.trends} completeness={profile.completeness.trends} />
 
             {/* Ofsted timeline */}
@@ -150,7 +129,10 @@ export function SchoolProfileFeature(): JSX.Element {
             </div>
 
             {/* Coverage notice */}
-            <CoverageNotice unsupportedMetrics={profile.unsupportedMetrics} />
+            <CoverageNotice
+              unsupportedMetrics={profile.unsupportedMetrics}
+              completeness={profile.completeness}
+            />
           </div>
         </>
       ) : null}

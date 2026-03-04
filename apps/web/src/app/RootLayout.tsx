@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout/AppShell";
 import { SiteHeader } from "../components/layout/SiteHeader";
 import { SiteFooter } from "../components/layout/SiteFooter";
 import { SkipToContent } from "../components/layout/SkipToContent";
+import { TooltipProvider } from "../components/ui/Tooltip";
 import { SearchContextProvider } from "../shared/context/SearchContext";
 import { RouteTransition } from "./RouteTransition";
 import { paths } from "../shared/routing/paths";
@@ -19,16 +20,18 @@ export function RootLayout(): JSX.Element {
 
   return (
     <SearchContextProvider>
-      <AppShell>
-        <SkipToContent />
-        <SiteHeader />
-        <main id="main-content">
-          <RouteTransition>
-            <Outlet />
-          </RouteTransition>
-        </main>
-        {!isMapPage && <SiteFooter />}
-      </AppShell>
+      <TooltipProvider delayDuration={300}>
+        <AppShell>
+          <SkipToContent />
+          <SiteHeader />
+          <main id="main-content">
+            <RouteTransition>
+              <Outlet />
+            </RouteTransition>
+          </main>
+          {!isMapPage && <SiteFooter />}
+        </AppShell>
+      </TooltipProvider>
     </SearchContextProvider>
   );
 }

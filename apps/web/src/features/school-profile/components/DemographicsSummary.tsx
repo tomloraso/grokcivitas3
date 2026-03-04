@@ -1,19 +1,28 @@
+import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { StatCard } from "../../../components/data/StatCard";
-import { TrendIndicator } from "../../../components/data/TrendIndicator";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
-import type { DemographicsVM, SectionCompletenessVM, TrendsVM } from "../types";
+import type { DemographicsVM, SectionCompletenessVM } from "../types";
 
 interface DemographicsSummaryProps {
   demographics: DemographicsVM | null;
-  trends: TrendsVM | null;
   completeness: SectionCompletenessVM;
 }
 
+/**
+ * Map from metric key to glossary term key for acronym tooltips.
+ * Only metrics whose labels are acronyms need glossary entries.
+ */
+const METRIC_GLOSSARY_KEYS: Record<string, string> = {
+  fsm_pct: "fsm",
+  sen_pct: "sen",
+  ehcp_pct: "ehcp",
+  eal_pct: "eal"
+};
+
 export function DemographicsSummary({
   demographics,
-  trends,
   completeness
 }: DemographicsSummaryProps): JSX.Element {
   if (!demographics) {
@@ -54,25 +63,18 @@ export function DemographicsSummary({
         {demographics.metrics
           .filter((m) => m.value !== null)
           .map((metric) => {
-            // Find matching trend series for this metric
-            const trendSeries = trends?.series.find(
-              (s) => s.metricKey === metric.metricKey
+            const glossaryKey = METRIC_GLOSSARY_KEYS[metric.metricKey];
+            const label = glossaryKey ? (
+              <GlossaryTerm term={glossaryKey}>{metric.label}</GlossaryTerm>
+            ) : (
+              metric.label
             );
-
-            const footer =
-              trendSeries?.latestDelta !== null && trendSeries?.latestDelta !== undefined ? (
-                <TrendIndicator
-                  delta={trendSeries.latestDelta}
-                  direction={trendSeries.latestDirection ?? undefined}
-                />
-              ) : null;
 
             return (
               <StatCard
                 key={metric.metricKey}
-                label={metric.label}
+                label={label}
                 value={metric.value!}
-                footer={footer}
               />
             );
           })}

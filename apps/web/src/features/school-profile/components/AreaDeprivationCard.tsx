@@ -1,3 +1,4 @@
+import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { StatCard } from "../../../components/data/StatCard";
@@ -12,12 +13,12 @@ interface AreaDeprivationCardProps {
 
 function deprivationContextLabel(decile: number): string {
   if (decile <= 2) {
-    return "Higher deprivation context (1 is most deprived).";
+    return "This area has higher levels of deprivation (1 is most deprived, 10 is least).";
   }
   if (decile >= 9) {
-    return "Lower deprivation context (10 is least deprived).";
+    return "This area has lower levels of deprivation (1 is most deprived, 10 is least).";
   }
-  return "Mid-range deprivation context (1 most deprived, 10 least deprived).";
+  return "This area has mid-range deprivation levels (1 is most deprived, 10 is least).";
 }
 
 export function AreaDeprivationCard({
@@ -37,10 +38,16 @@ export function AreaDeprivationCard({
       {deprivation ? (
         <>
           <MetricGrid columns={3}>
-            <StatCard label="IMD Decile" value={`${deprivation.imdDecile}`} />
-            <StatCard label="IDACI Decile" value={`${deprivation.idaciDecile}`} />
             <StatCard
-              label="IDACI Score"
+              label={<GlossaryTerm term="imd">IMD Decile</GlossaryTerm>}
+              value={`${deprivation.imdDecile}`}
+            />
+            <StatCard
+              label={<GlossaryTerm term="idaci">IDACI Decile</GlossaryTerm>}
+              value={`${deprivation.idaciDecile}`}
+            />
+            <StatCard
+              label={<GlossaryTerm term="idaci">IDACI Score</GlossaryTerm>}
               value={deprivation.idaciScore.toFixed(3)}
             />
           </MetricGrid>
@@ -48,12 +55,13 @@ export function AreaDeprivationCard({
           <p className="text-sm text-secondary">
             {deprivationContextLabel(deprivation.imdDecile)}
           </p>
-          <p className="text-xs text-secondary">
-            Source: {deprivation.sourceRelease} ({deprivation.lsoaCode})
+          <p className="text-xs text-disabled">
+            Source: {deprivation.sourceRelease} &middot;{" "}
+            <GlossaryTerm term="lsoa">{deprivation.lsoaCode}</GlossaryTerm>
           </p>
         </>
       ) : (
-        <MetricUnavailable metricLabel="Area deprivation context" />
+        <MetricUnavailable metricLabel="Area deprivation" />
       )}
     </Card>
   );
