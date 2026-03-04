@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 
 import { getSchoolProfile, getSchoolTrends, ApiClientError } from "../../../api/client";
 import { mapProfileToVM } from "../mappers/profileMapper";
@@ -39,12 +39,14 @@ const INITIAL_STATE: ProfileState = {
 
 export function useSchoolProfile(urn: string | undefined) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const requestSeqRef = useRef(0);
 
   const fetchProfile = useCallback(async () => {
     if (!urn) {
       return;
     }
 
+    const requestId = ++requestSeqRef.current;
     dispatch({ type: "FETCH_START" });
 
     try {
@@ -56,9 +58,17 @@ export function useSchoolProfile(urn: string | undefined) {
         })
       ]);
 
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
+
       const vm = mapProfileToVM(profileRes, trendsRes);
       dispatch({ type: "FETCH_SUCCESS", profile: vm });
     } catch (err: unknown) {
+      if (requestId !== requestSeqRef.current) {
+        return;
+      }
+
       if (err instanceof ApiClientError && err.status === 404) {
         dispatch({ type: "FETCH_NOT_FOUND" });
         return;
@@ -73,6 +83,10 @@ export function useSchoolProfile(urn: string | undefined) {
 
   useEffect(() => {
     void fetchProfile();
+
+    return () => {
+      requestSeqRef.current += 1;
+    };
   }, [fetchProfile]);
 
   return {

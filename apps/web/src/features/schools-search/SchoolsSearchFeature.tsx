@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
+import { prefetchSchoolProfile } from "../../api/client";
 import { MapOverlayLayout } from "../../components/layout/MapOverlayLayout";
 import { useSearchContext } from "../../shared/context/SearchContext";
 import { FilterChips } from "./components/FilterChips";
@@ -24,6 +25,9 @@ export function SchoolsSearchFeature(): JSX.Element {
   const { setSearch, clearSearch } = useSearchContext();
   const [activeSchoolId, setActiveSchoolId] = useState<string | null>(null);
   const handleSchoolHover = useCallback((id: string | null) => setActiveSchoolId(id), []);
+  const handlePreviewSchool = useCallback((schoolId: string) => {
+    prefetchSchoolProfile(schoolId);
+  }, []);
 
   // Client-side faceted filters — stable empty array prevents infinite re-renders
   const allSchools = state.result?.schools ?? EMPTY_SCHOOLS;
@@ -154,6 +158,7 @@ export function SchoolsSearchFeature(): JSX.Element {
           }
           activeSchoolId={activeSchoolId}
           onSchoolHover={handleSchoolHover}
+          onPreviewSchool={handlePreviewSchool}
           isNameSearch={state.result?.mode === "name"}
           nameSearchQuery={state.result?.nameQuery}
         />

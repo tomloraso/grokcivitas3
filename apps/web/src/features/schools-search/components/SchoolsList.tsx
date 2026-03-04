@@ -28,6 +28,7 @@ interface SchoolsListProps {
   searchContext?: SearchQuery;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
+  onPreviewSchool?: (schoolId: string) => void;
   isNameSearch?: boolean;
   nameSearchQuery?: string;
 }
@@ -80,6 +81,7 @@ function PhaseGroupSection({
   searchContext,
   activeSchoolId,
   onSchoolHover,
+  onPreviewSchool,
   globalIndex,
   isNameSearch,
 }: {
@@ -87,6 +89,7 @@ function PhaseGroupSection({
   searchContext?: SearchQuery;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
+  onPreviewSchool?: (schoolId: string) => void;
   globalIndex: number;
   isNameSearch?: boolean;
 }): JSX.Element {
@@ -131,6 +134,7 @@ function PhaseGroupSection({
               style={{ animationDelay: `${(globalIndex + index) * 60}ms` }}
               isActive={activeSchoolId === school.urn}
               onHover={onSchoolHover}
+              onNavigateIntent={onPreviewSchool}
             />
           ))}
         </div>
@@ -144,12 +148,14 @@ function ResultsList({
   searchContext,
   activeSchoolId,
   onSchoolHover,
+  onPreviewSchool,
   isNameSearch,
 }: {
   schools: SchoolSearchListItem[];
   searchContext?: SearchQuery;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
+  onPreviewSchool?: (schoolId: string) => void;
   isNameSearch?: boolean;
 }): JSX.Element {
   const groups = useMemo(() => groupByPhase(schools), [schools]);
@@ -172,6 +178,7 @@ function ResultsList({
             style={{ animationDelay: `${index * 60}ms` }}
             isActive={activeSchoolId === school.urn}
             onHover={onSchoolHover}
+            onNavigateIntent={onPreviewSchool}
           />
         ))}
       </>
@@ -191,6 +198,7 @@ function ResultsList({
             searchContext={searchContext}
             activeSchoolId={activeSchoolId}
             onSchoolHover={onSchoolHover}
+            onPreviewSchool={onPreviewSchool}
             globalIndex={startIndex}
             isNameSearch={isNameSearch}
           />
@@ -208,6 +216,7 @@ export function SchoolsList({
   searchContext,
   activeSchoolId,
   onSchoolHover,
+  onPreviewSchool,
   isNameSearch,
   nameSearchQuery,
 }: SchoolsListProps): JSX.Element {
@@ -235,7 +244,7 @@ export function SchoolsList({
             Retry
           </Button>
         </div>
-        <ResultsList schools={schools} searchContext={searchContext} activeSchoolId={activeSchoolId} onSchoolHover={onSchoolHover} isNameSearch={isNameSearch} />
+        <ResultsList schools={schools} searchContext={searchContext} activeSchoolId={activeSchoolId} onSchoolHover={onSchoolHover} onPreviewSchool={onPreviewSchool} isNameSearch={isNameSearch} />
       </>
     );
   }
@@ -275,7 +284,7 @@ export function SchoolsList({
   }
 
   if (status === "success") {
-    return <ResultsList schools={schools} searchContext={searchContext} activeSchoolId={activeSchoolId} onSchoolHover={onSchoolHover} isNameSearch={isNameSearch} />;
+    return <ResultsList schools={schools} searchContext={searchContext} activeSchoolId={activeSchoolId} onSchoolHover={onSchoolHover} onPreviewSchool={onPreviewSchool} isNameSearch={isNameSearch} />;
   }
 
   return (

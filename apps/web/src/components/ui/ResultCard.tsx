@@ -22,6 +22,8 @@ interface ResultCardProps {
   isActive?: boolean;
   /** Callback when the card gains/loses hover or keyboard focus */
   onHover?: (id: string | null) => void;
+  /** Callback fired when the user shows intent to open this school (hover/focus/tap). */
+  onNavigateIntent?: (id: string) => void;
 }
 
 export function ResultCard({
@@ -37,13 +39,21 @@ export function ResultCard({
   className,
   isActive,
   onHover,
+  onNavigateIntent,
 }: ResultCardProps): JSX.Element {
-  const hoverHandlers = id && onHover
+  const interactionHandlers = id
     ? {
-        onMouseEnter: () => onHover(id),
-        onMouseLeave: () => onHover(null),
-        onFocus: () => onHover(id),
-        onBlur: () => onHover(null),
+        onMouseEnter: () => {
+          onHover?.(id);
+          onNavigateIntent?.(id);
+        },
+        onMouseLeave: () => onHover?.(null),
+        onFocus: () => {
+          onHover?.(id);
+          onNavigateIntent?.(id);
+        },
+        onBlur: () => onHover?.(null),
+        onPointerDown: () => onNavigateIntent?.(id),
       }
     : {};
   const content = (
@@ -83,7 +93,7 @@ export function ResultCard({
         className={cn("group block result-card-enter", className)}
         aria-label={`View profile for ${name}`}
         style={style}
-        {...hoverHandlers}
+        {...interactionHandlers}
       >
         <Card className={cn("space-y-3 transition-all duration-fast group-hover:scale-[1.01] group-hover:border-brand/30 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]", activeRing)}>
           {content}
@@ -93,7 +103,7 @@ export function ResultCard({
   }
 
   return (
-    <Card className={cn("space-y-3 result-card-enter", activeRing, className)} style={style} {...hoverHandlers}>
+    <Card className={cn("space-y-3 result-card-enter", activeRing, className)} style={style} {...interactionHandlers}>
       {content}
     </Card>
   );
