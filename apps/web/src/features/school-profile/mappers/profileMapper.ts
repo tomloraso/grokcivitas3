@@ -138,7 +138,9 @@ const TREND_METRIC_LABELS: Record<string, string> = {
   disadvantaged_pct: "Disadvantaged",
   sen_pct: "SEN Support",
   ehcp_pct: "EHCP",
-  eal_pct: "English as Additional Language"
+  eal_pct: "English as Additional Language",
+  first_language_english_pct: "First Language English",
+  first_language_unclassified_pct: "First Language Unclassified"
 };
 
 const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionCompletenessMessageKey> = {

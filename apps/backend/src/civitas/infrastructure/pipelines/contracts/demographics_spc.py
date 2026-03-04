@@ -8,6 +8,7 @@ CONTRACT_VERSION = "demographics_spc.v1"
 
 _REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
     "urn": ("urn", "URN"),
+    "fsm_pct": ("% of pupils known to be eligible for free school meals",),
     "disadvantaged_pct": (
         "% of pupils known to be eligible for free school meals (Performance Tables)",
     ),
@@ -26,6 +27,7 @@ _RELEASE_SLUG_PATTERN = re.compile(r"^(?P<start>\d{4})-(?P<end>\d{2})$")
 class NormalizedSpcRow(TypedDict):
     urn: str
     academic_year: str
+    fsm_pct: float | None
     disadvantaged_pct: float | None
     eal_pct: float | None
     first_language_english_pct: float | None
@@ -74,6 +76,11 @@ def normalize_row(
         return None, "invalid_academic_year"
 
     try:
+        fsm_pct = _parse_optional_percentage(raw_row.get(column_map["fsm_pct"]))
+    except ValueError:
+        return None, "invalid_fsm_pct"
+
+    try:
         disadvantaged_pct = _parse_optional_percentage(raw_row.get(column_map["disadvantaged_pct"]))
     except ValueError:
         return None, "invalid_disadvantaged_pct"
@@ -101,6 +108,7 @@ def normalize_row(
         NormalizedSpcRow(
             urn=urn,
             academic_year=academic_year,
+            fsm_pct=fsm_pct,
             disadvantaged_pct=disadvantaged_pct,
             eal_pct=eal_pct,
             first_language_english_pct=first_language_english_pct,

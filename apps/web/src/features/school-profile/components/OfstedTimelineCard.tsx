@@ -1,6 +1,7 @@
 import { CalendarDays, Clock3 } from "lucide-react";
 
 import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
+import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Badge } from "../../../components/ui/Badge";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
@@ -19,6 +20,20 @@ function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
     return event.headlineOutcome;
   }
   return "Outcome not published";
+}
+
+/** Map raw inspection-type strings to glossary keys */
+const INSPECTION_TYPE_GLOSSARY: Record<string, string> = {
+  "Section 5": "section_5",
+  "Section 8": "section_8",
+};
+
+function InspectionTypeLabel({ type }: { type: string }): JSX.Element {
+  const glossaryKey = INSPECTION_TYPE_GLOSSARY[type];
+  if (glossaryKey) {
+    return <GlossaryTerm term={glossaryKey}>{type}</GlossaryTerm>;
+  }
+  return <>{type}</>;
 }
 
 export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCardProps): JSX.Element {
@@ -106,7 +121,9 @@ export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCar
                           </Badge>
                         ) : null}
                       </div>
-                      <p className="text-xs text-secondary">{event.inspectionType}</p>
+                      <p className="text-xs text-secondary">
+                        <InspectionTypeLabel type={event.inspectionType} />
+                      </p>
                     </div>
 
                     <Badge

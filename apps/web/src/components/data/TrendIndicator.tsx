@@ -4,13 +4,16 @@ import type { HTMLAttributes } from "react";
 import { cn } from "../../shared/utils/cn";
 
 type TrendDirection = "up" | "down" | "flat";
+type TrendUnit = "%" | "pp";
 
 interface TrendIndicatorProps extends HTMLAttributes<HTMLSpanElement> {
   /** Delta value to display (e.g. +2.3, -1.5) */
   delta: number;
   /** Explicit direction override. Auto-derived from delta sign when omitted. */
   direction?: TrendDirection;
-  /** Format the delta as a percentage (default: true) */
+  /** Unit suffix for delta formatting (default: "%"). */
+  unit?: TrendUnit;
+  /** @deprecated Use `unit` instead. */
   asPercentage?: boolean;
   /** Size of the icon in pixels (default: 14) */
   iconSize?: number;
@@ -27,15 +30,16 @@ const directionConfig: Record<
   TrendDirection,
   { icon: typeof TrendingUp; colorClass: string; label: string }
 > = {
-  up: { icon: TrendingUp, colorClass: "text-success", label: "Trending up" },
-  down: { icon: TrendingDown, colorClass: "text-danger", label: "Trending down" },
-  flat: { icon: Minus, colorClass: "text-secondary", label: "No change" }
+  up: { icon: TrendingUp, colorClass: "text-trend-up", label: "Trending up" },
+  down: { icon: TrendingDown, colorClass: "text-trend-down", label: "Trending down" },
+  flat: { icon: Minus, colorClass: "text-trend-flat", label: "No change" }
 };
 
 export function TrendIndicator({
   delta,
   direction: directionProp,
-  asPercentage = true,
+  unit = "%",
+  asPercentage,
   iconSize = 14,
   className,
   ...props
@@ -43,7 +47,10 @@ export function TrendIndicator({
   const dir = resolveDirection(delta, directionProp);
   const { icon: Icon, colorClass, label } = directionConfig[dir];
   const prefix = delta > 0 ? "+" : "";
-  const formatted = asPercentage ? `${prefix}${delta.toFixed(1)}%` : `${prefix}${delta}`;
+  const formatted =
+    asPercentage === false
+      ? `${prefix}${delta}`
+      : `${prefix}${delta.toFixed(1)}${unit}`;
 
   return (
     <span

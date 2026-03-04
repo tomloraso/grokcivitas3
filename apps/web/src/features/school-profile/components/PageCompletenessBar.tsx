@@ -7,9 +7,10 @@ interface PageCompletenessBarProps {
 }
 
 /**
- * A single, consolidated page-level banner summarising data gaps.
- * Replaces the per-section wall-of-warnings pattern with one
- * calm notice that doesn't erode trust.
+ * Subtle page-level hint about data gaps.
+ * Designed to inform without dominating the page or breaking the
+ * data narrative. Renders as a muted inline line rather than a
+ * bordered banner.
  */
 export function PageCompletenessBar({
   completeness,
@@ -35,25 +36,20 @@ export function PageCompletenessBar({
   const incompleteNames = incomplete.map((s) => s.label);
 
   return (
-    <div
-      className="flex items-start gap-2.5 rounded-lg border border-border-subtle/60 bg-surface/50 px-4 py-3 text-sm text-secondary"
+    <p
+      className="flex flex-wrap items-center gap-1.5 text-xs text-disabled"
       role="status"
       aria-label="Some data is incomplete"
     >
-      <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" aria-hidden />
-      <div className="space-y-0.5">
-        <p>
-          Some information hasn&apos;t been published yet.{" "}
-          <span className="text-disabled">
-            Affected: {incompleteNames.join(", ")}.
-          </span>
-        </p>
-        {latestRefresh ? (
-          <p className="text-xs text-disabled">
-            Last checked: {latestRefresh}
-          </p>
-        ) : null}
-      </div>
-    </div>
+      <Info className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span>
+        Not yet published: {incompleteNames.join(", ")}
+      </span>
+      {latestRefresh ? (
+        <span className="before:content-['·'] before:mr-1.5">
+          {latestRefresh}
+        </span>
+      ) : null}
+    </p>
   );
 }

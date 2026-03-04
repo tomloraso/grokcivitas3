@@ -14,6 +14,12 @@ export interface GlossaryEntry {
 }
 
 const GLOSSARY: Record<string, GlossaryEntry> = {
+  disadvantaged: {
+    short: "Disadvantaged",
+    full: "Disadvantaged Pupils (DfE performance measure)",
+    description:
+      "A DfE comparison measure used in performance tables. It can differ from the direct free school meals eligibility percentage."
+  },
   ehcp: {
     short: "EHCP",
     full: "Education, Health and Care Plan",
@@ -28,15 +34,27 @@ const GLOSSARY: Record<string, GlossaryEntry> = {
   },
   fsm: {
     short: "FSM",
-    full: "Free School Meals",
+    full: "Free School Meals (direct)",
     description:
-      "Government-funded meals for children from families on lower incomes. Often used as an indicator of disadvantage."
+      "The percentage of pupils currently known to be eligible for free school meals in that school year."
   },
   eal: {
     short: "EAL",
     full: "English as an Additional Language",
     description:
       "Children whose first language at home is not English."
+  },
+  first_language_english: {
+    short: "First Language English",
+    full: "First Language English",
+    description:
+      "Pupils whose first language is recorded as English in the school census. This is the language spoken at home, not a measure of proficiency."
+  },
+  first_language_unclassified: {
+    short: "First Language Unclassified",
+    full: "First Language Unclassified",
+    description:
+      "Pupils whose first language was not recorded or could not be classified in the school census. A high figure may indicate data-quality gaps."
   },
   imd: {
     short: "IMD",
@@ -61,6 +79,18 @@ const GLOSSARY: Record<string, GlossaryEntry> = {
     full: "Office for Standards in Education",
     description:
       "The government body that inspects schools and rates them Outstanding, Good, Requires Improvement or Inadequate."
+  },
+  section_5: {
+    short: "Section 5",
+    full: "Section 5 Inspection (Full Inspection)",
+    description:
+      "A full graded inspection under the Education Act 2005. Results in an overall effectiveness judgement of Outstanding, Good, Requires Improvement or Inadequate."
+  },
+  section_8: {
+    short: "Section 8",
+    full: "Section 8 Inspection (Short / Monitoring)",
+    description:
+      "A shorter, usually ungraded inspection. Often used to check whether a Good school remains Good, or to monitor progress at schools rated Requires Improvement or Inadequate."
   }
 } as const;
 

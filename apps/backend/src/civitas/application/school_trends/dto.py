@@ -40,6 +40,8 @@ class SchoolTrendsSeriesDto:
     sen_pct: tuple[SchoolTrendPointDto, ...]
     ehcp_pct: tuple[SchoolTrendPointDto, ...]
     eal_pct: tuple[SchoolTrendPointDto, ...]
+    first_language_english_pct: tuple[SchoolTrendPointDto, ...]
+    first_language_unclassified_pct: tuple[SchoolTrendPointDto, ...]
 
 
 @dataclass(frozen=True)

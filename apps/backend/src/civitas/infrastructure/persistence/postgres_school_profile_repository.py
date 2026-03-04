@@ -81,6 +81,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                             demographics.first_language_unclassified_pct,
                             demographics.has_ethnicity_data,
                             demographics.has_top_languages_data,
+                            demographics.source_dataset_id,
                             demographics.updated_at AS demographics_updated_at,
                             ofsted.urn AS ofsted_urn,
                             ofsted.overall_effectiveness_code,
@@ -103,6 +104,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 first_language_unclassified_pct,
                                 has_ethnicity_data,
                                 has_top_languages_data,
+                                source_dataset_id,
                                 updated_at
                             FROM school_demographics_yearly
                             WHERE school_demographics_yearly.urn = schools.urn
@@ -295,8 +297,10 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     row["first_language_unclassified_pct"]
                 ),
                 coverage=SchoolDemographicsCoverage(
-                    # Phase 1 source contract does not provide direct school-level FSM%.
-                    fsm_supported=False,
+                    fsm_supported=_supports_direct_fsm(
+                        source_dataset_id=row["source_dataset_id"],
+                        fsm_pct=row["fsm_pct"],
+                    ),
                     ethnicity_supported=bool(row["has_ethnicity_data"]),
                     top_languages_supported=bool(row["has_top_languages_data"]),
                 ),
@@ -690,3 +694,12 @@ def _build_area_crime_completeness(
         reason_code=None,
         last_updated_at=crime_updated_at,
     )
+
+
+def _supports_direct_fsm(*, source_dataset_id: object, fsm_pct: object) -> bool:
+    source_token = _to_optional_str(source_dataset_id)
+    if source_token is not None and "spc:" in source_token:
+        return True
+
+    # Legacy rows may not include family tokens in source_dataset_id.
+    return _to_optional_float(fsm_pct) is not None

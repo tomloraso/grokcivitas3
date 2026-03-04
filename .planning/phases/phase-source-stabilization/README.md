@@ -94,3 +94,4 @@ Phase Source Stabilization is split into five deliverables:
 - 2026-03-04: progression to expansion phases is blocked until this phase is signed off.
 - 2026-03-04: multi-year demographics recovery requires source-strategy change, not UI-only mitigations.
 - 2026-03-04: phase implementation completed with gate evidence captured in `signoff-2026-03-04.md`.
+- 2026-03-04: direct FSM percentage support is enabled from SPC release files; unsupported flag now reflects source-family availability rather than a hardcoded false.

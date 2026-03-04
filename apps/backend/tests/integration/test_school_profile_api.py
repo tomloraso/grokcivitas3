@@ -72,14 +72,14 @@ def test_get_school_profile_returns_expected_contract() -> None:
             demographics_latest=SchoolDemographicsLatestDto(
                 academic_year="2024/25",
                 disadvantaged_pct=17.2,
-                fsm_pct=None,
+                fsm_pct=16.9,
                 sen_pct=13.0,
                 ehcp_pct=2.1,
                 eal_pct=8.4,
                 first_language_english_pct=90.6,
                 first_language_unclassified_pct=1.0,
                 coverage=SchoolDemographicsCoverageDto(
-                    fsm_supported=False,
+                    fsm_supported=True,
                     ethnicity_supported=False,
                     top_languages_supported=False,
                 ),
@@ -189,14 +189,14 @@ def test_get_school_profile_returns_expected_contract() -> None:
         "demographics_latest": {
             "academic_year": "2024/25",
             "disadvantaged_pct": 17.2,
-            "fsm_pct": None,
+            "fsm_pct": 16.9,
             "sen_pct": 13.0,
             "ehcp_pct": 2.1,
             "eal_pct": 8.4,
             "first_language_english_pct": 90.6,
             "first_language_unclassified_pct": 1.0,
             "coverage": {
-                "fsm_supported": False,
+                "fsm_supported": True,
                 "ethnicity_supported": False,
                 "top_languages_supported": False,
             },

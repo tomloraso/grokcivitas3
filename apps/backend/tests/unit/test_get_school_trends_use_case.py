@@ -29,6 +29,8 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
                     sen_pct=10.0,
                     ehcp_pct=2.0,
                     eal_pct=8.0,
+                    first_language_english_pct=90.0,
+                    first_language_unclassified_pct=1.0,
                 ),
                 SchoolDemographicsYearlyRow(
                     academic_year="2023/24",
@@ -36,6 +38,8 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
                     sen_pct=10.0,
                     ehcp_pct=2.5,
                     eal_pct=8.0,
+                    first_language_english_pct=89.0,
+                    first_language_unclassified_pct=1.0,
                 ),
                 SchoolDemographicsYearlyRow(
                     academic_year="2024/25",
@@ -43,6 +47,8 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
                     sen_pct=None,
                     ehcp_pct=2.0,
                     eal_pct=9.0,
+                    first_language_english_pct=88.5,
+                    first_language_unclassified_pct=0.8,
                 ),
             ),
             latest_updated_at=None,
@@ -83,6 +89,10 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
     assert result.series.eal_pct[1].direction == "flat"
     assert result.series.eal_pct[2].delta == 1.0
     assert result.series.eal_pct[2].direction == "up"
+    assert result.series.first_language_english_pct[1].delta == -1.0
+    assert result.series.first_language_english_pct[1].direction == "down"
+    assert result.series.first_language_unclassified_pct[2].delta == pytest.approx(-0.2)
+    assert result.series.first_language_unclassified_pct[2].direction == "down"
 
 
 def test_get_school_trends_marks_partial_history_when_only_one_year_is_available() -> None:
@@ -96,6 +106,8 @@ def test_get_school_trends_marks_partial_history_when_only_one_year_is_available
                     sen_pct=13.0,
                     ehcp_pct=2.1,
                     eal_pct=8.4,
+                    first_language_english_pct=90.6,
+                    first_language_unclassified_pct=1.0,
                 ),
             ),
             latest_updated_at=None,
@@ -113,6 +125,8 @@ def test_get_school_trends_marks_partial_history_when_only_one_year_is_available
     assert result.completeness.years_available == ("2024/25",)
     assert result.series.disadvantaged_pct[0].delta is None
     assert result.series.disadvantaged_pct[0].direction is None
+    assert result.series.first_language_english_pct[0].delta is None
+    assert result.series.first_language_unclassified_pct[0].delta is None
 
 
 def test_get_school_trends_returns_empty_series_for_school_without_demographics_rows() -> None:
@@ -138,6 +152,8 @@ def test_get_school_trends_returns_empty_series_for_school_without_demographics_
     assert result.series.sen_pct == ()
     assert result.series.ehcp_pct == ()
     assert result.series.eal_pct == ()
+    assert result.series.first_language_english_pct == ()
+    assert result.series.first_language_unclassified_pct == ()
 
 
 def test_get_school_trends_raises_not_found_when_school_is_missing() -> None:

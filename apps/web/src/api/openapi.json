@@ -1327,6 +1327,20 @@
             },
             "type": "array",
             "title": "Eal Pct"
+          },
+          "first_language_english_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "First Language English Pct"
+          },
+          "first_language_unclassified_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "First Language Unclassified Pct"
           }
         },
         "type": "object",
@@ -1334,7 +1348,9 @@
           "disadvantaged_pct",
           "sen_pct",
           "ehcp_pct",
-          "eal_pct"
+          "eal_pct",
+          "first_language_english_pct",
+          "first_language_unclassified_pct"
         ],
         "title": "SchoolTrendsSeriesResponse"
       },

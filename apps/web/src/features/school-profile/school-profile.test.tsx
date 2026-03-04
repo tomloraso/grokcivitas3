@@ -157,7 +157,15 @@ const TRENDS_RESPONSE: SchoolTrendsResponse = {
       { academic_year: "2024/25", value: 13.0, delta: 0.5, direction: "up" }
     ],
     ehcp_pct: [{ academic_year: "2024/25", value: 2.1, delta: null, direction: null }],
-    eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }]
+    eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }],
+    first_language_english_pct: [
+      { academic_year: "2023/24", value: 89.9, delta: null, direction: null },
+      { academic_year: "2024/25", value: 90.6, delta: 0.7, direction: "up" }
+    ],
+    first_language_unclassified_pct: [
+      { academic_year: "2023/24", value: 0.6, delta: null, direction: null },
+      { academic_year: "2024/25", value: 1.0, delta: 0.4, direction: "up" }
+    ]
   },
   completeness: {
     status: "partial",
@@ -176,6 +184,18 @@ const UNGRADED_PROFILE: SchoolProfileResponse = {
     publication_date: "2025-07-15",
     is_graded: false,
     ungraded_outcome: "Effective safeguarding"
+  }
+};
+
+const DIRECT_FSM_PROFILE: SchoolProfileResponse = {
+  ...PROFILE_RESPONSE,
+  demographics_latest: {
+    ...PROFILE_RESPONSE.demographics_latest!,
+    fsm_pct: 16.9,
+    coverage: {
+      ...PROFILE_RESPONSE.demographics_latest!.coverage,
+      fsm_supported: true
+    }
   }
 };
 
@@ -226,9 +246,9 @@ describe("SchoolProfileFeature", () => {
 
     expect(screen.getAllByLabelText(/Ofsted rating: Good/).length).toBeGreaterThanOrEqual(1);
 
-    expect(screen.getByText("Demographics")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("Disadvantaged").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Disadvantaged/).length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders Ofsted ungraded state", async () => {
@@ -241,6 +261,22 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getAllByText("Ungraded").length).toBeGreaterThanOrEqual(1);
     });
     expect(screen.getByText(/Effective safeguarding/)).toBeInTheDocument();
+  });
+
+  it("prefers direct FSM in the hero", async () => {
+    profileMock.mockResolvedValue(DIRECT_FSM_PROFILE);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
+    expect(screen.getAllByText("Free School Meals (direct)").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Current eligibility rate")).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Free School Meals (direct) and Disadvantaged use different DfE definitions, so percentages can differ."
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("renders not-found state for missing school", async () => {
@@ -270,8 +306,8 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    await screen.findByText("Trends");
-    expect(screen.getByLabelText("Disadvantaged trend line")).toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Pupil Demographics" });
+    expect(screen.getByLabelText("Disadvantaged trend")).toBeInTheDocument();
   });
 
   it("renders Ofsted timeline section with newest event first", async () => {
@@ -445,7 +481,9 @@ describe("SchoolProfileFeature", () => {
         disadvantaged_pct: [{ academic_year: "2024/25", value: 17.2, delta: null, direction: null }],
         sen_pct: [],
         ehcp_pct: [],
-        eal_pct: []
+        eal_pct: [],
+        first_language_english_pct: [],
+        first_language_unclassified_pct: []
       },
       completeness: {
         status: "partial",
@@ -460,7 +498,7 @@ describe("SchoolProfileFeature", () => {
     renderProfileAtUrn("100001");
 
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    expect(screen.getByRole("heading", { name: "Trends" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(
       screen.getByText("We currently have one published year for this school.")
     ).toBeInTheDocument();
@@ -479,7 +517,9 @@ describe("SchoolProfileFeature", () => {
         disadvantaged_pct: [],
         sen_pct: [],
         ehcp_pct: [],
-        eal_pct: []
+        eal_pct: [],
+        first_language_english_pct: [],
+        first_language_unclassified_pct: []
       },
       completeness: {
         status: "unavailable",
@@ -494,7 +534,7 @@ describe("SchoolProfileFeature", () => {
     renderProfileAtUrn("100001");
 
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    expect(screen.getByRole("heading", { name: "Trends" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(
       screen.getByText("A published file for this year is not yet available for this school.")
     ).toBeInTheDocument();
@@ -506,7 +546,7 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    await screen.findByText("Data Coverage");
+    await screen.findByLabelText("Free School Meals (direct) data is not available");
     expect(screen.getByLabelText("Free School Meals (direct) data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Ethnicity breakdown data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Top non-English languages data is not available")).toBeInTheDocument();
@@ -521,7 +561,7 @@ describe("SchoolProfileFeature", () => {
     expect(
       await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Demographics")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(screen.getByLabelText("Trends data is unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Something went wrong" })).not.toBeInTheDocument();
   });

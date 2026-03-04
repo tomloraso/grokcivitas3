@@ -300,7 +300,7 @@ def _seed_data(engine: Engine) -> None:
                     '910001',
                     '2023/24',
                     22.0,
-                    NULL,
+                    21.4,
                     14.0,
                     2.5,
                     9.0,
@@ -308,13 +308,13 @@ def _seed_data(engine: Engine) -> None:
                     1.0,
                     false,
                     false,
-                    'dataset-1'
+                    'spc:spc-rv-2023|sen:sen-rv-2023'
                 ),
                 (
                     '910001',
                     '2024/25',
                     20.5,
-                    NULL,
+                    20.0,
                     13.0,
                     2.1,
                     8.4,
@@ -322,7 +322,7 @@ def _seed_data(engine: Engine) -> None:
                     1.0,
                     false,
                     false,
-                    'dataset-1'
+                    'spc:spc-rv-2024|sen:sen-rv-2024'
                 )
                 ON CONFLICT (urn, academic_year) DO UPDATE SET
                     disadvantaged_pct = EXCLUDED.disadvantaged_pct,
@@ -535,6 +535,8 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.demographics_latest is not None
     assert result.demographics_latest.academic_year == "2024/25"
     assert result.demographics_latest.disadvantaged_pct == 20.5
+    assert result.demographics_latest.fsm_pct == 20.0
+    assert result.demographics_latest.coverage.fsm_supported is True
     assert result.demographics_latest.coverage.ethnicity_supported is False
     assert result.demographics_latest.coverage.top_languages_supported is False
 

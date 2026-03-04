@@ -23,7 +23,7 @@ export const TooltipTrigger = TooltipPrimitive.Trigger;
 export const TooltipContent = forwardRef<
   ElementRef<typeof TooltipPrimitive.Content>,
   ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 6, ...props }, ref) => (
+>(({ className, sideOffset = 6, children, ...props }, ref) => (
   <TooltipPrimitive.Portal>
     <TooltipPrimitive.Content
       ref={ref}
@@ -34,7 +34,10 @@ export const TooltipContent = forwardRef<
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      <TooltipPrimitive.Arrow className="fill-elevated" />
+    </TooltipPrimitive.Content>
   </TooltipPrimitive.Portal>
 ));
 TooltipContent.displayName = "TooltipContent";

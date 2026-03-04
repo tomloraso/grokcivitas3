@@ -42,6 +42,7 @@ Normalize SPC and SEN school-level files into one consistent yearly demographics
 ### Key fields
 
 - `urn`: from `urn` or `URN`.
+- `fsm_pct`: SPC `% of pupils known to be eligible for free school meals` (direct metric).
 - `disadvantaged_pct`: SPC `% of pupils known to be eligible for free school meals (Performance Tables)`.
 - `eal_pct`: SPC `% of pupils whose first language is known or believed to be other than English`.
 - `first_language_english_pct`: SPC `% of pupils whose first language is known or believed to be English`.
@@ -94,6 +95,7 @@ Normalize SPC and SEN school-level files into one consistent yearly demographics
   - `apps/backend/src/civitas/infrastructure/pipelines/contracts/demographics_spc.py`
   - `apps/backend/src/civitas/infrastructure/pipelines/contracts/demographics_sen.py`
 - [x] Added merge/stage/promote logic in `demographics_release_files.py` with rejection logging.
+- [x] Populated direct `fsm_pct` from SPC source files in stage/promote merge path.
 - [x] Added contract and integration coverage:
   - `apps/backend/tests/unit/test_demographics_spc_contract.py`
   - `apps/backend/tests/unit/test_demographics_sen_contract.py`

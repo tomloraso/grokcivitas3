@@ -165,19 +165,34 @@ function MiniDeprivationGauge({ decile }: { decile: number }): JSX.Element {
 }
 
 /* ------------------------------------------------------------------ */
-/* Disadvantaged signal                                                */
+/* Need signal                                                         */
 /* ------------------------------------------------------------------ */
 
-function DisadvantagedSignal({ value, year }: { value: string; year: string }): JSX.Element {
+interface NeedSignalProps {
+  label: string;
+  glossaryTerm: "fsm" | "disadvantaged";
+  value: string;
+  year: string;
+  definitionHint: string;
+}
+
+function NeedSignal({
+  label,
+  glossaryTerm,
+  value,
+  year,
+  definitionHint
+}: NeedSignalProps): JSX.Element {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-disabled">
-        Disadvantaged
+        <GlossaryTerm term={glossaryTerm}>{label}</GlossaryTerm>
       </span>
       <span className="font-display text-2xl font-bold leading-none tracking-tight text-primary">
         {value}
       </span>
       <span className="text-[11px] text-disabled">{year}</span>
+      <span className="text-[11px] text-secondary">{definitionHint}</span>
     </div>
   );
 }
@@ -194,12 +209,32 @@ export function ProfileHeader({
   areaContext,
 }: ProfileHeaderProps): JSX.Element {
   const isUngraded = ofsted ? !ofsted.isGraded : false;
+  const fsmDirect = demographics?.metrics.find((m) => m.metricKey === "fsm_pct");
   const disadvantaged = demographics?.metrics.find(
     (m) => m.metricKey === "disadvantaged_pct"
   );
+  const showDirectFsm = Boolean(demographics?.coverage.fsmSupported && fsmDirect?.value);
+
+  const needSignal = showDirectFsm
+    ? {
+        label: "Free School Meals (direct)",
+        glossaryTerm: "fsm" as const,
+        value: fsmDirect!.value!,
+        definitionHint: "Current eligibility rate"
+      }
+    : disadvantaged?.value
+      ? {
+          label: "Disadvantaged (DfE measure)",
+          glossaryTerm: "disadvantaged" as const,
+          value: disadvantaged.value,
+          definitionHint: demographics?.coverage.fsmSupported
+            ? "Direct FSM not published for this year"
+            : "Fallback measure when direct FSM is unavailable"
+        }
+      : null;
 
   const hasSignals =
-    ofsted || areaContext.deprivation || disadvantaged?.value;
+    ofsted || areaContext.deprivation || needSignal;
 
   return (
     <header className="space-y-6">
@@ -253,7 +288,7 @@ export function ProfileHeader({
             {ofsted ? <OfstedSignal ofsted={ofsted} /> : null}
 
             {/* Vertical divider between signals */}
-            {ofsted && (areaContext.deprivation || disadvantaged?.value) ? (
+            {ofsted && (areaContext.deprivation || needSignal) ? (
               <div className="hidden h-16 w-px self-center bg-border-subtle/60 sm:block" aria-hidden />
             ) : null}
 
@@ -262,14 +297,17 @@ export function ProfileHeader({
             ) : null}
 
             {/* Vertical divider */}
-            {areaContext.deprivation && disadvantaged?.value ? (
+            {areaContext.deprivation && needSignal ? (
               <div className="hidden h-16 w-px self-center bg-border-subtle/60 sm:block" aria-hidden />
             ) : null}
 
-            {disadvantaged?.value && demographics ? (
-              <DisadvantagedSignal
-                value={disadvantaged.value}
+            {needSignal && demographics ? (
+              <NeedSignal
+                label={needSignal.label}
+                glossaryTerm={needSignal.glossaryTerm}
+                value={needSignal.value}
                 year={demographics.academicYear}
+                definitionHint={needSignal.definitionHint}
               />
             ) : null}
           </div>

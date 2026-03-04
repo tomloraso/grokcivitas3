@@ -25,6 +25,8 @@ class SchoolDemographicsYearlyRow:
     sen_pct: float | None
     ehcp_pct: float | None
     eal_pct: float | None
+    first_language_english_pct: float | None
+    first_language_unclassified_pct: float | None
 
 
 @dataclass(frozen=True)

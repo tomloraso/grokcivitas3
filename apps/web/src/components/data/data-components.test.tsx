@@ -5,6 +5,7 @@ import { runA11yAudit } from "../../test/accessibility";
 import { renderWithProviders } from "../../test/render";
 import { MetricGrid } from "./MetricGrid";
 import { MetricUnavailable } from "./MetricUnavailable";
+import { ProportionBar } from "./ProportionBar";
 import { RatingBadge } from "./RatingBadge";
 import { Sparkline } from "./Sparkline";
 import { StatCard } from "./StatCard";
@@ -80,9 +81,9 @@ describe("TrendIndicator", () => {
     expect(screen.getByLabelText("Trending up: 0.0%")).toBeInTheDocument();
   });
 
-  it("renders non-percentage format", () => {
-    renderWithProviders(<TrendIndicator delta={5} asPercentage={false} />);
-    expect(screen.getByLabelText("Trending up: +5")).toBeInTheDocument();
+  it("renders point-percentage unit format", () => {
+    renderWithProviders(<TrendIndicator delta={0.7} unit="pp" />);
+    expect(screen.getByLabelText("Trending up: +0.7pp")).toBeInTheDocument();
   });
 
   it("passes accessibility smoke", async () => {
@@ -221,6 +222,28 @@ describe("Sparkline", () => {
     );
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();
+  });
+});
+
+/* ================================================================== */
+/* ProportionBar                                                       */
+/* ================================================================== */
+
+describe("ProportionBar", () => {
+  it("renders a meter with value bounds", () => {
+    renderWithProviders(<ProportionBar value={42.5} aria-label="Disadvantaged proportion" />);
+    const meter = screen.getByRole("meter", { name: "Disadvantaged proportion" });
+    expect(meter).toHaveAttribute("aria-valuemin", "0");
+    expect(meter).toHaveAttribute("aria-valuemax", "100");
+    expect(meter).toHaveAttribute("aria-valuenow", "42.5");
+  });
+
+  it("clamps values outside 0-100", () => {
+    const { rerender } = renderWithProviders(<ProportionBar value={120} aria-label="High value" />);
+    expect(screen.getByRole("meter", { name: "High value" })).toHaveAttribute("aria-valuenow", "100");
+
+    rerender(<ProportionBar value={-10} aria-label="Low value" />);
+    expect(screen.getByRole("meter", { name: "Low value" })).toHaveAttribute("aria-valuenow", "0");
   });
 });
 

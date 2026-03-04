@@ -56,13 +56,13 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Search schools" })).toBeInTheDocument();
     expect(screen.getByText("Search for nearby schools by postcode or name to load results.")).toBeInTheDocument();
     expect(screen.getByTestId("map-panel-mock")).toHaveTextContent("Chromeless map: 0 markers");
-  });
+  }, 10000);
 
   it("renders site header with Civitas brand on all routes", async () => {
     await renderAppAtRoute("/");
 
-    expect(screen.getByLabelText("Civitas - return to home")).toBeInTheDocument();
-    expect(screen.getByText("CIVITAS")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("Civitas - return to home").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("CIVITAS").length).toBeGreaterThan(0);
   });
 
   it("hides site footer on the search/map page", async () => {

@@ -154,14 +154,14 @@ def test_get_school_profile_returns_contract_dto() -> None:
             demographics_latest=SchoolDemographicsLatest(
                 academic_year="2024/25",
                 disadvantaged_pct=17.2,
-                fsm_pct=None,
+                fsm_pct=16.8,
                 sen_pct=13.0,
                 ehcp_pct=2.1,
                 eal_pct=8.4,
                 first_language_english_pct=90.6,
                 first_language_unclassified_pct=1.0,
                 coverage=SchoolDemographicsCoverage(
-                    fsm_supported=False,
+                    fsm_supported=True,
                     ethnicity_supported=False,
                     top_languages_supported=False,
                 ),

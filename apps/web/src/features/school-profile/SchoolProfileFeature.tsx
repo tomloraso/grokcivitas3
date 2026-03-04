@@ -7,12 +7,10 @@ import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
 import { CoverageNotice } from "./components/CoverageNotice";
-import { DemographicsSummary } from "./components/DemographicsSummary";
+import { DemographicsAndTrendsPanel } from "./components/DemographicsAndTrendsPanel";
 import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
 import { OfstedTimelineCard } from "./components/OfstedTimelineCard";
-import { PageCompletenessBar } from "./components/PageCompletenessBar";
 import { ProfileHeader } from "./components/ProfileHeader";
-import { TrendPanel } from "./components/TrendPanel";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
 export function SchoolProfileFeature(): JSX.Element {
@@ -95,9 +93,6 @@ export function SchoolProfileFeature(): JSX.Element {
               areaContext={profile.areaContext}
             />
 
-            {/* Page-level completeness banner */}
-            <PageCompletenessBar completeness={profile.completeness} />
-
             {/* Zone 2: The School */}
             <div className="space-y-10 sm:space-y-12">
               {/* Ofsted timeline - inspection record comes first */}
@@ -106,14 +101,13 @@ export function SchoolProfileFeature(): JSX.Element {
                 completeness={profile.completeness.ofstedTimeline}
               />
 
-              {/* Demographics summary - current-year values */}
-              <DemographicsSummary
+              {/* Demographics & Trends - unified section */}
+              <DemographicsAndTrendsPanel
                 demographics={profile.demographics}
-                completeness={profile.completeness.demographics}
+                trends={profile.trends}
+                demographicsCompleteness={profile.completeness.demographics}
+                trendsCompleteness={profile.completeness.trends}
               />
-
-              {/* Trends - directional change, suppressed when < 2 years */}
-              <TrendPanel trends={profile.trends} completeness={profile.completeness.trends} />
             </div>
 
             {/* Zone 3: The Neighbourhood */}

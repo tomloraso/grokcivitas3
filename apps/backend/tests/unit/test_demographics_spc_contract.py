@@ -8,6 +8,7 @@ from civitas.infrastructure.pipelines.contracts import demographics_spc
 def _row(**overrides: str) -> dict[str, str]:
     row = {
         "urn": "100001",
+        "% of pupils known to be eligible for free school meals": "17.9",
         "% of pupils known to be eligible for free school meals (Performance Tables)": "18.4",
         "% of pupils whose first language is known or believed to be other than English": "11.2",
         "% of pupils whose first language is known or believed to be English": "87.9",
@@ -50,6 +51,7 @@ def test_normalize_row_accepts_compact_time_period() -> None:
     assert normalized is not None
     assert normalized["urn"] == "100001"
     assert normalized["academic_year"] == "2024/25"
+    assert normalized["fsm_pct"] == 17.9
     assert normalized["disadvantaged_pct"] == 18.4
 
 

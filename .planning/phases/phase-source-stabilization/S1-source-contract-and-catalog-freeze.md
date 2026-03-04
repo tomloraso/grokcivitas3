@@ -67,6 +67,7 @@ Freeze the approved demographics source catalog, schema requirements, and fallba
 
 - `urn` or `URN`
 - `time_period` (or derive from release slug when absent)
+- `% of pupils known to be eligible for free school meals`
 - `% of pupils known to be eligible for free school meals (Performance Tables)`
 - `% of pupils whose first language is known or believed to be other than English`
 - `% of pupils whose first language is known or believed to be English`
@@ -122,3 +123,4 @@ Freeze the approved demographics source catalog, schema requirements, and fallba
 - [x] Added `apps/backend/tests/unit/test_verify_phase_s_sources.py`.
 - [x] Added demographics source settings in `apps/backend/src/civitas/infrastructure/config/settings.py`.
 - [x] Generated `.planning/phases/phase-source-stabilization/source-catalog-2026-03-04.md` from live verification.
+- [x] Extended SPC contract verification to require direct FSM percentage column.

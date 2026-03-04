@@ -146,7 +146,15 @@ const BASE_TRENDS: SchoolTrendsResponse = {
       { academic_year: "2024/25", value: 13.0, delta: 0.5, direction: "up" }
     ],
     ehcp_pct: [{ academic_year: "2024/25", value: 2.1, delta: null, direction: null }],
-    eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }]
+    eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }],
+    first_language_english_pct: [
+      { academic_year: "2023/24", value: 89.9, delta: null, direction: null },
+      { academic_year: "2024/25", value: 90.6, delta: 0.7, direction: "up" }
+    ],
+    first_language_unclassified_pct: [
+      { academic_year: "2023/24", value: 0.6, delta: null, direction: null },
+      { academic_year: "2024/25", value: 1.0, delta: 0.4, direction: "up" }
+    ]
   },
   completeness: {
     status: "partial",
@@ -425,7 +433,7 @@ describe("mapProfileToVM", () => {
     expect(vm.trends!.isPartialHistory).toBe(true);
     expect(vm.trends!.yearsCount).toBe(2);
     expect(vm.trends!.yearsAvailable).toEqual(["2023/24", "2024/25"]);
-    expect(vm.trends!.series).toHaveLength(4);
+    expect(vm.trends!.series).toHaveLength(6);
   });
 
   it("maps profile and trends completeness metadata", () => {

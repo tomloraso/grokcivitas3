@@ -25,6 +25,7 @@ from civitas.infrastructure.pipelines.demographics_release_files import (
 )
 
 REQUIRED_SPC_COLUMNS = (
+    "% of pupils known to be eligible for free school meals",
     "% of pupils known to be eligible for free school meals (Performance Tables)",
     "% of pupils whose first language is known or believed to be other than English",
     "% of pupils whose first language is known or believed to be English",

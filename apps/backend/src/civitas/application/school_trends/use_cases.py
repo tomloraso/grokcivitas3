@@ -64,6 +64,14 @@ class GetSchoolTrendsUseCase:
                     rows=rows,
                     metric_value=lambda row: row.eal_pct,
                 ),
+                first_language_english_pct=_build_metric_series(
+                    rows=rows,
+                    metric_value=lambda row: row.first_language_english_pct,
+                ),
+                first_language_unclassified_pct=_build_metric_series(
+                    rows=rows,
+                    metric_value=lambda row: row.first_language_unclassified_pct,
+                ),
             ),
             completeness=completeness,
         )
@@ -152,6 +160,8 @@ def _has_partial_metric_coverage(rows: Sequence[SchoolDemographicsYearlyRow]) ->
                 row.sen_pct,
                 row.ehcp_pct,
                 row.eal_pct,
+                row.first_language_english_pct,
+                row.first_language_unclassified_pct,
             )
         ):
             return True

@@ -72,6 +72,7 @@ class BronzeManifestAsset:
 class _SpcRecord:
     urn: str
     academic_year: str
+    fsm_pct: float | None
     disadvantaged_pct: float | None
     eal_pct: float | None
     first_language_english_pct: float | None
@@ -95,6 +96,7 @@ class _SenRecord:
 class _MergedRecord:
     urn: str
     academic_year: str
+    fsm_pct: float | None
     disadvantaged_pct: float | None
     sen_pct: float | None
     sen_support_pct: float | None
@@ -258,6 +260,7 @@ class DemographicsReleaseFilesPipeline:
                         spc_rows[key] = _SpcRecord(
                             urn=normalized_spc["urn"],
                             academic_year=normalized_spc["academic_year"],
+                            fsm_pct=normalized_spc["fsm_pct"],
                             disadvantaged_pct=normalized_spc["disadvantaged_pct"],
                             eal_pct=normalized_spc["eal_pct"],
                             first_language_english_pct=normalized_spc["first_language_english_pct"],
@@ -302,6 +305,7 @@ class DemographicsReleaseFilesPipeline:
                     CREATE TABLE staging.{staging_table_name} (
                         urn text NOT NULL,
                         academic_year text NOT NULL,
+                        fsm_pct double precision NULL,
                         disadvantaged_pct double precision NULL,
                         sen_pct double precision NULL,
                         sen_support_pct double precision NULL,
@@ -323,6 +327,7 @@ class DemographicsReleaseFilesPipeline:
                     INSERT INTO staging.{staging_table_name} (
                         urn,
                         academic_year,
+                        fsm_pct,
                         disadvantaged_pct,
                         sen_pct,
                         sen_support_pct,
@@ -336,6 +341,7 @@ class DemographicsReleaseFilesPipeline:
                     ) VALUES (
                         :urn,
                         :academic_year,
+                        :fsm_pct,
                         :disadvantaged_pct,
                         :sen_pct,
                         :sen_support_pct,
@@ -348,6 +354,7 @@ class DemographicsReleaseFilesPipeline:
                         :source_dataset_version
                     )
                     ON CONFLICT (urn, academic_year) DO UPDATE SET
+                        fsm_pct = EXCLUDED.fsm_pct,
                         disadvantaged_pct = EXCLUDED.disadvantaged_pct,
                         sen_pct = EXCLUDED.sen_pct,
                         sen_support_pct = EXCLUDED.sen_support_pct,
@@ -367,6 +374,7 @@ class DemographicsReleaseFilesPipeline:
                             {
                                 "urn": row.urn,
                                 "academic_year": row.academic_year,
+                                "fsm_pct": row.fsm_pct,
                                 "disadvantaged_pct": row.disadvantaged_pct,
                                 "sen_pct": row.sen_pct,
                                 "sen_support_pct": row.sen_support_pct,
@@ -458,7 +466,7 @@ class DemographicsReleaseFilesPipeline:
                                 staged.urn,
                                 staged.academic_year,
                                 staged.disadvantaged_pct,
-                                NULL,
+                                staged.fsm_pct,
                                 staged.sen_pct,
                                 staged.sen_support_pct,
                                 staged.ehcp_pct,
@@ -680,6 +688,7 @@ def _merge_rows(
             _MergedRecord(
                 urn=key[0],
                 academic_year=key[1],
+                fsm_pct=spc_row.fsm_pct if spc_row is not None else None,
                 disadvantaged_pct=spc_row.disadvantaged_pct if spc_row is not None else None,
                 sen_pct=sen_row.sen_support_pct if sen_row is not None else None,
                 sen_support_pct=sen_row.sen_support_pct if sen_row is not None else None,

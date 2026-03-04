@@ -166,6 +166,8 @@ def _seed_data(engine: Engine) -> None:
                     sen_pct,
                     ehcp_pct,
                     eal_pct,
+                    first_language_english_pct,
+                    first_language_unclassified_pct,
                     source_dataset_id
                 ) VALUES
                 (
@@ -175,6 +177,8 @@ def _seed_data(engine: Engine) -> None:
                     12.0,
                     2.4,
                     9.1,
+                    88.9,
+                    0.7,
                     'dataset-1'
                 ),
                 (
@@ -184,13 +188,17 @@ def _seed_data(engine: Engine) -> None:
                     11.5,
                     2.3,
                     8.8,
+                    89.4,
+                    0.6,
                     'dataset-1'
                 )
                 ON CONFLICT (urn, academic_year) DO UPDATE SET
                     disadvantaged_pct = EXCLUDED.disadvantaged_pct,
                     sen_pct = EXCLUDED.sen_pct,
                     ehcp_pct = EXCLUDED.ehcp_pct,
-                    eal_pct = EXCLUDED.eal_pct
+                    eal_pct = EXCLUDED.eal_pct,
+                    first_language_english_pct = EXCLUDED.first_language_english_pct,
+                    first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct
                 """
             )
         )
@@ -216,6 +224,8 @@ def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
     assert [row.academic_year for row in result.rows] == ["2023/24", "2024/25"]
     assert result.rows[0].disadvantaged_pct == 19.5
     assert result.rows[1].disadvantaged_pct == 18.0
+    assert result.rows[0].first_language_english_pct == 89.4
+    assert result.rows[1].first_language_unclassified_pct == 0.7
     assert result.latest_updated_at is not None
 
 

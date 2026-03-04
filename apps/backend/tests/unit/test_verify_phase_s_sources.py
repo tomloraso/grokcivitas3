@@ -66,11 +66,12 @@ def test_verify_phase_s_sources_passes_for_valid_catalog() -> None:
         "https://content.explore-education-statistics.service.gov.uk/api/releases/spc-rv-2024/files/spc-file-2024": module.HttpResponse(
             status_code=200,
             body=(
-                "urn,% of pupils known to be eligible for free school meals (Performance Tables),"
+                "urn,% of pupils known to be eligible for free school meals,"
+                "% of pupils known to be eligible for free school meals (Performance Tables),"
                 "% of pupils whose first language is known or believed to be other than English,"
                 "% of pupils whose first language is known or believed to be English,"
                 "% of pupils whose first language is unclassified\n"
-                "100001,18.2,7.1,91.8,1.1\n"
+                "100001,18.1,18.2,7.1,91.8,1.1\n"
             ),
         ),
         "https://content.explore-education-statistics.service.gov.uk/api/releases/sen-rv-2024/files/sen-file-2024": module.HttpResponse(

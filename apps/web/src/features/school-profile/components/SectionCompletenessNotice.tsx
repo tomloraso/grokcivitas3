@@ -1,6 +1,5 @@
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, CircleOff } from "lucide-react";
 
-import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
 import { cn } from "../../../shared/utils/cn";
 import type { SectionCompletenessVM } from "../types";
 
@@ -75,45 +74,35 @@ export function SectionCompletenessNotice({
 
   const reasonCopy = resolveReasonCopy(completeness);
 
-  // Partial: lightweight inline indicator (icon + badge)
+  // Partial: lightweight inline indicator
   if (completeness.status === "partial") {
     return (
       <div
         className={cn(
-          "flex items-center gap-2 text-xs text-secondary",
+          "flex items-center gap-1.5 text-xs text-disabled",
           className
         )}
         role="status"
         aria-label={`${sectionLabel} data is partially available`}
       >
-        <AlertTriangle className="h-3.5 w-3.5 text-warning" aria-hidden />
+        <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
         <span>{reasonCopy ?? "Some data may be incomplete."}</span>
-        <DataStatusBadge status={completeness.status} />
       </div>
     );
   }
 
-  // Unavailable: full notice block
+  // Unavailable: same lightweight inline style
   return (
     <div
       className={cn(
-        "space-y-1 rounded-md border border-border-subtle/80 bg-surface/60 px-3 py-2.5 text-sm text-secondary",
+        "flex items-center gap-1.5 text-xs text-disabled",
         className
       )}
       role="status"
       aria-label={`${sectionLabel} data is ${completeness.status}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <p className="inline-flex items-center gap-1.5 font-medium text-primary">
-          <Info className="h-4 w-4 text-info" aria-hidden />
-          <span>This section is currently unavailable.</span>
-        </p>
-        <DataStatusBadge status={completeness.status} />
-      </div>
-      {reasonCopy ? <p>{reasonCopy}</p> : null}
-      {completeness.lastUpdatedAt ? (
-        <p className="text-xs text-disabled">Last refreshed: {completeness.lastUpdatedAt}</p>
-      ) : null}
+      <CircleOff className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span>{reasonCopy ?? "This section is not yet available."}</span>
     </div>
   );
 }

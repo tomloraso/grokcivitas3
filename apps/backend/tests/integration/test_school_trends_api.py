@@ -89,6 +89,22 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                first_language_english_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=90.6,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                first_language_unclassified_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
             ),
             completeness=SchoolTrendsCompletenessDto(
                 status="partial",
@@ -140,6 +156,22 @@ def test_get_school_trends_returns_expected_contract() -> None:
                 {
                     "academic_year": "2024/25",
                     "value": 8.4,
+                    "delta": None,
+                    "direction": None,
+                }
+            ],
+            "first_language_english_pct": [
+                {
+                    "academic_year": "2024/25",
+                    "value": 90.6,
+                    "delta": None,
+                    "direction": None,
+                }
+            ],
+            "first_language_unclassified_pct": [
+                {
+                    "academic_year": "2024/25",
+                    "value": 1.0,
                     "delta": None,
                     "direction": None,
                 }

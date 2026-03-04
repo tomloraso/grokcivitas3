@@ -92,4 +92,5 @@ Align trends/profile completeness semantics with source reality and ensure user-
   - `apps/web/src/features/school-profile/mappers/profileMapper.ts`
   - `apps/web/src/features/school-profile/components/SectionCompletenessNotice.tsx`
   - `apps/web/src/features/school-profile/components/TrendPanel.tsx`
+- [x] Follow-up UX clarification (parent-facing): prefer direct FSM in hero when supported, keep disadvantaged as explicit fallback/context, and keep the demographics card grid focused on non-duplicative metrics.
 - [x] Updated backend and web tests for new reason codes and `<2`-year trend explanation behavior.

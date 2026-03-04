@@ -16,6 +16,8 @@ class SchoolTrendsSeriesResponse(BaseModel):
     sen_pct: list[SchoolTrendPointResponse]
     ehcp_pct: list[SchoolTrendPointResponse]
     eal_pct: list[SchoolTrendPointResponse]
+    first_language_english_pct: list[SchoolTrendPointResponse]
+    first_language_unclassified_pct: list[SchoolTrendPointResponse]
 
 
 class SchoolTrendsHistoryQualityResponse(BaseModel):

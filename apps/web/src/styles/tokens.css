@@ -87,6 +87,11 @@
   --color-state-warning: var(--ref-color-warning-500);
   --color-state-danger: var(--ref-color-danger-500);
   --color-state-info: var(--ref-color-info-500);
+
+  /* Trend direction — neutral palette (directional, not evaluative) */
+  --color-trend-up: var(--ref-color-info-500);
+  --color-trend-down: var(--ref-color-grey-400);
+  --color-trend-flat: var(--ref-color-grey-500);
   --color-phase-primary: var(--ref-color-brand-500);
   --color-phase-secondary: var(--ref-color-phase-secondary);
   --color-phase-all-through: var(--ref-color-phase-all-through);

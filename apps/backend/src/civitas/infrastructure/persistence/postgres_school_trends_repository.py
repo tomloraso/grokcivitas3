@@ -48,6 +48,8 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                                 sen_pct,
                                 ehcp_pct,
                                 eal_pct,
+                                first_language_english_pct,
+                                first_language_unclassified_pct,
                                 updated_at
                             FROM school_demographics_yearly
                             WHERE urn = :urn
@@ -75,6 +77,12 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                     sen_pct=_to_optional_float(row["sen_pct"]),
                     ehcp_pct=_to_optional_float(row["ehcp_pct"]),
                     eal_pct=_to_optional_float(row["eal_pct"]),
+                    first_language_english_pct=_to_optional_float(
+                        row["first_language_english_pct"]
+                    ),
+                    first_language_unclassified_pct=_to_optional_float(
+                        row["first_language_unclassified_pct"]
+                    ),
                 )
                 for row in rows
             ),

@@ -234,14 +234,15 @@ def _write_manifest_and_files(context: PipelineRunContext) -> None:
     sen_name = "sen_2024_25_sen-file-2024.csv"
 
     (context.bronze_source_path / spc_name).write_text(
-        "urn,time_period,% of pupils known to be eligible for free school meals (Performance Tables),"
+        "urn,time_period,% of pupils known to be eligible for free school meals,"
+        "% of pupils known to be eligible for free school meals (Performance Tables),"
         "% of pupils whose first language is known or believed to be other than English,"
         "% of pupils whose first language is known or believed to be English,"
         "% of pupils whose first language is unclassified\n"
-        "100001,202324,19.5,9.5,88.0,2.5\n"
-        "100001,202425,18.0,8.8,89.4,1.8\n"
-        "100002,202425,SUPP,11.1,85.7,3.2\n"
-        ",202425,18.2,9.0,90.0,1.0\n",
+        "100001,202324,19.1,19.5,9.5,88.0,2.5\n"
+        "100001,202425,17.2,18.0,8.8,89.4,1.8\n"
+        "100002,202425,SUPP,SUPP,11.1,85.7,3.2\n"
+        ",202425,18.2,18.2,9.0,90.0,1.0\n",
         encoding="utf-8",
     )
 
@@ -331,18 +332,19 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         row_202425 = connection.execute(
             text(
                 """
-                SELECT disadvantaged_pct, sen_pct, ehcp_pct, total_pupils, source_dataset_id
+                SELECT fsm_pct, disadvantaged_pct, sen_pct, ehcp_pct, total_pupils, source_dataset_id
                 FROM school_demographics_yearly
                 WHERE urn = '100001' AND academic_year = '2024/25'
                 """
             )
         ).one()
-        assert row_202425[0] == 18.0
-        assert row_202425[1] == pytest.approx(14.8)
-        assert row_202425[2] == pytest.approx(4.4)
-        assert row_202425[3] == 250
-        assert "spc:spc-rv-2024" in row_202425[4]
-        assert "sen:sen-rv-2024" in row_202425[4]
+        assert row_202425[0] == 17.2
+        assert row_202425[1] == 18.0
+        assert row_202425[2] == pytest.approx(14.8)
+        assert row_202425[3] == pytest.approx(4.4)
+        assert row_202425[4] == 250
+        assert "spc:spc-rv-2024" in row_202425[5]
+        assert "sen:sen-rv-2024" in row_202425[5]
 
         row_partial = connection.execute(
             text(

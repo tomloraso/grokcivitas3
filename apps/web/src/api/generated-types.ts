@@ -373,6 +373,10 @@ export interface components {
             ehcp_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Eal Pct */
             eal_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language English Pct */
+            first_language_english_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {

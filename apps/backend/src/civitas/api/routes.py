@@ -428,6 +428,24 @@ def get_school_trends(
                 )
                 for point in result.series.eal_pct
             ],
+            first_language_english_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.first_language_english_pct
+            ],
+            first_language_unclassified_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.first_language_unclassified_pct
+            ],
         ),
         completeness=SchoolTrendsCompletenessResponse(
             status=result.completeness.status,
