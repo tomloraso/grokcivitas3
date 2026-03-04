@@ -169,6 +169,14 @@ export interface components {
             /** Source Release */
             source_release: string;
         };
+        /** SchoolProfileCompletenessResponse */
+        SchoolProfileCompletenessResponse: {
+            demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_crime: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+        };
         /** SchoolProfileDemographicsCoverageResponse */
         SchoolProfileDemographicsCoverageResponse: {
             /** Fsm Supported */
@@ -257,6 +265,7 @@ export interface components {
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
             ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
             area_context: components["schemas"]["SchoolProfileAreaContextResponse"];
+            completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
         };
         /** SchoolProfileSchoolResponse */
         SchoolProfileSchoolResponse: {
@@ -276,6 +285,20 @@ export interface components {
             lat: number;
             /** Lng */
             lng: number;
+        };
+        /** SchoolProfileSectionCompletenessResponse */
+        SchoolProfileSectionCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
         };
         /** SchoolSearchItemResponse */
         SchoolSearchItemResponse: {
@@ -307,6 +330,20 @@ export interface components {
             /** Direction */
             direction: ("up" | "down" | "flat") | null;
         };
+        /** SchoolTrendsCompletenessResponse */
+        SchoolTrendsCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
+        };
         /** SchoolTrendsHistoryQualityResponse */
         SchoolTrendsHistoryQualityResponse: {
             /** Is Partial History */
@@ -324,6 +361,7 @@ export interface components {
             years_available: string[];
             history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
             series: components["schemas"]["SchoolTrendsSeriesResponse"];
+            completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
         };
         /** SchoolTrendsSeriesResponse */
         SchoolTrendsSeriesResponse: {

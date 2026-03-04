@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Proposed
-- Last updated: 2026-03-03
+- Status: Implemented
+- Last updated: 2026-03-04
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 
@@ -109,3 +109,4 @@ Phase hardening is split into seven substantial deliverables:
 - 2026-03-03: hardening is treated as a dedicated phase, not ad-hoc fixes.
 - 2026-03-03: Bronze remains immutable; normalization contracts are enforced at stage boundary.
 - 2026-03-03: completeness transparency is a product requirement, not only an operational concern.
+- 2026-03-04: hardening phase signed off with full gate evidence in `signoff-2026-03-04.md`.

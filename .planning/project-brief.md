@@ -66,6 +66,7 @@ Minimum indicator groups:
 - Mobile-first responsive web app with PWA readiness.
 - Dashboard-style presentation with high visual signal (big numbers, flags, small trend visuals).
 - Map interactions including markers, radius context, and marker-to-detail navigation.
+- User-selectable dark/light display mode with accessible contrast and persistent preference.
 
 ## Security, Privacy, and Access
 - Email-based authentication for MVP.

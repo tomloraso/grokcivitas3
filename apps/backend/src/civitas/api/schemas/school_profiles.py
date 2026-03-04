@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -95,9 +96,35 @@ class SchoolProfileAreaContextResponse(BaseModel):
     coverage: SchoolProfileAreaContextCoverageResponse
 
 
+class SchoolProfileSectionCompletenessResponse(BaseModel):
+    status: Literal["available", "partial", "unavailable"]
+    reason_code: (
+        Literal[
+            "source_missing",
+            "source_not_provided",
+            "rejected_by_validation",
+            "not_joined_yet",
+            "pipeline_failed_recently",
+            "not_applicable",
+        ]
+        | None
+    )
+    last_updated_at: datetime | None
+    years_available: list[str] | None = None
+
+
+class SchoolProfileCompletenessResponse(BaseModel):
+    demographics: SchoolProfileSectionCompletenessResponse
+    ofsted_latest: SchoolProfileSectionCompletenessResponse
+    ofsted_timeline: SchoolProfileSectionCompletenessResponse
+    area_deprivation: SchoolProfileSectionCompletenessResponse
+    area_crime: SchoolProfileSectionCompletenessResponse
+
+
 class SchoolProfileResponse(BaseModel):
     school: SchoolProfileSchoolResponse
     demographics_latest: SchoolProfileDemographicsLatestResponse | None
     ofsted_latest: SchoolProfileOfstedLatestResponse | None
     ofsted_timeline: SchoolProfileOfstedTimelineResponse
     area_context: SchoolProfileAreaContextResponse
+    completeness: SchoolProfileCompletenessResponse

@@ -143,6 +143,45 @@ export interface TrendsVM {
 }
 
 /* ------------------------------------------------------------------ */
+/* Completeness                                                        */
+/* ------------------------------------------------------------------ */
+
+export type SectionCompletenessStatus = "available" | "partial" | "unavailable";
+
+export type SectionCompletenessReasonCode =
+  | "source_missing"
+  | "source_not_provided"
+  | "rejected_by_validation"
+  | "not_joined_yet"
+  | "pipeline_failed_recently"
+  | "not_applicable";
+
+export type SectionCompletenessMessageKey =
+  | "missing"
+  | "notProvided"
+  | "validationRejected"
+  | "notJoinedYet"
+  | "pipelineFailedRecently"
+  | "notApplicable";
+
+export interface SectionCompletenessVM {
+  status: SectionCompletenessStatus;
+  reasonCode: SectionCompletenessReasonCode | null;
+  messageKey: SectionCompletenessMessageKey | null;
+  lastUpdatedAt: string | null;
+  yearsAvailable: string[] | null;
+}
+
+export interface ProfileCompletenessVM {
+  demographics: SectionCompletenessVM;
+  trends: SectionCompletenessVM;
+  ofstedLatest: SectionCompletenessVM;
+  ofstedTimeline: SectionCompletenessVM;
+  areaDeprivation: SectionCompletenessVM;
+  areaCrime: SectionCompletenessVM;
+}
+
+/* ------------------------------------------------------------------ */
 /* Unsupported metrics                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -161,5 +200,6 @@ export interface SchoolProfileVM {
   ofstedTimeline: OfstedTimelineVM;
   areaContext: AreaContextVM;
   trends: TrendsVM | null;
+  completeness: ProfileCompletenessVM;
   unsupportedMetrics: UnsupportedMetricVM[];
 }

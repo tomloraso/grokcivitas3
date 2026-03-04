@@ -19,6 +19,7 @@ civitas/
 |- docs/
 |- agents/
 |- .agents/
+|- data/
 `- tools/
 ```
 
@@ -29,4 +30,5 @@ civitas/
 - Infrastructure implementations: `apps/backend/src/civitas/infrastructure/*`
 - HTTP/CLI entrypoints only: `apps/backend/src/civitas/api`, `cli`
 - Dependency composition only: `apps/backend/src/civitas/bootstrap/*`
+- Canonical Bronze root for pipelines: `data/bronze`
 

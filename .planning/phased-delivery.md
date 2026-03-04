@@ -177,7 +177,7 @@
 
 ## Phase UX - Visual quality + interaction uplift (web cross-cutting)
 
-**Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys.
+**Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys, with explicit dark/light mode control.
 
 ### Detailed design
 
@@ -189,6 +189,7 @@
 - `.planning/phases/phase-ux/UX-5-transitions-motion.md`
 - `.planning/phases/phase-ux/UX-6-navigation-site-chrome-refinement.md`
 - `.planning/phases/phase-ux/UX-7-loading-empty-state-polish.md`
+- `.planning/phases/phase-ux/UX-8-theme-mode-toggle.md`
 
 ### Deliverables
 
@@ -199,12 +200,14 @@
 5. **UX-5: Transitions and motion** - route and interaction continuity with reduced-motion parity.
 6. **UX-6: Navigation chrome refinement** - map-first header/footer behavior and contextual breadcrumb/search state.
 7. **UX-7: Loading/empty/error polish** - map-aware contextual states preserving user orientation.
+8. **UX-8: Theme mode toggle** - user-selectable dark/light mode with persisted preference and map style parity.
 
 ### Exit criteria
 
 - Search route renders UK-bounded vector map and map/list interactions feel connected.
 - Overlay, typography, motion, and chrome refinements produce a polished map-first UX.
 - Loading, empty, and error states preserve map context and support recovery.
+- Users can switch between dark and light mode, and both themes remain accessible and visually coherent with the map stack.
 - Existing quality rails remain green (`make lint`, `make test`, web budgets, Lighthouse, accessibility).
 
 ### Dependencies

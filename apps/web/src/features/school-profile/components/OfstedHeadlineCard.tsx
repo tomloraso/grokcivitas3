@@ -1,18 +1,32 @@
 import { Calendar, FileCheck } from "lucide-react";
 
+import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { RatingBadge } from "../../../components/data/RatingBadge";
 import { Card } from "../../../components/ui/Card";
-import type { OfstedVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { OfstedVM, SectionCompletenessVM } from "../types";
 
 interface OfstedHeadlineCardProps {
-  ofsted: OfstedVM;
+  ofsted: OfstedVM | null;
+  completeness: SectionCompletenessVM;
 }
 
-export function OfstedHeadlineCard({ ofsted }: OfstedHeadlineCardProps): JSX.Element {
+export function OfstedHeadlineCard({ ofsted, completeness }: OfstedHeadlineCardProps): JSX.Element {
+  if (!ofsted) {
+    return (
+      <Card className="space-y-4 p-5 sm:p-6">
+        <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">Ofsted Rating</p>
+        <SectionCompletenessNotice sectionLabel="Ofsted rating" completeness={completeness} />
+        <MetricUnavailable metricLabel="Ofsted rating" />
+      </Card>
+    );
+  }
+
   const isUngraded = !ofsted.isGraded;
 
   return (
     <Card className="space-y-5 p-5 sm:p-6">
+      <SectionCompletenessNotice sectionLabel="Ofsted rating" completeness={completeness} />
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">

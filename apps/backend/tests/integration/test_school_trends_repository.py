@@ -216,6 +216,7 @@ def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
     assert [row.academic_year for row in result.rows] == ["2023/24", "2024/25"]
     assert result.rows[0].disadvantaged_pct == 19.5
     assert result.rows[1].disadvantaged_pct == 18.0
+    assert result.latest_updated_at is not None
 
 
 def test_school_trends_repository_returns_empty_rows_for_school_without_demographics(
@@ -228,6 +229,7 @@ def test_school_trends_repository_returns_empty_rows_for_school_without_demograp
     assert result is not None
     assert result.urn == "920002"
     assert result.rows == ()
+    assert result.latest_updated_at is None
 
 
 def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine) -> None:

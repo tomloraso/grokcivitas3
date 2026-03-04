@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Proposed
+- Status: Implemented
 - Last updated: 2026-03-03
 - Depends on:
   - `.planning/phases/phase-hardening/H2-source-normalization-contracts.md`
@@ -57,7 +57,7 @@ Add settings:
 4. `tools/scripts/discover_dfe_characteristics_history.py` (new)
    - enumerate candidate source years/dataset versions and write inventory.
 5. `apps/backend/alembic/versions/*_hardening_dfe_source_inventory.py` (new)
-   - optional `dfe_source_inventory` table for auditable source-year catalog.
+   - optional `dfe_source_inventory` table for auditable source-year catalog (deferred).
 6. `apps/backend/tests/unit/test_dfe_characteristics_transforms.py`
    - add multi-year normalization and provenance tests.
 7. `apps/backend/tests/integration/test_dfe_characteristics_pipeline.py`
@@ -95,3 +95,9 @@ Add settings:
   - Mitigation: source inventory table plus explicit year-level coverage reporting.
 - Risk: backfill runtime is long.
   - Mitigation: chunked year execution and resumable runs from `H6`.
+
+## Implementation Notes (2026-03-03)
+
+1. Backfill mode is implemented as a dedicated CLI command (`civitas pipeline backfill`) that is intentionally separate from daily `pipeline run` execution.
+2. Historical dataset discovery is implemented via `tools/scripts/discover_dfe_characteristics_history.py`, and runtime backfill prefers explicit dataset catalogs for deterministic operations.
+3. The optional `dfe_source_inventory` table is deferred; per-row provenance in `school_demographics_yearly` and Bronze backfill manifest metadata provide current audit coverage.

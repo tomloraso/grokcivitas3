@@ -89,6 +89,34 @@ def test_normalize_ofsted_row_supports_ungraded_outcome_when_code_missing() -> N
     assert normalized.ungraded_outcome == "Maintained standards"
 
 
+def test_normalize_ofsted_row_treats_null_code_as_missing() -> None:
+    normalized, rejection = normalize_ofsted_latest_row(
+        _row(**{"Latest OEIF overall effectiveness": "NULL"}),
+        source_asset_url="https://assets.publishing.service.gov.uk/media/abc/latest.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.overall_effectiveness_code is None
+    assert normalized.overall_effectiveness_label is None
+    assert normalized.is_graded is False
+
+
+def test_normalize_ofsted_row_maps_code_9_to_not_judged() -> None:
+    normalized, rejection = normalize_ofsted_latest_row(
+        _row(**{"Latest OEIF overall effectiveness": "9"}),
+        source_asset_url="https://assets.publishing.service.gov.uk/media/abc/latest.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.overall_effectiveness_code == "Not judged"
+    assert normalized.overall_effectiveness_label == "Not judged"
+    assert normalized.is_graded is False
+
+
 def test_normalize_ofsted_row_rejects_missing_urn() -> None:
     normalized, rejection = normalize_ofsted_latest_row(
         _row(URN=""),

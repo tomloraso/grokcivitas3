@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Proposed
+- Status: Implemented
 - Last updated: 2026-03-03
 - Depends on:
   - `.planning/phases/phase-hardening/H1-pipeline-run-policy-quality-gates.md`
@@ -14,6 +14,24 @@
 ## Objective
 
 Provide production-grade observability for pipeline freshness, coverage drift, and run health so data quality regressions are detected before users encounter empty or misleading school pages.
+
+## Tracking Update (2026-03-03, implementation checkpoint)
+
+- Implemented `data_quality_snapshots` and `pipeline_run_events` persistence schema.
+- Implemented operational observability domain/application flow:
+  - `apps/backend/src/civitas/domain/operations/models.py`
+  - `apps/backend/src/civitas/application/operations/ports/data_quality_repository.py`
+  - `apps/backend/src/civitas/application/operations/use_cases.py`
+- Implemented Postgres snapshot + drift repository:
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_data_quality_repository.py`
+- Implemented standardized pipeline run telemetry emission in:
+  - `apps/backend/src/civitas/infrastructure/pipelines/runner.py`
+- Implemented strict snapshot/SLO entrypoints in:
+  - `apps/backend/src/civitas/cli/main.py`
+  - `tools/scripts/check_data_quality_slo.py`
+- Added coverage for use-case policy logic and Postgres persistence:
+  - `apps/backend/tests/unit/test_data_quality_use_cases.py`
+  - `apps/backend/tests/integration/test_data_quality_repository.py`
 
 ## Scope
 

@@ -483,6 +483,34 @@
         ],
         "title": "SchoolProfileAreaDeprivationResponse"
       },
+      "SchoolProfileCompletenessResponse": {
+        "properties": {
+          "demographics": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "ofsted_latest": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "ofsted_timeline": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "area_deprivation": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "area_crime": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "demographics",
+          "ofsted_latest",
+          "ofsted_timeline",
+          "area_deprivation",
+          "area_crime"
+        ],
+        "title": "SchoolProfileCompletenessResponse"
+      },
       "SchoolProfileDemographicsCoverageResponse": {
         "properties": {
           "fsm_supported": {
@@ -856,6 +884,9 @@
           },
           "area_context": {
             "$ref": "#/components/schemas/SchoolProfileAreaContextResponse"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/SchoolProfileCompletenessResponse"
           }
         },
         "type": "object",
@@ -864,7 +895,8 @@
           "demographics_latest",
           "ofsted_latest",
           "ofsted_timeline",
-          "area_context"
+          "area_context",
+          "completeness"
         ],
         "title": "SchoolProfileResponse"
       },
@@ -943,6 +975,71 @@
           "lng"
         ],
         "title": "SchoolProfileSchoolResponse"
+      },
+      "SchoolProfileSectionCompletenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source_missing",
+                  "source_not_provided",
+                  "rejected_by_validation",
+                  "not_joined_yet",
+                  "pipeline_failed_recently",
+                  "not_applicable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "last_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Updated At"
+          },
+          "years_available": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Years Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "reason_code",
+          "last_updated_at"
+        ],
+        "title": "SchoolProfileSectionCompletenessResponse"
       },
       "SchoolSearchItemResponse": {
         "properties": {
@@ -1067,6 +1164,71 @@
         ],
         "title": "SchoolTrendPointResponse"
       },
+      "SchoolTrendsCompletenessResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source_missing",
+                  "source_not_provided",
+                  "rejected_by_validation",
+                  "not_joined_yet",
+                  "pipeline_failed_recently",
+                  "not_applicable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "last_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Updated At"
+          },
+          "years_available": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Years Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "reason_code",
+          "last_updated_at"
+        ],
+        "title": "SchoolTrendsCompletenessResponse"
+      },
       "SchoolTrendsHistoryQualityResponse": {
         "properties": {
           "is_partial_history": {
@@ -1108,6 +1270,9 @@
           },
           "series": {
             "$ref": "#/components/schemas/SchoolTrendsSeriesResponse"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
           }
         },
         "type": "object",
@@ -1115,7 +1280,8 @@
           "urn",
           "years_available",
           "history_quality",
-          "series"
+          "series",
+          "completeness"
         ],
         "title": "SchoolTrendsResponse"
       },

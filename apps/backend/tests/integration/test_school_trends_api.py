@@ -6,6 +6,7 @@ from civitas.api.dependencies import get_school_trends_use_case
 from civitas.api.main import app
 from civitas.application.school_trends.dto import (
     SchoolTrendPointDto,
+    SchoolTrendsCompletenessDto,
     SchoolTrendsHistoryQualityDto,
     SchoolTrendsResponseDto,
     SchoolTrendsSeriesDto,
@@ -89,6 +90,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     ),
                 ),
             ),
+            completeness=SchoolTrendsCompletenessDto(
+                status="partial",
+                reason_code="source_missing",
+                last_updated_at=None,
+                years_available=("2024/25",),
+            ),
         )
     )
     app.dependency_overrides[get_school_trends_use_case] = lambda: fake_use_case
@@ -137,6 +144,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     "direction": None,
                 }
             ],
+        },
+        "completeness": {
+            "status": "partial",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": ["2024/25"],
         },
     }
     assert fake_use_case.calls == ["123456"]

@@ -103,6 +103,38 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
       has_crime: true,
       crime_months_available: 12
     }
+  },
+  completeness: {
+    demographics: {
+      status: "partial",
+      reason_code: "source_not_provided",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: null
+    },
+    ofsted_latest: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-20T10:00:00Z",
+      years_available: null
+    },
+    ofsted_timeline: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-18T11:00:00Z",
+      years_available: null
+    },
+    area_deprivation: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-10T12:00:00Z",
+      years_available: null
+    },
+    area_crime: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-31T13:00:00Z",
+      years_available: null
+    }
   }
 };
 
@@ -125,6 +157,12 @@ const TRENDS_RESPONSE: SchoolTrendsResponse = {
     ],
     ehcp_pct: [{ academic_year: "2024/25", value: 2.1, delta: null, direction: null }],
     eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }]
+  },
+  completeness: {
+    status: "partial",
+    reason_code: "source_missing",
+    last_updated_at: "2026-01-31T09:00:00Z",
+    years_available: ["2023/24", "2024/25"]
   }
 };
 
@@ -187,6 +225,7 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByText("Demographics")).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Disadvantaged").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Some sections have partial or unavailable data right now.")).toBeInTheDocument();
   });
 
   it("renders Ofsted ungraded state", async () => {
@@ -230,6 +269,7 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Trends");
     expect(screen.getByLabelText("Disadvantaged trend line")).toBeInTheDocument();
+    expect(screen.getByText(/Limited history available \(2 years\)/)).toBeInTheDocument();
   });
 
   it("renders Ofsted timeline section with newest event first", async () => {
@@ -281,6 +321,27 @@ describe("SchoolProfileFeature", () => {
           has_crime: false,
           crime_months_available: 0
         }
+      },
+      completeness: {
+        ...PROFILE_RESPONSE.completeness,
+        ofsted_timeline: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_deprivation: {
+          status: "unavailable",
+          reason_code: "not_joined_yet",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_crime: {
+          status: "unavailable",
+          reason_code: "not_joined_yet",
+          last_updated_at: null,
+          years_available: null
+        }
       }
     };
     profileMock.mockResolvedValue(unavailableProfile);
@@ -308,6 +369,12 @@ describe("SchoolProfileFeature", () => {
         sen_pct: [],
         ehcp_pct: [],
         eal_pct: []
+      },
+      completeness: {
+        status: "partial",
+        reason_code: "source_missing",
+        last_updated_at: "2026-01-31T09:00:00Z",
+        years_available: ["2024/25"]
       }
     };
     profileMock.mockResolvedValue(PROFILE_RESPONSE);
@@ -317,7 +384,9 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Trends");
     expect(screen.getByText(/Limited history available/)).toBeInTheDocument();
-    expect(screen.getByText(/1 year/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Limited history available (1 year). Trend deltas require at least 2 years of data.")
+    ).toBeInTheDocument();
   });
 
   it("renders explicit empty trend state when all trend series are empty", async () => {
@@ -334,6 +403,12 @@ describe("SchoolProfileFeature", () => {
         sen_pct: [],
         ehcp_pct: [],
         eal_pct: []
+      },
+      completeness: {
+        status: "unavailable",
+        reason_code: "source_missing",
+        last_updated_at: null,
+        years_available: []
       }
     };
     profileMock.mockResolvedValue(PROFILE_RESPONSE);
@@ -343,6 +418,7 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
     expect(screen.getByText("No trend data available for this school.")).toBeInTheDocument();
+    expect(screen.getByText("No historical years are available yet for trend analysis.")).toBeInTheDocument();
   });
 
   it("renders coverage notice for unsupported metrics", async () => {
@@ -367,6 +443,7 @@ describe("SchoolProfileFeature", () => {
       await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
     ).toBeInTheDocument();
     expect(screen.getByText("Demographics")).toBeInTheDocument();
+    expect(screen.getByLabelText("Trends data is unavailable")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Something went wrong" })).not.toBeInTheDocument();
   });
 

@@ -9,8 +9,12 @@ import type {
   DemographicsVM,
   OfstedVM,
   OfstedTimelineVM,
+  ProfileCompletenessVM,
   SchoolIdentityVM,
   SchoolProfileVM,
+  SectionCompletenessMessageKey,
+  SectionCompletenessReasonCode,
+  SectionCompletenessVM,
   TrendPointVM,
   TrendSeriesVM,
   TrendsVM,
@@ -66,6 +70,26 @@ function fmtMonth(month: string): string {
   });
 }
 
+function fmtDateTime(iso: string | null | undefined): string | null {
+  if (!iso) {
+    return null;
+  }
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return iso;
+  }
+
+  return date.toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC"
+  });
+}
+
 function dateKey(iso: string): number {
   const parsed = Date.parse(`${iso}T00:00:00Z`);
   return Number.isNaN(parsed) ? -1 : parsed;
@@ -116,6 +140,41 @@ const TREND_METRIC_LABELS: Record<string, string> = {
   ehcp_pct: "EHCP",
   eal_pct: "English as Additional Language"
 };
+
+const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionCompletenessMessageKey> = {
+  source_missing: "missing",
+  source_not_provided: "notProvided",
+  rejected_by_validation: "validationRejected",
+  not_joined_yet: "notJoinedYet",
+  pipeline_failed_recently: "pipelineFailedRecently",
+  not_applicable: "notApplicable"
+};
+
+interface SectionCompletenessContract {
+  status: "available" | "partial" | "unavailable";
+  reason_code: SectionCompletenessReasonCode | null;
+  last_updated_at: string | null;
+  years_available?: string[] | null;
+}
+
+export function mapCompletenessReasonToMessageKey(
+  reasonCode: SectionCompletenessReasonCode | null
+): SectionCompletenessMessageKey | null {
+  if (!reasonCode) {
+    return null;
+  }
+  return REASON_MESSAGE_KEYS[reasonCode];
+}
+
+function mapSectionCompleteness(section: SectionCompletenessContract): SectionCompletenessVM {
+  return {
+    status: section.status,
+    reasonCode: section.reason_code,
+    messageKey: mapCompletenessReasonToMessageKey(section.reason_code),
+    lastUpdatedAt: fmtDateTime(section.last_updated_at),
+    yearsAvailable: section.years_available ?? null
+  };
+}
 
 function mapSchool(profile: SchoolProfileResponse): SchoolIdentityVM {
   const s = profile.school;
@@ -296,6 +355,30 @@ function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
   };
 }
 
+function mapCompleteness(
+  profile: SchoolProfileResponse,
+  trends: SchoolTrendsResponse | null
+): ProfileCompletenessVM {
+  const trendsCompleteness: SectionCompletenessVM = trends
+    ? mapSectionCompleteness(trends.completeness)
+    : {
+        status: "unavailable",
+        reasonCode: "pipeline_failed_recently",
+        messageKey: mapCompletenessReasonToMessageKey("pipeline_failed_recently"),
+        lastUpdatedAt: null,
+        yearsAvailable: null
+      };
+
+  return {
+    demographics: mapSectionCompleteness(profile.completeness.demographics),
+    trends: trendsCompleteness,
+    ofstedLatest: mapSectionCompleteness(profile.completeness.ofsted_latest),
+    ofstedTimeline: mapSectionCompleteness(profile.completeness.ofsted_timeline),
+    areaDeprivation: mapSectionCompleteness(profile.completeness.area_deprivation),
+    areaCrime: mapSectionCompleteness(profile.completeness.area_crime)
+  };
+}
+
 function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
   const coverage = profile.demographics_latest?.coverage;
   if (!coverage) {
@@ -326,8 +409,9 @@ export function mapProfileToVM(
     ofstedTimeline: mapOfstedTimeline(profile),
     areaContext: mapAreaContext(profile),
     trends: mapTrends(trends),
+    completeness: mapCompleteness(profile, trends),
     unsupportedMetrics: mapUnsupported(profile)
   };
 }
 
-export { fallback, fmtDate, fmtMonth, fmtPct };
+export { fallback, fmtDate, fmtDateTime, fmtMonth, fmtPct };

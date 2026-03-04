@@ -15,6 +15,22 @@ import { TrendPanel } from "./components/TrendPanel";
 import { AreaDeprivationCard } from "./components/AreaDeprivationCard";
 import { AreaCrimeSummaryCard } from "./components/AreaCrimeSummaryCard";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
+import type { ProfileCompletenessVM } from "./types";
+
+const COMPLETENESS_SECTION_LABELS: Record<keyof ProfileCompletenessVM, string> = {
+  demographics: "Demographics",
+  trends: "Trends",
+  ofstedLatest: "Ofsted rating",
+  ofstedTimeline: "Ofsted timeline",
+  areaDeprivation: "Area deprivation",
+  areaCrime: "Area crime"
+};
+
+function incompleteSections(completeness: ProfileCompletenessVM): string[] {
+  return (Object.keys(completeness) as (keyof ProfileCompletenessVM)[])
+    .filter((key) => completeness[key].status !== "available")
+    .map((key) => COMPLETENESS_SECTION_LABELS[key]);
+}
 
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
@@ -83,35 +99,54 @@ export function SchoolProfileFeature(): JSX.Element {
           <div className="space-y-10 sm:space-y-12">
             {/* School identity header */}
             <ProfileHeader school={profile.school} />
+            {incompleteSections(profile.completeness).length > 0 ? (
+              <section
+                className="rounded-lg border border-border-subtle/80 bg-surface/60 px-4 py-3 text-sm text-secondary"
+                role="status"
+                aria-label="Profile data completeness summary"
+              >
+                <p className="font-medium text-primary">
+                  Some sections have partial or unavailable data right now.
+                </p>
+                <p>{incompleteSections(profile.completeness).join(" · ")}</p>
+              </section>
+            ) : null}
 
             {/* Ofsted + demographics row on larger screens */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
               {/* Ofsted headline */}
-              {profile.ofsted ? (
-                <OfstedHeadlineCard ofsted={profile.ofsted} />
-              ) : null}
+              <OfstedHeadlineCard
+                ofsted={profile.ofsted}
+                completeness={profile.completeness.ofstedLatest}
+              />
 
               {/* Demographics summary */}
-              {profile.demographics ? (
-                <DemographicsSummary
-                  demographics={profile.demographics}
-                  trends={profile.trends}
-                />
-              ) : null}
+              <DemographicsSummary
+                demographics={profile.demographics}
+                trends={profile.trends}
+                completeness={profile.completeness.demographics}
+              />
             </div>
 
             {/* Trends */}
-            {profile.trends && profile.trends.series.length > 0 ? (
-              <TrendPanel trends={profile.trends} />
-            ) : null}
+            <TrendPanel trends={profile.trends} completeness={profile.completeness.trends} />
 
             {/* Ofsted timeline */}
-            <OfstedTimelineCard timeline={profile.ofstedTimeline} />
+            <OfstedTimelineCard
+              timeline={profile.ofstedTimeline}
+              completeness={profile.completeness.ofstedTimeline}
+            />
 
             {/* Area context */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AreaDeprivationCard areaContext={profile.areaContext} />
-              <AreaCrimeSummaryCard areaContext={profile.areaContext} />
+              <AreaDeprivationCard
+                areaContext={profile.areaContext}
+                completeness={profile.completeness.areaDeprivation}
+              />
+              <AreaCrimeSummaryCard
+                areaContext={profile.areaContext}
+                completeness={profile.completeness.areaCrime}
+              />
             </div>
 
             {/* Coverage notice */}

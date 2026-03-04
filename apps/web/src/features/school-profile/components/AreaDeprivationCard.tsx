@@ -2,10 +2,12 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { StatCard } from "../../../components/data/StatCard";
 import { Card } from "../../../components/ui/Card";
-import type { AreaContextVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { AreaContextVM, SectionCompletenessVM } from "../types";
 
 interface AreaDeprivationCardProps {
   areaContext: AreaContextVM;
+  completeness: SectionCompletenessVM;
 }
 
 function deprivationContextLabel(decile: number): string {
@@ -19,7 +21,8 @@ function deprivationContextLabel(decile: number): string {
 }
 
 export function AreaDeprivationCard({
-  areaContext
+  areaContext,
+  completeness
 }: AreaDeprivationCardProps): JSX.Element {
   const deprivation =
     areaContext.coverage.hasDeprivation && areaContext.deprivation
@@ -29,6 +32,7 @@ export function AreaDeprivationCard({
   return (
     <Card className="space-y-5 p-5 sm:p-6">
       <h2 className="text-lg font-semibold text-primary sm:text-xl">Area Deprivation</h2>
+      <SectionCompletenessNotice sectionLabel="Area deprivation" completeness={completeness} />
 
       {deprivation ? (
         <>

@@ -9,16 +9,29 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
 DEFAULT_BRONZE_ROOT = Path("data/bronze")
 DEFAULT_DFE_CHARACTERISTICS_DATASET_ID = "019afee4-ba17-73cb-85e0-f88c101bb734"
+DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS = 5
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
 DEFAULT_OFSTED_TIMELINE_YEARS = 10
+DEFAULT_PIPELINE_MAX_REJECT_RATIO = 1.0
+DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS = 60.0
+DEFAULT_PIPELINE_MAX_RETRIES = 2
+DEFAULT_PIPELINE_RETRY_BACKOFF_SECONDS = 0.5
+DEFAULT_PIPELINE_STAGE_CHUNK_SIZE = 1000
+DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE = 1000
+DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES = 1
+DEFAULT_PIPELINE_RESUME_ENABLED = True
 DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL = (
     "https://www.gov.uk/government/statistical-data-sets/"
     "monthly-management-information-ofsteds-school-inspections-outcomes"
 )
 DEFAULT_POSTCODES_IO_BASE_URL = "https://api.postcodes.io"
 DEFAULT_POSTCODE_CACHE_TTL_DAYS = 30
+DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS = 720
+DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD = 0.05
+DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES = 2
+DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD = 0.7
 
 
 class DatabaseSettings(BaseModel):
@@ -31,6 +44,9 @@ class PipelineSettings(BaseModel):
     gias_source_zip: str | None = None
     dfe_characteristics_source_csv: str | None = None
     dfe_characteristics_dataset_id: str
+    dfe_characteristics_lookback_years: PositiveInt
+    dfe_characteristics_backfill_enabled: bool = False
+    dfe_characteristics_dataset_catalog: tuple[str, ...] = ()
     imd_source_csv: str | None = None
     imd_release: str
     police_crime_source_archive_url: str | None = None
@@ -41,6 +57,19 @@ class PipelineSettings(BaseModel):
     ofsted_timeline_source_assets: str | None = None
     ofsted_timeline_years: PositiveInt
     ofsted_timeline_include_historical_baseline: bool = True
+    max_reject_ratio_gias: float
+    max_reject_ratio_dfe_characteristics: float
+    max_reject_ratio_ofsted_latest: float
+    max_reject_ratio_ofsted_timeline: float
+    max_reject_ratio_ons_imd: float
+    max_reject_ratio_police_crime_context: float
+    http_timeout_seconds: PositiveFloat
+    max_retries: NonNegativeInt
+    retry_backoff_seconds: PositiveFloat
+    stage_chunk_size: PositiveInt
+    promote_chunk_size: PositiveInt
+    max_concurrent_sources: PositiveInt
+    resume_enabled: bool
 
 
 class HttpClientSettings(BaseModel):
@@ -52,6 +81,29 @@ class HttpClientSettings(BaseModel):
 class SchoolSearchSettings(BaseModel):
     postcodes_io_base_url: str
     postcode_cache_ttl_days: PositiveInt
+
+
+class DataQualitySettings(BaseModel):
+    freshness_sla_hours_gias: PositiveInt
+    freshness_sla_hours_dfe_characteristics: PositiveInt
+    freshness_sla_hours_ofsted_latest: PositiveInt
+    freshness_sla_hours_ofsted_timeline: PositiveInt
+    freshness_sla_hours_ons_imd: PositiveInt
+    freshness_sla_hours_police_crime_context: PositiveInt
+    coverage_drift_threshold: float
+    max_consecutive_hard_failures: PositiveInt
+    sparse_trend_ratio_threshold: float
+
+    @property
+    def source_freshness_sla_hours(self) -> dict[str, float]:
+        return {
+            "gias": float(self.freshness_sla_hours_gias),
+            "dfe_characteristics": float(self.freshness_sla_hours_dfe_characteristics),
+            "ofsted_latest": float(self.freshness_sla_hours_ofsted_latest),
+            "ofsted_timeline": float(self.freshness_sla_hours_ofsted_timeline),
+            "ons_imd": float(self.freshness_sla_hours_ons_imd),
+            "police_crime_context": float(self.freshness_sla_hours_police_crime_context),
+        }
 
 
 class AppSettings(BaseSettings):
@@ -87,6 +139,18 @@ class AppSettings(BaseSettings):
         default=DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
         min_length=1,
         validation_alias="CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+    )
+    dfe_characteristics_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS",
+    )
+    dfe_characteristics_backfill_enabled: bool = Field(
+        default=False,
+        validation_alias="CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED",
+    )
+    dfe_characteristics_dataset_catalog: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
     )
     imd_source_csv: str | None = Field(
         default=None,
@@ -131,6 +195,70 @@ class AppSettings(BaseSettings):
         default=True,
         validation_alias="CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
     )
+    pipeline_max_reject_ratio_gias: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS",
+    )
+    pipeline_max_reject_ratio_dfe_characteristics: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS",
+    )
+    pipeline_max_reject_ratio_ofsted_latest: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
+    )
+    pipeline_max_reject_ratio_ofsted_timeline: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
+    )
+    pipeline_max_reject_ratio_ons_imd: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD",
+    )
+    pipeline_max_reject_ratio_police_crime_context: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_POLICE_CRIME_CONTEXT",
+    )
+    pipeline_http_timeout_seconds: PositiveFloat = Field(
+        default=DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS,
+        validation_alias="CIVITAS_PIPELINE_HTTP_TIMEOUT_SECONDS",
+    )
+    pipeline_max_retries: NonNegativeInt = Field(
+        default=DEFAULT_PIPELINE_MAX_RETRIES,
+        validation_alias="CIVITAS_PIPELINE_MAX_RETRIES",
+    )
+    pipeline_retry_backoff_seconds: PositiveFloat = Field(
+        default=DEFAULT_PIPELINE_RETRY_BACKOFF_SECONDS,
+        validation_alias="CIVITAS_PIPELINE_RETRY_BACKOFF_SECONDS",
+    )
+    pipeline_stage_chunk_size: PositiveInt = Field(
+        default=DEFAULT_PIPELINE_STAGE_CHUNK_SIZE,
+        validation_alias="CIVITAS_PIPELINE_STAGE_CHUNK_SIZE",
+    )
+    pipeline_promote_chunk_size: PositiveInt = Field(
+        default=DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE,
+        validation_alias="CIVITAS_PIPELINE_PROMOTE_CHUNK_SIZE",
+    )
+    pipeline_max_concurrent_sources: PositiveInt = Field(
+        default=DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES,
+        validation_alias="CIVITAS_PIPELINE_MAX_CONCURRENT_SOURCES",
+    )
+    pipeline_resume_enabled: bool = Field(
+        default=DEFAULT_PIPELINE_RESUME_ENABLED,
+        validation_alias="CIVITAS_PIPELINE_RESUME_ENABLED",
+    )
 
     http_timeout_seconds: PositiveFloat = Field(
         default=10.0,
@@ -152,6 +280,46 @@ class AppSettings(BaseSettings):
         default=DEFAULT_POSTCODE_CACHE_TTL_DAYS,
         validation_alias="CIVITAS_POSTCODE_CACHE_TTL_DAYS",
     )
+    data_quality_freshness_sla_hours_gias: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS",
+    )
+    data_quality_freshness_sla_hours_dfe_characteristics: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS",
+    )
+    data_quality_freshness_sla_hours_ofsted_latest: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
+    )
+    data_quality_freshness_sla_hours_ofsted_timeline: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
+    )
+    data_quality_freshness_sla_hours_ons_imd: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD",
+    )
+    data_quality_freshness_sla_hours_police_crime_context: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_POLICE_CRIME_CONTEXT",
+    )
+    data_quality_coverage_drift_threshold: float = Field(
+        default=DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD",
+    )
+    data_quality_max_consecutive_hard_failures: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES,
+        validation_alias="CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES",
+    )
+    data_quality_sparse_trend_ratio_threshold: float = Field(
+        default=DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD",
+    )
 
     @property
     def database(self) -> DatabaseSettings:
@@ -165,6 +333,11 @@ class AppSettings(BaseSettings):
             gias_source_zip=self.gias_source_zip,
             dfe_characteristics_source_csv=self.dfe_characteristics_source_csv,
             dfe_characteristics_dataset_id=self.dfe_characteristics_dataset_id,
+            dfe_characteristics_lookback_years=self.dfe_characteristics_lookback_years,
+            dfe_characteristics_backfill_enabled=self.dfe_characteristics_backfill_enabled,
+            dfe_characteristics_dataset_catalog=_parse_csv_tokens(
+                self.dfe_characteristics_dataset_catalog
+            ),
             imd_source_csv=self.imd_source_csv,
             imd_release=self.imd_release,
             police_crime_source_archive_url=self.police_crime_source_archive_url,
@@ -177,6 +350,23 @@ class AppSettings(BaseSettings):
             ofsted_timeline_include_historical_baseline=(
                 self.ofsted_timeline_include_historical_baseline
             ),
+            max_reject_ratio_gias=self.pipeline_max_reject_ratio_gias,
+            max_reject_ratio_dfe_characteristics=(
+                self.pipeline_max_reject_ratio_dfe_characteristics
+            ),
+            max_reject_ratio_ofsted_latest=self.pipeline_max_reject_ratio_ofsted_latest,
+            max_reject_ratio_ofsted_timeline=self.pipeline_max_reject_ratio_ofsted_timeline,
+            max_reject_ratio_ons_imd=self.pipeline_max_reject_ratio_ons_imd,
+            max_reject_ratio_police_crime_context=(
+                self.pipeline_max_reject_ratio_police_crime_context
+            ),
+            http_timeout_seconds=self.pipeline_http_timeout_seconds,
+            max_retries=self.pipeline_max_retries,
+            retry_backoff_seconds=self.pipeline_retry_backoff_seconds,
+            stage_chunk_size=self.pipeline_stage_chunk_size,
+            promote_chunk_size=self.pipeline_promote_chunk_size,
+            max_concurrent_sources=self.pipeline_max_concurrent_sources,
+            resume_enabled=self.pipeline_resume_enabled,
         )
 
     @property
@@ -194,10 +384,31 @@ class AppSettings(BaseSettings):
             postcode_cache_ttl_days=self.postcode_cache_ttl_days,
         )
 
+    @property
+    def data_quality(self) -> DataQualitySettings:
+        return DataQualitySettings(
+            freshness_sla_hours_gias=self.data_quality_freshness_sla_hours_gias,
+            freshness_sla_hours_dfe_characteristics=(
+                self.data_quality_freshness_sla_hours_dfe_characteristics
+            ),
+            freshness_sla_hours_ofsted_latest=self.data_quality_freshness_sla_hours_ofsted_latest,
+            freshness_sla_hours_ofsted_timeline=(
+                self.data_quality_freshness_sla_hours_ofsted_timeline
+            ),
+            freshness_sla_hours_ons_imd=self.data_quality_freshness_sla_hours_ons_imd,
+            freshness_sla_hours_police_crime_context=(
+                self.data_quality_freshness_sla_hours_police_crime_context
+            ),
+            coverage_drift_threshold=self.data_quality_coverage_drift_threshold,
+            max_consecutive_hard_failures=self.data_quality_max_consecutive_hard_failures,
+            sparse_trend_ratio_threshold=self.data_quality_sparse_trend_ratio_threshold,
+        )
+
     @field_validator(
         "gias_source_csv",
         "gias_source_zip",
         "dfe_characteristics_source_csv",
+        "dfe_characteristics_dataset_catalog",
         "imd_source_csv",
         "police_crime_source_archive_url",
         "ofsted_latest_source_csv",
@@ -245,3 +456,18 @@ class AppSettings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> AppSettings:
     return AppSettings()
+
+
+def _parse_csv_tokens(raw_value: str | None) -> tuple[str, ...]:
+    if raw_value is None:
+        return ()
+
+    tokens: list[str] = []
+    seen: set[str] = set()
+    for item in raw_value.split(","):
+        normalized = item.strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        tokens.append(normalized)
+    return tuple(tokens)

@@ -338,7 +338,7 @@ def _seed_data(engine: Engine) -> None:
                     source_asset_month
                 ) VALUES
                 (
-                    '10420001',
+                    '910001-historical',
                     '910001',
                     '2015-09-14',
                     '2015-10-10',
@@ -351,7 +351,7 @@ def _seed_data(engine: Engine) -> None:
                     '2019-08'
                 ),
                 (
-                    '10426709',
+                    '910001-latest',
                     '910001',
                     '2025-11-11',
                     '2026-01-11',
@@ -530,8 +530,8 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.ofsted_timeline.coverage.latest_event_date == date(2025, 11, 11)
     assert result.ofsted_timeline.coverage.events_count == 2
     assert [event.inspection_number for event in result.ofsted_timeline.events] == [
-        "10426709",
-        "10420001",
+        "910001-latest",
+        "910001-historical",
     ]
     assert result.area_context is not None
     assert result.area_context.coverage.has_deprivation is True
@@ -549,6 +549,14 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
         "violent-crime",
         "anti-social-behaviour",
     )
+    assert result.completeness.demographics.status == "partial"
+    assert result.completeness.demographics.reason_code == "source_not_provided"
+    assert result.completeness.demographics.last_updated_at is not None
+    assert result.completeness.ofsted_latest.status == "available"
+    assert result.completeness.ofsted_timeline.status == "available"
+    assert result.completeness.area_deprivation.status == "available"
+    assert result.completeness.area_crime.status == "partial"
+    assert result.completeness.area_crime.reason_code == "source_missing"
 
 
 def test_school_profile_repository_returns_none_for_unknown_urn(engine: Engine) -> None:

@@ -1,5 +1,16 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
+from typing import Literal
+
+SectionCompletenessStatus = Literal["available", "partial", "unavailable"]
+SectionCompletenessReasonCode = Literal[
+    "source_missing",
+    "source_not_provided",
+    "rejected_by_validation",
+    "not_joined_yet",
+    "pipeline_failed_recently",
+    "not_applicable",
+]
 
 
 @dataclass(frozen=True)
@@ -107,9 +118,27 @@ class SchoolAreaContext:
 
 
 @dataclass(frozen=True)
+class SchoolProfileSectionCompleteness:
+    status: SectionCompletenessStatus
+    reason_code: SectionCompletenessReasonCode | None
+    last_updated_at: datetime | None
+    years_available: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
+class SchoolProfileCompleteness:
+    demographics: SchoolProfileSectionCompleteness
+    ofsted_latest: SchoolProfileSectionCompleteness
+    ofsted_timeline: SchoolProfileSectionCompleteness
+    area_deprivation: SchoolProfileSectionCompleteness
+    area_crime: SchoolProfileSectionCompleteness
+
+
+@dataclass(frozen=True)
 class SchoolProfile:
     school: SchoolProfileSchool
     demographics_latest: SchoolDemographicsLatest | None
     ofsted_latest: SchoolOfstedLatest | None
     ofsted_timeline: SchoolOfstedTimeline | None
     area_context: SchoolAreaContext | None
+    completeness: SchoolProfileCompleteness

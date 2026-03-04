@@ -1,7 +1,9 @@
 from collections.abc import Callable, Sequence
+from datetime import datetime
 
 from civitas.application.school_trends.dto import (
     SchoolTrendPointDto,
+    SchoolTrendsCompletenessDto,
     SchoolTrendsHistoryQualityDto,
     SchoolTrendsResponseDto,
     SchoolTrendsSeriesDto,
@@ -30,6 +32,11 @@ class GetSchoolTrendsUseCase:
         rows = demographics_series.rows
         years_available = tuple(row.academic_year for row in rows)
         years_count = len(years_available)
+        completeness = _build_completeness(
+            years_count=years_count,
+            years_available=years_available,
+            last_updated_at=demographics_series.latest_updated_at,
+        )
 
         return SchoolTrendsResponseDto(
             urn=demographics_series.urn,
@@ -57,6 +64,7 @@ class GetSchoolTrendsUseCase:
                     metric_value=lambda row: row.eal_pct,
                 ),
             ),
+            completeness=completeness,
         )
 
 
@@ -96,3 +104,31 @@ def _direction_from_delta(delta: float) -> TrendDirection:
     if delta < 0:
         return "down"
     return "flat"
+
+
+def _build_completeness(
+    *,
+    years_count: int,
+    years_available: tuple[str, ...],
+    last_updated_at: datetime | None,
+) -> SchoolTrendsCompletenessDto:
+    if years_count == 0:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="source_missing",
+            last_updated_at=None,
+            years_available=years_available,
+        )
+    if years_count < MIN_YEARS_FOR_COMPLETE_HISTORY:
+        return SchoolTrendsCompletenessDto(
+            status="partial",
+            reason_code="source_missing",
+            last_updated_at=last_updated_at,
+            years_available=years_available,
+        )
+    return SchoolTrendsCompletenessDto(
+        status="available",
+        reason_code=None,
+        last_updated_at=last_updated_at,
+        years_available=years_available,
+    )

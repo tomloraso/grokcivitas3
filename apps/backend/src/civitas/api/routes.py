@@ -16,6 +16,7 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileAreaCrimeCategoryResponse,
     SchoolProfileAreaCrimeResponse,
     SchoolProfileAreaDeprivationResponse,
+    SchoolProfileCompletenessResponse,
     SchoolProfileDemographicsCoverageResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileOfstedLatestResponse,
@@ -24,9 +25,11 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileOfstedTimelineResponse,
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
+    SchoolProfileSectionCompletenessResponse,
 )
 from civitas.api.schemas.school_trends import (
     SchoolTrendPointResponse,
+    SchoolTrendsCompletenessResponse,
     SchoolTrendsHistoryQualityResponse,
     SchoolTrendsResponse,
     SchoolTrendsSeriesResponse,
@@ -305,6 +308,58 @@ def get_school_profile(
         ofsted_latest=ofsted_latest,
         ofsted_timeline=ofsted_timeline,
         area_context=area_context,
+        completeness=SchoolProfileCompletenessResponse(
+            demographics=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.demographics.status,
+                reason_code=result.completeness.demographics.reason_code,
+                last_updated_at=result.completeness.demographics.last_updated_at,
+                years_available=(
+                    list(result.completeness.demographics.years_available)
+                    if result.completeness.demographics.years_available is not None
+                    else None
+                ),
+            ),
+            ofsted_latest=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.ofsted_latest.status,
+                reason_code=result.completeness.ofsted_latest.reason_code,
+                last_updated_at=result.completeness.ofsted_latest.last_updated_at,
+                years_available=(
+                    list(result.completeness.ofsted_latest.years_available)
+                    if result.completeness.ofsted_latest.years_available is not None
+                    else None
+                ),
+            ),
+            ofsted_timeline=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.ofsted_timeline.status,
+                reason_code=result.completeness.ofsted_timeline.reason_code,
+                last_updated_at=result.completeness.ofsted_timeline.last_updated_at,
+                years_available=(
+                    list(result.completeness.ofsted_timeline.years_available)
+                    if result.completeness.ofsted_timeline.years_available is not None
+                    else None
+                ),
+            ),
+            area_deprivation=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.area_deprivation.status,
+                reason_code=result.completeness.area_deprivation.reason_code,
+                last_updated_at=result.completeness.area_deprivation.last_updated_at,
+                years_available=(
+                    list(result.completeness.area_deprivation.years_available)
+                    if result.completeness.area_deprivation.years_available is not None
+                    else None
+                ),
+            ),
+            area_crime=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.area_crime.status,
+                reason_code=result.completeness.area_crime.reason_code,
+                last_updated_at=result.completeness.area_crime.last_updated_at,
+                years_available=(
+                    list(result.completeness.area_crime.years_available)
+                    if result.completeness.area_crime.years_available is not None
+                    else None
+                ),
+            ),
+        ),
     )
 
 
@@ -373,5 +428,15 @@ def get_school_trends(
                 )
                 for point in result.series.eal_pct
             ],
+        ),
+        completeness=SchoolTrendsCompletenessResponse(
+            status=result.completeness.status,
+            reason_code=result.completeness.reason_code,
+            last_updated_at=result.completeness.last_updated_at,
+            years_available=(
+                list(result.completeness.years_available)
+                if result.completeness.years_available is not None
+                else None
+            ),
         ),
     )

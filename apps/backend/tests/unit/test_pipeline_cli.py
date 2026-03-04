@@ -9,10 +9,20 @@ class FakePipelineRunner:
     def __init__(self, result: PipelineResult) -> None:
         self._result = result
         self.ran_source: str | None = None
+        self.ran_source_resume = False
+        self.ran_run_id: str | None = None
         self.ran_all = False
 
-    def run_source(self, source: str) -> PipelineResult:
+    def run_source(
+        self,
+        source: str,
+        *,
+        resume: bool = False,
+        run_id: str | None = None,
+    ) -> PipelineResult:
         self.ran_source = source
+        self.ran_source_resume = resume
+        self.ran_run_id = run_id
         return self._result
 
     def available_sources(self) -> tuple[str, ...]:
@@ -28,6 +38,20 @@ class FakePipelineRunner:
     def run_all(self) -> dict[PipelineSource, PipelineResult]:
         self.ran_all = True
         return {PipelineSource.GIAS: self._result}
+
+    def resume_run(self, run_id: str) -> tuple[PipelineSource, PipelineResult]:
+        self.ran_run_id = run_id
+        return PipelineSource.GIAS, self._result
+
+
+class FakeDfeBackfillRunner:
+    def __init__(self, result: PipelineResult) -> None:
+        self._result = result
+        self.lookback_years: int | None = None
+
+    def run(self, *, lookback_years: int | None) -> PipelineResult:
+        self.lookback_years = lookback_years
+        return self._result
 
 
 def _result(status: PipelineRunStatus, error_message: str | None = None) -> PipelineResult:
@@ -50,6 +74,7 @@ def test_pipeline_run_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert result.exit_code == 0
     assert fake_runner.ran_source == "gias"
+    assert fake_runner.ran_source_resume is False
     assert "gias: succeeded" in result.stdout.lower()
 
 
@@ -69,7 +94,7 @@ def test_pipeline_run_source_failure_returns_nonzero_exit_code(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake_runner = FakePipelineRunner(
-        result=_result(PipelineRunStatus.FAILED, error_message="stage failed")
+        result=_result(PipelineRunStatus.FAILED_QUALITY_GATE, error_message="stage failed")
     )
     monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
 
@@ -78,6 +103,37 @@ def test_pipeline_run_source_failure_returns_nonzero_exit_code(
 
     assert result.exit_code == 1
     assert "stage failed" in result.stdout.lower()
+
+
+def test_pipeline_run_source_unavailable_returns_nonzero_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(
+        result=_result(
+            PipelineRunStatus.FAILED_SOURCE_UNAVAILABLE,
+            error_message="gate_id=download_nonzero downloaded_rows=0",
+        )
+    )
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "gias"])
+
+    assert result.exit_code == 1
+    assert "failed_source_unavailable" in result.stdout.lower()
+
+
+def test_pipeline_run_source_skipped_no_change_returns_zero_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SKIPPED_NO_CHANGE))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "gias"])
+
+    assert result.exit_code == 0
+    assert "skipped_no_change" in result.stdout.lower()
 
 
 def test_pipeline_run_dfe_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -152,3 +208,87 @@ def test_pipeline_run_all(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_all is True
     assert "gias: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_source_resume(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "gias", "--resume"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "gias"
+    assert fake_runner.ran_source_resume is True
+
+
+def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    run_id = "6f3f1a49-ecfb-4889-9efd-2913f6f821cc"
+    result = runner.invoke(app, ["pipeline", "resume", "--run-id", run_id])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_run_id == run_id
+    assert "gias: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_backfill_dfe_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakeDfeBackfillRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "pipeline",
+            "backfill",
+            "--source",
+            "dfe_characteristics",
+            "--lookback-years",
+            "3",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert fake_runner.lookback_years == 3
+    assert "dfe_characteristics backfill: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_backfill_requires_dfe_source(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakeDfeBackfillRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        [
+            "pipeline",
+            "backfill",
+            "--source",
+            "gias",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "only dfe_characteristics is supported" in result.stdout.lower()
+
+
+def test_pipeline_backfill_returns_nonzero_on_hard_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakeDfeBackfillRunner(
+        result=_result(PipelineRunStatus.FAILED_QUALITY_GATE, error_message="gate failed")
+    )
+    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        ["pipeline", "backfill", "--source", "dfe_characteristics"],
+    )
+
+    assert result.exit_code == 1
+    assert "gate failed" in result.stdout.lower()

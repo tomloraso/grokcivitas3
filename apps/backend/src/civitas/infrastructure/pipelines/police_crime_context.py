@@ -19,23 +19,20 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import police as police_contract
 
 POLICE_ARCHIVE_INDEX_URL = "https://data.police.uk/data/archive/"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 SUPPORTED_POLICE_CRIME_SOURCE_MODES = ("archive", "api")
 
-REQUIRED_POLICE_STREET_HEADERS: tuple[str, ...] = (
-    "Crime type",
-    "Longitude",
-    "Latitude",
-    "Month",
-)
+REQUIRED_POLICE_STREET_HEADERS = police_contract.REQUIRED_HEADERS
 
 BRONZE_ARCHIVE_FILE_NAME = "archive.zip"
 BRONZE_METADATA_FILE_NAME = "archive.metadata.json"
 BRONZE_EXTRACTED_DIR = "extracted"
+POLICE_NORMALIZATION_CONTRACT_VERSION = police_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -69,47 +66,21 @@ def extract_latest_police_archive_url(index_html: str) -> str:
 
 
 def validate_police_street_headers(headers: Sequence[str]) -> None:
-    header_set = set(headers)
-    missing = [header for header in REQUIRED_POLICE_STREET_HEADERS if header not in header_set]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(
-            f"Police crime schema mismatch; missing required headers: {missing_fields}"
-        )
+    police_contract.validate_headers(headers)
 
 
 def normalize_police_street_row(
     raw_row: Mapping[str, str],
 ) -> tuple[PoliceCrimePoint | None, str | None]:
-    raw_month = raw_row.get("Month")
-    month = _parse_month(raw_month)
-    if month is None:
-        return None, "invalid_month"
-
-    crime_category = _strip_or_none(raw_row.get("Crime type"))
-    if crime_category is None:
-        return None, "missing_crime_type"
-
-    longitude_value = raw_row.get("Longitude")
-    if _strip_or_none(longitude_value) is None:
-        return None, "missing_longitude"
-    longitude = _parse_coordinate(longitude_value, axis="longitude")
-    if longitude is None:
-        return None, "invalid_longitude"
-
-    latitude_value = raw_row.get("Latitude")
-    if _strip_or_none(latitude_value) is None:
-        return None, "missing_latitude"
-    latitude = _parse_coordinate(latitude_value, axis="latitude")
-    if latitude is None:
-        return None, "invalid_latitude"
-
+    normalized_row, rejection = police_contract.normalize_row(raw_row)
+    if normalized_row is None:
+        return None, rejection
     return (
         PoliceCrimePoint(
-            month=month,
-            crime_category=crime_category,
-            longitude=longitude,
-            latitude=latitude,
+            month=normalized_row["month"],
+            crime_category=normalized_row["crime_category"],
+            longitude=normalized_row["longitude"],
+            latitude=normalized_row["latitude"],
         ),
         None,
     )
@@ -167,6 +138,7 @@ class PoliceCrimeContextPipeline:
             "source_archive_url": archive_url,
             "source_month": archive_month,
             "radius_meters": self._crime_radius_meters,
+            "normalization_contract_version": POLICE_NORMALIZATION_CONTRACT_VERSION,
             "sha256": _sha256_file(archive_path),
             "extracted_file_count": len(extracted_files),
             "rows": row_count,
@@ -196,6 +168,12 @@ class PoliceCrimeContextPipeline:
         staging_table_name = self._staging_table_name(context)
         with self._engine.begin() as connection:
             connection.execute(text("CREATE SCHEMA IF NOT EXISTS staging"))
+            if connection.dialect.name == "postgresql":
+                # Interrupted CREATE TABLE operations can leave behind an orphaned
+                # composite type with the table name; clear it before re-creating.
+                connection.execute(
+                    text(f"DROP TYPE IF EXISTS staging.{staging_table_name} CASCADE")
+                )
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
             connection.execute(
                 text(
@@ -212,66 +190,74 @@ class PoliceCrimeContextPipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            month,
-                            crime_category,
-                            longitude,
-                            latitude,
-                            location
-                        ) VALUES (
-                            :month,
-                            :crime_category,
-                            :longitude,
-                            :latitude,
-                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "month": row.month,
-                            "crime_category": row.crime_category,
-                            "longitude": row.longitude,
-                            "latitude": row.latitude,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        month,
+                        crime_category,
+                        longitude,
+                        latitude,
+                        location
+                    ) VALUES (
+                        :month,
+                        :crime_category,
+                        :longitude,
+                        :latitude,
+                        ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography
+                    )
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "month": row.month,
+                                "crime_category": row.crime_category,
+                                "longitude": row.longitude,
+                                "latitude": row.latitude,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=POLICE_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)

@@ -33,3 +33,8 @@ Run all commands from the repo root.
 - `make test`
 - `make run`
 
+## Pipelines
+
+- Canonical Bronze root is `data/bronze` (`CIVITAS_BRONZE_ROOT`).
+- Pipeline operational guidance: `docs/runbooks/pipelines.md`.
+

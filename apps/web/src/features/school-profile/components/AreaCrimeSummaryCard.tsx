@@ -1,14 +1,17 @@
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { StatCard } from "../../../components/data/StatCard";
 import { Card } from "../../../components/ui/Card";
-import type { AreaContextVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { AreaContextVM, SectionCompletenessVM } from "../types";
 
 interface AreaCrimeSummaryCardProps {
   areaContext: AreaContextVM;
+  completeness: SectionCompletenessVM;
 }
 
 export function AreaCrimeSummaryCard({
-  areaContext
+  areaContext,
+  completeness
 }: AreaCrimeSummaryCardProps): JSX.Element {
   const crime = areaContext.coverage.hasCrime && areaContext.crime ? areaContext.crime : null;
 
@@ -20,6 +23,7 @@ export function AreaCrimeSummaryCard({
           Within {crime ? crime.radiusMiles : 1} mile radius
         </p>
       </div>
+      <SectionCompletenessNotice sectionLabel="Area crime" completeness={completeness} />
 
       {crime ? (
         <>

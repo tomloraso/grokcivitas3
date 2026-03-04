@@ -22,7 +22,7 @@ Replace permissive pipeline success semantics with deterministic quality-gated o
 - Define run outcome policy for `downloaded_rows`, `staged_rows`, `promoted_rows`, and rejection ratios.
 - Enforce policy in runner before final status writeback.
 - Introduce explicit run statuses for no-op and quality-gate failure.
-- Add source-level configurable thresholds.
+- Add source-level configurable rejection thresholds.
 
 ### Out of scope
 
@@ -50,6 +50,7 @@ Replace permissive pipeline success semantics with deterministic quality-gated o
 2. "No change" is explicit and non-fatal.
 3. Gate thresholds are source-specific and config-driven.
 4. Error messages must include failing gate id and measured values.
+5. H1 only introduces `max_reject_ratio`; additional threshold types are deferred until justified.
 
 ## File-Oriented Implementation Plan
 
@@ -57,13 +58,12 @@ Replace permissive pipeline success semantics with deterministic quality-gated o
    - extend `PipelineRunStatus` with `failed_quality_gate`, `failed_source_unavailable`, `skipped_no_change`.
    - add `PipelineQualityConfig` and gate result dataclasses.
 2. `apps/backend/src/civitas/infrastructure/config/settings.py`
-   - add per-source thresholds:
+   - add per-source reject-ratio thresholds:
      - `CIVITAS_PIPELINE_MAX_REJECT_RATIO_{SOURCE}`
-     - `CIVITAS_PIPELINE_MIN_STAGE_RATIO_{SOURCE}`
 3. `apps/backend/src/civitas/infrastructure/pipelines/runner.py`
    - evaluate gates after `download`, `stage`, `promote`.
    - set explicit failure reason text with measured counters.
-   - emit `skipped_no_change` when checksum unchanged and promote no-op.
+   - emit `skipped_no_change` when Bronze checksum(s) match the prior successful run.
 4. `apps/backend/src/civitas/cli/main.py`
    - print gate outcome details and return non-zero for hard failures.
 5. `apps/backend/tests/unit/test_pipeline_runner.py`

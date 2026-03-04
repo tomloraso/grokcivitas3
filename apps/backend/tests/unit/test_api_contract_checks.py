@@ -25,6 +25,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
             "ofsted_latest": {},
             "ofsted_timeline": {},
             "area_context": {},
+            "completeness": {},
         }
     )
 
@@ -37,6 +38,7 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
             "school": {},
             "demographics_latest": {},
             "ofsted_latest": {},
+            "completeness": {},
         }
     )
 

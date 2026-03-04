@@ -17,7 +17,8 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import ons_imd as ons_imd_contract
 
 IOD2025_FILE_7_URL = (
     "https://assets.publishing.service.gov.uk/media/691ded56d140bbbaa59a2a7d/"
@@ -28,47 +29,31 @@ IOD2019_FILE_7_URL = (
     "File_7_-_All_IoD2019_Scores__Ranks__Deciles_and_Population_Denominators_3.csv"
 )
 
-IMD_RELEASE_IOD2025 = "iod2025"
-IMD_RELEASE_IOD2019 = "iod2019"
-SUPPORTED_IMD_RELEASES = (IMD_RELEASE_IOD2025, IMD_RELEASE_IOD2019)
+IMD_RELEASE_IOD2025 = ons_imd_contract.IMD_RELEASE_IOD2025
+IMD_RELEASE_IOD2019 = ons_imd_contract.IMD_RELEASE_IOD2019
+SUPPORTED_IMD_RELEASES = ons_imd_contract.SUPPORTED_RELEASES
 
-IMD_SCORE_HEADER = "Index of Multiple Deprivation (IMD) Score"
-IMD_RANK_HEADER = "Index of Multiple Deprivation (IMD) Rank (where 1 is most deprived)"
-IMD_DECILE_HEADER = (
-    "Index of Multiple Deprivation (IMD) Decile (where 1 is most deprived 10% of LSOAs)"
-)
-IDACI_SCORE_HEADER = "Income Deprivation Affecting Children Index (IDACI) Score (rate)"
-IDACI_RANK_HEADER = (
-    "Income Deprivation Affecting Children Index (IDACI) Rank (where 1 is most deprived)"
-)
-IDACI_DECILE_HEADER = (
-    "Income Deprivation Affecting Children Index (IDACI) Decile "
-    "(where 1 is most deprived 10% of LSOAs)"
-)
+IMD_SCORE_HEADER = ons_imd_contract.IMD_SCORE_HEADER
+IMD_RANK_HEADER = ons_imd_contract.IMD_RANK_HEADER
+IMD_DECILE_HEADER = ons_imd_contract.IMD_DECILE_HEADER
+IDACI_SCORE_HEADER = ons_imd_contract.IDACI_SCORE_HEADER
+IDACI_RANK_HEADER = ons_imd_contract.IDACI_RANK_HEADER
+IDACI_DECILE_HEADER = ons_imd_contract.IDACI_DECILE_HEADER
 
 IMD_RELEASE_CONFIG: dict[str, dict[str, str]] = {
     IMD_RELEASE_IOD2025: {
         "source_file_url": IOD2025_FILE_7_URL,
-        "source_release_label": "IoD2025",
-        "lsoa_vintage": "2021",
-        "lsoa_code_header": "LSOA code (2021)",
-        "lsoa_name_header": "LSOA name (2021)",
-        "lad_code_header": "Local Authority District code (2024)",
-        "lad_name_header": "Local Authority District name (2024)",
+        **ons_imd_contract.RELEASE_CONFIG[IMD_RELEASE_IOD2025],
     },
     IMD_RELEASE_IOD2019: {
         "source_file_url": IOD2019_FILE_7_URL,
-        "source_release_label": "IoD2019",
-        "lsoa_vintage": "2011",
-        "lsoa_code_header": "LSOA code (2011)",
-        "lsoa_name_header": "LSOA name (2011)",
-        "lad_code_header": "Local Authority District code (2019)",
-        "lad_name_header": "Local Authority District name (2019)",
+        **ons_imd_contract.RELEASE_CONFIG[IMD_RELEASE_IOD2019],
     },
 }
 
 BRONZE_FILE_NAME = "file_7.csv"
 BRONZE_METADATA_FILE_NAME = "file_7.metadata.json"
+ONS_IMD_NORMALIZATION_CONTRACT_VERSION = ons_imd_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -89,27 +74,7 @@ class OnsImdStagedRow:
 
 
 def validate_ons_imd_headers(headers: Sequence[str], *, source_release: str) -> None:
-    release = _normalize_release(source_release)
-    release_config = IMD_RELEASE_CONFIG[release]
-    required_headers = [
-        release_config["lsoa_code_header"],
-        release_config["lsoa_name_header"],
-        release_config["lad_code_header"],
-        release_config["lad_name_header"],
-        IMD_SCORE_HEADER,
-        IMD_RANK_HEADER,
-        IMD_DECILE_HEADER,
-        IDACI_SCORE_HEADER,
-        IDACI_RANK_HEADER,
-        IDACI_DECILE_HEADER,
-    ]
-    header_set = set(headers)
-    missing = [header for header in required_headers if header not in header_set]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(
-            f"ONS IMD schema mismatch for '{release}'; missing required headers: {missing_fields}"
-        )
+    ons_imd_contract.validate_headers(headers, source_release=source_release)
 
 
 def normalize_ons_imd_row(
@@ -118,66 +83,28 @@ def normalize_ons_imd_row(
     source_release: str,
     source_file_url: str,
 ) -> tuple[OnsImdStagedRow | None, str | None]:
-    release = _normalize_release(source_release)
-    release_config = IMD_RELEASE_CONFIG[release]
-
-    lsoa_code = _strip_or_none(raw_row.get(release_config["lsoa_code_header"]))
-    if lsoa_code is None:
-        return None, "missing_lsoa_code"
-
-    lsoa_name = _strip_or_none(raw_row.get(release_config["lsoa_name_header"]))
-    if lsoa_name is None:
-        return None, "missing_lsoa_name"
-
-    try:
-        imd_score = _parse_required_float(raw_row.get(IMD_SCORE_HEADER))
-    except ValueError:
-        return None, "invalid_imd_score"
-
-    try:
-        imd_rank = _parse_required_integer(raw_row.get(IMD_RANK_HEADER))
-    except ValueError:
-        return None, "invalid_imd_rank"
-
-    try:
-        imd_decile = _parse_required_decile(raw_row.get(IMD_DECILE_HEADER))
-    except ValueError:
-        return None, "invalid_imd_decile"
-
-    try:
-        idaci_score = _parse_required_float(raw_row.get(IDACI_SCORE_HEADER))
-    except ValueError:
-        return None, "invalid_idaci_score"
-
-    try:
-        idaci_rank = _parse_required_integer(raw_row.get(IDACI_RANK_HEADER))
-    except ValueError:
-        return None, "invalid_idaci_rank"
-
-    try:
-        idaci_decile = _parse_required_decile(raw_row.get(IDACI_DECILE_HEADER))
-    except ValueError:
-        return None, "invalid_idaci_decile"
-
+    normalized_row, rejection = ons_imd_contract.normalize_row(
+        raw_row,
+        source_release=source_release,
+        source_file_url=source_file_url,
+    )
+    if normalized_row is None:
+        return None, rejection
     return (
         OnsImdStagedRow(
-            lsoa_code=lsoa_code,
-            lsoa_name=lsoa_name,
-            local_authority_district_code=_strip_or_none(
-                raw_row.get(release_config["lad_code_header"])
-            ),
-            local_authority_district_name=_strip_or_none(
-                raw_row.get(release_config["lad_name_header"])
-            ),
-            imd_score=imd_score,
-            imd_rank=imd_rank,
-            imd_decile=imd_decile,
-            idaci_score=idaci_score,
-            idaci_rank=idaci_rank,
-            idaci_decile=idaci_decile,
-            source_release=release_config["source_release_label"],
-            lsoa_vintage=release_config["lsoa_vintage"],
-            source_file_url=source_file_url,
+            lsoa_code=normalized_row["lsoa_code"],
+            lsoa_name=normalized_row["lsoa_name"],
+            local_authority_district_code=normalized_row["local_authority_district_code"],
+            local_authority_district_name=normalized_row["local_authority_district_name"],
+            imd_score=normalized_row["imd_score"],
+            imd_rank=normalized_row["imd_rank"],
+            imd_decile=normalized_row["imd_decile"],
+            idaci_score=normalized_row["idaci_score"],
+            idaci_rank=normalized_row["idaci_rank"],
+            idaci_decile=normalized_row["idaci_decile"],
+            source_release=normalized_row["source_release"],
+            lsoa_vintage=normalized_row["lsoa_vintage"],
+            source_file_url=normalized_row["source_file_url"],
         ),
         None,
     )
@@ -220,6 +147,7 @@ class OnsImdPipeline:
             "source_release": self._source_release,
             "source_release_label": release_config["source_release_label"],
             "lsoa_vintage": release_config["lsoa_vintage"],
+            "normalization_contract_version": ONS_IMD_NORMALIZATION_CONTRACT_VERSION,
             "sha256": _sha256_file(target_csv),
             "rows": row_count,
         }
@@ -294,104 +222,112 @@ class OnsImdPipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            lsoa_code,
-                            lsoa_name,
-                            local_authority_district_code,
-                            local_authority_district_name,
-                            imd_score,
-                            imd_rank,
-                            imd_decile,
-                            idaci_score,
-                            idaci_rank,
-                            idaci_decile,
-                            source_release,
-                            lsoa_vintage,
-                            source_file_url
-                        ) VALUES (
-                            :lsoa_code,
-                            :lsoa_name,
-                            :local_authority_district_code,
-                            :local_authority_district_name,
-                            :imd_score,
-                            :imd_rank,
-                            :imd_decile,
-                            :idaci_score,
-                            :idaci_rank,
-                            :idaci_decile,
-                            :source_release,
-                            :lsoa_vintage,
-                            :source_file_url
-                        )
-                        ON CONFLICT (lsoa_code) DO UPDATE SET
-                            lsoa_name = EXCLUDED.lsoa_name,
-                            local_authority_district_code = EXCLUDED.local_authority_district_code,
-                            local_authority_district_name = EXCLUDED.local_authority_district_name,
-                            imd_score = EXCLUDED.imd_score,
-                            imd_rank = EXCLUDED.imd_rank,
-                            imd_decile = EXCLUDED.imd_decile,
-                            idaci_score = EXCLUDED.idaci_score,
-                            idaci_rank = EXCLUDED.idaci_rank,
-                            idaci_decile = EXCLUDED.idaci_decile,
-                            source_release = EXCLUDED.source_release,
-                            lsoa_vintage = EXCLUDED.lsoa_vintage,
-                            source_file_url = EXCLUDED.source_file_url
-                        """
-                    ),
-                    [
-                        {
-                            "lsoa_code": row.lsoa_code,
-                            "lsoa_name": row.lsoa_name,
-                            "local_authority_district_code": row.local_authority_district_code,
-                            "local_authority_district_name": row.local_authority_district_name,
-                            "imd_score": row.imd_score,
-                            "imd_rank": row.imd_rank,
-                            "imd_decile": row.imd_decile,
-                            "idaci_score": row.idaci_score,
-                            "idaci_rank": row.idaci_rank,
-                            "idaci_decile": row.idaci_decile,
-                            "source_release": row.source_release,
-                            "lsoa_vintage": row.lsoa_vintage,
-                            "source_file_url": row.source_file_url,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        lsoa_code,
+                        lsoa_name,
+                        local_authority_district_code,
+                        local_authority_district_name,
+                        imd_score,
+                        imd_rank,
+                        imd_decile,
+                        idaci_score,
+                        idaci_rank,
+                        idaci_decile,
+                        source_release,
+                        lsoa_vintage,
+                        source_file_url
+                    ) VALUES (
+                        :lsoa_code,
+                        :lsoa_name,
+                        :local_authority_district_code,
+                        :local_authority_district_name,
+                        :imd_score,
+                        :imd_rank,
+                        :imd_decile,
+                        :idaci_score,
+                        :idaci_rank,
+                        :idaci_decile,
+                        :source_release,
+                        :lsoa_vintage,
+                        :source_file_url
+                    )
+                    ON CONFLICT (lsoa_code) DO UPDATE SET
+                        lsoa_name = EXCLUDED.lsoa_name,
+                        local_authority_district_code = EXCLUDED.local_authority_district_code,
+                        local_authority_district_name = EXCLUDED.local_authority_district_name,
+                        imd_score = EXCLUDED.imd_score,
+                        imd_rank = EXCLUDED.imd_rank,
+                        imd_decile = EXCLUDED.imd_decile,
+                        idaci_score = EXCLUDED.idaci_score,
+                        idaci_rank = EXCLUDED.idaci_rank,
+                        idaci_decile = EXCLUDED.idaci_decile,
+                        source_release = EXCLUDED.source_release,
+                        lsoa_vintage = EXCLUDED.lsoa_vintage,
+                        source_file_url = EXCLUDED.source_file_url
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "lsoa_code": row.lsoa_code,
+                                "lsoa_name": row.lsoa_name,
+                                "local_authority_district_code": row.local_authority_district_code,
+                                "local_authority_district_name": row.local_authority_district_name,
+                                "imd_score": row.imd_score,
+                                "imd_rank": row.imd_rank,
+                                "imd_decile": row.imd_decile,
+                                "idaci_score": row.idaci_score,
+                                "idaci_rank": row.idaci_rank,
+                                "idaci_decile": row.idaci_decile,
+                                "source_release": row.source_release,
+                                "lsoa_vintage": row.lsoa_vintage,
+                                "source_file_url": row.source_file_url,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=ONS_IMD_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)
@@ -463,15 +399,7 @@ class OnsImdPipeline:
 
 
 def _normalize_release(value: str) -> str:
-    normalized = value.strip().casefold()
-    if normalized in SUPPORTED_IMD_RELEASES:
-        return normalized
-    if normalized == "iod2025":
-        return IMD_RELEASE_IOD2025
-    if normalized == "iod2019":
-        return IMD_RELEASE_IOD2019
-    msg = "Unsupported IMD release. Expected one of: " + ", ".join(sorted(SUPPORTED_IMD_RELEASES))
-    raise ValueError(msg)
+    return ons_imd_contract.normalize_release(value)
 
 
 def _strip_or_none(raw_value: str | None) -> str | None:

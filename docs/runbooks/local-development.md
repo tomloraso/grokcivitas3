@@ -96,13 +96,22 @@ Set `CIVITAS_DATABASE_URL` in `.env` to target a different database.
 ```bash
 uv run --project apps/backend python tools/scripts/verify_phase1_sources.py
 uv run --project apps/backend python tools/scripts/verify_phase2_sources.py
+uv run --project apps/backend python tools/scripts/verify_source_contracts_runtime.py
+uv run --project apps/backend python tools/scripts/discover_dfe_characteristics_history.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --source ofsted_timeline
+uv run --project apps/backend civitas pipeline run --source gias --resume
+uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>
 uv run --project apps/backend civitas pipeline run --all
+uv run --project apps/backend civitas ops data-quality snapshot
+uv run --project apps/backend python tools/scripts/check_data_quality_slo.py --strict
+uv run --project apps/backend python tools/scripts/run_pipeline_recovery_drill.py --strict
+uv run --project apps/backend python tools/scripts/benchmark_pipeline_throughput.py --strict
 ```
 
 For GIAS runs, set one of these optional source inputs in `.env` when automatic site download is unavailable:
@@ -129,7 +138,21 @@ CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV=C:\path\to\school_characteristics.csv
 
 # Defaults to validated Phase 1 dataset id when not set
 CIVITAS_DFE_CHARACTERISTICS_DATASET_ID=019afee4-ba17-73cb-85e0-f88c101bb734
+
+# Default historical lookback used by `pipeline backfill` when --lookback-years is omitted
+CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS=5
+
+# Guardrail: must be true to run backfill mode
+CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED=false
+
+# Optional explicit historical dataset id catalog (comma-separated)
+# CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG=dataset-id-2023,dataset-id-2024,dataset-id-2025
 ```
+
+Historical backfill safety notes:
+- Keep daily incremental and historical backfill separate: use `pipeline run` for daily and `pipeline backfill` for historical hydration only.
+- Use `tools/scripts/discover_dfe_characteristics_history.py` to generate a candidate inventory before setting `CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG`.
+- Backfill writes per-asset provenance (`source_dataset_id`, `source_dataset_version`) into `school_demographics_yearly` by academic year.
 
 For ONS IMD runs, these optional `.env` values control release selection and manual source override:
 
@@ -183,6 +206,69 @@ For postcode search API behavior, these optional `.env` values control resolver 
 CIVITAS_POSTCODES_IO_BASE_URL=https://api.postcodes.io
 CIVITAS_POSTCODE_CACHE_TTL_DAYS=30
 ```
+
+For pipeline run quality gates, these optional `.env` values set per-source maximum reject ratios
+(`rejected_rows / downloaded_rows`). Defaults are `1.0` for all sources. Hard gates for
+`downloaded_rows`, `staged_rows`, and `promoted_rows` are always enforced.
+
+```bash
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_POLICE_CRIME_CONTEXT=1.0
+```
+
+For H6 pipeline resilience controls, these optional `.env` values tune retry, chunking, resume,
+and source concurrency behavior:
+
+```bash
+CIVITAS_PIPELINE_HTTP_TIMEOUT_SECONDS=60
+CIVITAS_PIPELINE_MAX_RETRIES=2
+CIVITAS_PIPELINE_RETRY_BACKOFF_SECONDS=0.5
+CIVITAS_PIPELINE_STAGE_CHUNK_SIZE=1000
+CIVITAS_PIPELINE_PROMOTE_CHUNK_SIZE=1000
+CIVITAS_PIPELINE_MAX_CONCURRENT_SOURCES=1
+CIVITAS_PIPELINE_RESUME_ENABLED=true
+```
+
+For H5 operational observability checks, these optional `.env` values tune strict SLO evaluation:
+
+```bash
+# Per-source freshness SLA (hours).
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_POLICE_CRIME_CONTEXT=720
+
+# Day-over-day coverage drop threshold (absolute ratio delta).
+CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD=0.05
+
+# Trigger when consecutive hard failures are greater than this value.
+CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES=2
+
+# Trigger sparse-trend warning when (zero-year + one-year schools) / total exceeds this ratio.
+CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD=0.7
+```
+
+## Data quality triage flow
+
+1. Capture a daily observability snapshot:
+   `uv run --project apps/backend civitas ops data-quality snapshot`
+2. Evaluate strict SLO state:
+   `uv run --project apps/backend python tools/scripts/check_data_quality_slo.py --strict`
+   - `--strict` exits non-zero for `critical` alerts and still prints `warning` alerts.
+3. If freshness alerts fire:
+   - inspect `pipeline_run_events` and `pipeline_runs` for the source status history and latest `finished_at`.
+4. If coverage drift alerts fire:
+   - compare `data_quality_snapshots` day-over-day for the section and source.
+   - check same-day `pipeline_run_events` for `failed_quality_gate` / `failed_source_unavailable`.
+5. If sparse-trend risk alerts fire:
+   - review demographics trend-year distribution from the snapshot (`0`, `1`, `2+` year counts).
+   - confirm whether source coverage changed or joins/regressions reduced promoted records.
 
 `postcode_cache` stores both `lsoa` (name) and `lsoa_code`. If a cached row predates
 `lsoa_code` backfill, the resolver automatically refreshes it from Postcodes.io on the next

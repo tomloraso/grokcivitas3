@@ -74,9 +74,9 @@ Implement explicit, versioned normalization contracts per source family so sourc
 4. `tools/scripts/verify_source_contracts_runtime.py` (new)
    - execute contract checks against Bronze samples and fail on mismatch.
 5. `apps/backend/tests/unit/test_*_transforms.py`
-   - move parser coverage to contract tests and add drift regression cases.
-6. `apps/backend/tests/fixtures/contracts/` (new)
-   - add representative real-row snapshots for each source family.
+   - keep coverage at pipeline adapter boundary and add drift regression cases for contract behavior.
+6. `apps/backend/tests/fixtures/*`
+   - reuse existing source fixtures as Bronze-like runtime contract samples to avoid duplicate fixture trees.
 
 ## Testing And Quality Gates
 

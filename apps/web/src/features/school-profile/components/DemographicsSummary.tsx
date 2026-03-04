@@ -1,17 +1,40 @@
 import { MetricGrid } from "../../../components/data/MetricGrid";
+import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { StatCard } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
-import type { DemographicsVM, TrendsVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { DemographicsVM, SectionCompletenessVM, TrendsVM } from "../types";
 
 interface DemographicsSummaryProps {
-  demographics: DemographicsVM;
+  demographics: DemographicsVM | null;
   trends: TrendsVM | null;
+  completeness: SectionCompletenessVM;
 }
 
 export function DemographicsSummary({
   demographics,
-  trends
+  trends,
+  completeness
 }: DemographicsSummaryProps): JSX.Element {
+  if (!demographics) {
+    return (
+      <section aria-labelledby="demographics-heading">
+        <div className="mb-5 flex items-baseline justify-between gap-3">
+          <h2
+            id="demographics-heading"
+            className="text-lg font-semibold text-primary sm:text-xl"
+          >
+            Demographics
+          </h2>
+        </div>
+        <div className="space-y-3">
+          <SectionCompletenessNotice sectionLabel="Demographics" completeness={completeness} />
+          <MetricUnavailable metricLabel="Demographics" />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section aria-labelledby="demographics-heading">
       <div className="mb-5 flex items-baseline justify-between gap-3">
@@ -25,6 +48,7 @@ export function DemographicsSummary({
           {demographics.academicYear}
         </span>
       </div>
+      <SectionCompletenessNotice sectionLabel="Demographics" completeness={completeness} />
 
       <MetricGrid columns={3}>
         {demographics.metrics

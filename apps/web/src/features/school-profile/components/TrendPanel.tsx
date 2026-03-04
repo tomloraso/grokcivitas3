@@ -1,16 +1,45 @@
 import { AlertTriangle } from "lucide-react";
 
 import { MetricGrid } from "../../../components/data/MetricGrid";
+import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
-import type { TrendsVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { SectionCompletenessVM, TrendsVM } from "../types";
 
 interface TrendPanelProps {
-  trends: TrendsVM;
+  trends: TrendsVM | null;
+  completeness: SectionCompletenessVM;
 }
 
-export function TrendPanel({ trends }: TrendPanelProps): JSX.Element {
+function partialHistoryMessage(yearsCount: number): string {
+  if (yearsCount === 0) {
+    return "No historical years are available yet for trend analysis.";
+  }
+  if (yearsCount === 1) {
+    return "Limited history available (1 year). Trend deltas require at least 2 years of data.";
+  }
+  return `Limited history available (${yearsCount} years). Trend deltas need at least 2 years of data.`;
+}
+
+export function TrendPanel({ trends, completeness }: TrendPanelProps): JSX.Element {
+  if (!trends) {
+    return (
+      <section aria-labelledby="trends-heading">
+        <div className="mb-5 flex items-baseline justify-between gap-3">
+          <h2 id="trends-heading" className="text-lg font-semibold text-primary sm:text-xl">
+            Trends
+          </h2>
+        </div>
+        <div className="space-y-3">
+          <SectionCompletenessNotice sectionLabel="Trends" completeness={completeness} />
+          <MetricUnavailable metricLabel="Trends" />
+        </div>
+      </section>
+    );
+  }
+
   const hasData = trends.series.some((s) => s.points.length > 0);
 
   return (
@@ -28,6 +57,7 @@ export function TrendPanel({ trends }: TrendPanelProps): JSX.Element {
           </span>
         ) : null}
       </div>
+      <SectionCompletenessNotice sectionLabel="Trends" completeness={completeness} />
 
       {trends.isPartialHistory ? (
         <div
@@ -35,10 +65,7 @@ export function TrendPanel({ trends }: TrendPanelProps): JSX.Element {
           role="status"
         >
           <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden />
-          <span>
-            Limited history available ({trends.yearsCount} {trends.yearsCount === 1 ? "year" : "years"}).
-            Trend deltas require at least 2 years of data.
-          </span>
+          <span>{partialHistoryMessage(trends.yearsCount)}</span>
         </div>
       ) : null}
 

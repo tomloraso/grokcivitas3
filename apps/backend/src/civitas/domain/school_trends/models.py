@@ -1,4 +1,16 @@
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Literal
+
+TrendCompletenessStatus = Literal["available", "partial", "unavailable"]
+TrendCompletenessReasonCode = Literal[
+    "source_missing",
+    "source_not_provided",
+    "rejected_by_validation",
+    "not_joined_yet",
+    "pipeline_failed_recently",
+    "not_applicable",
+]
 
 
 @dataclass(frozen=True)
@@ -14,3 +26,4 @@ class SchoolDemographicsYearlyRow:
 class SchoolDemographicsSeries:
     urn: str
     rows: tuple[SchoolDemographicsYearlyRow, ...]
+    latest_updated_at: datetime | None

@@ -103,6 +103,11 @@ Harden ingestion pipelines for production operation under large files, transient
 3. Retry behavior improves resilience without masking persistent data-quality failures.
 4. Throughput and recovery expectations are codified and testable.
 
+## Implementation Notes
+
+- Stage writes and rejection logging are chunked by configured batch size to bound statement payload size.
+- Promote paths remain set-based SQL upserts from staging tables; additional row-chunk loops are intentionally not added where set-based statements already avoid Python-side buffering.
+
 ## Risks And Mitigations
 
 - Risk: checkpoint logic introduces subtle duplicate writes.

@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { SchoolProfileResponse, SchoolTrendsResponse } from "../../../api/types";
-import { mapProfileToVM, fmtPct, fmtDate, fallback } from "./profileMapper";
+import {
+  fallback,
+  fmtDate,
+  fmtPct,
+  mapCompletenessReasonToMessageKey,
+  mapProfileToVM
+} from "./profileMapper";
 
 const BASE_PROFILE: SchoolProfileResponse = {
   school: {
@@ -87,6 +93,38 @@ const BASE_PROFILE: SchoolProfileResponse = {
       has_crime: true,
       crime_months_available: 12
     }
+  },
+  completeness: {
+    demographics: {
+      status: "partial",
+      reason_code: "source_not_provided",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: null
+    },
+    ofsted_latest: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-20T10:00:00Z",
+      years_available: null
+    },
+    ofsted_timeline: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-18T11:00:00Z",
+      years_available: null
+    },
+    area_deprivation: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-10T12:00:00Z",
+      years_available: null
+    },
+    area_crime: {
+      status: "partial",
+      reason_code: "source_missing",
+      last_updated_at: "2026-01-31T13:00:00Z",
+      years_available: null
+    }
   }
 };
 
@@ -109,6 +147,12 @@ const BASE_TRENDS: SchoolTrendsResponse = {
     ],
     ehcp_pct: [{ academic_year: "2024/25", value: 2.1, delta: null, direction: null }],
     eal_pct: [{ academic_year: "2024/25", value: 8.4, delta: null, direction: null }]
+  },
+  completeness: {
+    status: "partial",
+    reason_code: "source_missing",
+    last_updated_at: "2026-01-31T09:00:00Z",
+    years_available: ["2023/24", "2024/25"]
   }
 };
 
@@ -152,6 +196,20 @@ describe("fallback", () => {
 
   it("returns placeholder for whitespace-only string", () => {
     expect(fallback("   ", "Unknown")).toBe("Unknown");
+  });
+});
+
+describe("mapCompletenessReasonToMessageKey", () => {
+  it("maps backend reason codes to stable UI message keys", () => {
+    expect(mapCompletenessReasonToMessageKey("source_missing")).toBe("missing");
+    expect(mapCompletenessReasonToMessageKey("source_not_provided")).toBe("notProvided");
+    expect(mapCompletenessReasonToMessageKey("rejected_by_validation")).toBe("validationRejected");
+    expect(mapCompletenessReasonToMessageKey("not_joined_yet")).toBe("notJoinedYet");
+    expect(mapCompletenessReasonToMessageKey("pipeline_failed_recently")).toBe(
+      "pipelineFailedRecently"
+    );
+    expect(mapCompletenessReasonToMessageKey("not_applicable")).toBe("notApplicable");
+    expect(mapCompletenessReasonToMessageKey(null)).toBeNull();
   });
 });
 
@@ -296,6 +354,38 @@ describe("mapProfileToVM", () => {
           has_crime: false,
           crime_months_available: 0
         }
+      },
+      completeness: {
+        demographics: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        ofsted_latest: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        ofsted_timeline: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_deprivation: {
+          status: "unavailable",
+          reason_code: "not_applicable",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_crime: {
+          status: "unavailable",
+          reason_code: "not_joined_yet",
+          last_updated_at: null,
+          years_available: null
+        }
       }
     };
 
@@ -316,6 +406,27 @@ describe("mapProfileToVM", () => {
     expect(vm.trends!.yearsCount).toBe(2);
     expect(vm.trends!.yearsAvailable).toEqual(["2023/24", "2024/25"]);
     expect(vm.trends!.series).toHaveLength(4);
+  });
+
+  it("maps profile and trends completeness metadata", () => {
+    const vm = mapProfileToVM(BASE_PROFILE, BASE_TRENDS);
+
+    expect(vm.completeness.demographics.status).toBe("partial");
+    expect(vm.completeness.demographics.messageKey).toBe("notProvided");
+    expect(vm.completeness.demographics.lastUpdatedAt).toMatch(/31.*Jan.*2026/);
+
+    expect(vm.completeness.areaCrime.status).toBe("partial");
+    expect(vm.completeness.areaCrime.messageKey).toBe("missing");
+
+    expect(vm.completeness.trends.status).toBe("partial");
+    expect(vm.completeness.trends.messageKey).toBe("missing");
+    expect(vm.completeness.trends.yearsAvailable).toEqual(["2023/24", "2024/25"]);
+  });
+
+  it("marks trends as temporarily unavailable when trends payload is missing", () => {
+    const vm = mapProfileToVM(BASE_PROFILE, null);
+    expect(vm.completeness.trends.status).toBe("unavailable");
+    expect(vm.completeness.trends.messageKey).toBe("pipelineFailedRecently");
   });
 
   it("maps trend deltas and direction for latest point", () => {
@@ -381,6 +492,38 @@ describe("mapProfileToVM", () => {
           has_deprivation: false,
           has_crime: false,
           crime_months_available: 0
+        }
+      },
+      completeness: {
+        demographics: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        ofsted_latest: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        ofsted_timeline: {
+          status: "unavailable",
+          reason_code: "source_missing",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_deprivation: {
+          status: "unavailable",
+          reason_code: "not_applicable",
+          last_updated_at: null,
+          years_available: null
+        },
+        area_crime: {
+          status: "unavailable",
+          reason_code: "not_joined_yet",
+          last_updated_at: null,
+          years_available: null
         }
       }
     };

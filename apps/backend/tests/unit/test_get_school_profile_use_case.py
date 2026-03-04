@@ -17,7 +17,9 @@ from civitas.domain.school_profiles.models import (
     SchoolOfstedTimelineCoverage,
     SchoolOfstedTimelineEvent,
     SchoolProfile,
+    SchoolProfileCompleteness,
     SchoolProfileSchool,
+    SchoolProfileSectionCompleteness,
 )
 from civitas.domain.schools.models import PostcodeCoordinates
 
@@ -65,6 +67,7 @@ def _profile(
     ofsted_latest: SchoolOfstedLatest | None = None,
     ofsted_timeline: SchoolOfstedTimeline | None = None,
     area_context: SchoolAreaContext | None = None,
+    completeness: SchoolProfileCompleteness | None = None,
 ) -> SchoolProfile:
     if ofsted_timeline is None:
         ofsted_timeline = SchoolOfstedTimeline(
@@ -86,6 +89,44 @@ def _profile(
                 crime_months_available=0,
             ),
         )
+    if completeness is None:
+        ofsted_timeline_status = (
+            "unavailable"
+            if len(ofsted_timeline.events) == 0
+            else ("partial" if ofsted_timeline.coverage.is_partial_history else "available")
+        )
+        completeness = SchoolProfileCompleteness(
+            demographics=SchoolProfileSectionCompleteness(
+                status="available" if demographics_latest is not None else "unavailable",
+                reason_code=None if demographics_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            ofsted_latest=SchoolProfileSectionCompleteness(
+                status="available" if ofsted_latest is not None else "unavailable",
+                reason_code=None if ofsted_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            ofsted_timeline=SchoolProfileSectionCompleteness(
+                status=ofsted_timeline_status,
+                reason_code=None if ofsted_timeline_status == "available" else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            area_deprivation=SchoolProfileSectionCompleteness(
+                status="available" if area_context.deprivation is not None else "unavailable",
+                reason_code=None if area_context.deprivation is not None else "not_joined_yet",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            area_crime=SchoolProfileSectionCompleteness(
+                status="available" if area_context.crime is not None else "unavailable",
+                reason_code=None if area_context.crime is not None else "not_joined_yet",
+                last_updated_at=None,
+                years_available=None,
+            ),
+        )
     return SchoolProfile(
         school=SchoolProfileSchool(
             urn="123456",
@@ -101,6 +142,7 @@ def _profile(
         ofsted_latest=ofsted_latest,
         ofsted_timeline=ofsted_timeline,
         area_context=area_context,
+        completeness=completeness,
     )
 
 
@@ -174,6 +216,38 @@ def test_get_school_profile_returns_contract_dto() -> None:
                     crime_months_available=12,
                 ),
             ),
+            completeness=SchoolProfileCompleteness(
+                demographics=SchoolProfileSectionCompleteness(
+                    status="partial",
+                    reason_code="source_not_provided",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                ofsted_latest=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                ofsted_timeline=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                area_deprivation=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                area_crime=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+            ),
         )
     )
     use_case = GetSchoolProfileUseCase(school_profile_repository=repository)
@@ -194,6 +268,8 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.area_context is not None
     assert result.area_context.coverage.has_deprivation is True
     assert result.area_context.coverage.has_crime is True
+    assert result.completeness.demographics.status == "partial"
+    assert result.completeness.demographics.reason_code == "source_not_provided"
 
 
 def test_get_school_profile_raises_not_found_when_repository_returns_none() -> None:
@@ -217,6 +293,9 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.area_context is not None
     assert result.area_context.deprivation is None
     assert result.area_context.crime is None
+    assert result.completeness.demographics.status == "unavailable"
+    assert result.completeness.ofsted_timeline.status == "unavailable"
+    assert result.completeness.area_deprivation.reason_code == "not_joined_yet"
 
 
 def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing() -> None:

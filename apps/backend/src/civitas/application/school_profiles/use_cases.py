@@ -10,8 +10,10 @@ from civitas.application.school_profiles.dto import (
     SchoolOfstedTimelineCoverageDto,
     SchoolOfstedTimelineDto,
     SchoolOfstedTimelineEventDto,
+    SchoolProfileCompletenessDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
+    SchoolProfileSectionCompletenessDto,
 )
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
 from civitas.application.school_profiles.ports.postcode_context_resolver import (
@@ -131,6 +133,39 @@ class GetSchoolProfileUseCase:
                 ),
             )
 
+        completeness = SchoolProfileCompletenessDto(
+            demographics=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.demographics.status,
+                reason_code=profile.completeness.demographics.reason_code,
+                last_updated_at=profile.completeness.demographics.last_updated_at,
+                years_available=profile.completeness.demographics.years_available,
+            ),
+            ofsted_latest=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.ofsted_latest.status,
+                reason_code=profile.completeness.ofsted_latest.reason_code,
+                last_updated_at=profile.completeness.ofsted_latest.last_updated_at,
+                years_available=profile.completeness.ofsted_latest.years_available,
+            ),
+            ofsted_timeline=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.ofsted_timeline.status,
+                reason_code=profile.completeness.ofsted_timeline.reason_code,
+                last_updated_at=profile.completeness.ofsted_timeline.last_updated_at,
+                years_available=profile.completeness.ofsted_timeline.years_available,
+            ),
+            area_deprivation=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.area_deprivation.status,
+                reason_code=profile.completeness.area_deprivation.reason_code,
+                last_updated_at=profile.completeness.area_deprivation.last_updated_at,
+                years_available=profile.completeness.area_deprivation.years_available,
+            ),
+            area_crime=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.area_crime.status,
+                reason_code=profile.completeness.area_crime.reason_code,
+                last_updated_at=profile.completeness.area_crime.last_updated_at,
+                years_available=profile.completeness.area_crime.years_available,
+            ),
+        )
+
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
                 urn=profile.school.urn,
@@ -146,6 +181,7 @@ class GetSchoolProfileUseCase:
             ofsted_latest=ofsted_latest,
             ofsted_timeline=ofsted_timeline,
             area_context=area_context,
+            completeness=completeness,
         )
 
     def _refresh_profile_context_if_needed(

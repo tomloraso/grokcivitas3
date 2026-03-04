@@ -9,6 +9,7 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "ofsted_latest",
         "ofsted_timeline",
         "area_context",
+        "completeness",
     }
 )
 

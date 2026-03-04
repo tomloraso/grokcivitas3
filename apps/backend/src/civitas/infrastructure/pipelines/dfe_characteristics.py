@@ -17,26 +17,19 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import dfe as dfe_contract
 
 DFE_BASE_URL = "https://api.education.gov.uk/statistics/v1"
 DFE_DATASET_URL_TEMPLATE = f"{DFE_BASE_URL}/data-sets/{{dataset_id}}"
 DFE_DATASET_CSV_URL_TEMPLATE = f"{DFE_BASE_URL}/data-sets/{{dataset_id}}/csv"
 
-REQUIRED_DFE_CHARACTERISTICS_HEADERS: tuple[str, ...] = (
-    "school_urn",
-    "time_period",
-    "ptfsm6cla1a",
-    "psenelek",
-    "psenelk",
-    "psenele",
-    "ptealgrp2",
-    "ptealgrp1",
-    "ptealgrp3",
-)
+REQUIRED_DFE_CHARACTERISTICS_HEADERS = dfe_contract.REQUIRED_HEADERS
 
 NUMERIC_SENTINELS = {"", "SUPP", "NE", "N/A", "NA", "X", "Z", "C"}
 BRONZE_FILE_NAME = "school_characteristics.csv"
+DFE_BACKFILL_MANIFEST_FILE_NAME = "school_characteristics.backfill.manifest.json"
+DFE_NORMALIZATION_CONTRACT_VERSION = dfe_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -55,14 +48,24 @@ class DfeCharacteristicsStagedRow:
     source_dataset_version: str | None
 
 
+@dataclass(frozen=True)
+class DfeCharacteristicsBackfillSource:
+    dataset_id: str
+    dataset_version: str | None
+    academic_year: str | None
+
+
+@dataclass(frozen=True)
+class DfeCharacteristicsBackfillAsset:
+    bronze_file_name: str
+    source_reference: str
+    source_dataset_id: str
+    source_dataset_version: str | None
+    source_academic_year: str | None
+
+
 def validate_dfe_characteristics_headers(headers: Sequence[str]) -> None:
-    header_set = set(headers)
-    missing = [
-        header for header in REQUIRED_DFE_CHARACTERISTICS_HEADERS if header not in header_set
-    ]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(f"DfE schema mismatch; missing required headers: {missing_fields}")
+    dfe_contract.validate_headers(tuple(headers))
 
 
 def normalize_dfe_characteristics_row(
@@ -71,69 +74,27 @@ def normalize_dfe_characteristics_row(
     source_dataset_id: str,
     source_dataset_version: str | None = None,
 ) -> tuple[DfeCharacteristicsStagedRow | None, str | None]:
-    urn = raw_row["school_urn"].strip()
-    if not urn:
-        return None, "missing_urn"
-
-    try:
-        academic_year = _normalize_academic_year(raw_row["time_period"])
-    except ValueError:
-        return None, "invalid_academic_year"
-
-    try:
-        disadvantaged_pct = _parse_optional_percentage(raw_row["ptfsm6cla1a"])
-    except ValueError:
-        return None, "invalid_disadvantaged_pct"
-
-    try:
-        sen_pct = _parse_optional_percentage(raw_row["psenelek"])
-    except ValueError:
-        return None, "invalid_sen_pct"
-
-    try:
-        sen_support_pct = _parse_optional_percentage(raw_row["psenelk"])
-    except ValueError:
-        return None, "invalid_sen_support_pct"
-
-    try:
-        ehcp_pct = _parse_optional_percentage(raw_row["psenele"])
-    except ValueError:
-        return None, "invalid_ehcp_pct"
-
-    try:
-        eal_pct = _parse_optional_percentage(raw_row["ptealgrp2"])
-    except ValueError:
-        return None, "invalid_eal_pct"
-
-    try:
-        first_language_english_pct = _parse_optional_percentage(raw_row["ptealgrp1"])
-    except ValueError:
-        return None, "invalid_first_language_english_pct"
-
-    try:
-        first_language_unclassified_pct = _parse_optional_percentage(raw_row["ptealgrp3"])
-    except ValueError:
-        return None, "invalid_first_language_unclassified_pct"
-
-    try:
-        total_pupils = _parse_total_pupils(raw_row)
-    except ValueError:
-        return None, "invalid_total_pupils"
-
+    normalized_row, rejection = dfe_contract.normalize_row(
+        raw_row,
+        source_dataset_id=source_dataset_id,
+        source_dataset_version=source_dataset_version,
+    )
+    if normalized_row is None:
+        return None, rejection
     return (
         DfeCharacteristicsStagedRow(
-            urn=urn,
-            academic_year=academic_year,
-            disadvantaged_pct=disadvantaged_pct,
-            sen_pct=sen_pct,
-            sen_support_pct=sen_support_pct,
-            ehcp_pct=ehcp_pct,
-            eal_pct=eal_pct,
-            first_language_english_pct=first_language_english_pct,
-            first_language_unclassified_pct=first_language_unclassified_pct,
-            total_pupils=total_pupils,
-            source_dataset_id=source_dataset_id,
-            source_dataset_version=source_dataset_version,
+            urn=normalized_row["urn"],
+            academic_year=normalized_row["academic_year"],
+            disadvantaged_pct=normalized_row["disadvantaged_pct"],
+            sen_pct=normalized_row["sen_pct"],
+            sen_support_pct=normalized_row["sen_support_pct"],
+            ehcp_pct=normalized_row["ehcp_pct"],
+            eal_pct=normalized_row["eal_pct"],
+            first_language_english_pct=normalized_row["first_language_english_pct"],
+            first_language_unclassified_pct=normalized_row["first_language_unclassified_pct"],
+            total_pupils=normalized_row["total_pupils"],
+            source_dataset_id=normalized_row["source_dataset_id"],
+            source_dataset_version=normalized_row["source_dataset_version"],
         ),
         None,
     )
@@ -147,12 +108,25 @@ class DfeCharacteristicsPipeline:
         engine: Engine,
         source_dataset_id: str,
         source_csv: str | None = None,
+        *,
+        backfill_enabled: bool = False,
+        lookback_years: int = 5,
+        source_dataset_catalog: Sequence[str] | None = None,
     ) -> None:
+        if lookback_years <= 0:
+            raise ValueError("DfE characteristics lookback years must be greater than 0.")
+
         self._engine = engine
         self._source_dataset_id = source_dataset_id
         self._source_csv = source_csv
+        self._backfill_enabled = backfill_enabled
+        self._lookback_years = lookback_years
+        self._source_dataset_catalog = tuple(source_dataset_catalog or ())
 
     def download(self, context: PipelineRunContext) -> int:
+        if self._backfill_enabled:
+            return self._download_backfill(context)
+
         context.bronze_source_path.mkdir(parents=True, exist_ok=True)
 
         target_csv = context.bronze_source_path / BRONZE_FILE_NAME
@@ -179,41 +153,40 @@ class DfeCharacteristicsPipeline:
         )
 
     def stage(self, context: PipelineRunContext) -> StageResult:
-        source_csv = context.bronze_source_path / BRONZE_FILE_NAME
-        if not source_csv.exists():
-            raise FileNotFoundError(
-                f"DfE bronze file not found at '{source_csv}'. Run download stage first."
-            )
-
-        metadata = _load_download_metadata(source_csv.with_suffix(".metadata.json"))
-        source_dataset_id = str(metadata.get("source_dataset_id") or self._source_dataset_id)
-        source_dataset_version_raw = metadata.get("source_dataset_version")
-        source_dataset_version = (
-            str(source_dataset_version_raw) if isinstance(source_dataset_version_raw, str) else None
-        )
-
         staged_rows_by_key: dict[tuple[str, str], DfeCharacteristicsStagedRow] = {}
         rejected_rows: list[tuple[str, dict[str, str]]] = []
-        with source_csv.open("r", encoding="utf-8-sig", newline="") as csv_file:
-            reader = csv.DictReader(csv_file)
-            if reader.fieldnames is None:
-                raise ValueError("DfE characteristics CSV has no header row.")
-
-            validate_dfe_characteristics_headers(reader.fieldnames)
-
-            for raw_row in reader:
-                normalized, rejection = normalize_dfe_characteristics_row(
-                    raw_row,
-                    source_dataset_id=source_dataset_id,
-                    source_dataset_version=source_dataset_version,
+        for source_asset in self._staging_sources(context):
+            source_csv = context.bronze_source_path / source_asset.bronze_file_name
+            if not source_csv.exists():
+                raise FileNotFoundError(
+                    f"DfE bronze file not found at '{source_csv}'. Run download stage first."
                 )
-                if normalized is not None:
-                    staged_rows_by_key[(normalized.urn, normalized.academic_year)] = normalized
-                    continue
-                if rejection is not None:
-                    rejected_rows.append((rejection, dict(raw_row)))
+
+            with source_csv.open("r", encoding="utf-8-sig", newline="") as csv_file:
+                reader = csv.DictReader(csv_file)
+                if reader.fieldnames is None:
+                    raise ValueError("DfE characteristics CSV has no header row.")
+
+                validate_dfe_characteristics_headers(reader.fieldnames)
+
+                for raw_row in reader:
+                    normalized, rejection = normalize_dfe_characteristics_row(
+                        raw_row,
+                        source_dataset_id=source_asset.source_dataset_id,
+                        source_dataset_version=source_asset.source_dataset_version,
+                    )
+                    if normalized is not None:
+                        staged_rows_by_key[(normalized.urn, normalized.academic_year)] = normalized
+                        continue
+                    if rejection is not None:
+                        rejected_rows.append((rejection, dict(raw_row)))
 
         staged_rows = list(staged_rows_by_key.values())
+        if self._backfill_enabled:
+            staged_rows = _filter_rows_to_lookback_years(
+                staged_rows,
+                lookback_years=self._lookback_years,
+            )
 
         staging_table_name = self._staging_table_name(context)
         with self._engine.begin() as connection:
@@ -242,99 +215,109 @@ class DfeCharacteristicsPipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            urn,
-                            academic_year,
-                            disadvantaged_pct,
-                            sen_pct,
-                            sen_support_pct,
-                            ehcp_pct,
-                            eal_pct,
-                            first_language_english_pct,
-                            first_language_unclassified_pct,
-                            total_pupils,
-                            source_dataset_id,
-                            source_dataset_version
-                        ) VALUES (
-                            :urn,
-                            :academic_year,
-                            :disadvantaged_pct,
-                            :sen_pct,
-                            :sen_support_pct,
-                            :ehcp_pct,
-                            :eal_pct,
-                            :first_language_english_pct,
-                            :first_language_unclassified_pct,
-                            :total_pupils,
-                            :source_dataset_id,
-                            :source_dataset_version
-                        )
-                        ON CONFLICT (urn, academic_year) DO UPDATE SET
-                            disadvantaged_pct = EXCLUDED.disadvantaged_pct,
-                            sen_pct = EXCLUDED.sen_pct,
-                            sen_support_pct = EXCLUDED.sen_support_pct,
-                            ehcp_pct = EXCLUDED.ehcp_pct,
-                            eal_pct = EXCLUDED.eal_pct,
-                            first_language_english_pct = EXCLUDED.first_language_english_pct,
-                            first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
-                            total_pupils = EXCLUDED.total_pupils,
-                            source_dataset_id = EXCLUDED.source_dataset_id,
-                            source_dataset_version = EXCLUDED.source_dataset_version
-                        """
-                    ),
-                    [
-                        {
-                            "urn": row.urn,
-                            "academic_year": row.academic_year,
-                            "disadvantaged_pct": row.disadvantaged_pct,
-                            "sen_pct": row.sen_pct,
-                            "sen_support_pct": row.sen_support_pct,
-                            "ehcp_pct": row.ehcp_pct,
-                            "eal_pct": row.eal_pct,
-                            "first_language_english_pct": row.first_language_english_pct,
-                            "first_language_unclassified_pct": row.first_language_unclassified_pct,
-                            "total_pupils": row.total_pupils,
-                            "source_dataset_id": row.source_dataset_id,
-                            "source_dataset_version": row.source_dataset_version,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        urn,
+                        academic_year,
+                        disadvantaged_pct,
+                        sen_pct,
+                        sen_support_pct,
+                        ehcp_pct,
+                        eal_pct,
+                        first_language_english_pct,
+                        first_language_unclassified_pct,
+                        total_pupils,
+                        source_dataset_id,
+                        source_dataset_version
+                    ) VALUES (
+                        :urn,
+                        :academic_year,
+                        :disadvantaged_pct,
+                        :sen_pct,
+                        :sen_support_pct,
+                        :ehcp_pct,
+                        :eal_pct,
+                        :first_language_english_pct,
+                        :first_language_unclassified_pct,
+                        :total_pupils,
+                        :source_dataset_id,
+                        :source_dataset_version
+                    )
+                    ON CONFLICT (urn, academic_year) DO UPDATE SET
+                        disadvantaged_pct = EXCLUDED.disadvantaged_pct,
+                        sen_pct = EXCLUDED.sen_pct,
+                        sen_support_pct = EXCLUDED.sen_support_pct,
+                        ehcp_pct = EXCLUDED.ehcp_pct,
+                        eal_pct = EXCLUDED.eal_pct,
+                        first_language_english_pct = EXCLUDED.first_language_english_pct,
+                        first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
+                        total_pupils = EXCLUDED.total_pupils,
+                        source_dataset_id = EXCLUDED.source_dataset_id,
+                        source_dataset_version = EXCLUDED.source_dataset_version
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "urn": row.urn,
+                                "academic_year": row.academic_year,
+                                "disadvantaged_pct": row.disadvantaged_pct,
+                                "sen_pct": row.sen_pct,
+                                "sen_support_pct": row.sen_support_pct,
+                                "ehcp_pct": row.ehcp_pct,
+                                "eal_pct": row.eal_pct,
+                                "first_language_english_pct": row.first_language_english_pct,
+                                "first_language_unclassified_pct": (
+                                    row.first_language_unclassified_pct
+                                ),
+                                "total_pupils": row.total_pupils,
+                                "source_dataset_id": row.source_dataset_id,
+                                "source_dataset_version": row.source_dataset_version,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=DFE_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)
@@ -411,6 +394,141 @@ class DfeCharacteristicsPipeline:
     def _staging_table_name(context: PipelineRunContext) -> str:
         return f"dfe_characteristics__{context.run_id.hex}"
 
+    def _download_backfill(self, context: PipelineRunContext) -> int:
+        context.bronze_source_path.mkdir(parents=True, exist_ok=True)
+        manifest_path = context.bronze_source_path / DFE_BACKFILL_MANIFEST_FILE_NAME
+
+        existing_assets = _manifest_backfill_assets(_load_download_metadata(manifest_path))
+        if existing_assets and all(
+            (context.bronze_source_path / asset.bronze_file_name).exists()
+            for asset in existing_assets
+        ):
+            return sum(
+                _count_csv_rows(context.bronze_source_path / asset.bronze_file_name)
+                for asset in existing_assets
+            )
+
+        backfill_sources = self._resolve_backfill_sources()
+        if not backfill_sources:
+            return 0
+
+        manifest_assets: list[dict[str, object]] = []
+        total_rows = 0
+        for index, source in enumerate(backfill_sources, start=1):
+            source_reference = DFE_DATASET_CSV_URL_TEMPLATE.format(dataset_id=source.dataset_id)
+            bronze_file_name = _build_backfill_file_name(source, index=index)
+            target_csv = context.bronze_source_path / bronze_file_name
+            target_csv.write_text(_download_text(source_reference), encoding="utf-8")
+
+            row_count = _count_csv_rows(target_csv)
+            total_rows += row_count
+            manifest_assets.append(
+                {
+                    "bronze_file_name": bronze_file_name,
+                    "source_reference": source_reference,
+                    "source_dataset_id": source.dataset_id,
+                    "source_dataset_version": source.dataset_version,
+                    "source_academic_year": source.academic_year,
+                    "sha256": _sha256_file(target_csv),
+                    "rows": row_count,
+                }
+            )
+
+        manifest_payload = {
+            "downloaded_at": datetime.now(timezone.utc).isoformat(),
+            "normalization_contract_version": DFE_NORMALIZATION_CONTRACT_VERSION,
+            "lookback_years": self._lookback_years,
+            "assets": manifest_assets,
+        }
+        manifest_path.write_text(
+            json.dumps(manifest_payload, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        return total_rows
+
+    def _resolve_backfill_sources(self) -> tuple[DfeCharacteristicsBackfillSource, ...]:
+        dataset_ids = (
+            tuple(self._source_dataset_catalog)
+            if self._source_dataset_catalog
+            else (self._source_dataset_id,)
+        )
+
+        sources: list[DfeCharacteristicsBackfillSource] = []
+        for dataset_id in dataset_ids:
+            summary = _fetch_dataset_summary(dataset_id)
+            latest_version = summary.get("latestVersion")
+            if not isinstance(latest_version, dict):
+                latest_version = {}
+
+            sources.append(
+                DfeCharacteristicsBackfillSource(
+                    dataset_id=dataset_id,
+                    dataset_version=_extract_dataset_version(latest_version),
+                    academic_year=_extract_dataset_academic_year(latest_version),
+                )
+            )
+
+        by_year: dict[str, DfeCharacteristicsBackfillSource] = {}
+        sources_without_year: list[DfeCharacteristicsBackfillSource] = []
+        for source in sources:
+            if source.academic_year is None:
+                sources_without_year.append(source)
+                continue
+            by_year[source.academic_year] = source
+
+        if by_year:
+            ranked = sorted(
+                by_year.values(),
+                key=lambda source: _academic_year_sort_key(source.academic_year),
+            )
+            return tuple(ranked[-self._lookback_years :])
+
+        return tuple(sources_without_year[-self._lookback_years :])
+
+    def _staging_sources(
+        self, context: PipelineRunContext
+    ) -> tuple[DfeCharacteristicsBackfillAsset, ...]:
+        if self._backfill_enabled:
+            manifest_path = context.bronze_source_path / DFE_BACKFILL_MANIFEST_FILE_NAME
+            assets = _manifest_backfill_assets(_load_download_metadata(manifest_path))
+            if not assets:
+                raise ValueError(
+                    "DfE backfill manifest missing assets. Run download stage before stage."
+                )
+            return tuple(
+                sorted(
+                    assets,
+                    key=lambda asset: (
+                        _academic_year_sort_key(asset.source_academic_year),
+                        asset.source_dataset_id,
+                        asset.bronze_file_name,
+                    ),
+                )
+            )
+
+        source_csv = context.bronze_source_path / BRONZE_FILE_NAME
+        metadata = _load_download_metadata(source_csv.with_suffix(".metadata.json"))
+        source_dataset_id = str(metadata.get("source_dataset_id") or self._source_dataset_id)
+        source_dataset_version_raw = metadata.get("source_dataset_version")
+        source_dataset_version = (
+            str(source_dataset_version_raw) if isinstance(source_dataset_version_raw, str) else None
+        )
+        source_academic_year_raw = metadata.get("source_academic_year")
+        source_academic_year = (
+            str(source_academic_year_raw).strip()
+            if isinstance(source_academic_year_raw, str) and source_academic_year_raw.strip()
+            else None
+        )
+        return (
+            DfeCharacteristicsBackfillAsset(
+                bronze_file_name=BRONZE_FILE_NAME,
+                source_reference=str(metadata.get("source_reference") or BRONZE_FILE_NAME),
+                source_dataset_id=source_dataset_id,
+                source_dataset_version=source_dataset_version,
+                source_academic_year=source_academic_year,
+            ),
+        )
+
     def _finalize_download_metadata(
         self,
         *,
@@ -426,6 +544,7 @@ class DfeCharacteristicsPipeline:
             "source_reference": source_reference,
             "source_dataset_id": source_dataset_id,
             "source_dataset_version": source_dataset_version,
+            "normalization_contract_version": DFE_NORMALIZATION_CONTRACT_VERSION,
             "sha256": _sha256_file(target_csv),
             "rows": row_count,
         }
@@ -500,7 +619,7 @@ def _download_text(url: str) -> str:
         return _decode_response_bytes(raw_bytes, response.headers.get("Content-Encoding"))
 
 
-def _fetch_dataset_version(source_dataset_id: str) -> str | None:
+def _fetch_dataset_summary(source_dataset_id: str) -> dict[str, object]:
     dataset_url = DFE_DATASET_URL_TEMPLATE.format(dataset_id=source_dataset_id)
     request = urllib.request.Request(dataset_url, headers={"User-Agent": "civitas-pipeline/0.1"})
     try:
@@ -509,17 +628,121 @@ def _fetch_dataset_version(source_dataset_id: str) -> str | None:
                 _decode_response_bytes(response.read(), response.headers.get("Content-Encoding"))
             )
     except Exception:
-        return None
+        return {}
 
+    if isinstance(payload, dict):
+        return payload
+    return {}
+
+
+def _fetch_dataset_version(source_dataset_id: str) -> str | None:
+    payload = _fetch_dataset_summary(source_dataset_id)
     latest_version = payload.get("latestVersion")
     if not isinstance(latest_version, dict):
         return None
+    return _extract_dataset_version(latest_version)
 
+
+def _extract_dataset_version(latest_version: Mapping[str, object]) -> str | None:
     for key in ("id", "version"):
         value = latest_version.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def _extract_dataset_academic_year(latest_version: Mapping[str, object]) -> str | None:
+    time_periods = latest_version.get("timePeriods")
+    if not isinstance(time_periods, dict):
+        return None
+    end_value = time_periods.get("end")
+    if not isinstance(end_value, str):
+        return None
+    with suppress(ValueError):
+        return dfe_contract.normalize_academic_year(end_value)
+    return None
+
+
+def _build_backfill_file_name(source: DfeCharacteristicsBackfillSource, *, index: int) -> str:
+    academic_year_token = (source.academic_year or "unknown").replace("/", "_")
+    return f"{index:02d}_school_characteristics_{academic_year_token}_{source.dataset_id}.csv"
+
+
+def _academic_year_sort_key(academic_year: str | None) -> tuple[int, str]:
+    if academic_year is None:
+        return (0, "")
+    with suppress(ValueError):
+        normalized = dfe_contract.normalize_academic_year(academic_year)
+        return (int(normalized[:4]), normalized)
+    return (0, academic_year)
+
+
+def _filter_rows_to_lookback_years(
+    rows: Sequence[DfeCharacteristicsStagedRow],
+    *,
+    lookback_years: int,
+) -> list[DfeCharacteristicsStagedRow]:
+    if lookback_years <= 0:
+        return []
+    if len(rows) <= 1:
+        return list(rows)
+
+    available_years = sorted(
+        {row.academic_year for row in rows},
+        key=_academic_year_sort_key,
+    )
+    selected_years = set(available_years[-lookback_years:])
+    return [row for row in rows if row.academic_year in selected_years]
+
+
+def _manifest_backfill_assets(manifest: dict[str, object]) -> list[DfeCharacteristicsBackfillAsset]:
+    assets_payload = manifest.get("assets")
+    if not isinstance(assets_payload, list):
+        return []
+
+    assets: list[DfeCharacteristicsBackfillAsset] = []
+    for payload in assets_payload:
+        if not isinstance(payload, dict):
+            continue
+        bronze_file_name = payload.get("bronze_file_name")
+        source_dataset_id = payload.get("source_dataset_id")
+        if not isinstance(bronze_file_name, str) or not bronze_file_name.strip():
+            continue
+        if not isinstance(source_dataset_id, str) or not source_dataset_id.strip():
+            continue
+
+        source_reference_value = payload.get("source_reference")
+        source_reference = (
+            source_reference_value.strip()
+            if isinstance(source_reference_value, str) and source_reference_value.strip()
+            else bronze_file_name.strip()
+        )
+
+        source_dataset_version_value = payload.get("source_dataset_version")
+        source_dataset_version = (
+            source_dataset_version_value.strip()
+            if isinstance(source_dataset_version_value, str)
+            and source_dataset_version_value.strip()
+            else None
+        )
+
+        source_academic_year_value = payload.get("source_academic_year")
+        source_academic_year = (
+            source_academic_year_value.strip()
+            if isinstance(source_academic_year_value, str) and source_academic_year_value.strip()
+            else None
+        )
+
+        assets.append(
+            DfeCharacteristicsBackfillAsset(
+                bronze_file_name=bronze_file_name.strip(),
+                source_reference=source_reference,
+                source_dataset_id=source_dataset_id.strip(),
+                source_dataset_version=source_dataset_version,
+                source_academic_year=source_academic_year,
+            )
+        )
+    return assets
 
 
 def _copy_from_source(source: str, target: Path) -> None:

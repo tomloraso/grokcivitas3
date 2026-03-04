@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -12,6 +13,7 @@ from civitas.infrastructure.config.settings import AppSettings
 from civitas.infrastructure.pipelines.base import PipelineRunContext, PipelineSource
 from civitas.infrastructure.pipelines.dfe_characteristics import (
     BRONZE_FILE_NAME,
+    DFE_BACKFILL_MANIFEST_FILE_NAME,
     DfeCharacteristicsPipeline,
 )
 
@@ -250,6 +252,61 @@ def _copy_fixture_to_bronze(context: PipelineRunContext) -> None:
     target.write_text(fixture_path.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def _copy_backfill_fixtures_to_bronze(context: PipelineRunContext) -> None:
+    context.bronze_source_path.mkdir(parents=True, exist_ok=True)
+    header = "school_urn,time_period,ptfsm6cla1a,psenelek,psenelk,psenele,ptealgrp2,ptealgrp1,ptealgrp3\n"
+    assets = [
+        {
+            "bronze_file_name": "school_characteristics_2022_23.csv",
+            "source_dataset_id": "dataset-2023",
+            "source_dataset_version": "v2023",
+            "source_academic_year": "2022/23",
+            "rows": ("100001,2022/23,21.0,13.2,10.2,3.0,10.0,87.5,2.5\n",),
+        },
+        {
+            "bronze_file_name": "school_characteristics_2023_24.csv",
+            "source_dataset_id": "dataset-2024",
+            "source_dataset_version": "v2024",
+            "source_academic_year": "2023/24",
+            "rows": (
+                "100001,2023/24,19.5,12.8,10.1,2.7,9.5,88.0,2.5\n",
+                "100002,2023/24,22.1,15.4,12.0,3.4,12.2,84.6,3.2\n",
+            ),
+        },
+        {
+            "bronze_file_name": "school_characteristics_2024_25.csv",
+            "source_dataset_id": "dataset-2025",
+            "source_dataset_version": "v2025",
+            "source_academic_year": "2024/25",
+            "rows": (
+                "100001,2024/25,18.0,12.0,9.7,2.3,8.8,89.4,1.8\n",
+                "100002,2024/25,20.2,14.8,11.6,3.2,11.1,85.7,3.2\n",
+            ),
+        },
+    ]
+
+    for asset in assets:
+        asset_path = context.bronze_source_path / asset["bronze_file_name"]
+        asset_path.write_text(header + "".join(asset["rows"]), encoding="utf-8")
+
+    manifest_payload = {
+        "assets": [
+            {
+                "bronze_file_name": asset["bronze_file_name"],
+                "source_reference": f"https://api.education.gov.uk/statistics/v1/data-sets/{asset['source_dataset_id']}/csv",
+                "source_dataset_id": asset["source_dataset_id"],
+                "source_dataset_version": asset["source_dataset_version"],
+                "source_academic_year": asset["source_academic_year"],
+            }
+            for asset in assets
+        ]
+    }
+    (context.bronze_source_path / DFE_BACKFILL_MANIFEST_FILE_NAME).write_text(
+        json.dumps(manifest_payload),
+        encoding="utf-8",
+    )
+
+
 def test_dfe_characteristics_pipeline_stage_and_promote_are_idempotent(
     engine: Engine,
     tmp_path: Path,
@@ -358,3 +415,91 @@ def test_dfe_characteristics_pipeline_stage_and_promote_are_idempotent(
             )
         ).scalar_one()
         assert total_rows_after_second_run == 2
+
+
+def test_dfe_characteristics_backfill_mode_respects_lookback_and_provenance(
+    engine: Engine,
+    tmp_path: Path,
+) -> None:
+    bronze_root = tmp_path / "bronze"
+    _seed_schools(engine)
+
+    pipeline = DfeCharacteristicsPipeline(
+        engine=engine,
+        source_csv=None,
+        source_dataset_id="dataset-2025",
+        backfill_enabled=True,
+        lookback_years=2,
+    )
+
+    first_context = _build_context(bronze_root)
+    _copy_backfill_fixtures_to_bronze(first_context)
+    _insert_run_row(engine, first_context)
+
+    first_stage = pipeline.stage(first_context)
+    assert first_stage.staged_rows == 4
+    assert first_stage.rejected_rows == 0
+
+    first_promoted_rows = pipeline.promote(first_context)
+    assert first_promoted_rows == 4
+
+    with engine.connect() as connection:
+        promoted_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_demographics_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert promoted_rows == 4
+
+        historical_gap = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_demographics_yearly
+                WHERE academic_year = '2022/23'
+                  AND urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert historical_gap == 0
+
+        provenance_rows = connection.execute(
+            text(
+                """
+                SELECT academic_year, source_dataset_id, source_dataset_version
+                FROM school_demographics_yearly
+                WHERE urn = '100001'
+                ORDER BY academic_year
+                """
+            )
+        ).all()
+        assert provenance_rows == [
+            ("2023/24", "dataset-2024", "v2024"),
+            ("2024/25", "dataset-2025", "v2025"),
+        ]
+
+    second_context = _build_context(bronze_root)
+    _insert_run_row(engine, second_context)
+
+    second_stage = pipeline.stage(second_context)
+    assert second_stage.staged_rows == 4
+    assert second_stage.rejected_rows == 0
+
+    second_promoted_rows = pipeline.promote(second_context)
+    assert second_promoted_rows == 4
+
+    with engine.connect() as connection:
+        total_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_demographics_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert total_rows == 4

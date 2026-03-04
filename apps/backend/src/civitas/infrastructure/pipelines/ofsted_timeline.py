@@ -19,7 +19,8 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import ofsted_timeline as ofsted_timeline_contract
 
 OFSTED_LANDING_PAGE_URL = (
     "https://www.gov.uk/government/statistical-data-sets/"
@@ -27,34 +28,13 @@ OFSTED_LANDING_PAGE_URL = (
 )
 BRONZE_MANIFEST_FILE_NAME = "assets.manifest.json"
 
-SCHEMA_VERSION_YTD = "all_inspections_ytd"
-SCHEMA_VERSION_HISTORICAL_2015_2019 = "all_inspections_historical_2015_2019"
+SCHEMA_VERSION_YTD = ofsted_timeline_contract.SCHEMA_VERSION_YTD
+SCHEMA_VERSION_HISTORICAL_2015_2019 = ofsted_timeline_contract.SCHEMA_VERSION_HISTORICAL_2015_2019
 
-REQUIRED_OFSTED_TIMELINE_YTD_HEADERS: tuple[str, ...] = (
-    "URN",
-    "Inspection number",
-    "Inspection type",
-    "Inspection start date",
-    "Publication date",
-)
-REQUIRED_OFSTED_TIMELINE_HISTORICAL_HEADERS: tuple[str, ...] = (
-    "Academic year",
-    "URN",
-    "Inspection number",
-    "Inspection start date",
-    "Publication date",
-    "Overall effectiveness",
-)
-OVERALL_EFFECTIVENESS_CODE_TO_LABEL: dict[str, str] = {
-    "1": "Outstanding",
-    "2": "Good",
-    "3": "Requires improvement",
-    "4": "Inadequate",
-    "Not judged": "Not judged",
-}
-OVERALL_EFFECTIVENESS_LABEL_TO_CODE: dict[str, str] = {
-    label.casefold(): code for code, label in OVERALL_EFFECTIVENESS_CODE_TO_LABEL.items()
-}
+REQUIRED_OFSTED_TIMELINE_YTD_HEADERS = ofsted_timeline_contract.REQUIRED_HEADERS_YTD
+REQUIRED_OFSTED_TIMELINE_HISTORICAL_HEADERS = ofsted_timeline_contract.REQUIRED_HEADERS_HISTORICAL
+OVERALL_EFFECTIVENESS_CODE_TO_LABEL = ofsted_timeline_contract.OVERALL_EFFECTIVENESS_CODE_TO_LABEL
+OVERALL_EFFECTIVENESS_LABEL_TO_CODE = ofsted_timeline_contract.OVERALL_EFFECTIVENESS_LABEL_TO_CODE
 
 _HREF_PATTERN = re.compile(r"""href=["']([^"']+)["']""", re.IGNORECASE)
 _ASSET_URL_PREFIX = "https://assets.publishing.service.gov.uk/"
@@ -88,6 +68,7 @@ _MONTH_ABBR_TO_NUMBER: dict[str, int] = {
     "dec": 12,
     "december": 12,
 }
+OFSTED_TIMELINE_NORMALIZATION_CONTRACT_VERSION = ofsted_timeline_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -124,19 +105,7 @@ class OfstedTimelineLandingAssets:
 
 
 def validate_ofsted_timeline_headers(headers: Sequence[str], *, schema_version: str) -> None:
-    required_headers = (
-        REQUIRED_OFSTED_TIMELINE_HISTORICAL_HEADERS
-        if schema_version == SCHEMA_VERSION_HISTORICAL_2015_2019
-        else REQUIRED_OFSTED_TIMELINE_YTD_HEADERS
-    )
-    header_set = set(headers)
-    missing = [header for header in required_headers if header not in header_set]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(
-            f"Ofsted timeline schema mismatch for '{schema_version}'; missing required headers: "
-            f"{missing_fields}"
-        )
+    ofsted_timeline_contract.validate_headers(headers, schema_version=schema_version)
 
 
 def extract_ofsted_timeline_landing_assets(
@@ -203,75 +172,31 @@ def normalize_ofsted_timeline_row(
     source_asset_url: str,
     source_asset_month: str | None,
 ) -> tuple[OfstedTimelineStagedRow | None, str | None]:
-    urn = _strip_or_none(raw_row.get("URN"))
-    if urn is None:
-        return None, "missing_urn"
-
-    inspection_number = _strip_or_none(raw_row.get("Inspection number"))
-    if inspection_number is None:
-        return None, "missing_inspection_number"
-
-    inspection_start_raw = raw_row.get("Inspection start date")
-    try:
-        inspection_start_date = _parse_required_date(inspection_start_raw)
-    except ValueError:
-        return None, "invalid_inspection_start_date"
-
-    try:
-        inspection_end_date = _parse_optional_date(raw_row.get("Inspection end date"))
-    except ValueError:
-        return None, "invalid_inspection_end_date"
-
-    try:
-        publication_date = _parse_optional_date(raw_row.get("Publication date"))
-    except ValueError:
-        return None, "invalid_publication_date"
-
-    overall_effectiveness_raw = _first_non_empty(
+    normalized_row, rejection = ofsted_timeline_contract.normalize_row(
         raw_row,
-        [
-            "Latest OEIF overall effectiveness",
-            "Overall effectiveness",
-        ],
+        source_schema_version=source_schema_version,
+        source_asset_url=source_asset_url,
+        source_asset_month=source_asset_month,
     )
-    overall_effectiveness_code: str | None = None
-    overall_effectiveness_label: str | None = None
-    if overall_effectiveness_raw is not None:
-        overall_effectiveness_code = _normalize_overall_effectiveness_code(
-            overall_effectiveness_raw
-        )
-        if overall_effectiveness_code is not None:
-            overall_effectiveness_label = OVERALL_EFFECTIVENESS_CODE_TO_LABEL[
-                overall_effectiveness_code
-            ]
-
-    headline_outcome_text = _first_non_empty(
-        raw_row,
-        [
-            "Ungraded inspection overall outcome",
-            "Outcome",
-        ],
-    )
-    if headline_outcome_text is None and overall_effectiveness_code is None:
-        headline_outcome_text = overall_effectiveness_raw
-
+    if normalized_row is None:
+        return None, rejection
     return (
         OfstedTimelineStagedRow(
-            inspection_number=inspection_number,
-            urn=urn,
-            inspection_start_date=inspection_start_date,
-            inspection_end_date=inspection_end_date,
-            publication_date=publication_date,
-            inspection_type=_first_non_empty(raw_row, ["Inspection type"]),
-            inspection_type_grouping=_first_non_empty(raw_row, ["Inspection type grouping"]),
-            event_type_grouping=_first_non_empty(raw_row, ["Event type grouping"]),
-            overall_effectiveness_code=overall_effectiveness_code,
-            overall_effectiveness_label=overall_effectiveness_label,
-            headline_outcome_text=headline_outcome_text,
-            category_of_concern=_first_non_empty(raw_row, ["Category of concern"]),
-            source_schema_version=source_schema_version,
-            source_asset_url=source_asset_url,
-            source_asset_month=source_asset_month,
+            inspection_number=normalized_row["inspection_number"],
+            urn=normalized_row["urn"],
+            inspection_start_date=normalized_row["inspection_start_date"],
+            inspection_end_date=normalized_row["inspection_end_date"],
+            publication_date=normalized_row["publication_date"],
+            inspection_type=normalized_row["inspection_type"],
+            inspection_type_grouping=normalized_row["inspection_type_grouping"],
+            event_type_grouping=normalized_row["event_type_grouping"],
+            overall_effectiveness_code=normalized_row["overall_effectiveness_code"],
+            overall_effectiveness_label=normalized_row["overall_effectiveness_label"],
+            headline_outcome_text=normalized_row["headline_outcome_text"],
+            category_of_concern=normalized_row["category_of_concern"],
+            source_schema_version=normalized_row["source_schema_version"],
+            source_asset_url=normalized_row["source_asset_url"],
+            source_asset_month=normalized_row["source_asset_month"],
         ),
         None,
     )
@@ -333,6 +258,7 @@ class OfstedTimelinePipeline:
         manifest_payload = {
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
             "source_index_url": self._source_index_url,
+            "normalization_contract_version": OFSTED_TIMELINE_NORMALIZATION_CONTRACT_VERSION,
             "assets": manifest_assets,
         }
         manifest_path.write_text(
@@ -423,112 +349,120 @@ class OfstedTimelinePipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            inspection_number,
-                            urn,
-                            inspection_start_date,
-                            inspection_end_date,
-                            publication_date,
-                            inspection_type,
-                            inspection_type_grouping,
-                            event_type_grouping,
-                            overall_effectiveness_code,
-                            overall_effectiveness_label,
-                            headline_outcome_text,
-                            category_of_concern,
-                            source_schema_version,
-                            source_asset_url,
-                            source_asset_month
-                        ) VALUES (
-                            :inspection_number,
-                            :urn,
-                            :inspection_start_date,
-                            :inspection_end_date,
-                            :publication_date,
-                            :inspection_type,
-                            :inspection_type_grouping,
-                            :event_type_grouping,
-                            :overall_effectiveness_code,
-                            :overall_effectiveness_label,
-                            :headline_outcome_text,
-                            :category_of_concern,
-                            :source_schema_version,
-                            :source_asset_url,
-                            :source_asset_month
-                        )
-                        ON CONFLICT (inspection_number) DO UPDATE SET
-                            urn = EXCLUDED.urn,
-                            inspection_start_date = EXCLUDED.inspection_start_date,
-                            inspection_end_date = EXCLUDED.inspection_end_date,
-                            publication_date = EXCLUDED.publication_date,
-                            inspection_type = EXCLUDED.inspection_type,
-                            inspection_type_grouping = EXCLUDED.inspection_type_grouping,
-                            event_type_grouping = EXCLUDED.event_type_grouping,
-                            overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,
-                            overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
-                            headline_outcome_text = EXCLUDED.headline_outcome_text,
-                            category_of_concern = EXCLUDED.category_of_concern,
-                            source_schema_version = EXCLUDED.source_schema_version,
-                            source_asset_url = EXCLUDED.source_asset_url,
-                            source_asset_month = EXCLUDED.source_asset_month
-                        """
-                    ),
-                    [
-                        {
-                            "inspection_number": row.inspection_number,
-                            "urn": row.urn,
-                            "inspection_start_date": row.inspection_start_date,
-                            "inspection_end_date": row.inspection_end_date,
-                            "publication_date": row.publication_date,
-                            "inspection_type": row.inspection_type,
-                            "inspection_type_grouping": row.inspection_type_grouping,
-                            "event_type_grouping": row.event_type_grouping,
-                            "overall_effectiveness_code": row.overall_effectiveness_code,
-                            "overall_effectiveness_label": row.overall_effectiveness_label,
-                            "headline_outcome_text": row.headline_outcome_text,
-                            "category_of_concern": row.category_of_concern,
-                            "source_schema_version": row.source_schema_version,
-                            "source_asset_url": row.source_asset_url,
-                            "source_asset_month": row.source_asset_month,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        inspection_number,
+                        urn,
+                        inspection_start_date,
+                        inspection_end_date,
+                        publication_date,
+                        inspection_type,
+                        inspection_type_grouping,
+                        event_type_grouping,
+                        overall_effectiveness_code,
+                        overall_effectiveness_label,
+                        headline_outcome_text,
+                        category_of_concern,
+                        source_schema_version,
+                        source_asset_url,
+                        source_asset_month
+                    ) VALUES (
+                        :inspection_number,
+                        :urn,
+                        :inspection_start_date,
+                        :inspection_end_date,
+                        :publication_date,
+                        :inspection_type,
+                        :inspection_type_grouping,
+                        :event_type_grouping,
+                        :overall_effectiveness_code,
+                        :overall_effectiveness_label,
+                        :headline_outcome_text,
+                        :category_of_concern,
+                        :source_schema_version,
+                        :source_asset_url,
+                        :source_asset_month
+                    )
+                    ON CONFLICT (inspection_number) DO UPDATE SET
+                        urn = EXCLUDED.urn,
+                        inspection_start_date = EXCLUDED.inspection_start_date,
+                        inspection_end_date = EXCLUDED.inspection_end_date,
+                        publication_date = EXCLUDED.publication_date,
+                        inspection_type = EXCLUDED.inspection_type,
+                        inspection_type_grouping = EXCLUDED.inspection_type_grouping,
+                        event_type_grouping = EXCLUDED.event_type_grouping,
+                        overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,
+                        overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
+                        headline_outcome_text = EXCLUDED.headline_outcome_text,
+                        category_of_concern = EXCLUDED.category_of_concern,
+                        source_schema_version = EXCLUDED.source_schema_version,
+                        source_asset_url = EXCLUDED.source_asset_url,
+                        source_asset_month = EXCLUDED.source_asset_month
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "inspection_number": row.inspection_number,
+                                "urn": row.urn,
+                                "inspection_start_date": row.inspection_start_date,
+                                "inspection_end_date": row.inspection_end_date,
+                                "publication_date": row.publication_date,
+                                "inspection_type": row.inspection_type,
+                                "inspection_type_grouping": row.inspection_type_grouping,
+                                "event_type_grouping": row.event_type_grouping,
+                                "overall_effectiveness_code": row.overall_effectiveness_code,
+                                "overall_effectiveness_label": row.overall_effectiveness_label,
+                                "headline_outcome_text": row.headline_outcome_text,
+                                "category_of_concern": row.category_of_concern,
+                                "source_schema_version": row.source_schema_version,
+                                "source_asset_url": row.source_asset_url,
+                                "source_asset_month": row.source_asset_month,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=OFSTED_TIMELINE_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)

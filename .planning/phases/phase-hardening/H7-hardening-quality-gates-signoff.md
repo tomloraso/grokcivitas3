@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Proposed
-- Last updated: 2026-03-03
+- Status: Implemented
+- Last updated: 2026-03-04
 - Depends on:
   - `.planning/phases/phase-hardening/H1-pipeline-run-policy-quality-gates.md`
   - `.planning/phases/phase-hardening/H2-source-normalization-contracts.md`
@@ -38,7 +38,7 @@ Required commands:
 
 - `uv run --project apps/backend pytest apps/backend/tests/integration/test_dfe_characteristics_pipeline.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_repository.py -q`
-- `uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5 --dry-run`
+- `uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5`
 
 ## Gate 2 - Completeness Contract Across API And UI
 
@@ -117,3 +117,8 @@ The sign-off artifact must include:
   - Mitigation: explicit command list and mandatory single-state pass requirement.
 - Risk: hardening changes drift from planning intent.
   - Mitigation: sign-off artifact includes mapping from each RCA concern to implemented evidence.
+
+## Implementation Notes
+
+- `civitas pipeline backfill` does not support `--dry-run`; Gate 1 uses the real backfill command with explicit lookback (`--lookback-years 5`).
+- Final sign-off evidence is captured in `.planning/phases/phase-hardening/signoff-2026-03-04.md`.

@@ -8,10 +8,22 @@ from pydantic import ValidationError
 
 from civitas.infrastructure.config.settings import (
     DEFAULT_BRONZE_ROOT,
+    DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD,
+    DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+    DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES,
+    DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD,
     DEFAULT_DATABASE_URL,
     DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
+    DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS,
     DEFAULT_IMD_RELEASE,
     DEFAULT_OFSTED_TIMELINE_YEARS,
+    DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS,
+    DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES,
+    DEFAULT_PIPELINE_MAX_RETRIES,
+    DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE,
+    DEFAULT_PIPELINE_RESUME_ENABLED,
+    DEFAULT_PIPELINE_RETRY_BACKOFF_SECONDS,
+    DEFAULT_PIPELINE_STAGE_CHUNK_SIZE,
     DEFAULT_POLICE_CRIME_RADIUS_METERS,
     DEFAULT_POLICE_CRIME_SOURCE_MODE,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
@@ -33,6 +45,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_GIAS_SOURCE_ZIP",
         "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
         "CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+        "CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS",
+        "CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED",
+        "CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
         "CIVITAS_IMD_SOURCE_CSV",
         "CIVITAS_IMD_RELEASE",
         "CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL",
@@ -43,11 +58,33 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_OFSTED_TIMELINE_SOURCE_ASSETS",
         "CIVITAS_OFSTED_TIMELINE_YEARS",
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_POLICE_CRIME_CONTEXT",
+        "CIVITAS_PIPELINE_HTTP_TIMEOUT_SECONDS",
+        "CIVITAS_PIPELINE_MAX_RETRIES",
+        "CIVITAS_PIPELINE_RETRY_BACKOFF_SECONDS",
+        "CIVITAS_PIPELINE_STAGE_CHUNK_SIZE",
+        "CIVITAS_PIPELINE_PROMOTE_CHUNK_SIZE",
+        "CIVITAS_PIPELINE_MAX_CONCURRENT_SOURCES",
+        "CIVITAS_PIPELINE_RESUME_ENABLED",
         "CIVITAS_HTTP_TIMEOUT_SECONDS",
         "CIVITAS_HTTP_MAX_RETRIES",
         "CIVITAS_HTTP_RETRY_BACKOFF_SECONDS",
         "CIVITAS_POSTCODES_IO_BASE_URL",
         "CIVITAS_POSTCODE_CACHE_TTL_DAYS",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_POLICE_CRIME_CONTEXT",
+        "CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD",
+        "CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES",
+        "CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -72,14 +109,68 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.ofsted_timeline_source_assets is None
     assert settings.pipeline.ofsted_timeline_years == DEFAULT_OFSTED_TIMELINE_YEARS
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is True
+    assert settings.pipeline.max_reject_ratio_gias == 1.0
+    assert settings.pipeline.max_reject_ratio_dfe_characteristics == 1.0
+    assert settings.pipeline.max_reject_ratio_ofsted_latest == 1.0
+    assert settings.pipeline.max_reject_ratio_ofsted_timeline == 1.0
+    assert settings.pipeline.max_reject_ratio_ons_imd == 1.0
+    assert settings.pipeline.max_reject_ratio_police_crime_context == 1.0
+    assert settings.pipeline.http_timeout_seconds == DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS
+    assert settings.pipeline.max_retries == DEFAULT_PIPELINE_MAX_RETRIES
+    assert settings.pipeline.retry_backoff_seconds == DEFAULT_PIPELINE_RETRY_BACKOFF_SECONDS
+    assert settings.pipeline.stage_chunk_size == DEFAULT_PIPELINE_STAGE_CHUNK_SIZE
+    assert settings.pipeline.promote_chunk_size == DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE
+    assert settings.pipeline.max_concurrent_sources == DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES
+    assert settings.pipeline.resume_enabled is DEFAULT_PIPELINE_RESUME_ENABLED
     assert (
         settings.pipeline.dfe_characteristics_dataset_id == DEFAULT_DFE_CHARACTERISTICS_DATASET_ID
     )
+    assert (
+        settings.pipeline.dfe_characteristics_lookback_years
+        == DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS
+    )
+    assert settings.pipeline.dfe_characteristics_backfill_enabled is False
+    assert settings.pipeline.dfe_characteristics_dataset_catalog == ()
     assert settings.http_clients.timeout_seconds == 10.0
     assert settings.http_clients.max_retries == 2
     assert settings.http_clients.retry_backoff_seconds == 0.5
     assert settings.school_search.postcodes_io_base_url == DEFAULT_POSTCODES_IO_BASE_URL
     assert settings.school_search.postcode_cache_ttl_days == DEFAULT_POSTCODE_CACHE_TTL_DAYS
+    assert (
+        settings.data_quality.freshness_sla_hours_gias == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_dfe_characteristics
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_ofsted_latest
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_ofsted_timeline
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_ons_imd
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_police_crime_context
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.coverage_drift_threshold
+        == DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD
+    )
+    assert (
+        settings.data_quality.max_consecutive_hard_failures
+        == DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES
+    )
+    assert (
+        settings.data_quality.sparse_trend_ratio_threshold
+        == DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD
+    )
 
 
 def test_app_settings_reads_environment_overrides(
@@ -96,6 +187,12 @@ def test_app_settings_reads_environment_overrides(
         "  https://example.com/dfe_characteristics.csv  ",
     )
     monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " custom-dataset-id ")
+    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS", "7")
+    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED", "true")
+    monkeypatch.setenv(
+        "CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
+        " dataset-a, dataset-b, dataset-a ",
+    )
     monkeypatch.setenv("CIVITAS_IMD_SOURCE_CSV", "  https://example.com/file_7.csv  ")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", " IOD2019 ")
     monkeypatch.setenv(
@@ -121,11 +218,33 @@ def test_app_settings_reads_environment_overrides(
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "false",
     )
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS", "0.15")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS", "0.25")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST", "0.10")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE", "0.20")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD", "0.05")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_POLICE_CRIME_CONTEXT", "0.30")
+    monkeypatch.setenv("CIVITAS_PIPELINE_HTTP_TIMEOUT_SECONDS", "75")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_RETRIES", "4")
+    monkeypatch.setenv("CIVITAS_PIPELINE_RETRY_BACKOFF_SECONDS", "1.5")
+    monkeypatch.setenv("CIVITAS_PIPELINE_STAGE_CHUNK_SIZE", "500")
+    monkeypatch.setenv("CIVITAS_PIPELINE_PROMOTE_CHUNK_SIZE", "750")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_CONCURRENT_SOURCES", "2")
+    monkeypatch.setenv("CIVITAS_PIPELINE_RESUME_ENABLED", "false")
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "20")
     monkeypatch.setenv("CIVITAS_HTTP_MAX_RETRIES", "5")
     monkeypatch.setenv("CIVITAS_HTTP_RETRY_BACKOFF_SECONDS", "1.25")
     monkeypatch.setenv("CIVITAS_POSTCODES_IO_BASE_URL", "https://postcodes.io")
     monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "7")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS", "48")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS", "72")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST", "96")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE", "120")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD", "144")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_POLICE_CRIME_CONTEXT", "168")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD", "0.11")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES", "4")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD", "0.52")
 
     settings = AppSettings(_env_file=None)
 
@@ -137,6 +256,9 @@ def test_app_settings_reads_environment_overrides(
         == "https://example.com/dfe_characteristics.csv"
     )
     assert settings.pipeline.dfe_characteristics_dataset_id == "custom-dataset-id"
+    assert settings.pipeline.dfe_characteristics_lookback_years == 7
+    assert settings.pipeline.dfe_characteristics_backfill_enabled is True
+    assert settings.pipeline.dfe_characteristics_dataset_catalog == ("dataset-a", "dataset-b")
     assert settings.pipeline.imd_source_csv == "https://example.com/file_7.csv"
     assert settings.pipeline.imd_release == "iod2019"
     assert (
@@ -156,11 +278,33 @@ def test_app_settings_reads_environment_overrides(
     )
     assert settings.pipeline.ofsted_timeline_years == 5
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is False
+    assert settings.pipeline.max_reject_ratio_gias == 0.15
+    assert settings.pipeline.max_reject_ratio_dfe_characteristics == 0.25
+    assert settings.pipeline.max_reject_ratio_ofsted_latest == 0.10
+    assert settings.pipeline.max_reject_ratio_ofsted_timeline == 0.20
+    assert settings.pipeline.max_reject_ratio_ons_imd == 0.05
+    assert settings.pipeline.max_reject_ratio_police_crime_context == 0.30
+    assert settings.pipeline.http_timeout_seconds == 75.0
+    assert settings.pipeline.max_retries == 4
+    assert settings.pipeline.retry_backoff_seconds == 1.5
+    assert settings.pipeline.stage_chunk_size == 500
+    assert settings.pipeline.promote_chunk_size == 750
+    assert settings.pipeline.max_concurrent_sources == 2
+    assert settings.pipeline.resume_enabled is False
     assert settings.http_clients.timeout_seconds == 20.0
     assert settings.http_clients.max_retries == 5
     assert settings.http_clients.retry_backoff_seconds == 1.25
     assert settings.school_search.postcodes_io_base_url == "https://postcodes.io"
     assert settings.school_search.postcode_cache_ttl_days == 7
+    assert settings.data_quality.freshness_sla_hours_gias == 48
+    assert settings.data_quality.freshness_sla_hours_dfe_characteristics == 72
+    assert settings.data_quality.freshness_sla_hours_ofsted_latest == 96
+    assert settings.data_quality.freshness_sla_hours_ofsted_timeline == 120
+    assert settings.data_quality.freshness_sla_hours_ons_imd == 144
+    assert settings.data_quality.freshness_sla_hours_police_crime_context == 168
+    assert settings.data_quality.coverage_drift_threshold == 0.11
+    assert settings.data_quality.max_consecutive_hard_failures == 4
+    assert settings.data_quality.sparse_trend_ratio_threshold == 0.52
 
 
 def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -168,10 +312,18 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "-1")
     monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "0")
     monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " ")
+    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS", "0")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", "not-a-release")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_SOURCE_MODE", "invalid")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_RADIUS_METERS", "0")
     monkeypatch.setenv("CIVITAS_OFSTED_TIMELINE_YEARS", "0")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS", "1.5")
+    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_RETRIES", "-1")
+    monkeypatch.setenv("CIVITAS_PIPELINE_STAGE_CHUNK_SIZE", "0")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS", "0")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD", "1.2")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES", "0")
+    monkeypatch.setenv("CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD", "-0.1")
 
     with pytest.raises(ValidationError):
         AppSettings(_env_file=None)

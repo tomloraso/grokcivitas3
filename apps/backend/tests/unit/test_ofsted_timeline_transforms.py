@@ -275,6 +275,34 @@ def test_normalize_row_supports_ungraded_outcome_text() -> None:
     assert normalized.headline_outcome_text == "Strong progress"
 
 
+def test_normalize_row_treats_null_overall_effectiveness_as_missing() -> None:
+    normalized, rejection = normalize_ofsted_timeline_row(
+        _ytd_row(**{"Latest OEIF overall effectiveness": "NULL"}),
+        source_schema_version=SCHEMA_VERSION_YTD,
+        source_asset_url="https://assets.publishing.service.gov.uk/media/new/ytd.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.overall_effectiveness_code is None
+    assert normalized.overall_effectiveness_label is None
+
+
+def test_normalize_row_maps_code_9_to_not_judged() -> None:
+    normalized, rejection = normalize_ofsted_timeline_row(
+        _ytd_row(**{"Latest OEIF overall effectiveness": "9"}),
+        source_schema_version=SCHEMA_VERSION_YTD,
+        source_asset_url="https://assets.publishing.service.gov.uk/media/new/ytd.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.overall_effectiveness_code == "Not judged"
+    assert normalized.overall_effectiveness_label == "Not judged"
+
+
 def test_normalize_row_rejects_missing_inspection_number() -> None:
     normalized, rejection = normalize_ofsted_timeline_row(
         _ytd_row(**{"Inspection number": ""}),

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 
 from fastapi.testclient import TestClient
 
@@ -18,8 +18,10 @@ from civitas.application.school_profiles.dto import (
     SchoolOfstedTimelineCoverageDto,
     SchoolOfstedTimelineDto,
     SchoolOfstedTimelineEventDto,
+    SchoolProfileCompletenessDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
+    SchoolProfileSectionCompletenessDto,
 )
 from civitas.application.school_profiles.errors import (
     SchoolProfileDataUnavailableError,
@@ -134,6 +136,38 @@ def test_get_school_profile_returns_expected_contract() -> None:
                     crime_months_available=12,
                 ),
             ),
+            completeness=SchoolProfileCompletenessDto(
+                demographics=SchoolProfileSectionCompletenessDto(
+                    status="partial",
+                    reason_code="source_not_provided",
+                    last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                ofsted_latest=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 20, 10, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                ofsted_timeline=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 18, 11, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                area_deprivation=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 10, 12, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                area_crime=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 31, 13, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+            ),
         )
     )
     app.dependency_overrides[get_school_profile_use_case] = lambda: fake_use_case
@@ -219,6 +253,38 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 "crime_months_available": 12,
             },
         },
+        "completeness": {
+            "demographics": {
+                "status": "partial",
+                "reason_code": "source_not_provided",
+                "last_updated_at": "2026-01-31T09:00:00Z",
+                "years_available": None,
+            },
+            "ofsted_latest": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-20T10:00:00Z",
+                "years_available": None,
+            },
+            "ofsted_timeline": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-18T11:00:00Z",
+                "years_available": None,
+            },
+            "area_deprivation": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-10T12:00:00Z",
+                "years_available": None,
+            },
+            "area_crime": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-31T13:00:00Z",
+                "years_available": None,
+            },
+        },
     }
     assert fake_use_case.calls == ["123456"]
 
@@ -240,6 +306,38 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             ofsted_latest=None,
             ofsted_timeline=None,
             area_context=None,
+            completeness=SchoolProfileCompletenessDto(
+                demographics=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                ofsted_latest=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                ofsted_timeline=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                area_deprivation=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="not_joined_yet",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                area_crime=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="not_joined_yet",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+            ),
         )
     )
     app.dependency_overrides[get_school_profile_use_case] = lambda: fake_use_case
@@ -265,6 +363,38 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             "has_deprivation": False,
             "has_crime": False,
             "crime_months_available": 0,
+        },
+    }
+    assert response.json()["completeness"] == {
+        "demographics": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "ofsted_latest": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "ofsted_timeline": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "area_deprivation": {
+            "status": "unavailable",
+            "reason_code": "not_joined_yet",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "area_crime": {
+            "status": "unavailable",
+            "reason_code": "not_joined_yet",
+            "last_updated_at": None,
+            "years_available": None,
         },
     }
 

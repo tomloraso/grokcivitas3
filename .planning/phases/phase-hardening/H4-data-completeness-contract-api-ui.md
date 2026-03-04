@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Proposed
+- Status: Implemented
 - Last updated: 2026-03-03
 - Depends on:
   - `.planning/phases/phase-hardening/H3-historical-demographics-backfill-lookback.md`
@@ -14,6 +14,23 @@
 ## Objective
 
 Expose section-level completeness explicitly in API and UI so parents can understand whether data is missing at source, unavailable by design, or temporarily incomplete.
+
+## Tracking Update (2026-03-03, implementation checkpoint)
+
+- Implemented section-level completeness contracts for profile and trends APIs with status, reason code, last-updated timestamp, and optional years-available metadata.
+- Implemented repository-level completeness derivation in:
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_profile_repository.py`
+  - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_trends_repository.py`
+- Wired completeness DTO/schema flow through:
+  - `apps/backend/src/civitas/application/school_profiles/*`
+  - `apps/backend/src/civitas/application/school_trends/*`
+  - `apps/backend/src/civitas/api/schemas/*`
+  - `apps/backend/src/civitas/api/routes.py`
+- Implemented school-profile UI completeness rendering with section shells and top-level summary via:
+  - `apps/web/src/features/school-profile/mappers/profileMapper.ts`
+  - `apps/web/src/features/school-profile/components/SectionCompletenessNotice.tsx`
+  - `apps/web/src/features/school-profile/SchoolProfileFeature.tsx`
+- Regenerated web API types from backend OpenAPI and validated required quality gates.
 
 ## Scope
 

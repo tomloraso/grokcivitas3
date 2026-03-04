@@ -1,5 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 
+from civitas.application.operations.use_cases import (
+    DataQualitySloConfig,
+    EvaluateDataQualityAlertsUseCase,
+    GenerateDataQualitySnapshotsUseCase,
+    RunDataQualitySloCheckUseCase,
+)
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
 from civitas.application.schools.use_cases import (
@@ -12,6 +19,9 @@ from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
 from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
 from civitas.infrastructure.persistence.database import db_engine
 from civitas.infrastructure.persistence.in_memory_task_repository import InMemoryTaskRepository
+from civitas.infrastructure.persistence.postgres_data_quality_repository import (
+    PostgresDataQualityRepository,
+)
 from civitas.infrastructure.persistence.postgres_postcode_cache_repository import (
     PostgresPostcodeCacheRepository,
 )
@@ -25,6 +35,13 @@ from civitas.infrastructure.persistence.postgres_school_trends_repository import
     PostgresSchoolTrendsRepository,
 )
 from civitas.infrastructure.pipelines import pipeline_registry
+from civitas.infrastructure.pipelines.base import (
+    PipelineQualityConfig,
+    PipelineResult,
+    PipelineRetryPolicy,
+    PipelineSource,
+)
+from civitas.infrastructure.pipelines.dfe_characteristics import DfeCharacteristicsPipeline
 from civitas.infrastructure.pipelines.runner import PipelineRunner, SqlPipelineRunStore
 
 
@@ -68,6 +85,12 @@ def school_trends_repository() -> PostgresSchoolTrendsRepository:
 def postcode_cache_repository() -> PostgresPostcodeCacheRepository:
     settings = app_settings()
     return PostgresPostcodeCacheRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def data_quality_repository() -> PostgresDataQualityRepository:
+    settings = app_settings()
+    return PostgresDataQualityRepository(engine=db_engine(settings.database.url))
 
 
 @lru_cache(maxsize=1)
@@ -117,13 +140,137 @@ def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
     )
 
 
+def data_quality_snapshot_use_case() -> GenerateDataQualitySnapshotsUseCase:
+    return GenerateDataQualitySnapshotsUseCase(
+        repository=data_quality_repository(),
+    )
+
+
+def data_quality_alerts_use_case() -> EvaluateDataQualityAlertsUseCase:
+    settings = app_settings()
+    return EvaluateDataQualityAlertsUseCase(
+        repository=data_quality_repository(),
+        slo_config=DataQualitySloConfig(
+            source_freshness_sla_hours=settings.data_quality.source_freshness_sla_hours,
+            max_day_over_day_coverage_drop=settings.data_quality.coverage_drift_threshold,
+            max_consecutive_hard_failures=(settings.data_quality.max_consecutive_hard_failures),
+            max_sparse_trend_ratio=settings.data_quality.sparse_trend_ratio_threshold,
+        ),
+    )
+
+
+def data_quality_slo_check_use_case() -> RunDataQualitySloCheckUseCase:
+    return RunDataQualitySloCheckUseCase(
+        snapshot_use_case=data_quality_snapshot_use_case(),
+        evaluate_use_case=data_quality_alerts_use_case(),
+    )
+
+
+class DfeCharacteristicsBackfillRunner:
+    def __init__(
+        self,
+        *,
+        database_url: str,
+        bronze_root: Path,
+        source_dataset_id: str,
+        source_csv: str | None,
+        source_dataset_catalog: tuple[str, ...],
+        default_lookback_years: int,
+        max_reject_ratio: float,
+        backfill_enabled: bool,
+    ) -> None:
+        self._database_url = database_url
+        self._bronze_root = bronze_root
+        self._source_dataset_id = source_dataset_id
+        self._source_csv = source_csv
+        self._source_dataset_catalog = source_dataset_catalog
+        self._default_lookback_years = default_lookback_years
+        self._max_reject_ratio = max_reject_ratio
+        self._backfill_enabled = backfill_enabled
+
+    def run(self, *, lookback_years: int | None = None) -> PipelineResult:
+        if not self._backfill_enabled:
+            raise ValueError(
+                "Historical DfE backfill is disabled. Set "
+                "CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED=true to run backfill."
+            )
+
+        resolved_lookback_years = lookback_years or self._default_lookback_years
+        engine = db_engine(self._database_url)
+        pipeline = DfeCharacteristicsPipeline(
+            engine=engine,
+            source_dataset_id=self._source_dataset_id,
+            source_csv=self._source_csv,
+            backfill_enabled=True,
+            lookback_years=resolved_lookback_years,
+            source_dataset_catalog=self._source_dataset_catalog,
+        )
+        runner = PipelineRunner(
+            pipelines={PipelineSource.DFE_CHARACTERISTICS: pipeline},
+            run_store=SqlPipelineRunStore(engine=engine),
+            bronze_root=self._bronze_root,
+            quality_config_by_source={
+                PipelineSource.DFE_CHARACTERISTICS: PipelineQualityConfig(
+                    max_reject_ratio=self._max_reject_ratio
+                )
+            },
+            retry_policy=PipelineRetryPolicy(max_retries=0),
+        )
+        return runner.run_source(PipelineSource.DFE_CHARACTERISTICS)
+
+
+@lru_cache(maxsize=1)
+def dfe_characteristics_backfill_runner() -> DfeCharacteristicsBackfillRunner:
+    settings = app_settings()
+    return DfeCharacteristicsBackfillRunner(
+        database_url=settings.database.url,
+        bronze_root=settings.pipeline.bronze_root,
+        source_dataset_id=settings.pipeline.dfe_characteristics_dataset_id,
+        source_csv=settings.pipeline.dfe_characteristics_source_csv,
+        source_dataset_catalog=settings.pipeline.dfe_characteristics_dataset_catalog,
+        default_lookback_years=settings.pipeline.dfe_characteristics_lookback_years,
+        max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_characteristics,
+        backfill_enabled=settings.pipeline.dfe_characteristics_backfill_enabled,
+    )
+
+
 @lru_cache(maxsize=1)
 def pipeline_runner() -> PipelineRunner:
     settings = app_settings()
     engine = db_engine(settings.database.url)
     run_store = SqlPipelineRunStore(engine=engine)
+    quality_config_by_source = {
+        PipelineSource.GIAS: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_gias
+        ),
+        PipelineSource.DFE_CHARACTERISTICS: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_characteristics
+        ),
+        PipelineSource.OFSTED_LATEST: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_ofsted_latest
+        ),
+        PipelineSource.OFSTED_TIMELINE: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_ofsted_timeline
+        ),
+        PipelineSource.ONS_IMD: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_ons_imd
+        ),
+        PipelineSource.POLICE_CRIME_CONTEXT: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_police_crime_context
+        ),
+    }
     return PipelineRunner(
         pipelines=pipeline_registry(engine=engine, pipeline_settings=settings.pipeline),
         run_store=run_store,
         bronze_root=settings.pipeline.bronze_root,
+        quality_config_by_source=quality_config_by_source,
+        retry_policy=PipelineRetryPolicy(
+            max_retries=settings.pipeline.max_retries,
+            backoff_seconds=settings.pipeline.retry_backoff_seconds,
+        ),
+        stage_chunk_size=settings.pipeline.stage_chunk_size,
+        promote_chunk_size=settings.pipeline.promote_chunk_size,
+        http_timeout_seconds=settings.pipeline.http_timeout_seconds,
+        max_concurrent_sources=settings.pipeline.max_concurrent_sources,
+        resume_enabled=settings.pipeline.resume_enabled,
     )

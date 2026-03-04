@@ -3,10 +3,12 @@ import { CalendarDays, Clock3 } from "lucide-react";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Badge } from "../../../components/ui/Badge";
 import { Card } from "../../../components/ui/Card";
-import type { OfstedTimelineVM } from "../types";
+import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
+import type { OfstedTimelineVM, SectionCompletenessVM } from "../types";
 
 interface OfstedTimelineCardProps {
   timeline: OfstedTimelineVM;
+  completeness: SectionCompletenessVM;
 }
 
 function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
@@ -19,7 +21,7 @@ function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
   return "Outcome not published";
 }
 
-export function OfstedTimelineCard({ timeline }: OfstedTimelineCardProps): JSX.Element {
+export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCardProps): JSX.Element {
   return (
     <Card className="space-y-5 p-5 sm:p-6">
       <div className="space-y-2">
@@ -45,6 +47,7 @@ export function OfstedTimelineCard({ timeline }: OfstedTimelineCardProps): JSX.E
           </p>
         ) : null}
       </div>
+      <SectionCompletenessNotice sectionLabel="Ofsted timeline" completeness={completeness} />
 
       {timeline.events.length === 0 ? (
         <MetricUnavailable metricLabel="Ofsted timeline events" />

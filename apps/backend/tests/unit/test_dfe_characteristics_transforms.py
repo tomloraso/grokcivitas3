@@ -77,12 +77,23 @@ def test_normalize_dfe_row_rejects_missing_school_urn() -> None:
 
 def test_normalize_dfe_row_rejects_invalid_academic_year() -> None:
     normalized, rejection = normalize_dfe_characteristics_row(
-        _row(time_period="202425"),
+        _row(time_period="2024"),
         source_dataset_id="dataset-1",
     )
 
     assert normalized is None
     assert rejection == "invalid_academic_year"
+
+
+def test_normalize_dfe_row_supports_compact_academic_year_token() -> None:
+    normalized, rejection = normalize_dfe_characteristics_row(
+        _row(time_period="202425"),
+        source_dataset_id="dataset-1",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.academic_year == "2024/25"
 
 
 def test_normalize_dfe_row_rejects_invalid_percentage() -> None:
