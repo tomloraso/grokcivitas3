@@ -1,5 +1,24 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
+from typing import Literal
+
+SectionCompletenessStatus = Literal["available", "partial", "unavailable"]
+SectionCompletenessReasonCode = Literal[
+    "source_missing",
+    "insufficient_years_published",
+    "source_not_in_catalog",
+    "source_file_missing_for_year",
+    "source_schema_incompatible_for_year",
+    "partial_metric_coverage",
+    "source_not_provided",
+    "rejected_by_validation",
+    "not_joined_yet",
+    "pipeline_failed_recently",
+    "not_applicable",
+    "source_coverage_gap",
+    "stale_after_school_refresh",
+    "no_incidents_in_radius",
+]
 
 
 @dataclass(frozen=True)
@@ -45,7 +64,89 @@ class SchoolOfstedLatest:
 
 
 @dataclass(frozen=True)
+class SchoolOfstedTimelineEvent:
+    inspection_number: str
+    inspection_start_date: date
+    publication_date: date | None
+    inspection_type: str | None
+    overall_effectiveness_label: str | None
+    headline_outcome_text: str | None
+    category_of_concern: str | None
+
+
+@dataclass(frozen=True)
+class SchoolOfstedTimelineCoverage:
+    is_partial_history: bool
+    earliest_event_date: date | None
+    latest_event_date: date | None
+    events_count: int
+
+
+@dataclass(frozen=True)
+class SchoolOfstedTimeline:
+    events: tuple[SchoolOfstedTimelineEvent, ...]
+    coverage: SchoolOfstedTimelineCoverage
+
+
+@dataclass(frozen=True)
+class SchoolAreaDeprivation:
+    lsoa_code: str
+    imd_decile: int
+    idaci_score: float
+    idaci_decile: int
+    source_release: str
+
+
+@dataclass(frozen=True)
+class SchoolAreaCrimeCategory:
+    category: str
+    incident_count: int
+
+
+@dataclass(frozen=True)
+class SchoolAreaCrime:
+    radius_miles: float
+    latest_month: str
+    total_incidents: int
+    categories: tuple[SchoolAreaCrimeCategory, ...]
+
+
+@dataclass(frozen=True)
+class SchoolAreaContextCoverage:
+    has_deprivation: bool
+    has_crime: bool
+    crime_months_available: int
+
+
+@dataclass(frozen=True)
+class SchoolAreaContext:
+    deprivation: SchoolAreaDeprivation | None
+    crime: SchoolAreaCrime | None
+    coverage: SchoolAreaContextCoverage
+
+
+@dataclass(frozen=True)
+class SchoolProfileSectionCompleteness:
+    status: SectionCompletenessStatus
+    reason_code: SectionCompletenessReasonCode | None
+    last_updated_at: datetime | None
+    years_available: tuple[str, ...] | None = None
+
+
+@dataclass(frozen=True)
+class SchoolProfileCompleteness:
+    demographics: SchoolProfileSectionCompleteness
+    ofsted_latest: SchoolProfileSectionCompleteness
+    ofsted_timeline: SchoolProfileSectionCompleteness
+    area_deprivation: SchoolProfileSectionCompleteness
+    area_crime: SchoolProfileSectionCompleteness
+
+
+@dataclass(frozen=True)
 class SchoolProfile:
     school: SchoolProfileSchool
     demographics_latest: SchoolDemographicsLatest | None
     ofsted_latest: SchoolOfstedLatest | None
+    ofsted_timeline: SchoolOfstedTimeline | None
+    area_context: SchoolAreaContext | None
+    completeness: SchoolProfileCompleteness

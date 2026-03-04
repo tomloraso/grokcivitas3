@@ -1,7 +1,9 @@
 from collections.abc import Callable, Sequence
+from datetime import datetime
 
 from civitas.application.school_trends.dto import (
     SchoolTrendPointDto,
+    SchoolTrendsCompletenessDto,
     SchoolTrendsHistoryQualityDto,
     SchoolTrendsResponseDto,
     SchoolTrendsSeriesDto,
@@ -30,6 +32,12 @@ class GetSchoolTrendsUseCase:
         rows = demographics_series.rows
         years_available = tuple(row.academic_year for row in rows)
         years_count = len(years_available)
+        completeness = _build_completeness(
+            years_count=years_count,
+            years_available=years_available,
+            last_updated_at=demographics_series.latest_updated_at,
+            rows=rows,
+        )
 
         return SchoolTrendsResponseDto(
             urn=demographics_series.urn,
@@ -56,7 +64,16 @@ class GetSchoolTrendsUseCase:
                     rows=rows,
                     metric_value=lambda row: row.eal_pct,
                 ),
+                first_language_english_pct=_build_metric_series(
+                    rows=rows,
+                    metric_value=lambda row: row.first_language_english_pct,
+                ),
+                first_language_unclassified_pct=_build_metric_series(
+                    rows=rows,
+                    metric_value=lambda row: row.first_language_unclassified_pct,
+                ),
             ),
+            completeness=completeness,
         )
 
 
@@ -96,3 +113,56 @@ def _direction_from_delta(delta: float) -> TrendDirection:
     if delta < 0:
         return "down"
     return "flat"
+
+
+def _build_completeness(
+    *,
+    years_count: int,
+    years_available: tuple[str, ...],
+    last_updated_at: datetime | None,
+    rows: Sequence[SchoolDemographicsYearlyRow],
+) -> SchoolTrendsCompletenessDto:
+    if years_count == 0:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="source_file_missing_for_year",
+            last_updated_at=None,
+            years_available=years_available,
+        )
+    if years_count < MIN_YEARS_FOR_COMPLETE_HISTORY:
+        return SchoolTrendsCompletenessDto(
+            status="partial",
+            reason_code="insufficient_years_published",
+            last_updated_at=last_updated_at,
+            years_available=years_available,
+        )
+    if _has_partial_metric_coverage(rows):
+        return SchoolTrendsCompletenessDto(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=last_updated_at,
+            years_available=years_available,
+        )
+    return SchoolTrendsCompletenessDto(
+        status="available",
+        reason_code=None,
+        last_updated_at=last_updated_at,
+        years_available=years_available,
+    )
+
+
+def _has_partial_metric_coverage(rows: Sequence[SchoolDemographicsYearlyRow]) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.disadvantaged_pct,
+                row.sen_pct,
+                row.ehcp_pct,
+                row.eal_pct,
+                row.first_language_english_pct,
+                row.first_language_unclassified_pct,
+            )
+        ):
+            return True
+    return False

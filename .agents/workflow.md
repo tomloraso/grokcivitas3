@@ -21,3 +21,9 @@
 
 - Update docs for behavior/config/API changes.
 - Add new docs to `docs/index.md`.
+
+## Pipelines
+
+- Read `.agents/pipelines.md` and `docs/runbooks/pipelines.md` before pipeline changes.
+- Use canonical Bronze root (`data/bronze`) for standard runs.
+- Preserve mandatory Bronze -> Silver -> Gold flow for every source run.

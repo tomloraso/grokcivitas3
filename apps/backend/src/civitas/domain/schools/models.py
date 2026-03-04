@@ -8,6 +8,7 @@ class PostcodeCoordinates:
     lng: float
     lsoa: str | None
     admin_district: str | None
+    lsoa_code: str | None = None
 
 
 @dataclass(frozen=True)

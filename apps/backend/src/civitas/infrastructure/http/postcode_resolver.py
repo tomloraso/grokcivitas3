@@ -24,7 +24,7 @@ class CachedPostcodeResolver(PostcodeResolver):
 
     def resolve(self, postcode: str) -> PostcodeCoordinates:
         cached = self._cache_repository.get_fresh(postcode=postcode, ttl=self._cache_ttl)
-        if cached is not None:
+        if cached is not None and cached.lsoa_code is not None:
             return cached
 
         resolved = self._postcodes_io_client.lookup(postcode)

@@ -1,7 +1,38 @@
+/* ================================================================== */
+/* Reference / constant tokens (theme-invariant)                       */
+/* ================================================================== */
+
 :root {
   --font-family-display: "Space Grotesk";
   --font-family-body: "Public Sans";
   --font-family-mono: "IBM Plex Mono";
+
+  /* Typography scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  /* Font weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Leading (line-height) */
+  --leading-none: 1;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+
+  /* Text opacity modifiers */
+  --text-opacity-muted: 0.72;
+  --text-opacity-subtle: 0.56;
 
   --ref-color-navy-950: #060a13;
   --ref-color-navy-900: #0c1222;
@@ -10,24 +41,105 @@
   --ref-color-navy-600: #263350;
 
   --ref-color-grey-50: #f8fafc;
+  --ref-color-grey-100: #f1f5f9;
   --ref-color-grey-200: #e2e8f0;
+  --ref-color-grey-300: #cbd5e1;
   --ref-color-grey-400: #94a3b8;
   --ref-color-grey-500: #64748b;
+  --ref-color-grey-600: #475569;
+  --ref-color-grey-700: #334155;
+  --ref-color-grey-800: #1e293b;
+  --ref-color-grey-900: #0f172a;
 
-  --ref-color-brand-500: #8b5cf6;
-  --ref-color-brand-400: #a78bfa;
-  --ref-color-brand-600: #7c3aed;
+  --ref-color-brand-500: #A855F7;
+  --ref-color-brand-400: #C084FC;
+  --ref-color-brand-600: #8B2FC9;
   --ref-color-accent-400: #22d3ee;
   --ref-color-accent-500: #06b6d4;
+  --ref-color-phase-secondary: #E879F9;
+  --ref-color-phase-all-through: #22d3ee;
+  --ref-color-phase-default: #64748b;
 
   --ref-color-success-500: #22c55e;
   --ref-color-warning-500: #f59e0b;
   --ref-color-danger-500: #ef4444;
   --ref-color-info-500: #3b82f6;
 
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Radii */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+
+  /* Z-index */
+  --z-base: 1;
+  --z-nav: 10;
+  --z-popover: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  /* Button */
+  --button-height: 44px;
+  --button-height-sm: 36px;
+  --button-padding-inline: var(--space-4);
+  --button-font-weight: 600;
+
+  /* Input */
+  --input-height: 44px;
+  --input-padding-inline: var(--space-3);
+
+  /* Panel overlay (desktop resize) */
+  --panel-blur: 18px;
+  --panel-min-width: 280px;
+  --panel-max-width: 480px;
+  --panel-default-width: 380px;
+
+  /* Bottom-sheet (mobile) */
+  --sheet-peek-height: 220px;
+  --sheet-drag-handle-height: 36px;
+
+  /* Section spacing */
+  --section-gap: var(--space-10);
+  --section-gap-lg: var(--space-12);
+}
+
+/* ================================================================== */
+/* Dark theme (default)                                                */
+/* ================================================================== */
+
+[data-theme="dark"] {
   --ref-color-border-subtle: rgba(255, 255, 255, 0.06);
   --ref-color-border-default: rgba(255, 255, 255, 0.1);
   --ref-color-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Map chrome – light-water anchor palette for dark basemap */
+  --map-label-primary: rgba(255, 255, 255, 0.88);
+  --map-label-secondary: rgba(255, 255, 255, 0.65);
+  --map-label-tertiary: rgba(255, 255, 255, 0.45);
+  --map-label-muted: rgba(255, 255, 255, 0.30);
+  --map-label-halo: rgba(12, 18, 34, 0.92);
+  --map-surface-water: #243447;
+  --map-surface-land: #0c1222;
+  --map-line-road: rgba(255, 255, 255, 0.12);
+  --map-line-boundary: rgba(255, 255, 255, 0.10);
 
   --color-bg-canvas: var(--ref-color-navy-900);
   --color-bg-surface: var(--ref-color-navy-800);
@@ -47,44 +159,107 @@
   --color-state-danger: var(--ref-color-danger-500);
   --color-state-info: var(--ref-color-info-500);
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
-
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  /* Trend direction — neutral palette (directional, not evaluative) */
+  --color-trend-up: var(--ref-color-info-500);
+  --color-trend-down: var(--ref-color-grey-400);
+  --color-trend-flat: var(--ref-color-grey-500);
+  --color-phase-primary: var(--ref-color-brand-500);
+  --color-phase-secondary: var(--ref-color-phase-secondary);
+  --color-phase-all-through: var(--ref-color-phase-all-through);
+  --color-phase-default: var(--ref-color-phase-default);
+  --marker-glow: rgba(168, 85, 247, 0.4);
+  --marker-glow-active: rgba(168, 85, 247, 0.55);
 
   --elevation-sm: 0 10px 24px rgba(1, 4, 15, 0.32);
   --elevation-md: 0 24px 56px rgba(1, 4, 15, 0.42);
   --elevation-lg: 0 32px 72px rgba(1, 4, 15, 0.5);
 
-  --motion-fast: 120ms;
-  --motion-base: 180ms;
-  --motion-slow: 260ms;
+  --panel-surface-neutral: rgba(15, 15, 20, 0.72);
+  --panel-surface-neutral-border: rgba(255, 255, 255, 0.10);
 
-  --z-base: 1;
-  --z-nav: 10;
-  --z-popover: 30;
-  --z-modal: 40;
-  --z-toast: 50;
+  --section-divider: 1px solid var(--ref-color-border-subtle);
 
-  --button-height: 44px;
-  --button-height-sm: 36px;
-  --button-padding-inline: var(--space-4);
-  --button-font-weight: 600;
+  /* Scroll shadows */
+  --scroll-shadow-size: 32px;
+  --scroll-shadow-top: linear-gradient(
+    to bottom,
+    rgba(15, 15, 20, 0.92) 0%,
+    transparent 100%
+  );
+  --scroll-shadow-bottom: linear-gradient(
+    to top,
+    rgba(15, 15, 20, 0.92) 0%,
+    transparent 100%
+  );
+}
 
-  --input-height: 44px;
-  --input-padding-inline: var(--space-3);
+/* ================================================================== */
+/* Light theme                                                          */
+/* ================================================================== */
 
-  --panel-blur: 18px;
+[data-theme="light"] {
+  --ref-color-border-subtle: rgba(0, 0, 0, 0.06);
+  --ref-color-border-default: rgba(0, 0, 0, 0.1);
+  --ref-color-border-strong: rgba(0, 0, 0, 0.16);
+
+  /* Map chrome – dark-on-light palette */
+  --map-label-primary: rgba(0, 0, 0, 0.82);
+  --map-label-secondary: rgba(0, 0, 0, 0.58);
+  --map-label-tertiary: rgba(0, 0, 0, 0.40);
+  --map-label-muted: rgba(0, 0, 0, 0.25);
+  --map-label-halo: rgba(255, 255, 255, 0.88);
+  --map-surface-water: #b8d4e8;
+  --map-surface-land: #f1f5f9;
+  --map-line-road: rgba(0, 0, 0, 0.10);
+  --map-line-boundary: rgba(0, 0, 0, 0.08);
+
+  --color-bg-canvas: var(--ref-color-grey-50);
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: var(--ref-color-grey-100);
+  --color-text-primary: var(--ref-color-grey-900);
+  --color-text-secondary: var(--ref-color-grey-600);
+  --color-text-disabled: var(--ref-color-grey-400);
+  --color-border-default: var(--ref-color-border-default);
+  --color-border-subtle: var(--ref-color-border-subtle);
+  --color-action-primary: var(--ref-color-brand-600);
+  --color-action-primary-hover: var(--ref-color-brand-500);
+  --color-action-primary-solid: var(--ref-color-brand-600);
+  --color-action-primary-solid-hover: var(--ref-color-brand-500);
+  --color-action-secondary: var(--ref-color-accent-500);
+  --color-state-success: var(--ref-color-success-500);
+  --color-state-warning: var(--ref-color-warning-500);
+  --color-state-danger: var(--ref-color-danger-500);
+  --color-state-info: var(--ref-color-info-500);
+
+  --color-trend-up: var(--ref-color-info-500);
+  --color-trend-down: var(--ref-color-grey-500);
+  --color-trend-flat: var(--ref-color-grey-400);
+  --color-phase-primary: var(--ref-color-brand-600);
+  --color-phase-secondary: var(--ref-color-phase-secondary);
+  --color-phase-all-through: var(--ref-color-phase-all-through);
+  --color-phase-default: var(--ref-color-phase-default);
+  --marker-glow: rgba(168, 85, 247, 0.25);
+  --marker-glow-active: rgba(168, 85, 247, 0.40);
+
+  --elevation-sm: 0 10px 24px rgba(0, 0, 0, 0.06);
+  --elevation-md: 0 24px 56px rgba(0, 0, 0, 0.10);
+  --elevation-lg: 0 32px 72px rgba(0, 0, 0, 0.14);
+
+  --panel-surface-neutral: rgba(255, 255, 255, 0.82);
+  --panel-surface-neutral-border: rgba(0, 0, 0, 0.08);
+
+  --section-divider: 1px solid var(--ref-color-border-subtle);
+
+  /* Scroll shadows */
+  --scroll-shadow-size: 32px;
+  --scroll-shadow-top: linear-gradient(
+    to bottom,
+    rgba(248, 250, 252, 0.92) 0%,
+    transparent 100%
+  );
+  --scroll-shadow-bottom: linear-gradient(
+    to top,
+    rgba(248, 250, 252, 0.92) 0%,
+    transparent 100%
+  );
 }

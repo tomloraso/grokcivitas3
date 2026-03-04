@@ -18,6 +18,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 7. **Enforce inward imports.** Domain has zero outward dependencies; infrastructure depends on application/domain ports; entrypoints (`api`, `cli`) stay thin and bootstrap handles composition.
 8. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
 9. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
+10. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved.
 
 ## Agent guides
 
@@ -29,6 +30,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 | Testing | [.agents/testing.md](.agents/testing.md) |
 | Repo structure | [.agents/repo-structure.md](.agents/repo-structure.md) |
 | Documentation | [.agents/documentation.md](.agents/documentation.md) |
+| Pipelines | [.agents/pipelines.md](.agents/pipelines.md) |
 
 Use native planning workflows for large features/refactors.
 

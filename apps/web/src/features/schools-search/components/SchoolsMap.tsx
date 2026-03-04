@@ -1,15 +1,29 @@
 import { useMemo } from "react";
 
-import { MapPanel, type MapMarker } from "../../../components/maps/MapPanel";
+import { type MapMarker } from "../../../components/maps/MapPanel";
+import { MapPanelChromeless } from "../../../components/maps/MapPanelChromeless";
 import type { SchoolsSearchStatus, SchoolSearchListItem } from "../types";
 
 interface SchoolsMapProps {
   status: SchoolsSearchStatus;
   center: { lat: number; lng: number } | null;
+  radiusMiles?: number;
   schools: SchoolSearchListItem[];
+  activeSchoolId?: string | null;
+  onSchoolHover?: (schoolId: string | null) => void;
+  /** When true, the map fits the bounds of all markers instead of centering on a point + radius. */
+  fitBounds?: boolean;
 }
 
-export function SchoolsMap({ status, center, schools }: SchoolsMapProps): JSX.Element {
+export function SchoolsMap({
+  status,
+  center,
+  radiusMiles,
+  schools,
+  activeSchoolId,
+  onSchoolHover,
+  fitBounds,
+}: SchoolsMapProps): JSX.Element {
   const markers = useMemo<MapMarker[]>(
     () =>
       schools.map((school) => ({
@@ -17,12 +31,34 @@ export function SchoolsMap({ status, center, schools }: SchoolsMapProps): JSX.El
         lat: school.lat,
         lng: school.lng,
         label: school.name,
-        distanceMiles: school.distance_miles
+        distanceMiles: school.distance_miles,
+        phase: school.phase ?? undefined,
+        ofstedRating: undefined,
+        isHovered: activeSchoolId === school.urn
       })),
-    [schools]
+    [activeSchoolId, schools]
   );
 
-  const mapCenter = status === "success" || status === "empty" ? center : null;
+  const mapCenter = status === "idle" ? null : center;
 
-  return <MapPanel title="Nearby schools map" center={mapCenter} markers={markers} />;
+  return (
+    <div className="relative h-full w-full">
+      <MapPanelChromeless
+        center={mapCenter}
+        radiusMiles={radiusMiles}
+        markers={markers}
+        activeMarkerId={activeSchoolId}
+        onMarkerHover={onSchoolHover}
+        fitBounds={fitBounds}
+      />
+      {status === "loading" && (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+          aria-hidden
+        >
+          <div className="h-16 w-16 animate-ping rounded-full border-2 border-brand/40" />
+        </div>
+      )}
+    </div>
+  );
 }

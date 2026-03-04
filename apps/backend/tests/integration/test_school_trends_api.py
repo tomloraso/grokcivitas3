@@ -6,6 +6,7 @@ from civitas.api.dependencies import get_school_trends_use_case
 from civitas.api.main import app
 from civitas.application.school_trends.dto import (
     SchoolTrendPointDto,
+    SchoolTrendsCompletenessDto,
     SchoolTrendsHistoryQualityDto,
     SchoolTrendsResponseDto,
     SchoolTrendsSeriesDto,
@@ -88,6 +89,28 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                first_language_english_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=90.6,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                first_language_unclassified_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+            ),
+            completeness=SchoolTrendsCompletenessDto(
+                status="partial",
+                reason_code="insufficient_years_published",
+                last_updated_at=None,
+                years_available=("2024/25",),
             ),
         )
     )
@@ -137,6 +160,28 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     "direction": None,
                 }
             ],
+            "first_language_english_pct": [
+                {
+                    "academic_year": "2024/25",
+                    "value": 90.6,
+                    "delta": None,
+                    "direction": None,
+                }
+            ],
+            "first_language_unclassified_pct": [
+                {
+                    "academic_year": "2024/25",
+                    "value": 1.0,
+                    "delta": None,
+                    "direction": None,
+                }
+            ],
+        },
+        "completeness": {
+            "status": "partial",
+            "reason_code": "insufficient_years_published",
+            "last_updated_at": None,
+            "years_available": ["2024/25"],
         },
     }
     assert fake_use_case.calls == ["123456"]

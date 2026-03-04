@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -45,7 +47,10 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                                 disadvantaged_pct,
                                 sen_pct,
                                 ehcp_pct,
-                                eal_pct
+                                eal_pct,
+                                first_language_english_pct,
+                                first_language_unclassified_pct,
+                                updated_at
                             FROM school_demographics_yearly
                             WHERE urn = :urn
                             ORDER BY
@@ -72,9 +77,16 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                     sen_pct=_to_optional_float(row["sen_pct"]),
                     ehcp_pct=_to_optional_float(row["ehcp_pct"]),
                     eal_pct=_to_optional_float(row["eal_pct"]),
+                    first_language_english_pct=_to_optional_float(
+                        row["first_language_english_pct"]
+                    ),
+                    first_language_unclassified_pct=_to_optional_float(
+                        row["first_language_unclassified_pct"]
+                    ),
                 )
                 for row in rows
             ),
+            latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
         )
 
 
@@ -82,3 +94,10 @@ def _to_optional_float(value: object) -> float | None:
     if value is None:
         return None
     return float(str(value))
+
+
+def _max_optional_updated_at(values: tuple[object, ...]) -> datetime | None:
+    non_null_values = [value for value in values if isinstance(value, datetime)]
+    if len(non_null_values) == 0:
+        return None
+    return max(non_null_values)

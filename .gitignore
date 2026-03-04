@@ -32,5 +32,6 @@ apps/web/coverage/
 playwright-report/
 test-results/
 
-# Local pipeline artifacts
+# Local pipeline artifacts (bronze CSVs at repo root and apps/backend)
 data/
+!apps/web/src/components/data/

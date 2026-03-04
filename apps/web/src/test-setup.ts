@@ -1,9 +1,14 @@
 import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
 import "vitest-axe/extend-expect";
 import * as axeMatchers from "vitest-axe/matchers";
-import { expect } from "vitest";
+import { afterEach, expect } from "vitest";
 
 expect.extend(axeMatchers);
+
+afterEach(() => {
+  cleanup();
+});
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -28,6 +33,18 @@ class ResizeObserverMock {
 }
 
 window.ResizeObserver = ResizeObserverMock;
+
+class IntersectionObserverMock implements IntersectionObserver {
+  readonly root: Element | Document | null = null;
+  readonly rootMargin: string = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] { return []; }
+}
+
+window.IntersectionObserver = IntersectionObserverMock as unknown as typeof IntersectionObserver;
 
 Element.prototype.scrollIntoView = () => undefined;
 Element.prototype.hasPointerCapture = () => false;

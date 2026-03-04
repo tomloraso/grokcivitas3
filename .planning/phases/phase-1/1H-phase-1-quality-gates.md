@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Draft
+- Status: Completed
 - Last updated: 2026-03-02
 - Depends on:
   - `.planning/phases/phase-1/1A-source-contract-gate.md`
@@ -15,6 +15,29 @@
   - `.planning/phases/phase-1/1G-web-school-profile-page.md`
   - `.agents/tooling.md`
   - `.agents/testing.md`
+
+## Tracking Update (2026-03-02)
+
+- Completed Phase 1H quality gate verification and sign-off sweep.
+- Gate 0 source contract verification: passed.
+  - `uv run --project apps/backend python tools/scripts/verify_phase1_sources.py`
+- Gate 1 backend verification: passed.
+  - `uv run --project apps/backend pytest`
+  - `uv run --project apps/backend pytest apps/backend/tests/unit/test_import_boundaries.py -q`
+- Gate 2 contract sync verification: passed.
+  - `uv run --project apps/backend python tools/scripts/export_openapi.py`
+  - `cd apps/web && npm run generate:types`
+- Gate 3 web quality verification: passed.
+  - `cd apps/web && npm run lint`
+  - `cd apps/web && npm run typecheck`
+  - `cd apps/web && npm run test`
+  - `cd apps/web && npm run build`
+  - `cd apps/web && npm run budget:check`
+  - `cd apps/web && npm run test:e2e`
+- Gate 4 repository golden path: passed.
+  - `make lint`
+  - `make test`
+- Sign-off outcome: all mandatory Phase 1 gates are green in a consistent state; Phase 1 is approved for closeout.
 
 ## Objective
 
@@ -73,6 +96,7 @@ Required commands:
 - `cd apps/web && npm run test`
 - `cd apps/web && npm run build`
 - `cd apps/web && npm run budget:check`
+- `cd apps/web && npm run test:e2e`
 
 ## Gate 4 - Repository Golden Path
 

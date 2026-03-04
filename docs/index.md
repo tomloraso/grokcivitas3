@@ -13,4 +13,5 @@
 9. [Testing Strategy](./architecture/testing-strategy.md)
 10. [ADR 0001: Architecture](./adr/0001-architecture.md)
 11. [Local Development Runbook](./runbooks/local-development.md)
+12. [Data Pipeline Runbook](./runbooks/pipelines.md)
 

@@ -20,7 +20,13 @@ const config: Config = {
         success: "var(--color-state-success)",
         warning: "var(--color-state-warning)",
         danger: "var(--color-state-danger)",
-        info: "var(--color-state-info)"
+        info: "var(--color-state-info)",
+        "trend-up": "var(--color-trend-up)",
+        "trend-down": "var(--color-trend-down)",
+        "trend-flat": "var(--color-trend-flat)",
+        "map-label": "var(--map-label-secondary)",
+        "map-label-muted": "var(--map-label-muted)",
+        "map-water": "var(--map-surface-water)"
       },
       fontFamily: {
         display: ["var(--font-family-display)", "sans-serif"],
@@ -71,6 +77,40 @@ const config: Config = {
         lg: "1024px",
         xl: "1280px",
         "2xl": "1536px"
+      },
+      keyframes: {
+        "fade-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" }
+        },
+        "fade-out": {
+          from: { opacity: "1" },
+          to: { opacity: "0" }
+        },
+        "slide-in-right": {
+          from: { transform: "translateX(100%)" },
+          to: { transform: "translateX(0)" }
+        },
+        "slide-out-right": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(100%)" }
+        },
+        "slide-in-left": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(0)" }
+        },
+        "slide-out-left": {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-100%)" }
+        }
+      },
+      animation: {
+        "fade-in": "fade-in var(--motion-slow) ease-out",
+        "fade-out": "fade-out var(--motion-slow) ease-in",
+        "slide-in-right": "slide-in-right var(--motion-slow) ease-out",
+        "slide-out-right": "slide-out-right var(--motion-slow) ease-in",
+        "slide-in-left": "slide-in-left var(--motion-slow) ease-out",
+        "slide-out-left": "slide-out-left var(--motion-slow) ease-in"
       }
     }
   },

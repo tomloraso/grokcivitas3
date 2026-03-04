@@ -40,6 +40,7 @@ def test_search_schools_uses_default_radius_and_normalized_postcode() -> None:
             postcode="SW1A 1AA",
             lat=51.501009,
             lng=-0.141588,
+            lsoa_code="E01004736",
             lsoa="Westminster 018B",
             admin_district="Westminster",
         )
@@ -64,6 +65,7 @@ def test_search_schools_rejects_invalid_radius() -> None:
             postcode="SW1A 1AA",
             lat=51.501009,
             lng=-0.141588,
+            lsoa_code=None,
             lsoa=None,
             admin_district=None,
         )
@@ -90,6 +92,7 @@ def test_search_schools_returns_deterministic_distance_ordering() -> None:
             postcode="SW1A 1AA",
             lat=51.501009,
             lng=-0.141588,
+            lsoa_code=None,
             lsoa=None,
             admin_district=None,
         )

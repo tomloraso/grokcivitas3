@@ -16,22 +16,10 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import gias as gias_contract
 
-REQUIRED_GIAS_HEADERS: tuple[str, ...] = (
-    "URN",
-    "EstablishmentName",
-    "TypeOfEstablishment (name)",
-    "PhaseOfEducation (name)",
-    "EstablishmentStatus (name)",
-    "Postcode",
-    "Easting",
-    "Northing",
-    "OpenDate",
-    "CloseDate",
-    "NumberOfPupils",
-    "SchoolCapacity",
-)
+REQUIRED_GIAS_HEADERS = gias_contract.REQUIRED_HEADERS
 
 NUMERIC_SENTINELS = {"", "SUPP", "NE", "N/A", "NA", "X"}
 EASTING_RANGE = (0.0, 700000.0)
@@ -45,6 +33,7 @@ CSV_NAME_SUBSTRING = "edubasealldata"
 # the ASCII/UTF-8 range.  cp1252 is a strict superset of ASCII so test
 # fixtures authored in plain ASCII are decoded correctly.
 GIAS_CSV_ENCODING = "cp1252"
+GIAS_NORMALIZATION_CONTRACT_VERSION = gias_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -64,78 +53,31 @@ class GiasStagedRow:
 
 
 def normalize_gias_postcode(raw_postcode: str | None) -> str | None:
-    if raw_postcode is None:
-        return None
-
-    compact = "".join(raw_postcode.strip().upper().split())
-    if not compact:
-        return None
-    if len(compact) <= 3:
-        return compact
-    return f"{compact[:-3]} {compact[-3:]}"
+    return gias_contract.normalize_postcode(raw_postcode)
 
 
 def validate_gias_headers(headers: Sequence[str]) -> None:
-    header_set = set(headers)
-    missing = [header for header in REQUIRED_GIAS_HEADERS if header not in header_set]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(f"GIAS schema mismatch; missing required headers: {missing_fields}")
+    gias_contract.validate_headers(headers)
 
 
 def normalize_gias_row(raw_row: Mapping[str, str]) -> tuple[GiasStagedRow | None, str | None]:
-    urn = raw_row["URN"].strip()
-    if not urn:
-        return None, "missing_urn"
-
-    easting_raw = raw_row["Easting"].strip()
-    northing_raw = raw_row["Northing"].strip()
-    if not easting_raw or not northing_raw:
-        return None, "missing_coordinates"
-
-    try:
-        easting = float(easting_raw)
-        northing = float(northing_raw)
-    except ValueError:
-        return None, "invalid_coordinates"
-
-    if not _is_coordinate_in_range(easting, northing):
-        return None, "invalid_coordinate_range"
-
-    try:
-        open_date = _parse_optional_date(raw_row["OpenDate"])
-    except ValueError:
-        return None, "invalid_open_date"
-
-    try:
-        close_date = _parse_optional_date(raw_row["CloseDate"])
-    except ValueError:
-        return None, "invalid_close_date"
-
-    try:
-        pupil_count = _parse_optional_integer(raw_row["NumberOfPupils"])
-    except ValueError:
-        return None, "invalid_pupil_count"
-
-    try:
-        capacity = _parse_optional_integer(raw_row["SchoolCapacity"])
-    except ValueError:
-        return None, "invalid_capacity"
-
+    normalized_row, rejection = gias_contract.normalize_row(raw_row)
+    if normalized_row is None:
+        return None, rejection
     return (
         GiasStagedRow(
-            urn=urn,
-            name=raw_row["EstablishmentName"].strip(),
-            phase=_strip_or_none(raw_row["PhaseOfEducation (name)"]),
-            school_type=_strip_or_none(raw_row["TypeOfEstablishment (name)"]),
-            status=_strip_or_none(raw_row["EstablishmentStatus (name)"]),
-            postcode=normalize_gias_postcode(raw_row["Postcode"]),
-            easting=easting,
-            northing=northing,
-            open_date=open_date,
-            close_date=close_date,
-            pupil_count=pupil_count,
-            capacity=capacity,
+            urn=normalized_row["urn"],
+            name=normalized_row["name"],
+            phase=normalized_row["phase"],
+            school_type=normalized_row["school_type"],
+            status=normalized_row["status"],
+            postcode=normalized_row["postcode"],
+            easting=normalized_row["easting"],
+            northing=normalized_row["northing"],
+            open_date=normalized_row["open_date"],
+            close_date=normalized_row["close_date"],
+            pupil_count=normalized_row["pupil_count"],
+            capacity=normalized_row["capacity"],
         ),
         None,
     )
@@ -224,88 +166,96 @@ class GiasPipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            urn,
-                            name,
-                            phase,
-                            type,
-                            status,
-                            postcode,
-                            easting,
-                            northing,
-                            open_date,
-                            close_date,
-                            pupil_count,
-                            capacity
-                        ) VALUES (
-                            :urn,
-                            :name,
-                            :phase,
-                            :type,
-                            :status,
-                            :postcode,
-                            :easting,
-                            :northing,
-                            :open_date,
-                            :close_date,
-                            :pupil_count,
-                            :capacity
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "urn": row.urn,
-                            "name": row.name,
-                            "phase": row.phase,
-                            "type": row.school_type,
-                            "status": row.status,
-                            "postcode": row.postcode,
-                            "easting": row.easting,
-                            "northing": row.northing,
-                            "open_date": row.open_date,
-                            "close_date": row.close_date,
-                            "pupil_count": row.pupil_count,
-                            "capacity": row.capacity,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        urn,
+                        name,
+                        phase,
+                        type,
+                        status,
+                        postcode,
+                        easting,
+                        northing,
+                        open_date,
+                        close_date,
+                        pupil_count,
+                        capacity
+                    ) VALUES (
+                        :urn,
+                        :name,
+                        :phase,
+                        :type,
+                        :status,
+                        :postcode,
+                        :easting,
+                        :northing,
+                        :open_date,
+                        :close_date,
+                        :pupil_count,
+                        :capacity
+                    )
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "urn": row.urn,
+                                "name": row.name,
+                                "phase": row.phase,
+                                "type": row.school_type,
+                                "status": row.status,
+                                "postcode": row.postcode,
+                                "easting": row.easting,
+                                "northing": row.northing,
+                                "open_date": row.open_date,
+                                "close_date": row.close_date,
+                                "pupil_count": row.pupil_count,
+                                "capacity": row.capacity,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=GIAS_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)
@@ -385,6 +335,7 @@ class GiasPipeline:
         metadata = {
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
             "source_reference": source_reference,
+            "normalization_contract_version": GIAS_NORMALIZATION_CONTRACT_VERSION,
             "sha256": _sha256_file(target_csv),
             "rows": row_count,
         }
@@ -420,9 +371,12 @@ def _parse_optional_date(raw_value: str | None) -> date | None:
 
     supported_formats = (
         "%d/%m/%Y",
+        "%d-%m-%Y",
         "%Y-%m-%d",
         "%d/%m/%Y %H:%M:%S",
         "%d/%m/%Y %H:%M",
+        "%d-%m-%Y %H:%M:%S",
+        "%d-%m-%Y %H:%M",
     )
     for date_format in supported_formats:
         try:

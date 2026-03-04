@@ -12,3 +12,10 @@ class SchoolSearchRepository(Protocol):
         center_lng: float,
         radius_miles: float,
     ) -> Sequence[SchoolSearchResult]: ...
+
+    def search_by_name(
+        self,
+        *,
+        name: str,
+        limit: int,
+    ) -> Sequence[SchoolSearchResult]: ...

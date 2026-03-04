@@ -56,6 +56,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schools/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Schools By Name */
+        get: operations["search_schools_by_name_api_v1_schools_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/schools/{urn}": {
         parameters: {
             query?: never;
@@ -98,6 +115,67 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** SchoolNameSearchResponse */
+        SchoolNameSearchResponse: {
+            /** Count */
+            count: number;
+            /** Schools */
+            schools: components["schemas"]["SchoolSearchItemResponse"][];
+        };
+        /** SchoolProfileAreaContextCoverageResponse */
+        SchoolProfileAreaContextCoverageResponse: {
+            /** Has Deprivation */
+            has_deprivation: boolean;
+            /** Has Crime */
+            has_crime: boolean;
+            /** Crime Months Available */
+            crime_months_available: number;
+        };
+        /** SchoolProfileAreaContextResponse */
+        SchoolProfileAreaContextResponse: {
+            deprivation: components["schemas"]["SchoolProfileAreaDeprivationResponse"] | null;
+            crime: components["schemas"]["SchoolProfileAreaCrimeResponse"] | null;
+            coverage: components["schemas"]["SchoolProfileAreaContextCoverageResponse"];
+        };
+        /** SchoolProfileAreaCrimeCategoryResponse */
+        SchoolProfileAreaCrimeCategoryResponse: {
+            /** Category */
+            category: string;
+            /** Incident Count */
+            incident_count: number;
+        };
+        /** SchoolProfileAreaCrimeResponse */
+        SchoolProfileAreaCrimeResponse: {
+            /** Radius Miles */
+            radius_miles: number;
+            /** Latest Month */
+            latest_month: string;
+            /** Total Incidents */
+            total_incidents: number;
+            /** Categories */
+            categories: components["schemas"]["SchoolProfileAreaCrimeCategoryResponse"][];
+        };
+        /** SchoolProfileAreaDeprivationResponse */
+        SchoolProfileAreaDeprivationResponse: {
+            /** Lsoa Code */
+            lsoa_code: string;
+            /** Imd Decile */
+            imd_decile: number;
+            /** Idaci Score */
+            idaci_score: number;
+            /** Idaci Decile */
+            idaci_decile: number;
+            /** Source Release */
+            source_release: string;
+        };
+        /** SchoolProfileCompletenessResponse */
+        SchoolProfileCompletenessResponse: {
+            demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_crime: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
         };
         /** SchoolProfileDemographicsCoverageResponse */
         SchoolProfileDemographicsCoverageResponse: {
@@ -143,11 +221,51 @@ export interface components {
             /** Ungraded Outcome */
             ungraded_outcome: string | null;
         };
+        /** SchoolProfileOfstedTimelineCoverageResponse */
+        SchoolProfileOfstedTimelineCoverageResponse: {
+            /** Is Partial History */
+            is_partial_history: boolean;
+            /** Earliest Event Date */
+            earliest_event_date: string | null;
+            /** Latest Event Date */
+            latest_event_date: string | null;
+            /** Events Count */
+            events_count: number;
+        };
+        /** SchoolProfileOfstedTimelineEventResponse */
+        SchoolProfileOfstedTimelineEventResponse: {
+            /** Inspection Number */
+            inspection_number: string;
+            /**
+             * Inspection Start Date
+             * Format: date
+             */
+            inspection_start_date: string;
+            /** Publication Date */
+            publication_date: string | null;
+            /** Inspection Type */
+            inspection_type: string | null;
+            /** Overall Effectiveness Label */
+            overall_effectiveness_label: string | null;
+            /** Headline Outcome Text */
+            headline_outcome_text: string | null;
+            /** Category Of Concern */
+            category_of_concern: string | null;
+        };
+        /** SchoolProfileOfstedTimelineResponse */
+        SchoolProfileOfstedTimelineResponse: {
+            /** Events */
+            events: components["schemas"]["SchoolProfileOfstedTimelineEventResponse"][];
+            coverage: components["schemas"]["SchoolProfileOfstedTimelineCoverageResponse"];
+        };
         /** SchoolProfileResponse */
         SchoolProfileResponse: {
             school: components["schemas"]["SchoolProfileSchoolResponse"];
             demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
+            ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
+            area_context: components["schemas"]["SchoolProfileAreaContextResponse"];
+            completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
         };
         /** SchoolProfileSchoolResponse */
         SchoolProfileSchoolResponse: {
@@ -167,6 +285,20 @@ export interface components {
             lat: number;
             /** Lng */
             lng: number;
+        };
+        /** SchoolProfileSectionCompletenessResponse */
+        SchoolProfileSectionCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
         };
         /** SchoolSearchItemResponse */
         SchoolSearchItemResponse: {
@@ -198,6 +330,20 @@ export interface components {
             /** Direction */
             direction: ("up" | "down" | "flat") | null;
         };
+        /** SchoolTrendsCompletenessResponse */
+        SchoolTrendsCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
+        };
         /** SchoolTrendsHistoryQualityResponse */
         SchoolTrendsHistoryQualityResponse: {
             /** Is Partial History */
@@ -215,6 +361,7 @@ export interface components {
             years_available: string[];
             history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
             series: components["schemas"]["SchoolTrendsSeriesResponse"];
+            completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
         };
         /** SchoolTrendsSeriesResponse */
         SchoolTrendsSeriesResponse: {
@@ -226,6 +373,10 @@ export interface components {
             ehcp_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Eal Pct */
             eal_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language English Pct */
+            first_language_english_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {
@@ -417,6 +568,44 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    search_schools_by_name_api_v1_schools_search_get: {
+        parameters: {
+            query: {
+                name: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolNameSearchResponse"];
+                };
+            };
+            /** @description Invalid name search parameter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

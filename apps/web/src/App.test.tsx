@@ -1,189 +1,109 @@
-import { screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
-import { App } from "./App";
-import { searchSchools } from "./api/client";
-import type { SchoolsSearchResponse } from "./api/types";
 import { runA11yAudit } from "./test/accessibility";
-import { renderWithProviders } from "./test/render";
+import { ThemeProvider } from "./app/providers/ThemeProvider";
 
-vi.mock("./api/client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("./api/client")>();
-  return {
-    ...actual,
-    searchSchools: vi.fn()
-  };
-});
-
-vi.mock("./components/maps/MapPanel", () => ({
-  MapPanel: ({ title, markers }: { title: string; markers: Array<{ id: string }> }) => (
-    <div data-testid="map-panel-mock">
-      {title}: {markers.length} markers
-    </div>
+vi.mock("./components/maps/MapPanelChromeless", () => ({
+  MapPanelChromeless: ({ markers }: { markers: Array<{ id: string }> }) => (
+    <div data-testid="map-panel-mock">Chromeless map: {markers.length} markers</div>
   )
 }));
 
-const searchSchoolsMock = vi.mocked(searchSchools);
+const routeModulesPromise = Promise.all([
+  import("./app/RootLayout"),
+  import("./features/schools-search/SchoolsSearchFeature"),
+  import("./pages/NotFoundPage")
+]);
 
-const successfulSearchResponse: SchoolsSearchResponse = {
-  query: {
-    postcode: "SW1A 1AA",
-    radius_miles: 5
-  },
-  center: {
-    lat: 51.501009,
-    lng: -0.141588
-  },
-  count: 2,
-  schools: [
-    {
-      urn: "100001",
-      name: "Camden Bridge Primary School",
-      type: "Community school",
-      phase: "Primary",
-      postcode: "NW1 8NH",
-      lat: 51.5424,
-      lng: -0.1418,
-      distance_miles: 0.52
-    },
-    {
-      urn: "100002",
-      name: "Alden Civic Academy",
-      type: "Academy sponsor led",
-      phase: "Secondary",
-      postcode: "NW1 5TX",
-      lat: 51.5357,
-      lng: -0.1299,
-      distance_miles: 1.12
-    }
-  ]
-};
+async function renderAppAtRoute(initialEntry = "/") {
+  const [rootLayoutModule, schoolsSearchModule, notFoundModule] = await routeModulesPromise;
+  const RootLayout = rootLayoutModule.RootLayout;
+  const SchoolsSearchFeature = schoolsSearchModule.SchoolsSearchFeature;
+  const NotFoundPage = notFoundModule.NotFoundPage;
+
+  const router = createMemoryRouter(
+    [
+      {
+        element: <RootLayout />,
+        children: [
+          { index: true, element: <SchoolsSearchFeature /> },
+          {
+            path: "schools/:urn",
+            element: <div data-testid="profile-placeholder">Profile for URN</div>
+          },
+          { path: "*", element: <NotFoundPage /> }
+        ]
+      }
+    ],
+    { initialEntries: [initialEntry] }
+  );
+
+  return render(<ThemeProvider><RouterProvider router={router} /></ThemeProvider>);
+}
 
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders the schools-search shell and baseline controls", () => {
-    renderWithProviders(<App />);
+  it("renders the schools-search shell and baseline controls", async () => {
+    await renderAppAtRoute("/");
 
-    expect(screen.getByRole("heading", { name: "Civitas Schools Discovery" })).toBeInTheDocument();
-    expect(screen.getByLabelText(/Postcode/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Search radius/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Find schools near you" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /search/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search schools" })).toBeInTheDocument();
-    expect(screen.getByText("Search for nearby schools by postcode to load results.")).toBeInTheDocument();
-    expect(screen.getByTestId("map-panel-mock")).toHaveTextContent("Nearby schools map: 0 markers");
+    expect(screen.getByText("Search for nearby schools by postcode or name to load results.")).toBeInTheDocument();
+    expect(screen.getByTestId("map-panel-mock")).toHaveTextContent("Chromeless map: 0 markers");
+  }, 10000);
+
+  it("renders site header with Civitas brand on all routes", async () => {
+    await renderAppAtRoute("/");
+
+    expect(screen.getAllByLabelText("Civitas - return to home").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("CIVITAS").length).toBeGreaterThan(0);
   });
 
-  it("validates postcode input before submitting search", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<App />);
+  it("hides site footer on the search/map page", async () => {
+    await renderAppAtRoute("/");
 
-    await user.clear(screen.getByLabelText(/Postcode/i));
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
-
-    expect(screen.getByText("Enter a UK postcode to search.")).toBeInTheDocument();
-    expect(searchSchoolsMock).not.toHaveBeenCalled();
+    expect(screen.queryByRole("contentinfo")).not.toBeInTheDocument();
   });
 
-  it("submits postcode search and renders returned schools", async () => {
-    const user = userEvent.setup();
-    searchSchoolsMock.mockResolvedValue(successfulSearchResponse);
+  it("renders site footer on non-map routes", async () => {
+    await renderAppAtRoute("/schools/100001");
 
-    renderWithProviders(<App />);
-
-    await user.clear(screen.getByLabelText(/Postcode/i));
-    await user.type(screen.getByLabelText(/Postcode/i), "SW1A 1AA");
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
-
-    await waitFor(() =>
-      expect(searchSchoolsMock).toHaveBeenCalledWith({
-        postcode: "SW1A 1AA",
-        radius: 5
-      })
-    );
-
-    expect(await screen.findByText("Camden Bridge Primary School")).toBeInTheDocument();
-    expect(screen.getByText("Alden Civic Academy")).toBeInTheDocument();
-    expect(screen.getByText("Nearby schools map: 2 markers")).toBeInTheDocument();
+    expect(screen.getByRole("contentinfo")).toBeInTheDocument();
+    expect(screen.getByText(/CIVITAS. All data sourced/)).toBeInTheDocument();
   });
 
-  it("shows loading and empty states for a valid zero-result search", async () => {
+  it("skip-to-content link is the first focusable element", async () => {
+    await renderAppAtRoute("/");
     const user = userEvent.setup();
-    let resolveSearch: (value: SchoolsSearchResponse) => void = () => undefined;
-    searchSchoolsMock.mockReturnValue(
-      new Promise<SchoolsSearchResponse>((resolve) => {
-        resolveSearch = resolve;
-      })
-    );
-
-    renderWithProviders(<App />);
-
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
-    expect(screen.getByRole("status", { name: "Loading content" })).toBeInTheDocument();
-
-    resolveSearch({
-      ...successfulSearchResponse,
-      count: 0,
-      schools: []
-    });
-
-    expect(await screen.findByText("No schools found")).toBeInTheDocument();
-    expect(
-      screen.getByText("Try a wider radius or a nearby postcode to broaden the search area.")
-    ).toBeInTheDocument();
-  });
-
-  it("shows recoverable error state when search fails", async () => {
-    const user = userEvent.setup();
-    searchSchoolsMock.mockRejectedValue(new Error("Request failed: 503"));
-
-    renderWithProviders(<App />);
-
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
-
-    expect(await screen.findByText("Search temporarily unavailable")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
-  });
-
-  it("supports keyboard focus and activation for form submission and retry controls", async () => {
-    const user = userEvent.setup();
-    searchSchoolsMock.mockRejectedValueOnce(new Error("Request failed: 503"));
-    searchSchoolsMock.mockResolvedValueOnce(successfulSearchResponse);
-
-    renderWithProviders(<App />);
 
     await user.tab();
-    const postcodeInput = screen.getByLabelText(/Postcode/i);
-    expect(postcodeInput).toHaveFocus();
+    const skipLink = screen.getByText("Skip to content");
+    expect(skipLink).toHaveFocus();
+    expect(skipLink).toHaveAttribute("href", "#main-content");
+  });
 
-    await user.clear(postcodeInput);
-    await user.type(postcodeInput, "SW1A 1AA");
+  it("renders 404 page for unknown routes", async () => {
+    await renderAppAtRoute("/unknown-path");
 
-    await user.tab();
-    expect(screen.getByLabelText(/Search radius/i)).toHaveFocus();
+    expect(screen.getByRole("heading", { name: "Page not found" })).toBeInTheDocument();
+    expect(screen.getByText("Back to search")).toBeInTheDocument();
+  });
 
-    await user.tab();
-    const submitButton = screen.getByRole("button", { name: "Search schools" });
-    expect(submitButton).toHaveFocus();
+  it("renders profile route for /schools/:urn", async () => {
+    await renderAppAtRoute("/schools/100001");
 
-    await user.keyboard("{Enter}");
-
-    const retryButton = await screen.findByRole("button", { name: "Try again" });
-    await user.tab();
-    expect(retryButton).toHaveFocus();
-
-    await user.keyboard("{Enter}");
-
-    await waitFor(() => {
-      expect(searchSchoolsMock).toHaveBeenCalledTimes(2);
-    });
-    expect(await screen.findByText("Camden Bridge Primary School")).toBeInTheDocument();
+    expect(screen.getByTestId("profile-placeholder")).toBeInTheDocument();
   });
 
   it("passes accessibility smoke checks", async () => {
-    const { container } = renderWithProviders(<App />);
+    const { container } = await renderAppAtRoute("/");
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();
   });

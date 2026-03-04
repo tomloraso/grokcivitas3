@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import request_validation_exception_handler
@@ -5,9 +7,17 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
 
+from civitas.api.contract_checks import validate_app_contracts
 from civitas.api.routes import router
 
-app = FastAPI(title="Civitas API", version="0.1.0")
+
+@asynccontextmanager
+async def app_lifespan(app: FastAPI):
+    validate_app_contracts(app)
+    yield
+
+
+app = FastAPI(title="Civitas API", version="0.1.0", lifespan=app_lifespan)
 app.include_router(router)
 
 

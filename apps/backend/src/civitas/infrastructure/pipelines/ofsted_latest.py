@@ -19,26 +19,15 @@ from typing import Mapping, Sequence
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
-from .base import PipelineRunContext, PipelineSource, StageResult
+from .base import PipelineRunContext, PipelineSource, StageResult, chunked
+from .contracts import ofsted_latest as ofsted_latest_contract
 
 OFSTED_LANDING_PAGE_URL = (
     "https://www.gov.uk/government/statistical-data-sets/"
     "monthly-management-information-ofsteds-school-inspections-outcomes"
 )
-REQUIRED_OFSTED_LATEST_HEADERS: tuple[str, ...] = (
-    "URN",
-    "Inspection start date",
-    "Publication date",
-    "Latest OEIF overall effectiveness",
-    "Ungraded inspection overall outcome",
-)
-OVERALL_EFFECTIVENESS_CODE_TO_LABEL: dict[str, str] = {
-    "1": "Outstanding",
-    "2": "Good",
-    "3": "Requires improvement",
-    "4": "Inadequate",
-    "Not judged": "Not judged",
-}
+REQUIRED_OFSTED_LATEST_HEADERS = ofsted_latest_contract.REQUIRED_HEADERS
+OVERALL_EFFECTIVENESS_CODE_TO_LABEL = ofsted_latest_contract.OVERALL_EFFECTIVENESS_CODE_TO_LABEL
 BRONZE_FILE_NAME = "latest_inspections.csv"
 _HREF_PATTERN = re.compile(r"""href=["']([^"']+)["']""", re.IGNORECASE)
 _ASSET_URL_PREFIX = "https://assets.publishing.service.gov.uk/"
@@ -60,6 +49,7 @@ _MONTH_ABBR_TO_NUMBER: dict[str, int] = {
     "nov": 11,
     "dec": 12,
 }
+OFSTED_LATEST_NORMALIZATION_CONTRACT_VERSION = ofsted_latest_contract.CONTRACT_VERSION
 
 
 @dataclass(frozen=True)
@@ -76,13 +66,7 @@ class OfstedLatestStagedRow:
 
 
 def validate_ofsted_latest_headers(headers: Sequence[str]) -> None:
-    header_set = set(headers)
-    missing = [header for header in REQUIRED_OFSTED_LATEST_HEADERS if header not in header_set]
-    if missing:
-        missing_fields = ", ".join(missing)
-        raise ValueError(
-            f"Ofsted latest schema mismatch; missing required headers: {missing_fields}"
-        )
+    ofsted_latest_contract.validate_headers(headers)
 
 
 def extract_latest_ofsted_asset_url(landing_page_html: str) -> str:
@@ -114,44 +98,24 @@ def normalize_ofsted_latest_row(
     source_asset_url: str,
     source_asset_month: str | None,
 ) -> tuple[OfstedLatestStagedRow | None, str | None]:
-    urn = raw_row["URN"].strip()
-    if not urn:
-        return None, "missing_urn"
-
-    try:
-        inspection_start_date = _parse_optional_date(raw_row["Inspection start date"])
-    except ValueError:
-        return None, "invalid_inspection_start_date"
-
-    try:
-        publication_date = _parse_optional_date(raw_row["Publication date"])
-    except ValueError:
-        return None, "invalid_publication_date"
-
-    overall_effectiveness_raw = _strip_or_none(raw_row["Latest OEIF overall effectiveness"])
-    overall_effectiveness_code: str | None = None
-    overall_effectiveness_label: str | None = None
-    is_graded = False
-
-    if overall_effectiveness_raw is not None:
-        normalized_code = _normalize_overall_effectiveness_code(overall_effectiveness_raw)
-        if normalized_code not in OVERALL_EFFECTIVENESS_CODE_TO_LABEL:
-            return None, "invalid_overall_effectiveness_code"
-        overall_effectiveness_code = normalized_code
-        overall_effectiveness_label = OVERALL_EFFECTIVENESS_CODE_TO_LABEL[normalized_code]
-        is_graded = normalized_code in {"1", "2", "3", "4"}
-
+    normalized_row, rejection = ofsted_latest_contract.normalize_row(
+        raw_row,
+        source_asset_url=source_asset_url,
+        source_asset_month=source_asset_month,
+    )
+    if normalized_row is None:
+        return None, rejection
     return (
         OfstedLatestStagedRow(
-            urn=urn,
-            inspection_start_date=inspection_start_date,
-            publication_date=publication_date,
-            overall_effectiveness_code=overall_effectiveness_code,
-            overall_effectiveness_label=overall_effectiveness_label,
-            is_graded=is_graded,
-            ungraded_outcome=_strip_or_none(raw_row["Ungraded inspection overall outcome"]),
-            source_asset_url=source_asset_url,
-            source_asset_month=source_asset_month,
+            urn=normalized_row["urn"],
+            inspection_start_date=normalized_row["inspection_start_date"],
+            publication_date=normalized_row["publication_date"],
+            overall_effectiveness_code=normalized_row["overall_effectiveness_code"],
+            overall_effectiveness_label=normalized_row["overall_effectiveness_label"],
+            is_graded=normalized_row["is_graded"],
+            ungraded_outcome=normalized_row["ungraded_outcome"],
+            source_asset_url=normalized_row["source_asset_url"],
+            source_asset_month=normalized_row["source_asset_month"],
         ),
         None,
     )
@@ -246,88 +210,96 @@ class OfstedLatestPipeline:
             )
 
             if staged_rows:
-                connection.execute(
-                    text(
-                        f"""
-                        INSERT INTO staging.{staging_table_name} (
-                            urn,
-                            inspection_start_date,
-                            publication_date,
-                            overall_effectiveness_code,
-                            overall_effectiveness_label,
-                            is_graded,
-                            ungraded_outcome,
-                            source_asset_url,
-                            source_asset_month
-                        ) VALUES (
-                            :urn,
-                            :inspection_start_date,
-                            :publication_date,
-                            :overall_effectiveness_code,
-                            :overall_effectiveness_label,
-                            :is_graded,
-                            :ungraded_outcome,
-                            :source_asset_url,
-                            :source_asset_month
-                        )
-                        ON CONFLICT (urn) DO UPDATE SET
-                            inspection_start_date = EXCLUDED.inspection_start_date,
-                            publication_date = EXCLUDED.publication_date,
-                            overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,
-                            overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
-                            is_graded = EXCLUDED.is_graded,
-                            ungraded_outcome = EXCLUDED.ungraded_outcome,
-                            source_asset_url = EXCLUDED.source_asset_url,
-                            source_asset_month = EXCLUDED.source_asset_month
-                        """
-                    ),
-                    [
-                        {
-                            "urn": row.urn,
-                            "inspection_start_date": row.inspection_start_date,
-                            "publication_date": row.publication_date,
-                            "overall_effectiveness_code": row.overall_effectiveness_code,
-                            "overall_effectiveness_label": row.overall_effectiveness_label,
-                            "is_graded": row.is_graded,
-                            "ungraded_outcome": row.ungraded_outcome,
-                            "source_asset_url": row.source_asset_url,
-                            "source_asset_month": row.source_asset_month,
-                        }
-                        for row in staged_rows
-                    ],
+                staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{staging_table_name} (
+                        urn,
+                        inspection_start_date,
+                        publication_date,
+                        overall_effectiveness_code,
+                        overall_effectiveness_label,
+                        is_graded,
+                        ungraded_outcome,
+                        source_asset_url,
+                        source_asset_month
+                    ) VALUES (
+                        :urn,
+                        :inspection_start_date,
+                        :publication_date,
+                        :overall_effectiveness_code,
+                        :overall_effectiveness_label,
+                        :is_graded,
+                        :ungraded_outcome,
+                        :source_asset_url,
+                        :source_asset_month
+                    )
+                    ON CONFLICT (urn) DO UPDATE SET
+                        inspection_start_date = EXCLUDED.inspection_start_date,
+                        publication_date = EXCLUDED.publication_date,
+                        overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,
+                        overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
+                        is_graded = EXCLUDED.is_graded,
+                        ungraded_outcome = EXCLUDED.ungraded_outcome,
+                        source_asset_url = EXCLUDED.source_asset_url,
+                        source_asset_month = EXCLUDED.source_asset_month
+                    """
                 )
+                for rows_chunk in chunked(staged_rows, context.stage_chunk_size):
+                    connection.execute(
+                        staged_insert,
+                        [
+                            {
+                                "urn": row.urn,
+                                "inspection_start_date": row.inspection_start_date,
+                                "publication_date": row.publication_date,
+                                "overall_effectiveness_code": row.overall_effectiveness_code,
+                                "overall_effectiveness_label": row.overall_effectiveness_label,
+                                "is_graded": row.is_graded,
+                                "ungraded_outcome": row.ungraded_outcome,
+                                "source_asset_url": row.source_asset_url,
+                                "source_asset_month": row.source_asset_month,
+                            }
+                            for row in rows_chunk
+                        ],
+                    )
 
             if rejected_rows:
-                connection.execute(
-                    text(
-                        """
-                        INSERT INTO pipeline_rejections (
-                            run_id,
-                            source,
-                            stage,
-                            reason_code,
-                            raw_record
-                        ) VALUES (
-                            :run_id,
-                            :source,
-                            'stage',
-                            :reason_code,
-                            CAST(:raw_record AS jsonb)
-                        )
-                        """
-                    ),
-                    [
-                        {
-                            "run_id": str(context.run_id),
-                            "source": context.source.value,
-                            "reason_code": reason_code,
-                            "raw_record": json.dumps(raw_row, ensure_ascii=True),
-                        }
-                        for reason_code, raw_row in rejected_rows
-                    ],
+                rejection_insert = text(
+                    """
+                    INSERT INTO pipeline_rejections (
+                        run_id,
+                        source,
+                        stage,
+                        reason_code,
+                        raw_record
+                    ) VALUES (
+                        :run_id,
+                        :source,
+                        'stage',
+                        :reason_code,
+                        CAST(:raw_record AS jsonb)
+                    )
+                    """
                 )
+                for rejected_chunk in chunked(rejected_rows, context.stage_chunk_size):
+                    connection.execute(
+                        rejection_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "reason_code": reason_code,
+                                "raw_record": json.dumps(raw_row, ensure_ascii=True),
+                            }
+                            for reason_code, raw_row in rejected_chunk
+                        ],
+                    )
 
-        return StageResult(staged_rows=len(staged_rows), rejected_rows=len(rejected_rows))
+        return StageResult(
+            staged_rows=len(staged_rows),
+            rejected_rows=len(rejected_rows),
+            contract_version=OFSTED_LATEST_NORMALIZATION_CONTRACT_VERSION,
+        )
 
     def promote(self, context: PipelineRunContext) -> int:
         staging_table_name = self._staging_table_name(context)
@@ -401,6 +373,7 @@ class OfstedLatestPipeline:
             "landing_page_url": OFSTED_LANDING_PAGE_URL,
             "source_asset_url": source_asset_url,
             "source_asset_month": source_asset_month,
+            "normalization_contract_version": OFSTED_LATEST_NORMALIZATION_CONTRACT_VERSION,
             "sha256": _sha256_file(target_csv),
             "rows": row_count,
         }
@@ -526,7 +499,7 @@ def _normalize_overall_effectiveness_code(raw_value: str) -> str:
 
 def _parse_optional_date(raw_value: str | None) -> date | None:
     value = (raw_value or "").strip()
-    if not value:
+    if not value or value.upper() == "NULL":
         return None
 
     supported_formats = (

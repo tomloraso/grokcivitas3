@@ -9,6 +9,12 @@
 - Each phase ends with working tests, passing lint, and a demoable artifact.
 - Deployment assumptions are tracked in `.planning/deployment-strategy.md` and updated when phase design changes runtime needs.
 
+## Program hold (effective 2026-03-04)
+
+- Progression to new expansion phases is paused until source-strategy and trend-history reliability concerns are closed.
+- `Phase S` (Source strategy stabilization + trend history recovery) is now a mandatory gate before advancing to `Phase 3`, `Phase 4`, or `Phase 5`.
+- If any `Phase S` acceptance criteria fail, subsequent phase work is limited to bug fixes and stabilization only.
+
 ---
 
 ## Phase 0 - Data foundation + GIAS baseline
@@ -97,16 +103,29 @@
 
 **Goal:** Add full inspection history timeline and area-level context (crime, deprivation) to profile depth.
 
+### Detailed design
+
+- `.planning/phases/phase-2/README.md`
+- `.planning/phases/phase-2/2A-source-contract-gate.md`
+- `.planning/phases/phase-2/2B-ofsted-timeline-pipeline.md`
+- `.planning/phases/phase-2/2C-ons-imd-pipeline.md`
+- `.planning/phases/phase-2/2D-police-crime-context-pipeline.md`
+- `.planning/phases/phase-2/2E-school-profile-api-extensions.md`
+- `.planning/phases/phase-2/2F-web-profile-area-context-enhancements.md`
+- `.planning/phases/phase-2/2G-phase-2-quality-gates.md`
+
 ### Deliverables
 
-1. **Ofsted timeline pipeline extension** - Bronze -> Staging -> Gold for full inspection record history.
-2. **Gold `ofsted_inspections` table** - full inspection timeline per school.
-3. **ONS IMD pipeline** - Bronze -> Staging -> Gold for deprivation by LSOA.
-4. **Gold `area_deprivation` table** - IMD decile and child poverty by LSOA.
-5. **Police UK pipeline** - Bronze -> Staging -> Gold for aggregated crime context near schools.
-6. **Gold `area_crime_context` table** - monthly crime aggregates per school location.
-7. **School profile API extensions** - include Ofsted timeline, IMD decile, and crime summary.
-8. **Frontend: profile enhancements** - Ofsted badge + timeline, area context section.
+1. **Source contract gate (blocking)** - verify all Phase 2 source endpoints/fields and lock fallback paths before implementation.
+2. **Ofsted timeline pipeline extension** - Bronze -> Staging -> Gold for full inspection record history.
+3. **Gold `ofsted_inspections` table** - full inspection timeline per school.
+4. **ONS IMD pipeline** - Bronze -> Staging -> Gold for deprivation by LSOA.
+5. **Gold `area_deprivation` table** - IMD decile and IDACI child-poverty proxy by LSOA.
+6. **Police UK pipeline** - Bronze -> Staging -> Gold for aggregated crime context near schools.
+7. **Gold `area_crime_context` table** - monthly crime aggregates per school location.
+8. **School profile API extensions** - include Ofsted timeline, IMD decile, and crime summary.
+9. **Frontend: profile enhancements** - Ofsted badge + timeline, area context section.
+10. **Phase 2 quality gates** - mandatory closeout checklist and sign-off sequence.
 
 ### Exit criteria
 
@@ -117,6 +136,130 @@
 ### Dependencies
 
 - Phase 1.
+
+---
+
+## Phase H - Hardening (data reliability + completeness + resilience)
+
+**Goal:** Convert data-quality RCA findings into production-grade hardening across ingestion correctness, historical depth, completeness transparency, and operational safety.
+
+### Detailed design
+
+- `.planning/phases/phase-hardening/README.md`
+- `.planning/phases/phase-hardening/H1-pipeline-run-policy-quality-gates.md`
+- `.planning/phases/phase-hardening/H2-source-normalization-contracts.md`
+- `.planning/phases/phase-hardening/H3-historical-demographics-backfill-lookback.md`
+- `.planning/phases/phase-hardening/H4-data-completeness-contract-api-ui.md`
+- `.planning/phases/phase-hardening/H5-operational-observability-freshness-coverage-drift.md`
+- `.planning/phases/phase-hardening/H6-pipeline-resilience-performance-hardening.md`
+- `.planning/phases/phase-hardening/H7-hardening-quality-gates-signoff.md`
+
+### Deliverables
+
+1. **H1: Pipeline run policy and quality gates** - deterministic run outcomes with hard-fail protection when downloaded/staged/promoted counters violate quality rules.
+2. **H2: Source normalization contracts** - versioned per-source normalization and schema drift controls at the Bronze -> Staging boundary.
+3. **H3: Historical demographics backfill** - configurable lookback and idempotent historical ingestion for trend depth where source data exists.
+4. **H4: Data completeness contract** - explicit section-level availability/reason metadata in profile/trends API and user-facing UI states.
+5. **H5: Operational observability** - freshness, coverage, and drift metrics with actionable alerting and runbook support.
+6. **H6: Pipeline resilience and performance** - retries, checkpoints, resume support, chunked processing, and throughput/recovery hardening.
+7. **H7: Hardening quality gates** - mandatory sign-off gates proving hardening outcomes in one repository state.
+
+### Exit criteria
+
+- Pipeline runs cannot silently succeed when staged/promoted data quality fails.
+- Source normalization is contract-driven, versioned, and test-covered for every active feed.
+- Historical demographics support configurable lookback and produce multi-year trends where available.
+- API and UI expose clear completeness metadata with user-friendly messaging.
+- Freshness and coverage drift are continuously monitored with alerting.
+- Recovery and performance drills pass for large-source and interruption scenarios.
+- Hardening quality gates pass (`H7`) with evidence captured.
+
+### Dependencies
+
+- Phase 2 for complete profile and source surface area.
+- Can run alongside late UX polish only when API contract changes are coordinated.
+
+---
+
+## Phase S - Source strategy stabilization + trend history recovery (blocking)
+
+**Goal:** Replace single-year demographics source behavior with a verified multi-year source strategy so trend coverage is reliable, explainable, and phase-inclusive.
+**Status:** S1-S5 complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md`; S6 ethnicity support plan added (2026-03-04).
+
+### Detailed design
+
+- `.planning/phases/phase-source-stabilization/README.md`
+- `.planning/phases/phase-source-stabilization/S1-source-contract-and-catalog-freeze.md`
+- `.planning/phases/phase-source-stabilization/S2-release-file-discovery-and-bronze-ingest.md`
+- `.planning/phases/phase-source-stabilization/S3-multi-source-normalization-and-gold-upsert.md`
+- `.planning/phases/phase-source-stabilization/S4-completeness-contract-and-parent-facing-copy.md`
+- `.planning/phases/phase-source-stabilization/S5-quality-gates-and-signoff.md`
+- `.planning/phases/phase-source-stabilization/S6-school-level-ethnicity-breakdown-support.md`
+
+### Deliverables
+
+1. **S1: Source contract and catalog freeze** - lock approved publications/releases/files and required columns with explicit fallback behavior.
+2. **S2: Release file discovery + Bronze ingest** - implement deterministic discovery of school-level underlying data assets and immutable Bronze manifests.
+3. **S3: Multi-source normalization + Gold upsert** - combine SPC + SEN school-level files into `school_demographics_yearly` with consistent `(urn, academic_year)` semantics.
+4. **S4: Completeness contract + parent copy** - expose precise reason codes and messaging for sparse/partial history states in API and web profile/trends UX.
+5. **S5: Quality gates + sign-off** - enforce coverage/depth gates and document evidence in one repository state.
+6. **S6: School-level ethnicity breakdown support** - map existing SPC school-level ethnicity columns into serving contracts and remove the ethnicity unsupported gap where data exists.
+
+### Exit criteria
+
+- Open-school trend history has `>=2` years for primary and secondary at agreed target thresholds.
+- `school_demographics_yearly` reflects multi-year coverage from approved source families (not single-year fallback behavior).
+- Trend suppression and UI copy align with actual source availability and do not use pipeline-internal language.
+- School profile APIs expose ethnicity breakdown from approved SPC school-level files where present.
+- All implemented `Phase S` gates pass with evidence.
+
+### Dependencies
+
+- Phase 2 and Phase H outputs.
+- Blocks progression to Phase 3+ until signed off.
+
+---
+
+## Phase UX - Visual quality + interaction uplift (web cross-cutting)
+
+**Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys, with explicit dark/light mode control.
+
+### Detailed design
+
+- `.planning/phases/phase-ux/README.md`
+- `.planning/phases/phase-ux/UX-1-maplibre-migration-uk-bounds-landing-state.md`
+- `.planning/phases/phase-ux/UX-2-map-interaction-depth.md`
+- `.planning/phases/phase-ux/UX-3-overlay-panel-refinement.md`
+- `.planning/phases/phase-ux/UX-4-typography-spacing-visual-hierarchy.md`
+- `.planning/phases/phase-ux/UX-5-transitions-motion.md`
+- `.planning/phases/phase-ux/UX-6-navigation-site-chrome-refinement.md`
+- `.planning/phases/phase-ux/UX-7-loading-empty-state-polish.md`
+- `.planning/phases/phase-ux/UX-8-theme-mode-toggle.md`
+
+### Deliverables
+
+1. **UX-1: MapLibre migration + UK bounds** - move from raster Leaflet stack to UK-scoped vector rendering with custom style control.
+2. **UX-2: Map interaction depth** - fly-to, radius overlays, clustering, and list-marker interaction linking.
+3. **UX-3: Overlay panel refinement** - desktop collapse, mobile bottom-sheet, hidden-scrollbar behavior, and scroll affordances.
+4. **UX-4: Typography and hierarchy** - editorial spacing and data-first visual hierarchy on search/profile routes.
+5. **UX-5: Transitions and motion** - route and interaction continuity with reduced-motion parity.
+6. **UX-6: Navigation chrome refinement** - map-first header/footer behavior and contextual breadcrumb/search state.
+7. **UX-7: Loading/empty/error polish** - map-aware contextual states preserving user orientation.
+8. **UX-8: Theme mode toggle** - user-selectable dark/light mode with persisted preference and map style parity.
+
+### Exit criteria
+
+- Search route renders UK-bounded vector map and map/list interactions feel connected.
+- Overlay, typography, motion, and chrome refinements produce a polished map-first UX.
+- Loading, empty, and error states preserve map context and support recovery.
+- Users can switch between dark and light mode, and both themes remain accessible and visually coherent with the map stack.
+- Existing quality rails remain green (`make lint`, `make test`, web budgets, Lighthouse, accessibility).
+
+### Dependencies
+
+- Phase 0 and Phase 1 web baseline.
+- Can run in parallel with Phase 2 backend work; coordinate with Phase 2 web section (`2F`) to keep profile styling aligned.
+- Must align with `Phase S` API completeness semantics before final UX sign-off on profile trend states.
 
 ---
 
@@ -139,6 +282,7 @@
 ### Dependencies
 
 - Phase 2.
+- Phase S.
 
 ---
 
@@ -196,6 +340,9 @@
 | 0 | Data foundation + GIAS | Search by postcode with production-grade web foundations and schools on map | Foundation / largest setup effort |
 | 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
+| H | Hardening | Deterministic pipeline quality, completeness transparency, and operational resilience | Large (cross-cutting) |
+| S | Source strategy stabilization | Reliable multi-year trend coverage and source-contract clarity | Large (cross-cutting + source integration) |
+| UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
 | 5 | Post-MVP extensions | Additional data and operational tooling | Ongoing |
@@ -207,4 +354,4 @@
 1. **Auth provider** - managed provider vs custom email auth?
 2. **Payment provider** - Stripe assumed but not yet confirmed.
 3. **Typed metrics schema boundaries** - split by domain (`demographics`, `attendance`, `workforce`) or one wider yearly fact table?
-4. **DfE school-level demographics coverage** - which validated callable source will provide direct FSM and ethnicity at school level if not present in current endpoint set?
+4. **Phase S target thresholds** - should open-school `>=2` year and `>=3` year coverage thresholds be adjusted by phase category before final sign-off?

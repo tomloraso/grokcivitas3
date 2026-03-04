@@ -21,6 +21,7 @@ def _create_engine_with_cache_table() -> Engine:
                     postcode text PRIMARY KEY,
                     lat double precision NOT NULL,
                     lng double precision NOT NULL,
+                    lsoa_code text NULL,
                     lsoa text NULL,
                     admin_district text NULL,
                     cached_at timestamp NOT NULL
@@ -39,6 +40,7 @@ def test_postcode_cache_repository_returns_hit_only_when_fresh() -> None:
         postcode="SW1A 1AA",
         lat=51.501009,
         lng=-0.141588,
+        lsoa_code="E01004736",
         lsoa="Westminster 018B",
         admin_district="Westminster",
     )
@@ -53,6 +55,7 @@ def test_postcode_cache_repository_returns_hit_only_when_fresh() -> None:
     assert hit is not None
     assert hit.postcode == "SW1A 1AA"
     assert hit.lat == 51.501009
+    assert hit.lsoa_code == "E01004736"
 
     stale_miss = repository.get_fresh(
         postcode="SW1A 1AA",
@@ -74,6 +77,7 @@ def test_postcode_cache_repository_upsert_replaces_existing_value() -> None:
             postcode="SW1A 1AA",
             lat=51.501009,
             lng=-0.141588,
+            lsoa_code=None,
             lsoa=None,
             admin_district=None,
         ),
@@ -84,6 +88,7 @@ def test_postcode_cache_repository_upsert_replaces_existing_value() -> None:
             postcode="SW1A 1AA",
             lat=51.501999,
             lng=-0.140000,
+            lsoa_code="E01004736",
             lsoa="Westminster 018B",
             admin_district="Westminster",
         ),
@@ -98,6 +103,7 @@ def test_postcode_cache_repository_upsert_replaces_existing_value() -> None:
     assert result is not None
     assert result.lat == 51.501999
     assert result.lng == -0.14
+    assert result.lsoa_code == "E01004736"
     assert result.admin_district == "Westminster"
 
     engine.dispose()

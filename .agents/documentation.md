@@ -10,6 +10,7 @@
 1. Update affected `docs/` pages.
 2. Add new pages to `docs/index.md`.
 3. Update architecture diagrams and decision records when boundaries change.
+4. For ingestion/data-shape changes, update `docs/runbooks/pipelines.md` and keep Bronze -> Silver -> Gold guidance current.
 
 ## Required pages
 
@@ -19,3 +20,4 @@
 - `docs/architecture/backend-conventions.md`
 - `docs/architecture/frontend-conventions.md`
 - `docs/architecture/testing-strategy.md`
+- `docs/runbooks/pipelines.md`

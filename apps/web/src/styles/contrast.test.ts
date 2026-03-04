@@ -16,6 +16,25 @@ function parseVariables(cssText: string): Record<string, string> {
   return variables;
 }
 
+/**
+ * Extract variables from a specific CSS block (e.g. :root or [data-theme="dark"]).
+ * Later blocks override earlier ones so that theme-specific tokens win.
+ */
+function parseVariablesFromBlocks(cssText: string, selectors: string[]): Record<string, string> {
+  let merged: Record<string, string> = {};
+  for (const selector of selectors) {
+    // Match the selector and capture its block content
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const blockPattern = new RegExp(`${escaped}\\s*\\{([^}]+)\\}`, "g");
+    let blockMatch = blockPattern.exec(cssText);
+    while (blockMatch) {
+      merged = { ...merged, ...parseVariables(blockMatch[1]) };
+      blockMatch = blockPattern.exec(cssText);
+    }
+  }
+  return merged;
+}
+
 function resolveToken(tokenName: string, variables: Record<string, string>, seen = new Set<string>()): string {
   const value = variables[tokenName];
   if (!value) {
@@ -102,7 +121,8 @@ function contrastRatio(foreground: Rgb, background: Rgb): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const variables = parseVariables(readFileSync(path.resolve(process.cwd(), "src/styles/tokens.css"), "utf8"));
+const cssText = readFileSync(path.resolve(process.cwd(), "src/styles/tokens.css"), "utf8");
+const variables = parseVariablesFromBlocks(cssText, [":root", '[data-theme="dark"]']);
 
 function expectContrast(foregroundToken: string, backgroundToken: string, minimumRatio: number): void {
   const foreground = parseColor(resolveToken(foregroundToken, variables));

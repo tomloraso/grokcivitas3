@@ -1,25 +1,48 @@
 from civitas.application.school_profiles.dto import (
+    SchoolAreaContextCoverageDto,
+    SchoolAreaContextDto,
+    SchoolAreaCrimeCategoryDto,
+    SchoolAreaCrimeDto,
+    SchoolAreaDeprivationDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsLatestDto,
     SchoolOfstedLatestDto,
+    SchoolOfstedTimelineCoverageDto,
+    SchoolOfstedTimelineDto,
+    SchoolOfstedTimelineEventDto,
+    SchoolProfileCompletenessDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
+    SchoolProfileSectionCompletenessDto,
 )
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
+from civitas.application.school_profiles.ports.postcode_context_resolver import (
+    PostcodeContextResolver,
+)
 from civitas.application.school_profiles.ports.school_profile_repository import (
     SchoolProfileRepository,
 )
+from civitas.domain.school_profiles.models import SchoolProfile
 
 
 class GetSchoolProfileUseCase:
-    def __init__(self, school_profile_repository: SchoolProfileRepository) -> None:
+    def __init__(
+        self,
+        school_profile_repository: SchoolProfileRepository,
+        postcode_context_resolver: PostcodeContextResolver | None = None,
+    ) -> None:
         self._school_profile_repository = school_profile_repository
+        self._postcode_context_resolver = postcode_context_resolver
 
     def execute(self, *, urn: str) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
         profile = self._school_profile_repository.get_school_profile(normalized_urn)
         if profile is None:
             raise SchoolProfileNotFoundError(normalized_urn)
+        profile = self._refresh_profile_context_if_needed(
+            urn=normalized_urn,
+            profile=profile,
+        )
 
         demographics_latest = None
         if profile.demographics_latest is not None:
@@ -50,6 +73,99 @@ class GetSchoolProfileUseCase:
                 ungraded_outcome=profile.ofsted_latest.ungraded_outcome,
             )
 
+        ofsted_timeline = None
+        if profile.ofsted_timeline is not None:
+            ofsted_timeline = SchoolOfstedTimelineDto(
+                events=tuple(
+                    SchoolOfstedTimelineEventDto(
+                        inspection_number=event.inspection_number,
+                        inspection_start_date=event.inspection_start_date,
+                        publication_date=event.publication_date,
+                        inspection_type=event.inspection_type,
+                        overall_effectiveness_label=event.overall_effectiveness_label,
+                        headline_outcome_text=event.headline_outcome_text,
+                        category_of_concern=event.category_of_concern,
+                    )
+                    for event in profile.ofsted_timeline.events
+                ),
+                coverage=SchoolOfstedTimelineCoverageDto(
+                    is_partial_history=profile.ofsted_timeline.coverage.is_partial_history,
+                    earliest_event_date=profile.ofsted_timeline.coverage.earliest_event_date,
+                    latest_event_date=profile.ofsted_timeline.coverage.latest_event_date,
+                    events_count=profile.ofsted_timeline.coverage.events_count,
+                ),
+            )
+
+        area_context = None
+        if profile.area_context is not None:
+            deprivation = None
+            if profile.area_context.deprivation is not None:
+                deprivation = SchoolAreaDeprivationDto(
+                    lsoa_code=profile.area_context.deprivation.lsoa_code,
+                    imd_decile=profile.area_context.deprivation.imd_decile,
+                    idaci_score=profile.area_context.deprivation.idaci_score,
+                    idaci_decile=profile.area_context.deprivation.idaci_decile,
+                    source_release=profile.area_context.deprivation.source_release,
+                )
+
+            crime = None
+            if profile.area_context.crime is not None:
+                crime = SchoolAreaCrimeDto(
+                    radius_miles=profile.area_context.crime.radius_miles,
+                    latest_month=profile.area_context.crime.latest_month,
+                    total_incidents=profile.area_context.crime.total_incidents,
+                    categories=tuple(
+                        SchoolAreaCrimeCategoryDto(
+                            category=category.category,
+                            incident_count=category.incident_count,
+                        )
+                        for category in profile.area_context.crime.categories
+                    ),
+                )
+
+            area_context = SchoolAreaContextDto(
+                deprivation=deprivation,
+                crime=crime,
+                coverage=SchoolAreaContextCoverageDto(
+                    has_deprivation=profile.area_context.coverage.has_deprivation,
+                    has_crime=profile.area_context.coverage.has_crime,
+                    crime_months_available=profile.area_context.coverage.crime_months_available,
+                ),
+            )
+
+        completeness = SchoolProfileCompletenessDto(
+            demographics=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.demographics.status,
+                reason_code=profile.completeness.demographics.reason_code,
+                last_updated_at=profile.completeness.demographics.last_updated_at,
+                years_available=profile.completeness.demographics.years_available,
+            ),
+            ofsted_latest=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.ofsted_latest.status,
+                reason_code=profile.completeness.ofsted_latest.reason_code,
+                last_updated_at=profile.completeness.ofsted_latest.last_updated_at,
+                years_available=profile.completeness.ofsted_latest.years_available,
+            ),
+            ofsted_timeline=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.ofsted_timeline.status,
+                reason_code=profile.completeness.ofsted_timeline.reason_code,
+                last_updated_at=profile.completeness.ofsted_timeline.last_updated_at,
+                years_available=profile.completeness.ofsted_timeline.years_available,
+            ),
+            area_deprivation=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.area_deprivation.status,
+                reason_code=profile.completeness.area_deprivation.reason_code,
+                last_updated_at=profile.completeness.area_deprivation.last_updated_at,
+                years_available=profile.completeness.area_deprivation.years_available,
+            ),
+            area_crime=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.area_crime.status,
+                reason_code=profile.completeness.area_crime.reason_code,
+                last_updated_at=profile.completeness.area_crime.last_updated_at,
+                years_available=profile.completeness.area_crime.years_available,
+            ),
+        )
+
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
                 urn=profile.school.urn,
@@ -63,4 +179,35 @@ class GetSchoolProfileUseCase:
             ),
             demographics_latest=demographics_latest,
             ofsted_latest=ofsted_latest,
+            ofsted_timeline=ofsted_timeline,
+            area_context=area_context,
+            completeness=completeness,
         )
+
+    def _refresh_profile_context_if_needed(
+        self,
+        *,
+        urn: str,
+        profile: SchoolProfile,
+    ) -> SchoolProfile:
+        if self._postcode_context_resolver is None:
+            return profile
+
+        postcode = profile.school.postcode
+        if postcode is None or not postcode.strip():
+            return profile
+
+        area_context = profile.area_context
+        has_deprivation = area_context is not None and area_context.coverage.has_deprivation
+        if has_deprivation:
+            return profile
+
+        try:
+            self._postcode_context_resolver.resolve(postcode)
+        except Exception:
+            return profile
+
+        refreshed_profile = self._school_profile_repository.get_school_profile(urn)
+        if refreshed_profile is None:
+            return profile
+        return refreshed_profile

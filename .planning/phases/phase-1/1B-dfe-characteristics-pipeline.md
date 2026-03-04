@@ -74,11 +74,14 @@ Supported from validated callable source:
 - EAL percentage
 - first-language percentage breakdown (English vs unclassified)
 
-Not currently supported from validated school-level source (2026-03-02):
+Not currently supported from validated school-level source (2026-03-02 baseline):
 
 - school-level ethnicity breakdown
 - top non-English language breakdown
-- direct FSM percentage field (source provides disadvantaged metric)
+
+Superseded note (2026-03-04, Phase S):
+
+- direct FSM percentage is supported from SPC release files in the stabilized release-files pipeline path.
 
 ## Decisions
 
@@ -134,7 +137,7 @@ Minimum columns:
 - `urn` (FK to `schools.urn`)
 - `academic_year`
 - `disadvantaged_pct`
-- `fsm_pct` (nullable; unpopulated until verified source supports direct FSM)
+- `fsm_pct` (nullable when source suppresses/unpublishes a school row)
 - `sen_pct`
 - `sen_support_pct`
 - `ehcp_pct`

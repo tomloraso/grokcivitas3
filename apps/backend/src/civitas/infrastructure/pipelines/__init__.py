@@ -3,9 +3,12 @@ from sqlalchemy.engine import Engine
 from civitas.infrastructure.config.settings import PipelineSettings
 
 from .base import Pipeline, PipelineSource
-from .dfe_characteristics import DfeCharacteristicsPipeline
+from .demographics_release_files import DemographicsReleaseFilesPipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
+from .ofsted_timeline import OfstedTimelinePipeline
+from .ons_imd import OnsImdPipeline
+from .police_crime_context import PoliceCrimeContextPipeline
 
 
 def pipeline_registry(
@@ -18,13 +21,36 @@ def pipeline_registry(
             source_csv=pipeline_settings.gias_source_csv,
             source_zip=pipeline_settings.gias_source_zip,
         ),
-        PipelineSource.DFE_CHARACTERISTICS: DfeCharacteristicsPipeline(
+        PipelineSource.DFE_CHARACTERISTICS: DemographicsReleaseFilesPipeline(
             engine=engine,
-            source_dataset_id=pipeline_settings.dfe_characteristics_dataset_id,
-            source_csv=pipeline_settings.dfe_characteristics_source_csv,
+            spc_publication_slug=pipeline_settings.demographics_spc_publication_slug,
+            sen_publication_slug=pipeline_settings.demographics_sen_publication_slug,
+            release_slugs=pipeline_settings.demographics_release_slugs,
+            lookback_years=pipeline_settings.demographics_lookback_years,
+            strict_mode=pipeline_settings.demographics_source_strict_mode,
         ),
         PipelineSource.OFSTED_LATEST: OfstedLatestPipeline(
             engine=engine,
             source_csv=pipeline_settings.ofsted_latest_source_csv,
+        ),
+        PipelineSource.OFSTED_TIMELINE: OfstedTimelinePipeline(
+            engine=engine,
+            source_index_url=pipeline_settings.ofsted_timeline_source_index_url,
+            source_assets_csv=pipeline_settings.ofsted_timeline_source_assets,
+            timeline_years=pipeline_settings.ofsted_timeline_years,
+            include_historical_baseline=(
+                pipeline_settings.ofsted_timeline_include_historical_baseline
+            ),
+        ),
+        PipelineSource.ONS_IMD: OnsImdPipeline(
+            engine=engine,
+            source_csv=pipeline_settings.imd_source_csv,
+            source_release=pipeline_settings.imd_release,
+        ),
+        PipelineSource.POLICE_CRIME_CONTEXT: PoliceCrimeContextPipeline(
+            engine=engine,
+            source_archive_url=pipeline_settings.police_crime_source_archive_url,
+            source_mode=pipeline_settings.police_crime_source_mode,
+            crime_radius_meters=pipeline_settings.police_crime_radius_meters,
         ),
     }

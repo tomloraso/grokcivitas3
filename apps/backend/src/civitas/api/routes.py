@@ -7,22 +7,35 @@ from civitas.api.dependencies import (
     get_list_tasks_use_case,
     get_school_profile_use_case,
     get_school_trends_use_case,
+    get_search_schools_by_name_use_case,
     get_search_schools_by_postcode_use_case,
 )
 from civitas.api.schemas.school_profiles import (
+    SchoolProfileAreaContextCoverageResponse,
+    SchoolProfileAreaContextResponse,
+    SchoolProfileAreaCrimeCategoryResponse,
+    SchoolProfileAreaCrimeResponse,
+    SchoolProfileAreaDeprivationResponse,
+    SchoolProfileCompletenessResponse,
     SchoolProfileDemographicsCoverageResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileOfstedLatestResponse,
+    SchoolProfileOfstedTimelineCoverageResponse,
+    SchoolProfileOfstedTimelineEventResponse,
+    SchoolProfileOfstedTimelineResponse,
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
+    SchoolProfileSectionCompletenessResponse,
 )
 from civitas.api.schemas.school_trends import (
     SchoolTrendPointResponse,
+    SchoolTrendsCompletenessResponse,
     SchoolTrendsHistoryQualityResponse,
     SchoolTrendsResponse,
     SchoolTrendsSeriesResponse,
 )
 from civitas.api.schemas.schools import (
+    SchoolNameSearchResponse,
     SchoolSearchItemResponse,
     SchoolsSearchCenterResponse,
     SchoolsSearchQueryResponse,
@@ -44,7 +57,10 @@ from civitas.application.schools.errors import (
     PostcodeNotFoundError,
     PostcodeResolverUnavailableError,
 )
-from civitas.application.schools.use_cases import SearchSchoolsByPostcodeUseCase
+from civitas.application.schools.use_cases import (
+    SearchSchoolsByNameUseCase,
+    SearchSchoolsByPostcodeUseCase,
+)
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 
 router = APIRouter(prefix="/api/v1", tags=["tasks"])
@@ -123,6 +139,41 @@ def search_schools(
 
 
 @router.get(
+    "/schools/search",
+    response_model=SchoolNameSearchResponse,
+    tags=["schools"],
+    responses={
+        400: {"description": "Invalid name search parameter."},
+    },
+)
+def search_schools_by_name(
+    name: str = Query(..., min_length=3),
+    use_case: SearchSchoolsByNameUseCase = Depends(get_search_schools_by_name_use_case),
+) -> SchoolNameSearchResponse:
+    try:
+        result = use_case.execute(name=name)
+    except InvalidSchoolSearchParametersError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return SchoolNameSearchResponse(
+        count=result.count,
+        schools=[
+            SchoolSearchItemResponse(
+                urn=school.urn,
+                name=school.name,
+                type=school.school_type,
+                phase=school.phase,
+                postcode=school.postcode,
+                lat=school.lat,
+                lng=school.lng,
+                distance_miles=school.distance_miles,
+            )
+            for school in result.schools
+        ],
+    )
+
+
+@router.get(
     "/schools/{urn}",
     response_model=SchoolProfileResponse,
     tags=["schools"],
@@ -171,6 +222,77 @@ def get_school_profile(
             ungraded_outcome=result.ofsted_latest.ungraded_outcome,
         )
 
+    ofsted_timeline = SchoolProfileOfstedTimelineResponse(
+        events=[
+            SchoolProfileOfstedTimelineEventResponse(
+                inspection_number=event.inspection_number,
+                inspection_start_date=event.inspection_start_date,
+                publication_date=event.publication_date,
+                inspection_type=event.inspection_type,
+                overall_effectiveness_label=event.overall_effectiveness_label,
+                headline_outcome_text=event.headline_outcome_text,
+                category_of_concern=event.category_of_concern,
+            )
+            for event in result.ofsted_timeline.events
+        ]
+        if result.ofsted_timeline is not None
+        else [],
+        coverage=SchoolProfileOfstedTimelineCoverageResponse(
+            is_partial_history=result.ofsted_timeline.coverage.is_partial_history,
+            earliest_event_date=result.ofsted_timeline.coverage.earliest_event_date,
+            latest_event_date=result.ofsted_timeline.coverage.latest_event_date,
+            events_count=result.ofsted_timeline.coverage.events_count,
+        )
+        if result.ofsted_timeline is not None
+        else SchoolProfileOfstedTimelineCoverageResponse(
+            is_partial_history=True,
+            earliest_event_date=None,
+            latest_event_date=None,
+            events_count=0,
+        ),
+    )
+
+    deprivation = None
+    if result.area_context is not None and result.area_context.deprivation is not None:
+        deprivation = SchoolProfileAreaDeprivationResponse(
+            lsoa_code=result.area_context.deprivation.lsoa_code,
+            imd_decile=result.area_context.deprivation.imd_decile,
+            idaci_score=result.area_context.deprivation.idaci_score,
+            idaci_decile=result.area_context.deprivation.idaci_decile,
+            source_release=result.area_context.deprivation.source_release,
+        )
+
+    crime = None
+    if result.area_context is not None and result.area_context.crime is not None:
+        crime = SchoolProfileAreaCrimeResponse(
+            radius_miles=result.area_context.crime.radius_miles,
+            latest_month=result.area_context.crime.latest_month,
+            total_incidents=result.area_context.crime.total_incidents,
+            categories=[
+                SchoolProfileAreaCrimeCategoryResponse(
+                    category=category.category,
+                    incident_count=category.incident_count,
+                )
+                for category in result.area_context.crime.categories
+            ],
+        )
+
+    area_context = SchoolProfileAreaContextResponse(
+        deprivation=deprivation,
+        crime=crime,
+        coverage=SchoolProfileAreaContextCoverageResponse(
+            has_deprivation=result.area_context.coverage.has_deprivation,
+            has_crime=result.area_context.coverage.has_crime,
+            crime_months_available=result.area_context.coverage.crime_months_available,
+        )
+        if result.area_context is not None
+        else SchoolProfileAreaContextCoverageResponse(
+            has_deprivation=False,
+            has_crime=False,
+            crime_months_available=0,
+        ),
+    )
+
     return SchoolProfileResponse(
         school=SchoolProfileSchoolResponse(
             urn=result.school.urn,
@@ -184,6 +306,60 @@ def get_school_profile(
         ),
         demographics_latest=demographics_latest,
         ofsted_latest=ofsted_latest,
+        ofsted_timeline=ofsted_timeline,
+        area_context=area_context,
+        completeness=SchoolProfileCompletenessResponse(
+            demographics=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.demographics.status,
+                reason_code=result.completeness.demographics.reason_code,
+                last_updated_at=result.completeness.demographics.last_updated_at,
+                years_available=(
+                    list(result.completeness.demographics.years_available)
+                    if result.completeness.demographics.years_available is not None
+                    else None
+                ),
+            ),
+            ofsted_latest=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.ofsted_latest.status,
+                reason_code=result.completeness.ofsted_latest.reason_code,
+                last_updated_at=result.completeness.ofsted_latest.last_updated_at,
+                years_available=(
+                    list(result.completeness.ofsted_latest.years_available)
+                    if result.completeness.ofsted_latest.years_available is not None
+                    else None
+                ),
+            ),
+            ofsted_timeline=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.ofsted_timeline.status,
+                reason_code=result.completeness.ofsted_timeline.reason_code,
+                last_updated_at=result.completeness.ofsted_timeline.last_updated_at,
+                years_available=(
+                    list(result.completeness.ofsted_timeline.years_available)
+                    if result.completeness.ofsted_timeline.years_available is not None
+                    else None
+                ),
+            ),
+            area_deprivation=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.area_deprivation.status,
+                reason_code=result.completeness.area_deprivation.reason_code,
+                last_updated_at=result.completeness.area_deprivation.last_updated_at,
+                years_available=(
+                    list(result.completeness.area_deprivation.years_available)
+                    if result.completeness.area_deprivation.years_available is not None
+                    else None
+                ),
+            ),
+            area_crime=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.area_crime.status,
+                reason_code=result.completeness.area_crime.reason_code,
+                last_updated_at=result.completeness.area_crime.last_updated_at,
+                years_available=(
+                    list(result.completeness.area_crime.years_available)
+                    if result.completeness.area_crime.years_available is not None
+                    else None
+                ),
+            ),
+        ),
     )
 
 
@@ -252,5 +428,33 @@ def get_school_trends(
                 )
                 for point in result.series.eal_pct
             ],
+            first_language_english_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.first_language_english_pct
+            ],
+            first_language_unclassified_pct=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.first_language_unclassified_pct
+            ],
+        ),
+        completeness=SchoolTrendsCompletenessResponse(
+            status=result.completeness.status,
+            reason_code=result.completeness.reason_code,
+            last_updated_at=result.completeness.last_updated_at,
+            years_available=(
+                list(result.completeness.years_available)
+                if result.completeness.years_available is not None
+                else None
+            ),
         ),
     )

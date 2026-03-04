@@ -4,20 +4,29 @@ import { describe, expect, it, vi } from "vitest";
 import { runA11yAudit } from "../../test/accessibility";
 import { renderWithProviders } from "../../test/render";
 import { MapPanel } from "./MapPanel";
+import type { MapMarker } from "./MapPanel";
 
-vi.mock("./MapPanelLeaflet", () => ({
-  default: ({ markers }: { markers: Array<{ id: string }> }) => (
-    <div data-testid="leaflet-map-mock">Leaflet markers: {markers.length}</div>
+vi.mock("./MapPanelMapLibre", () => ({
+  default: ({
+    center,
+    markers
+  }: {
+    center: { lat: number; lng: number };
+    markers: MapMarker[];
+  }) => (
+    <div data-testid="maplibre-map-mock">
+      MapLibre markers: {markers.length} center: {center.lat.toFixed(4)}, {center.lng.toFixed(4)}
+    </div>
   )
 }));
 
 describe("MapPanel", () => {
-  it("shows guidance message when no map center exists yet", () => {
+  it("uses default UK center when no explicit center exists", async () => {
     renderWithProviders(<MapPanel center={null} markers={[]} />);
 
-    expect(
-      screen.getByText("Search results will appear here once a postcode is resolved.")
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId("maplibre-map-mock")).toHaveTextContent(
+      "center: 51.5072, -0.1276"
+    );
     expect(screen.getByText("0 markers")).toBeInTheDocument();
   });
 
@@ -37,7 +46,9 @@ describe("MapPanel", () => {
       />
     );
 
-    expect(await screen.findByTestId("leaflet-map-mock")).toHaveTextContent("Leaflet markers: 1");
+    expect(await screen.findByTestId("maplibre-map-mock")).toHaveTextContent(
+      "MapLibre markers: 1"
+    );
     expect(screen.getByText("1 markers")).toBeInTheDocument();
   });
 

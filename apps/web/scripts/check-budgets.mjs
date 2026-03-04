@@ -7,7 +7,7 @@ const DIST_ASSETS = path.resolve("dist", "assets");
 const BUDGETS_BYTES = {
   appShellJs: 170 * 1024,
   appShellCss: 35 * 1024,
-  mapChunkJs: 260 * 1024
+  mapChunkJs: 300 * 1024
 };
 
 function toGzipSize(filePath) {
