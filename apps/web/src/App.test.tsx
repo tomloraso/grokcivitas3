@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { runA11yAudit } from "./test/accessibility";
+import { ThemeProvider } from "./app/providers/ThemeProvider";
 
 vi.mock("./components/maps/MapPanelChromeless", () => ({
   MapPanelChromeless: ({ markers }: { markers: Array<{ id: string }> }) => (
@@ -40,7 +41,7 @@ async function renderAppAtRoute(initialEntry = "/") {
     { initialEntries: [initialEntry] }
   );
 
-  return render(<RouterProvider router={router} />);
+  return render(<ThemeProvider><RouterProvider router={router} /></ThemeProvider>);
 }
 
 describe("App", () => {

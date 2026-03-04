@@ -19,6 +19,7 @@ import { MAP_BOUNDS } from "../../shared/maps/map-bounds";
 import { getMapStyle } from "../../shared/maps/map-style";
 import { MAP_BRAND, MAP_BG, MAP_TEXT_ON_BRAND, OFSTED_COLORS, markerColor } from "../../shared/maps/map-tokens";
 import { useReducedMotion } from "../../shared/hooks/useReducedMotion";
+import { useTheme } from "../../app/providers/useTheme";
 import type { MapMarker } from "./MapPanel";
 
 type ProtocolRegistryGlobal = typeof globalThis & {
@@ -81,7 +82,8 @@ export default function MapPanelMapLibre({
   markers,
   fitBounds
 }: MapPanelMapLibreProps): JSX.Element {
-  const mapStyle = useMemo(() => getMapStyle(), []);
+  const { theme } = useTheme();
+  const mapStyle = useMemo(() => getMapStyle(theme), [theme]);
   const markerSize = useMarkerSize();
   const [popupInfo, setPopupInfo] = useState<MapMarker | null>(null);
   const markerById = useMemo(

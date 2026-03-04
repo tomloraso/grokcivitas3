@@ -11,22 +11,34 @@
   }
 
   html {
-    color-scheme: dark;
     background-color: var(--color-bg-canvas);
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    background:
-      radial-gradient(70% 50% at 20% 0%, color-mix(in srgb, var(--ref-color-brand-500) 24%, transparent), transparent 75%),
-      radial-gradient(55% 45% at 88% 12%, color-mix(in srgb, var(--ref-color-accent-500) 18%, transparent), transparent 70%),
-      linear-gradient(180deg, var(--ref-color-navy-900) 0%, var(--ref-color-navy-950) 100%);
     color: var(--color-text-primary);
     font-family: var(--font-family-body), sans-serif;
     line-height: 1.5;
     text-rendering: optimizelegibility;
     -webkit-font-smoothing: antialiased;
+    transition: background var(--motion-base) ease, color var(--motion-base) ease;
+  }
+
+  /* Dark body gradient */
+  [data-theme="dark"] body {
+    background:
+      radial-gradient(70% 50% at 20% 0%, color-mix(in srgb, var(--ref-color-brand-500) 24%, transparent), transparent 75%),
+      radial-gradient(55% 45% at 88% 12%, color-mix(in srgb, var(--ref-color-accent-500) 18%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--ref-color-navy-900) 0%, var(--ref-color-navy-950) 100%);
+  }
+
+  /* Light body gradient */
+  [data-theme="light"] body {
+    background:
+      radial-gradient(70% 50% at 20% 0%, color-mix(in srgb, var(--ref-color-brand-500) 6%, transparent), transparent 75%),
+      radial-gradient(55% 45% at 88% 12%, color-mix(in srgb, var(--ref-color-accent-500) 5%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--ref-color-grey-50) 0%, #ffffff 100%);
   }
 
   h1,
@@ -62,9 +74,14 @@
     margin: 0;
   }
 
-  ::selection {
+  [data-theme="dark"] ::selection {
     background: color-mix(in srgb, var(--ref-color-brand-500) 45%, transparent);
     color: var(--ref-color-grey-50);
+  }
+
+  [data-theme="light"] ::selection {
+    background: color-mix(in srgb, var(--ref-color-brand-500) 30%, transparent);
+    color: var(--ref-color-grey-900);
   }
 
   :focus-visible {
@@ -85,10 +102,17 @@
     backdrop-filter: blur(var(--panel-blur));
   }
 
-  .subtle-grid-bg {
+  [data-theme="dark"] .subtle-grid-bg {
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  [data-theme="light"] .subtle-grid-bg {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
@@ -171,12 +195,21 @@
     width: 40px;
     height: 4px;
     border-radius: 2px;
-    background: rgba(255, 255, 255, 0.2);
     transition: background var(--motion-fast) ease;
   }
-  .drag-handle:hover,
-  .drag-handle:active {
+  [data-theme="dark"] .drag-handle {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  [data-theme="dark"] .drag-handle:hover,
+  [data-theme="dark"] .drag-handle:active {
     background: rgba(255, 255, 255, 0.4);
+  }
+  [data-theme="light"] .drag-handle {
+    background: rgba(0, 0, 0, 0.15);
+  }
+  [data-theme="light"] .drag-handle:hover,
+  [data-theme="light"] .drag-handle:active {
+    background: rgba(0, 0, 0, 0.3);
   }
 
   /* Result card micro-interaction */

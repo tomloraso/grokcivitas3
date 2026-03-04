@@ -3,11 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "../../shared/utils/cn";
 import { useSearchContext } from "../../shared/context/SearchContext";
 import { paths } from "../../shared/routing/paths";
+import { useTheme } from "../../app/providers/useTheme";
+import { ThemeModeToggle } from "./ThemeModeToggle";
 
 export function SiteHeader(): JSX.Element {
   const location = useLocation();
   const isMapPage = location.pathname === paths.home;
   const { search } = useSearchContext();
+  const { mode, cycleMode } = useTheme();
 
   return (
     <header
@@ -28,18 +31,22 @@ export function SiteHeader(): JSX.Element {
           CIVITAS
         </Link>
 
-        {isMapPage && search ? (
-          <div
-            className="hidden items-center gap-1.5 rounded-full border border-border-subtle/40 bg-surface/60 px-3 py-1 text-xs text-secondary backdrop-blur sm:flex"
-            aria-label={`Searching ${search.postcode} within ${search.radius} miles`}
-          >
-            <span className="font-mono font-medium text-primary">{search.postcode}</span>
-            <span className="text-disabled" aria-hidden>·</span>
-            <span>{search.radius} mi</span>
-            <span className="text-disabled" aria-hidden>·</span>
-            <span>{search.count} {search.count === 1 ? "result" : "results"}</span>
-          </div>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {isMapPage && search ? (
+            <div
+              className="hidden items-center gap-1.5 rounded-full border border-border-subtle/40 bg-surface/60 px-3 py-1 text-xs text-secondary backdrop-blur sm:flex"
+              aria-label={`Searching ${search.postcode} within ${search.radius} miles`}
+            >
+              <span className="font-mono font-medium text-primary">{search.postcode}</span>
+              <span className="text-disabled" aria-hidden>·</span>
+              <span>{search.radius} mi</span>
+              <span className="text-disabled" aria-hidden>·</span>
+              <span>{search.count} {search.count === 1 ? "result" : "results"}</span>
+            </div>
+          ) : null}
+
+          <ThemeModeToggle mode={mode} onCycle={cycleMode} />
+        </div>
       </div>
     </header>
   );
