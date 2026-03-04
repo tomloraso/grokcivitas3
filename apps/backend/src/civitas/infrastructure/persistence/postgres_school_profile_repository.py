@@ -39,6 +39,9 @@ SECTION_COMPLETENESS_REASON = Literal[
     "not_joined_yet",
     "pipeline_failed_recently",
     "not_applicable",
+    "source_coverage_gap",
+    "stale_after_school_refresh",
+    "no_incidents_in_radius",
 ]
 
 
@@ -60,6 +63,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                             schools.type,
                             schools.status,
                             schools.postcode,
+                            schools.updated_at AS school_updated_at,
                             ST_Y(schools.location::geometry) AS lat,
                             ST_X(schools.location::geometry) AS lng,
                             demographics.academic_year,
@@ -164,7 +168,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                         .first()
                     )
 
-                crime_months_available = int(
+                school_crime_months_available = int(
                     connection.execute(
                         text(
                             """
@@ -186,6 +190,40 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     ),
                     {"urn": urn},
                 ).scalar_one()
+                global_crime_months_available = int(
+                    connection.execute(
+                        text(
+                            """
+                            SELECT COUNT(DISTINCT month)
+                            FROM area_crime_context
+                            """
+                        )
+                    ).scalar_one()
+                )
+                global_crime_updated_at = connection.execute(
+                    text(
+                        """
+                        SELECT MAX(updated_at)
+                        FROM area_crime_context
+                        """
+                    )
+                ).scalar_one()
+                latest_global_crime_row = (
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                month,
+                                radius_meters
+                            FROM area_crime_context
+                            ORDER BY month DESC, updated_at DESC, radius_meters DESC
+                            LIMIT 1
+                            """
+                        )
+                    )
+                    .mappings()
+                    .first()
+                )
                 latest_crime_row = (
                     connection.execute(
                         text(
@@ -311,6 +349,18 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 source_release=str(deprivation_row["source_release"]),
             )
 
+        school_updated_at = _to_optional_datetime(row["school_updated_at"])
+        global_latest_crime_month = (
+            latest_global_crime_row["month"] if latest_global_crime_row is not None else None
+        )
+        global_latest_radius_meters = (
+            latest_global_crime_row["radius_meters"]
+            if latest_global_crime_row is not None
+            else None
+        )
+        global_crime_updated_at_dt = _to_optional_datetime(global_crime_updated_at)
+
+        inferred_no_incidents = False
         crime = None
         if latest_crime_row is not None:
             latest_month = latest_crime_row["month"]
@@ -331,6 +381,37 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                         for category_row in crime_category_rows
                     ),
                 )
+        elif (
+            global_latest_crime_month is not None
+            and global_latest_radius_meters is not None
+            and (
+                school_updated_at is None
+                or global_crime_updated_at_dt is None
+                or school_updated_at <= global_crime_updated_at_dt
+            )
+        ):
+            inferred_no_incidents = True
+            crime = SchoolAreaCrime(
+                radius_miles=round(float(str(global_latest_radius_meters)) / METERS_PER_MILE, 2),
+                latest_month=global_latest_crime_month.strftime("%Y-%m"),
+                total_incidents=0,
+                categories=tuple(),
+            )
+
+        effective_crime_months_available = (
+            school_crime_months_available
+            if school_crime_months_available > 0
+            else (
+                global_crime_months_available
+                if inferred_no_incidents
+                else school_crime_months_available
+            )
+        )
+        effective_crime_updated_at = (
+            _to_optional_datetime(crime_updated_at)
+            if school_crime_months_available > 0
+            else global_crime_updated_at_dt
+        )
 
         area_context = SchoolAreaContext(
             deprivation=deprivation,
@@ -338,7 +419,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             coverage=SchoolAreaContextCoverage(
                 has_deprivation=deprivation is not None,
                 has_crime=crime is not None,
-                crime_months_available=crime_months_available,
+                crime_months_available=effective_crime_months_available,
             ),
         )
 
@@ -370,8 +451,12 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             ),
             area_crime=_build_area_crime_completeness(
                 crime=crime,
-                crime_months_available=crime_months_available,
-                crime_updated_at=_to_optional_datetime(crime_updated_at),
+                crime_months_available=effective_crime_months_available,
+                crime_updated_at=effective_crime_updated_at,
+                school_updated_at=school_updated_at,
+                global_crime_updated_at=global_crime_updated_at_dt,
+                has_global_crime_data=global_crime_months_available > 0,
+                inferred_no_incidents=inferred_no_incidents,
             ),
         )
 
@@ -556,17 +641,43 @@ def _build_area_crime_completeness(
     crime: SchoolAreaCrime | None,
     crime_months_available: int,
     crime_updated_at: datetime | None,
+    school_updated_at: datetime | None,
+    global_crime_updated_at: datetime | None,
+    has_global_crime_data: bool,
+    inferred_no_incidents: bool,
 ) -> SchoolProfileSectionCompleteness:
     if crime is None:
+        if not has_global_crime_data:
+            return _section_completeness(
+                status="unavailable",
+                reason_code="source_missing",
+                last_updated_at=None,
+            )
+        if (
+            school_updated_at is not None
+            and global_crime_updated_at is not None
+            and school_updated_at > global_crime_updated_at
+        ):
+            return _section_completeness(
+                status="unavailable",
+                reason_code="stale_after_school_refresh",
+                last_updated_at=global_crime_updated_at,
+            )
         return _section_completeness(
             status="unavailable",
-            reason_code="not_joined_yet",
-            last_updated_at=None,
+            reason_code="source_coverage_gap",
+            last_updated_at=global_crime_updated_at,
         )
     if crime_months_available < 12:
         return _section_completeness(
             status="partial",
-            reason_code="source_missing",
+            reason_code="source_coverage_gap",
+            last_updated_at=crime_updated_at,
+        )
+    if inferred_no_incidents and crime.total_incidents == 0:
+        return _section_completeness(
+            status="available",
+            reason_code="no_incidents_in_radius",
             last_updated_at=crime_updated_at,
         )
     return _section_completeness(

@@ -3,7 +3,6 @@ import { CalendarDays, Clock3 } from "lucide-react";
 import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Badge } from "../../../components/ui/Badge";
-import { Card } from "../../../components/ui/Card";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type { OfstedTimelineVM, SectionCompletenessVM } from "../types";
 
@@ -24,10 +23,13 @@ function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
 
 export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCardProps): JSX.Element {
   return (
-    <Card className="space-y-5 p-5 sm:p-6">
+    <section aria-labelledby="inspection-heading" className="panel-surface rounded-lg space-y-5 p-5 sm:p-6">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold text-primary sm:text-xl">Ofsted Timeline</h2>
+          <h2 id="inspection-heading" className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl">
+            <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
+            Inspection History
+          </h2>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
               {timeline.coverage.eventsCount} {timeline.coverage.eventsCount === 1 ? "event" : "events"}
@@ -56,36 +58,77 @@ export function OfstedTimelineCard({ timeline, completeness }: OfstedTimelineCar
       {timeline.events.length === 0 ? (
         <MetricUnavailable metricLabel="Ofsted timeline events" />
       ) : (
-        <ol className="space-y-3">
-          {timeline.events.map((event) => (
-            <li
-              key={event.inspectionNumber}
-              className="rounded-lg border border-border-subtle/60 bg-surface/50 p-3"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <p className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                    <CalendarDays className="h-3.5 w-3.5 text-disabled" aria-hidden />
-                    <span>{event.inspectionDate}</span>
-                  </p>
-                  <p className="text-xs text-secondary">{event.inspectionType}</p>
+        <ol className="relative ml-3">
+          {/* Vertical connector line */}
+          {timeline.events.length > 1 ? (
+            <div
+              className="absolute bottom-4 left-0 top-4 w-px bg-border-subtle/80"
+              aria-hidden
+            />
+          ) : null}
+
+          {timeline.events.map((event, index) => {
+            const isLatest = index === 0;
+            const hasOutcome = Boolean(event.outcomeLabel);
+
+            return (
+              <li
+                key={event.inspectionNumber}
+                className="relative pb-5 pl-7 last:pb-0"
+              >
+                {/* Timeline node dot */}
+                <div
+                  className={`absolute left-0 top-1.5 -translate-x-1/2 rounded-full border-2 ${
+                    isLatest
+                      ? "h-3 w-3 border-brand bg-brand"
+                      : "h-2.5 w-2.5 border-border bg-surface"
+                  }`}
+                  aria-hidden
+                />
+
+                <div
+                  className={`rounded-lg border p-3 transition-colors ${
+                    isLatest
+                      ? "border-brand/20 bg-brand/[0.04]"
+                      : "border-border-subtle/60 bg-surface/50"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <p className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+                          <CalendarDays className="h-3.5 w-3.5 text-disabled" aria-hidden />
+                          <span>{event.inspectionDate}</span>
+                        </p>
+                        {isLatest ? (
+                          <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                            Latest
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-xs text-secondary">{event.inspectionType}</p>
+                    </div>
+
+                    <Badge
+                      variant={hasOutcome ? "info" : "outline"}
+                      className="text-xs"
+                    >
+                      {outcomeLabel(event)}
+                    </Badge>
+                  </div>
+
+                  {event.publicationDate ? (
+                    <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-secondary">
+                      <Clock3 className="h-3.5 w-3.5 text-disabled" aria-hidden />
+                      Published: {event.publicationDate}
+                    </p>
+                  ) : null}
                 </div>
-
-                <Badge variant={event.outcomeLabel ? "info" : "outline"} className="text-xs">
-                  {outcomeLabel(event)}
-                </Badge>
-              </div>
-
-              {event.publicationDate ? (
-                <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-secondary">
-                  <Clock3 className="h-3.5 w-3.5 text-disabled" aria-hidden />
-                  Published: {event.publicationDate}
-                </p>
-              ) : null}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
       )}
-    </Card>
+    </section>
   );
 }

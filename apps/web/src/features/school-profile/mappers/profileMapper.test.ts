@@ -121,7 +121,7 @@ const BASE_PROFILE: SchoolProfileResponse = {
     },
     area_crime: {
       status: "partial",
-      reason_code: "source_missing",
+      reason_code: "source_coverage_gap",
       last_updated_at: "2026-01-31T13:00:00Z",
       years_available: null
     }
@@ -209,6 +209,13 @@ describe("mapCompletenessReasonToMessageKey", () => {
       "pipelineFailedRecently"
     );
     expect(mapCompletenessReasonToMessageKey("not_applicable")).toBe("notApplicable");
+    expect(mapCompletenessReasonToMessageKey("source_coverage_gap")).toBe("sourceCoverageGap");
+    expect(mapCompletenessReasonToMessageKey("stale_after_school_refresh")).toBe(
+      "staleAfterSchoolRefresh"
+    );
+    expect(mapCompletenessReasonToMessageKey("no_incidents_in_radius")).toBe(
+      "noIncidentsInRadius"
+    );
     expect(mapCompletenessReasonToMessageKey(null)).toBeNull();
   });
 });
@@ -416,7 +423,7 @@ describe("mapProfileToVM", () => {
     expect(vm.completeness.demographics.lastUpdatedAt).toMatch(/31.*Jan.*2026/);
 
     expect(vm.completeness.areaCrime.status).toBe("partial");
-    expect(vm.completeness.areaCrime.messageKey).toBe("missing");
+    expect(vm.completeness.areaCrime.messageKey).toBe("sourceCoverageGap");
 
     expect(vm.completeness.trends.status).toBe("partial");
     expect(vm.completeness.trends.messageKey).toBe("missing");

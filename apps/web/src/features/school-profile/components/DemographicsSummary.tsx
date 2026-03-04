@@ -27,30 +27,30 @@ export function DemographicsSummary({
 }: DemographicsSummaryProps): JSX.Element {
   if (!demographics) {
     return (
-      <section aria-labelledby="demographics-heading">
-        <div className="mb-5 flex items-baseline justify-between gap-3">
+      <section aria-labelledby="demographics-heading" className="panel-surface rounded-lg space-y-5 p-5 sm:p-6">
+        <div className="flex items-baseline justify-between gap-3">
           <h2
             id="demographics-heading"
-            className="text-lg font-semibold text-primary sm:text-xl"
+            className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl"
           >
+            <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
             Demographics
           </h2>
         </div>
-        <div className="space-y-3">
-          <SectionCompletenessNotice sectionLabel="Demographics" completeness={completeness} />
-          <MetricUnavailable metricLabel="Demographics" />
-        </div>
+        <SectionCompletenessNotice sectionLabel="Demographics" completeness={completeness} />
+        <MetricUnavailable metricLabel="Demographics" />
       </section>
     );
   }
 
   return (
-    <section aria-labelledby="demographics-heading">
-      <div className="mb-5 flex items-baseline justify-between gap-3">
+    <section aria-labelledby="demographics-heading" className="panel-surface rounded-lg space-y-5 p-5 sm:p-6">
+      <div className="flex items-baseline justify-between gap-3">
         <h2
           id="demographics-heading"
-          className="text-lg font-semibold text-primary sm:text-xl"
+          className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl"
         >
+          <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
           Demographics
         </h2>
         <span className="text-xs text-secondary" style={{ opacity: "var(--text-opacity-muted)" }}>

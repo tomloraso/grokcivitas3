@@ -1,4 +1,4 @@
-import { useParams, useLocation, Link } from "react-router-dom";
+import { useLocation, useParams, Link } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
@@ -6,13 +6,11 @@ import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
-import { AreaCrimeSummaryCard } from "./components/AreaCrimeSummaryCard";
-import { AreaDeprivationCard } from "./components/AreaDeprivationCard";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsSummary } from "./components/DemographicsSummary";
-import { KeyFactsSummary } from "./components/KeyFactsSummary";
-import { OfstedHeadlineCard } from "./components/OfstedHeadlineCard";
+import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
 import { OfstedTimelineCard } from "./components/OfstedTimelineCard";
+import { PageCompletenessBar } from "./components/PageCompletenessBar";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { TrendPanel } from "./components/TrendPanel";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
@@ -20,7 +18,9 @@ import { useSchoolProfile } from "./hooks/useSchoolProfile";
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
   const location = useLocation();
-  const fromSearch = (location.state as { fromSearch?: { postcode: string; radius: number } } | null)?.fromSearch;
+  const fromSearch = (
+    location.state as { fromSearch?: { postcode: string; radius: number } } | null
+  )?.fromSearch;
   const { status, profile, errorMessage, retry } = useSchoolProfile(urn);
 
   return (
@@ -59,7 +59,9 @@ export function SchoolProfileFeature(): JSX.Element {
           <Breadcrumbs segments={[{ label: "Error" }]} />
           <ErrorState
             title="Something went wrong"
-            description={errorMessage ?? "An unexpected error occurred while loading the school profile."}
+            description={
+              errorMessage ?? "An unexpected error occurred while loading the school profile."
+            }
             onRetry={retry}
           />
         </>
@@ -71,62 +73,55 @@ export function SchoolProfileFeature(): JSX.Element {
           <Breadcrumbs
             segments={[
               ...(fromSearch
-                ? [{
-                    label: `${fromSearch.postcode} · ${fromSearch.radius} mi`,
-                    href: paths.home,
-                    state: { restoreSearch: fromSearch },
-                  }]
+                ? [
+                    {
+                      label: `${fromSearch.postcode} - ${fromSearch.radius} mi`,
+                      href: paths.home,
+                      state: { restoreSearch: fromSearch },
+                    },
+                  ]
                 : []),
               { label: profile.school.name },
             ]}
           />
 
-          <div className="space-y-10 sm:space-y-12">
-            {/* School identity header */}
-            <ProfileHeader school={profile.school} />
-
-            {/* Key facts — prominent at-a-glance summary */}
-            <KeyFactsSummary
+          <div className="space-y-14 sm:space-y-16">
+            {/* Zone 1: Hero */}
+            <ProfileHeader
+              school={profile.school}
               ofsted={profile.ofsted}
+              ofstedCompleteness={profile.completeness.ofstedLatest}
               demographics={profile.demographics}
               areaContext={profile.areaContext}
             />
 
-            {/* Ofsted + demographics row on larger screens */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
-              {/* Ofsted headline */}
-              <OfstedHeadlineCard
-                ofsted={profile.ofsted}
-                completeness={profile.completeness.ofstedLatest}
+            {/* Page-level completeness banner */}
+            <PageCompletenessBar completeness={profile.completeness} />
+
+            {/* Zone 2: The School */}
+            <div className="space-y-10 sm:space-y-12">
+              {/* Ofsted timeline - inspection record comes first */}
+              <OfstedTimelineCard
+                timeline={profile.ofstedTimeline}
+                completeness={profile.completeness.ofstedTimeline}
               />
 
-              {/* Demographics summary — current-year values only */}
+              {/* Demographics summary - current-year values */}
               <DemographicsSummary
                 demographics={profile.demographics}
                 completeness={profile.completeness.demographics}
               />
+
+              {/* Trends - directional change, suppressed when < 2 years */}
+              <TrendPanel trends={profile.trends} completeness={profile.completeness.trends} />
             </div>
 
-            {/* Trends — directional change only, suppressed when < 2 years */}
-            <TrendPanel trends={profile.trends} completeness={profile.completeness.trends} />
-
-            {/* Ofsted timeline */}
-            <OfstedTimelineCard
-              timeline={profile.ofstedTimeline}
-              completeness={profile.completeness.ofstedTimeline}
+            {/* Zone 3: The Neighbourhood */}
+            <NeighbourhoodSection
+              areaContext={profile.areaContext}
+              deprivationCompleteness={profile.completeness.areaDeprivation}
+              crimeCompleteness={profile.completeness.areaCrime}
             />
-
-            {/* Area context */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <AreaDeprivationCard
-                areaContext={profile.areaContext}
-                completeness={profile.completeness.areaDeprivation}
-              />
-              <AreaCrimeSummaryCard
-                areaContext={profile.areaContext}
-                completeness={profile.completeness.areaCrime}
-              />
-            </div>
 
             {/* Coverage notice */}
             <CoverageNotice

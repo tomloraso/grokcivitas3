@@ -147,7 +147,10 @@ const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionComplete
   rejected_by_validation: "validationRejected",
   not_joined_yet: "notJoinedYet",
   pipeline_failed_recently: "pipelineFailedRecently",
-  not_applicable: "notApplicable"
+  not_applicable: "notApplicable",
+  source_coverage_gap: "sourceCoverageGap",
+  stale_after_school_refresh: "staleAfterSchoolRefresh",
+  no_incidents_in_radius: "noIncidentsInRadius"
 };
 
 interface SectionCompletenessContract {

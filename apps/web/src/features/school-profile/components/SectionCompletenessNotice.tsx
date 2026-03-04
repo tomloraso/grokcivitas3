@@ -27,15 +27,14 @@ const REASON_COPY: Record<NonNullable<SectionCompletenessVM["messageKey"]>, stri
   pipelineFailedRecently:
     "This information is temporarily unavailable while we update our records.",
   notApplicable:
-    "This section doesn't apply to this type of school."
+    "This section doesn't apply to this type of school.",
+  sourceCoverageGap:
+    "The source currently has limited coverage for this information.",
+  staleAfterSchoolRefresh:
+    "This section will refresh after the next local-area data update.",
+  noIncidentsInRadius:
+    "No incidents were recorded in this area for the latest reporting window."
 };
-
-function statusLead(status: SectionCompletenessVM["status"]): string {
-  if (status === "partial") {
-    return "Some data is available now.";
-  }
-  return "This section is currently unavailable.";
-}
 
 export function SectionCompletenessNotice({
   sectionLabel,
@@ -46,13 +45,27 @@ export function SectionCompletenessNotice({
     return null;
   }
 
-  const Icon = completeness.status === "partial" ? AlertTriangle : Info;
   const reasonCopy = completeness.messageKey ? REASON_COPY[completeness.messageKey] : null;
-  const yearsCopy =
-    completeness.yearsAvailable && completeness.yearsAvailable.length > 0
-      ? `${completeness.yearsAvailable.length} ${completeness.yearsAvailable.length === 1 ? "year" : "years"} currently available.`
-      : null;
 
+  // Partial: lightweight inline indicator (icon + badge)
+  if (completeness.status === "partial") {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-2 text-xs text-secondary",
+          className
+        )}
+        role="status"
+        aria-label={`${sectionLabel} data is partially available`}
+      >
+        <AlertTriangle className="h-3.5 w-3.5 text-warning" aria-hidden />
+        <span>{reasonCopy ?? "Some data may be incomplete."}</span>
+        <DataStatusBadge status={completeness.status} />
+      </div>
+    );
+  }
+
+  // Unavailable: full notice block
   return (
     <div
       className={cn(
@@ -64,13 +77,12 @@ export function SectionCompletenessNotice({
     >
       <div className="flex items-center justify-between gap-2">
         <p className="inline-flex items-center gap-1.5 font-medium text-primary">
-          <Icon className="h-4 w-4 text-warning" aria-hidden />
-          <span>{statusLead(completeness.status)}</span>
+          <Info className="h-4 w-4 text-info" aria-hidden />
+          <span>This section is currently unavailable.</span>
         </p>
         <DataStatusBadge status={completeness.status} />
       </div>
       {reasonCopy ? <p>{reasonCopy}</p> : null}
-      {yearsCopy ? <p>{yearsCopy}</p> : null}
       {completeness.lastUpdatedAt ? (
         <p className="text-xs text-disabled">Last refreshed: {completeness.lastUpdatedAt}</p>
       ) : null}

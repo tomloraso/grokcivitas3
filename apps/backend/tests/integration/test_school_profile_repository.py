@@ -231,6 +231,21 @@ def _seed_data(engine: Engine) -> None:
                     300,
                     '2005-09-01',
                     NULL
+                ),
+                (
+                    '910002',
+                    'Profile Zero Crime School',
+                    'Primary',
+                    'Community school',
+                    'Open',
+                    NULL,
+                    0,
+                    0,
+                    ST_SetSRID(ST_MakePoint(-0.1600, 51.5000), 4326)::geography(Point, 4326),
+                    200,
+                    180,
+                    '2010-09-01',
+                    NULL
                 )
                 ON CONFLICT (urn) DO NOTHING
                 """
@@ -493,13 +508,17 @@ def _seed_data(engine: Engine) -> None:
 
 def _cleanup_data(engine: Engine) -> None:
     with engine.begin() as connection:
-        connection.execute(text("DELETE FROM area_crime_context WHERE urn = '910001'"))
+        connection.execute(text("DELETE FROM area_crime_context WHERE urn IN ('910001', '910002')"))
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code = 'E01004736'"))
-        connection.execute(text("DELETE FROM ofsted_inspections WHERE urn = '910001'"))
-        connection.execute(text("DELETE FROM school_ofsted_latest WHERE urn = '910001'"))
-        connection.execute(text("DELETE FROM school_demographics_yearly WHERE urn = '910001'"))
+        connection.execute(text("DELETE FROM ofsted_inspections WHERE urn IN ('910001', '910002')"))
+        connection.execute(
+            text("DELETE FROM school_ofsted_latest WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_demographics_yearly WHERE urn IN ('910001', '910002')")
+        )
         connection.execute(text("DELETE FROM postcode_cache WHERE postcode = 'SW1A 1AA'"))
-        connection.execute(text("DELETE FROM schools WHERE urn = '910001'"))
+        connection.execute(text("DELETE FROM schools WHERE urn IN ('910001', '910002')"))
 
 
 def test_school_profile_repository_returns_profile_with_latest_demographics(engine: Engine) -> None:
@@ -556,7 +575,7 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.completeness.ofsted_timeline.status == "available"
     assert result.completeness.area_deprivation.status == "available"
     assert result.completeness.area_crime.status == "partial"
-    assert result.completeness.area_crime.reason_code == "source_missing"
+    assert result.completeness.area_crime.reason_code == "source_coverage_gap"
 
 
 def test_school_profile_repository_returns_none_for_unknown_urn(engine: Engine) -> None:
@@ -565,3 +584,49 @@ def test_school_profile_repository_returns_none_for_unknown_urn(engine: Engine) 
     result = repository.get_school_profile("999999")
 
     assert result is None
+
+
+def test_school_profile_repository_infers_zero_incident_crime_snapshot(engine: Engine) -> None:
+    repository = PostgresSchoolProfileRepository(engine=engine)
+
+    result = repository.get_school_profile("910002")
+
+    assert result is not None
+    assert result.school.urn == "910002"
+    assert result.area_context.coverage.has_crime is True
+    assert result.area_context.coverage.crime_months_available >= 1
+    assert result.area_context.crime is not None
+    assert result.area_context.crime.latest_month == "2026-01"
+    assert result.area_context.crime.total_incidents == 0
+    assert result.area_context.crime.categories == ()
+    if result.area_context.coverage.crime_months_available < 12:
+        assert result.completeness.area_crime.status == "partial"
+        assert result.completeness.area_crime.reason_code == "source_coverage_gap"
+    else:
+        assert result.completeness.area_crime.status == "available"
+        assert result.completeness.area_crime.reason_code == "no_incidents_in_radius"
+
+
+def test_school_profile_repository_marks_area_crime_stale_after_school_refresh(
+    engine: Engine,
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                UPDATE schools
+                SET updated_at = timezone('utc', now()) + interval '3 days'
+                WHERE urn = '910002'
+                """
+            )
+        )
+
+    repository = PostgresSchoolProfileRepository(engine=engine)
+    result = repository.get_school_profile("910002")
+
+    assert result is not None
+    assert result.area_context.coverage.has_crime is False
+    assert result.area_context.crime is None
+    assert result.completeness.area_crime.status == "unavailable"
+    assert result.completeness.area_crime.reason_code == "stale_after_school_refresh"
+    assert result.completeness.area_crime.last_updated_at is not None

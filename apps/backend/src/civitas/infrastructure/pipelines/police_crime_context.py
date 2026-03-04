@@ -6,6 +6,7 @@ import hashlib
 import io
 import json
 import math
+import re
 import shutil
 import urllib.parse
 import urllib.request
@@ -63,6 +64,12 @@ def extract_latest_police_archive_url(index_html: str) -> str:
 
     latest_month = max(archive_links.keys())
     return archive_links[latest_month]
+
+
+ARCHIVE_STREET_FILE_PATTERN = re.compile(
+    r"^(?P<month>\d{4}-\d{2})-(?P<force>.+)-street\.csv$",
+    re.IGNORECASE,
+)
 
 
 def validate_police_street_headers(headers: Sequence[str]) -> None:
@@ -131,6 +138,7 @@ class PoliceCrimeContextPipeline:
         _copy_from_source(archive_url, archive_path)
         extracted_files = _extract_archive(archive_path, extracted_dir)
         row_count = _count_csv_rows(extracted_files)
+        coverage_diagnostics = _build_archive_coverage_diagnostics(extracted_files)
 
         metadata = {
             "downloaded_at": datetime.now(timezone.utc).isoformat(),
@@ -142,6 +150,10 @@ class PoliceCrimeContextPipeline:
             "sha256": _sha256_file(archive_path),
             "extracted_file_count": len(extracted_files),
             "rows": row_count,
+            "archive_months": coverage_diagnostics["archive_months"],
+            "archive_forces": coverage_diagnostics["archive_forces"],
+            "archive_month_count": coverage_diagnostics["archive_month_count"],
+            "archive_force_count": coverage_diagnostics["archive_force_count"],
         }
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
         return row_count
@@ -468,6 +480,38 @@ def _resolve_extracted_csv_files(bronze_source_path: Path) -> list[Path]:
             return files
     files = sorted(path for path in bronze_source_path.rglob("*-street.csv") if path.is_file())
     return files
+
+
+def _build_archive_coverage_diagnostics(extracted_files: Sequence[Path]) -> dict[str, object]:
+    archive_months: set[str] = set()
+    archive_forces: set[str] = set()
+    for extracted_file in extracted_files:
+        month, force = _parse_archive_street_file_name(extracted_file.name)
+        if month is not None:
+            archive_months.add(month)
+        if force is not None:
+            archive_forces.add(force)
+    return {
+        "archive_months": sorted(archive_months),
+        "archive_forces": sorted(archive_forces),
+        "archive_month_count": len(archive_months),
+        "archive_force_count": len(archive_forces),
+    }
+
+
+def _parse_archive_street_file_name(file_name: str) -> tuple[str | None, str | None]:
+    match = ARCHIVE_STREET_FILE_PATTERN.match(file_name)
+    if match is None:
+        return None, None
+
+    month = match.group("month")
+    if _parse_month(month) is None:
+        return None, None
+
+    force = match.group("force").strip().casefold()
+    if not force:
+        return month, None
+    return month, force
 
 
 def _iter_csv_rows(csv_path: Path) -> list[tuple[list[str], dict[str, str]]]:

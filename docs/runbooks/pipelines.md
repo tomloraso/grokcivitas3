@@ -41,6 +41,9 @@ Use alternate Bronze roots only for isolated experiments or drills, not for norm
 - Layout: `data/bronze/<source>/<run-date>/...`
 - Files are source-specific (CSV/ZIP/manifests/metadata JSON).
 - Used for traceability and no-change detection checksums.
+- `police_crime_context/archive.metadata.json` also records extracted coverage diagnostics:
+  - `archive_months`, `archive_month_count`
+  - `archive_forces`, `archive_force_count`
 
 ## Silver
 
@@ -113,4 +116,3 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `skipped_no_change` means Bronze checksums matched the last successful run for that source.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.
-

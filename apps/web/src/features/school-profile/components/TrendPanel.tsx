@@ -29,9 +29,10 @@ export function TrendPanel({ trends, completeness }: TrendPanelProps): JSX.Eleme
   // Completely unavailable — show notice
   if (!trends) {
     return (
-      <section aria-labelledby="trends-heading">
-        <div className="mb-5 flex items-baseline justify-between gap-3">
-          <h2 id="trends-heading" className="text-lg font-semibold text-primary sm:text-xl">
+      <section aria-labelledby="trends-heading" className="panel-surface rounded-lg space-y-5 p-5 sm:p-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="trends-heading" className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl">
+            <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
             Trends
           </h2>
         </div>
@@ -55,9 +56,10 @@ export function TrendPanel({ trends, completeness }: TrendPanelProps): JSX.Eleme
   }
 
   return (
-    <section aria-labelledby="trends-heading">
-      <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h2 id="trends-heading" className="text-lg font-semibold text-primary sm:text-xl">
+    <section aria-labelledby="trends-heading" className="panel-surface rounded-lg space-y-5 p-5 sm:p-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="trends-heading" className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl">
+          <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
           Trends
         </h2>
         {trends.yearsAvailable.length > 1 ? (
@@ -84,15 +86,15 @@ export function TrendPanel({ trends, completeness }: TrendPanelProps): JSX.Eleme
           return (
             <div
               key={series.metricKey}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle/60 bg-surface/50 px-4 py-3"
+              className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle/60 bg-surface/50 px-4 py-3 transition-colors duration-fast hover:border-border-subtle hover:bg-surface/70"
             >
               <span className="text-sm text-primary">{label}</span>
               <div className="flex items-center gap-3">
                 {sparkData.length > 1 ? (
                   <Sparkline
                     data={sparkData}
-                    width={72}
-                    height={24}
+                    width={120}
+                    height={36}
                     aria-label={`${series.label} trend line`}
                   />
                 ) : null}

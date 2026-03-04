@@ -225,7 +225,6 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByText("NW1 8NH")).toBeInTheDocument();
 
     expect(screen.getAllByLabelText(/Ofsted rating: Good/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Graded")).toBeInTheDocument();
 
     expect(screen.getByText("Demographics")).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
@@ -281,7 +280,7 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    await screen.findByText("Ofsted Timeline");
+    await screen.findByText("Inspection History");
     expect(screen.getByText("11 Nov 2025")).toBeInTheDocument();
     expect(screen.getByText("10 Jan 2024")).toBeInTheDocument();
     expect(screen.getByText("Strong standard")).toBeInTheDocument();
@@ -352,10 +351,85 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    await screen.findByText("Ofsted Timeline");
+    await screen.findByText("Inspection History");
     expect(screen.getByLabelText("Ofsted timeline events data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Area deprivation data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Area crime context data is not available")).toBeInTheDocument();
+  });
+
+  it("renders zero-incident crime state with a coverage-gap notice", async () => {
+    const zeroIncidentProfile: SchoolProfileResponse = {
+      ...PROFILE_RESPONSE,
+      area_context: {
+        ...PROFILE_RESPONSE.area_context,
+        crime: {
+          radius_miles: 1,
+          latest_month: "2026-01",
+          total_incidents: 0,
+          categories: []
+        },
+        coverage: {
+          has_deprivation: true,
+          has_crime: true,
+          crime_months_available: 1
+        }
+      },
+      completeness: {
+        ...PROFILE_RESPONSE.completeness,
+        area_crime: {
+          status: "partial",
+          reason_code: "source_coverage_gap",
+          last_updated_at: "2026-01-31T13:00:00Z",
+          years_available: null
+        }
+      }
+    };
+    profileMock.mockResolvedValue(zeroIncidentProfile);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Area Crime");
+    expect(
+      screen.getByText("No incidents were recorded within this radius for the latest available month.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The source currently has limited coverage for this information.")
+    ).toBeInTheDocument();
+    expect(screen.getByText("Total incidents (Jan 2026)")).toBeInTheDocument();
+  });
+
+  it("renders stale-refresh notice when area crime needs recompute", async () => {
+    const staleCrimeProfile: SchoolProfileResponse = {
+      ...PROFILE_RESPONSE,
+      area_context: {
+        ...PROFILE_RESPONSE.area_context,
+        crime: null,
+        coverage: {
+          has_deprivation: true,
+          has_crime: false,
+          crime_months_available: 0
+        }
+      },
+      completeness: {
+        ...PROFILE_RESPONSE.completeness,
+        area_crime: {
+          status: "unavailable",
+          reason_code: "stale_after_school_refresh",
+          last_updated_at: "2026-01-31T13:00:00Z",
+          years_available: null
+        }
+      }
+    };
+    profileMock.mockResolvedValue(staleCrimeProfile);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Area Crime");
+    expect(
+      screen.getByText("This section will refresh after the next local-area data update.")
+    ).toBeInTheDocument();
   });
 
   it("handles single-year trend series correctly", async () => {

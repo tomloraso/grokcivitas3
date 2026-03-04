@@ -160,3 +160,7 @@ def test_police_download_writes_contract_version_to_metadata(tmp_path: Path) -> 
     metadata_path = context.bronze_source_path / POLICE_METADATA_FILE_NAME
     payload = json.loads(metadata_path.read_text(encoding="utf-8"))
     assert payload["normalization_contract_version"] == police_contract.CONTRACT_VERSION
+    assert payload["archive_months"] == ["2026-01"]
+    assert payload["archive_forces"] == ["example"]
+    assert payload["archive_month_count"] == 1
+    assert payload["archive_force_count"] == 1

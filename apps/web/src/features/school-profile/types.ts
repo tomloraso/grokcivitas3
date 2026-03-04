@@ -154,7 +154,10 @@ export type SectionCompletenessReasonCode =
   | "rejected_by_validation"
   | "not_joined_yet"
   | "pipeline_failed_recently"
-  | "not_applicable";
+  | "not_applicable"
+  | "source_coverage_gap"
+  | "stale_after_school_refresh"
+  | "no_incidents_in_radius";
 
 export type SectionCompletenessMessageKey =
   | "missing"
@@ -162,7 +165,10 @@ export type SectionCompletenessMessageKey =
   | "validationRejected"
   | "notJoinedYet"
   | "pipelineFailedRecently"
-  | "notApplicable";
+  | "notApplicable"
+  | "sourceCoverageGap"
+  | "staleAfterSchoolRefresh"
+  | "noIncidentsInRadius";
 
 export interface SectionCompletenessVM {
   status: SectionCompletenessStatus;

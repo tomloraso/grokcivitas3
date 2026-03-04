@@ -10,6 +10,9 @@ SectionCompletenessReasonCode = Literal[
     "not_joined_yet",
     "pipeline_failed_recently",
     "not_applicable",
+    "source_coverage_gap",
+    "stale_after_school_refresh",
+    "no_incidents_in_radius",
 ]
 
 
