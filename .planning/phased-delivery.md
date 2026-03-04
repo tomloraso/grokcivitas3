@@ -184,7 +184,7 @@
 ## Phase S - Source strategy stabilization + trend history recovery (blocking)
 
 **Goal:** Replace single-year demographics source behavior with a verified multi-year source strategy so trend coverage is reliable, explainable, and phase-inclusive.
-**Status:** Complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md`.
+**Status:** S1-S5 complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md`; S6 ethnicity support plan added (2026-03-04).
 
 ### Detailed design
 
@@ -194,6 +194,7 @@
 - `.planning/phases/phase-source-stabilization/S3-multi-source-normalization-and-gold-upsert.md`
 - `.planning/phases/phase-source-stabilization/S4-completeness-contract-and-parent-facing-copy.md`
 - `.planning/phases/phase-source-stabilization/S5-quality-gates-and-signoff.md`
+- `.planning/phases/phase-source-stabilization/S6-school-level-ethnicity-breakdown-support.md`
 
 ### Deliverables
 
@@ -202,13 +203,15 @@
 3. **S3: Multi-source normalization + Gold upsert** - combine SPC + SEN school-level files into `school_demographics_yearly` with consistent `(urn, academic_year)` semantics.
 4. **S4: Completeness contract + parent copy** - expose precise reason codes and messaging for sparse/partial history states in API and web profile/trends UX.
 5. **S5: Quality gates + sign-off** - enforce coverage/depth gates and document evidence in one repository state.
+6. **S6: School-level ethnicity breakdown support** - map existing SPC school-level ethnicity columns into serving contracts and remove the ethnicity unsupported gap where data exists.
 
 ### Exit criteria
 
 - Open-school trend history has `>=2` years for primary and secondary at agreed target thresholds.
 - `school_demographics_yearly` reflects multi-year coverage from approved source families (not single-year fallback behavior).
 - Trend suppression and UI copy align with actual source availability and do not use pipeline-internal language.
-- All `S5` mandatory gates pass with evidence.
+- School profile APIs expose ethnicity breakdown from approved SPC school-level files where present.
+- All implemented `Phase S` gates pass with evidence.
 
 ### Dependencies
 

@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Complete
+- Status: Extended (S1-S5 complete; S6 planned)
 - Last updated: 2026-03-04
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
@@ -60,13 +60,14 @@ flowchart LR
 
 ## Delivery Model
 
-Phase Source Stabilization is split into five deliverables:
+Phase Source Stabilization is split into six deliverables:
 
 1. `S1-source-contract-and-catalog-freeze.md`
 2. `S2-release-file-discovery-and-bronze-ingest.md`
 3. `S3-multi-source-normalization-and-gold-upsert.md`
 4. `S4-completeness-contract-and-parent-facing-copy.md`
 5. `S5-quality-gates-and-signoff.md`
+6. `S6-school-level-ethnicity-breakdown-support.md`
 
 ## Execution Sequence
 
@@ -75,19 +76,22 @@ Phase Source Stabilization is split into five deliverables:
 3. Complete `S3` to normalize, merge, and promote multi-year demographics.
 4. Complete `S4` to align API/UI completeness semantics and user messaging.
 5. Complete `S5` as hard gate sign-off.
+6. Complete `S6` to close school-level ethnicity coverage using existing SPC source files.
 
 ## Definition of Done
 
 - Multi-year demographics history is sourced from approved, tested files.
 - Open-school trend depth reaches target thresholds for primary and secondary.
 - Completeness reason codes are source-aware and parent-readable.
-- All `S5` gates pass in one repository state (`make lint`, `make test` included).
+- School-level ethnicity breakdown is supported from approved SPC school-level files.
+- All implemented gates pass in one repository state (`make lint`, `make test` included).
 
 ## Change Management
 
 - `.planning/phased-delivery.md` remains the high-level source of truth.
 - Any source/catalog decision change must update `S1` and `S2` in the same PR.
 - Any API/UI completeness behavior change must update `S4` in the same PR.
+- Any school-level ethnicity coverage behavior change must update `S6` in the same PR.
 
 ## Decisions Captured
 
@@ -95,3 +99,4 @@ Phase Source Stabilization is split into five deliverables:
 - 2026-03-04: multi-year demographics recovery requires source-strategy change, not UI-only mitigations.
 - 2026-03-04: phase implementation completed with gate evidence captured in `signoff-2026-03-04.md`.
 - 2026-03-04: direct FSM percentage support is enabled from SPC release files; unsupported flag now reflects source-family availability rather than a hardcoded false.
+- 2026-03-04: S6 plan added to implement school-level ethnicity breakdown using existing SPC school-level files.
