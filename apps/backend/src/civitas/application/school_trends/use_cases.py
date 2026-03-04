@@ -36,6 +36,7 @@ class GetSchoolTrendsUseCase:
             years_count=years_count,
             years_available=years_available,
             last_updated_at=demographics_series.latest_updated_at,
+            rows=rows,
         )
 
         return SchoolTrendsResponseDto(
@@ -111,18 +112,26 @@ def _build_completeness(
     years_count: int,
     years_available: tuple[str, ...],
     last_updated_at: datetime | None,
+    rows: Sequence[SchoolDemographicsYearlyRow],
 ) -> SchoolTrendsCompletenessDto:
     if years_count == 0:
         return SchoolTrendsCompletenessDto(
             status="unavailable",
-            reason_code="source_missing",
+            reason_code="source_file_missing_for_year",
             last_updated_at=None,
             years_available=years_available,
         )
     if years_count < MIN_YEARS_FOR_COMPLETE_HISTORY:
         return SchoolTrendsCompletenessDto(
             status="partial",
-            reason_code="source_missing",
+            reason_code="insufficient_years_published",
+            last_updated_at=last_updated_at,
+            years_available=years_available,
+        )
+    if _has_partial_metric_coverage(rows):
+        return SchoolTrendsCompletenessDto(
+            status="partial",
+            reason_code="partial_metric_coverage",
             last_updated_at=last_updated_at,
             years_available=years_available,
         )
@@ -132,3 +141,18 @@ def _build_completeness(
         last_updated_at=last_updated_at,
         years_available=years_available,
     )
+
+
+def _has_partial_metric_coverage(rows: Sequence[SchoolDemographicsYearlyRow]) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.disadvantaged_pct,
+                row.sen_pct,
+                row.ehcp_pct,
+                row.eal_pct,
+            )
+        ):
+            return True
+    return False

@@ -9,6 +9,12 @@
 - Each phase ends with working tests, passing lint, and a demoable artifact.
 - Deployment assumptions are tracked in `.planning/deployment-strategy.md` and updated when phase design changes runtime needs.
 
+## Program hold (effective 2026-03-04)
+
+- Progression to new expansion phases is paused until source-strategy and trend-history reliability concerns are closed.
+- `Phase S` (Source strategy stabilization + trend history recovery) is now a mandatory gate before advancing to `Phase 3`, `Phase 4`, or `Phase 5`.
+- If any `Phase S` acceptance criteria fail, subsequent phase work is limited to bug fixes and stabilization only.
+
 ---
 
 ## Phase 0 - Data foundation + GIAS baseline
@@ -175,6 +181,42 @@
 
 ---
 
+## Phase S - Source strategy stabilization + trend history recovery (blocking)
+
+**Goal:** Replace single-year demographics source behavior with a verified multi-year source strategy so trend coverage is reliable, explainable, and phase-inclusive.
+**Status:** Complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md`.
+
+### Detailed design
+
+- `.planning/phases/phase-source-stabilization/README.md`
+- `.planning/phases/phase-source-stabilization/S1-source-contract-and-catalog-freeze.md`
+- `.planning/phases/phase-source-stabilization/S2-release-file-discovery-and-bronze-ingest.md`
+- `.planning/phases/phase-source-stabilization/S3-multi-source-normalization-and-gold-upsert.md`
+- `.planning/phases/phase-source-stabilization/S4-completeness-contract-and-parent-facing-copy.md`
+- `.planning/phases/phase-source-stabilization/S5-quality-gates-and-signoff.md`
+
+### Deliverables
+
+1. **S1: Source contract and catalog freeze** - lock approved publications/releases/files and required columns with explicit fallback behavior.
+2. **S2: Release file discovery + Bronze ingest** - implement deterministic discovery of school-level underlying data assets and immutable Bronze manifests.
+3. **S3: Multi-source normalization + Gold upsert** - combine SPC + SEN school-level files into `school_demographics_yearly` with consistent `(urn, academic_year)` semantics.
+4. **S4: Completeness contract + parent copy** - expose precise reason codes and messaging for sparse/partial history states in API and web profile/trends UX.
+5. **S5: Quality gates + sign-off** - enforce coverage/depth gates and document evidence in one repository state.
+
+### Exit criteria
+
+- Open-school trend history has `>=2` years for primary and secondary at agreed target thresholds.
+- `school_demographics_yearly` reflects multi-year coverage from approved source families (not single-year fallback behavior).
+- Trend suppression and UI copy align with actual source availability and do not use pipeline-internal language.
+- All `S5` mandatory gates pass with evidence.
+
+### Dependencies
+
+- Phase 2 and Phase H outputs.
+- Blocks progression to Phase 3+ until signed off.
+
+---
+
 ## Phase UX - Visual quality + interaction uplift (web cross-cutting)
 
 **Goal:** Elevate Civitas web experience from functional baseline to polished, map-first editorial quality across search and profile journeys, with explicit dark/light mode control.
@@ -214,6 +256,7 @@
 
 - Phase 0 and Phase 1 web baseline.
 - Can run in parallel with Phase 2 backend work; coordinate with Phase 2 web section (`2F`) to keep profile styling aligned.
+- Must align with `Phase S` API completeness semantics before final UX sign-off on profile trend states.
 
 ---
 
@@ -236,6 +279,7 @@
 ### Dependencies
 
 - Phase 2.
+- Phase S.
 
 ---
 
@@ -294,6 +338,7 @@
 | 1 | Profiles + DfE + Ofsted headline | School profile with trends and latest Ofsted | Medium-large |
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
 | H | Hardening | Deterministic pipeline quality, completeness transparency, and operational resilience | Large (cross-cutting) |
+| S | Source strategy stabilization | Reliable multi-year trend coverage and source-contract clarity | Large (cross-cutting + source integration) |
 | UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
@@ -306,4 +351,4 @@
 1. **Auth provider** - managed provider vs custom email auth?
 2. **Payment provider** - Stripe assumed but not yet confirmed.
 3. **Typed metrics schema boundaries** - split by domain (`demographics`, `attendance`, `workforce`) or one wider yearly fact table?
-4. **DfE school-level demographics coverage** - which validated callable source will provide direct FSM and ethnicity at school level if not present in current endpoint set?
+4. **Phase S target thresholds** - should open-school `>=2` year and `>=3` year coverage thresholds be adjusted by phase category before final sign-off?

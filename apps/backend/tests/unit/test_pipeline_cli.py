@@ -44,16 +44,6 @@ class FakePipelineRunner:
         return PipelineSource.GIAS, self._result
 
 
-class FakeDfeBackfillRunner:
-    def __init__(self, result: PipelineResult) -> None:
-        self._result = result
-        self.lookback_years: int | None = None
-
-    def run(self, *, lookback_years: int | None) -> PipelineResult:
-        self.lookback_years = lookback_years
-        return self._result
-
-
 def _result(status: PipelineRunStatus, error_message: str | None = None) -> PipelineResult:
     return PipelineResult(
         status=status,
@@ -233,62 +223,3 @@ def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_run_id == run_id
     assert "gias: succeeded" in result.stdout.lower()
-
-
-def test_pipeline_backfill_dfe_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
-    fake_runner = FakeDfeBackfillRunner(result=_result(PipelineRunStatus.SUCCEEDED))
-    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
-
-    runner = CliRunner()
-    result = runner.invoke(
-        app,
-        [
-            "pipeline",
-            "backfill",
-            "--source",
-            "dfe_characteristics",
-            "--lookback-years",
-            "3",
-        ],
-    )
-
-    assert result.exit_code == 0
-    assert fake_runner.lookback_years == 3
-    assert "dfe_characteristics backfill: succeeded" in result.stdout.lower()
-
-
-def test_pipeline_backfill_requires_dfe_source(monkeypatch: pytest.MonkeyPatch) -> None:
-    fake_runner = FakeDfeBackfillRunner(result=_result(PipelineRunStatus.SUCCEEDED))
-    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
-
-    runner = CliRunner()
-    result = runner.invoke(
-        app,
-        [
-            "pipeline",
-            "backfill",
-            "--source",
-            "gias",
-        ],
-    )
-
-    assert result.exit_code != 0
-    assert "only dfe_characteristics is supported" in result.stdout.lower()
-
-
-def test_pipeline_backfill_returns_nonzero_on_hard_failure(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    fake_runner = FakeDfeBackfillRunner(
-        result=_result(PipelineRunStatus.FAILED_QUALITY_GATE, error_message="gate failed")
-    )
-    monkeypatch.setattr("civitas.cli.main.dfe_characteristics_backfill_runner", lambda: fake_runner)
-
-    runner = CliRunner()
-    result = runner.invoke(
-        app,
-        ["pipeline", "backfill", "--source", "dfe_characteristics"],
-    )
-
-    assert result.exit_code == 1
-    assert "gate failed" in result.stdout.lower()

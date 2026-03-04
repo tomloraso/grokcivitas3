@@ -34,6 +34,11 @@ METERS_PER_MILE = 1609.344
 SECTION_COMPLETENESS_STATUS = Literal["available", "partial", "unavailable"]
 SECTION_COMPLETENESS_REASON = Literal[
     "source_missing",
+    "insufficient_years_published",
+    "source_not_in_catalog",
+    "source_file_missing_for_year",
+    "source_schema_incompatible_for_year",
+    "partial_metric_coverage",
     "source_not_provided",
     "rejected_by_validation",
     "not_joined_yet",
@@ -528,7 +533,7 @@ def _build_demographics_completeness(
     if demographics_latest is None:
         return _section_completeness(
             status="unavailable",
-            reason_code="source_missing",
+            reason_code="source_file_missing_for_year",
             last_updated_at=None,
         )
 
@@ -551,7 +556,7 @@ def _build_demographics_completeness(
     if has_sparse_metrics or has_unsupported_metrics:
         return _section_completeness(
             status="partial",
-            reason_code="source_not_provided",
+            reason_code="partial_metric_coverage",
             last_updated_at=demographics_updated_at,
         )
     return _section_completeness(

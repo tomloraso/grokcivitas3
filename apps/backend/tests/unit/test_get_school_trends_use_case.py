@@ -58,8 +58,8 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
     assert result.history_quality.min_years_for_delta == 2
     assert result.history_quality.years_count == 3
     assert result.history_quality.is_partial_history is False
-    assert result.completeness.status == "available"
-    assert result.completeness.reason_code is None
+    assert result.completeness.status == "partial"
+    assert result.completeness.reason_code == "partial_metric_coverage"
     assert result.completeness.years_available == ("2022/23", "2023/24", "2024/25")
 
     assert result.series.disadvantaged_pct[0].delta is None
@@ -109,7 +109,7 @@ def test_get_school_trends_marks_partial_history_when_only_one_year_is_available
     assert result.history_quality.years_count == 1
     assert result.history_quality.is_partial_history is True
     assert result.completeness.status == "partial"
-    assert result.completeness.reason_code == "source_missing"
+    assert result.completeness.reason_code == "insufficient_years_published"
     assert result.completeness.years_available == ("2024/25",)
     assert result.series.disadvantaged_pct[0].delta is None
     assert result.series.disadvantaged_pct[0].direction is None
@@ -132,7 +132,7 @@ def test_get_school_trends_returns_empty_series_for_school_without_demographics_
     assert result.history_quality.years_count == 0
     assert result.history_quality.is_partial_history is True
     assert result.completeness.status == "unavailable"
-    assert result.completeness.reason_code == "source_missing"
+    assert result.completeness.reason_code == "source_file_missing_for_year"
     assert result.completeness.years_available == ()
     assert result.series.disadvantaged_pct == ()
     assert result.series.sen_pct == ()

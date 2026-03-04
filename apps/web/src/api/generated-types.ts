@@ -294,7 +294,7 @@ export interface components {
              */
             status: "available" | "partial" | "unavailable";
             /** Reason Code */
-            reason_code: ("source_missing" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
             /** Last Updated At */
             last_updated_at: string | null;
             /** Years Available */
@@ -338,7 +338,7 @@ export interface components {
              */
             status: "available" | "partial" | "unavailable";
             /** Reason Code */
-            reason_code: ("source_missing" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
             /** Last Updated At */
             last_updated_at: string | null;
             /** Years Available */

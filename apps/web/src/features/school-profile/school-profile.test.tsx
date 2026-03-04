@@ -108,7 +108,7 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
   completeness: {
     demographics: {
       status: "partial",
-      reason_code: "source_not_provided",
+      reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: null
     },
@@ -161,7 +161,7 @@ const TRENDS_RESPONSE: SchoolTrendsResponse = {
   },
   completeness: {
     status: "partial",
-    reason_code: "source_missing",
+    reason_code: "insufficient_years_published",
     last_updated_at: "2026-01-31T09:00:00Z",
     years_available: ["2023/24", "2024/25"]
   }
@@ -449,7 +449,7 @@ describe("SchoolProfileFeature", () => {
       },
       completeness: {
         status: "partial",
-        reason_code: "source_missing",
+        reason_code: "insufficient_years_published",
         last_updated_at: "2026-01-31T09:00:00Z",
         years_available: ["2024/25"]
       }
@@ -459,9 +459,11 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    // With only 1 year of data, TrendPanel suppresses entirely
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    expect(screen.queryByRole("heading", { name: "Trends" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Trends" })).toBeInTheDocument();
+    expect(
+      screen.getByText("We currently have one published year for this school.")
+    ).toBeInTheDocument();
   });
 
   it("renders explicit empty trend state when all trend series are empty", async () => {
@@ -481,7 +483,7 @@ describe("SchoolProfileFeature", () => {
       },
       completeness: {
         status: "unavailable",
-        reason_code: "source_missing",
+        reason_code: "source_file_missing_for_year",
         last_updated_at: null,
         years_available: []
       }
@@ -491,9 +493,11 @@ describe("SchoolProfileFeature", () => {
 
     renderProfileAtUrn("100001");
 
-    // With 0 years of data, TrendPanel suppresses entirely
     await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    expect(screen.queryByRole("heading", { name: "Trends" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Trends" })).toBeInTheDocument();
+    expect(
+      screen.getByText("A published file for this year is not yet available for this school.")
+    ).toBeInTheDocument();
   });
 
   it("renders coverage notice for unsupported metrics", async () => {

@@ -13,8 +13,11 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES,
     DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD,
     DEFAULT_DATABASE_URL,
-    DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
-    DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS,
+    DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS,
+    DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS,
+    DEFAULT_DEMOGRAPHICS_SEN_PUBLICATION_SLUG,
+    DEFAULT_DEMOGRAPHICS_SOURCE_MODE,
+    DEFAULT_DEMOGRAPHICS_SPC_PUBLICATION_SLUG,
     DEFAULT_IMD_RELEASE,
     DEFAULT_OFSTED_TIMELINE_YEARS,
     DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS,
@@ -43,11 +46,12 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_BRONZE_ROOT",
         "CIVITAS_GIAS_SOURCE_CSV",
         "CIVITAS_GIAS_SOURCE_ZIP",
-        "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
-        "CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
-        "CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS",
-        "CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED",
-        "CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
+        "CIVITAS_DEMOGRAPHICS_SOURCE_MODE",
+        "CIVITAS_DEMOGRAPHICS_SPC_PUBLICATION_SLUG",
+        "CIVITAS_DEMOGRAPHICS_SEN_PUBLICATION_SLUG",
+        "CIVITAS_DEMOGRAPHICS_RELEASE_SLUGS",
+        "CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS",
+        "CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE",
         "CIVITAS_IMD_SOURCE_CSV",
         "CIVITAS_IMD_RELEASE",
         "CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL",
@@ -94,7 +98,18 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.bronze_root == DEFAULT_BRONZE_ROOT
     assert settings.pipeline.gias_source_csv is None
     assert settings.pipeline.gias_source_zip is None
-    assert settings.pipeline.dfe_characteristics_source_csv is None
+    assert settings.pipeline.demographics_source_mode == DEFAULT_DEMOGRAPHICS_SOURCE_MODE
+    assert (
+        settings.pipeline.demographics_spc_publication_slug
+        == DEFAULT_DEMOGRAPHICS_SPC_PUBLICATION_SLUG
+    )
+    assert (
+        settings.pipeline.demographics_sen_publication_slug
+        == DEFAULT_DEMOGRAPHICS_SEN_PUBLICATION_SLUG
+    )
+    assert settings.pipeline.demographics_release_slugs == DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS
+    assert settings.pipeline.demographics_lookback_years == DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS
+    assert settings.pipeline.demographics_source_strict_mode is True
     assert settings.pipeline.imd_source_csv is None
     assert settings.pipeline.imd_release == DEFAULT_IMD_RELEASE
     assert settings.pipeline.police_crime_source_archive_url is None
@@ -122,18 +137,6 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.promote_chunk_size == DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE
     assert settings.pipeline.max_concurrent_sources == DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES
     assert settings.pipeline.resume_enabled is DEFAULT_PIPELINE_RESUME_ENABLED
-    assert (
-        settings.pipeline.dfe_characteristics_dataset_id == DEFAULT_DFE_CHARACTERISTICS_DATASET_ID
-    )
-    assert (
-        settings.pipeline.dfe_characteristics_lookback_years
-        == DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS
-    )
-    assert settings.pipeline.dfe_characteristics_backfill_enabled is False
-    assert settings.pipeline.dfe_characteristics_dataset_catalog == ()
-    assert settings.http_clients.timeout_seconds == 10.0
-    assert settings.http_clients.max_retries == 2
-    assert settings.http_clients.retry_backoff_seconds == 0.5
     assert settings.school_search.postcodes_io_base_url == DEFAULT_POSTCODES_IO_BASE_URL
     assert settings.school_search.postcode_cache_ttl_days == DEFAULT_POSTCODE_CACHE_TTL_DAYS
     assert (
@@ -182,17 +185,21 @@ def test_app_settings_reads_environment_overrides(
     )
     monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
     monkeypatch.setenv("CIVITAS_GIAS_SOURCE_CSV", "  https://example.com/gias.csv  ")
+    monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_MODE", " release_files ")
     monkeypatch.setenv(
-        "CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
-        "  https://example.com/dfe_characteristics.csv  ",
+        "CIVITAS_DEMOGRAPHICS_SPC_PUBLICATION_SLUG",
+        " school-pupils-and-their-characteristics ",
     )
-    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " custom-dataset-id ")
-    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS", "7")
-    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED", "true")
     monkeypatch.setenv(
-        "CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
-        " dataset-a, dataset-b, dataset-a ",
+        "CIVITAS_DEMOGRAPHICS_SEN_PUBLICATION_SLUG",
+        " special-educational-needs-in-england ",
     )
+    monkeypatch.setenv(
+        "CIVITAS_DEMOGRAPHICS_RELEASE_SLUGS",
+        " 2019-20, 2020-21, 2021-22, 2022-23, 2023-24, 2024-25 ",
+    )
+    monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS", "5")
+    monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE", "false")
     monkeypatch.setenv("CIVITAS_IMD_SOURCE_CSV", "  https://example.com/file_7.csv  ")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", " IOD2019 ")
     monkeypatch.setenv(
@@ -218,47 +225,31 @@ def test_app_settings_reads_environment_overrides(
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "false",
     )
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS", "0.15")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS", "0.25")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST", "0.10")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE", "0.20")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD", "0.05")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_REJECT_RATIO_POLICE_CRIME_CONTEXT", "0.30")
-    monkeypatch.setenv("CIVITAS_PIPELINE_HTTP_TIMEOUT_SECONDS", "75")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_RETRIES", "4")
-    monkeypatch.setenv("CIVITAS_PIPELINE_RETRY_BACKOFF_SECONDS", "1.5")
-    monkeypatch.setenv("CIVITAS_PIPELINE_STAGE_CHUNK_SIZE", "500")
-    monkeypatch.setenv("CIVITAS_PIPELINE_PROMOTE_CHUNK_SIZE", "750")
-    monkeypatch.setenv("CIVITAS_PIPELINE_MAX_CONCURRENT_SOURCES", "2")
-    monkeypatch.setenv("CIVITAS_PIPELINE_RESUME_ENABLED", "false")
-    monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "20")
-    monkeypatch.setenv("CIVITAS_HTTP_MAX_RETRIES", "5")
-    monkeypatch.setenv("CIVITAS_HTTP_RETRY_BACKOFF_SECONDS", "1.25")
-    monkeypatch.setenv("CIVITAS_POSTCODES_IO_BASE_URL", "https://postcodes.io")
-    monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "7")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS", "48")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS", "72")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST", "96")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE", "120")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD", "144")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_POLICE_CRIME_CONTEXT", "168")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD", "0.11")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES", "4")
-    monkeypatch.setenv("CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD", "0.52")
 
     settings = AppSettings(_env_file=None)
 
     assert settings.database.url == "postgresql+psycopg://override:override@localhost:5432/app"
     assert settings.pipeline.bronze_root == tmp_path / "custom-bronze"
     assert settings.pipeline.gias_source_csv == "https://example.com/gias.csv"
+    assert settings.pipeline.demographics_source_mode == "release_files"
     assert (
-        settings.pipeline.dfe_characteristics_source_csv
-        == "https://example.com/dfe_characteristics.csv"
+        settings.pipeline.demographics_spc_publication_slug
+        == "school-pupils-and-their-characteristics"
     )
-    assert settings.pipeline.dfe_characteristics_dataset_id == "custom-dataset-id"
-    assert settings.pipeline.dfe_characteristics_lookback_years == 7
-    assert settings.pipeline.dfe_characteristics_backfill_enabled is True
-    assert settings.pipeline.dfe_characteristics_dataset_catalog == ("dataset-a", "dataset-b")
+    assert (
+        settings.pipeline.demographics_sen_publication_slug
+        == "special-educational-needs-in-england"
+    )
+    assert settings.pipeline.demographics_release_slugs == (
+        "2019-20",
+        "2020-21",
+        "2021-22",
+        "2022-23",
+        "2023-24",
+        "2024-25",
+    )
+    assert settings.pipeline.demographics_lookback_years == 5
+    assert settings.pipeline.demographics_source_strict_mode is False
     assert settings.pipeline.imd_source_csv == "https://example.com/file_7.csv"
     assert settings.pipeline.imd_release == "iod2019"
     assert (
@@ -278,41 +269,12 @@ def test_app_settings_reads_environment_overrides(
     )
     assert settings.pipeline.ofsted_timeline_years == 5
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is False
-    assert settings.pipeline.max_reject_ratio_gias == 0.15
-    assert settings.pipeline.max_reject_ratio_dfe_characteristics == 0.25
-    assert settings.pipeline.max_reject_ratio_ofsted_latest == 0.10
-    assert settings.pipeline.max_reject_ratio_ofsted_timeline == 0.20
-    assert settings.pipeline.max_reject_ratio_ons_imd == 0.05
-    assert settings.pipeline.max_reject_ratio_police_crime_context == 0.30
-    assert settings.pipeline.http_timeout_seconds == 75.0
-    assert settings.pipeline.max_retries == 4
-    assert settings.pipeline.retry_backoff_seconds == 1.5
-    assert settings.pipeline.stage_chunk_size == 500
-    assert settings.pipeline.promote_chunk_size == 750
-    assert settings.pipeline.max_concurrent_sources == 2
-    assert settings.pipeline.resume_enabled is False
-    assert settings.http_clients.timeout_seconds == 20.0
-    assert settings.http_clients.max_retries == 5
-    assert settings.http_clients.retry_backoff_seconds == 1.25
-    assert settings.school_search.postcodes_io_base_url == "https://postcodes.io"
-    assert settings.school_search.postcode_cache_ttl_days == 7
-    assert settings.data_quality.freshness_sla_hours_gias == 48
-    assert settings.data_quality.freshness_sla_hours_dfe_characteristics == 72
-    assert settings.data_quality.freshness_sla_hours_ofsted_latest == 96
-    assert settings.data_quality.freshness_sla_hours_ofsted_timeline == 120
-    assert settings.data_quality.freshness_sla_hours_ons_imd == 144
-    assert settings.data_quality.freshness_sla_hours_police_crime_context == 168
-    assert settings.data_quality.coverage_drift_threshold == 0.11
-    assert settings.data_quality.max_consecutive_hard_failures == 4
-    assert settings.data_quality.sparse_trend_ratio_threshold == 0.52
 
 
 def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CIVITAS_DATABASE_URL", "")
-    monkeypatch.setenv("CIVITAS_HTTP_TIMEOUT_SECONDS", "-1")
-    monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "0")
-    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_DATASET_ID", " ")
-    monkeypatch.setenv("CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS", "0")
+    monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_MODE", "legacy")
+    monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS", "0")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", "not-a-release")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_SOURCE_MODE", "invalid")
     monkeypatch.setenv("CIVITAS_POLICE_CRIME_RADIUS_METERS", "0")

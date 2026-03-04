@@ -87,7 +87,8 @@ Common commands:
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
 - `uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>`
-- `uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5`
+- `uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py`
+- `uv run --project apps/backend python tools/scripts/check_demographics_trend_coverage.py --strict`
 
 ## Full Local Hydration Sequence
 
@@ -96,7 +97,6 @@ From repo root:
 ```bash
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
-uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
@@ -115,4 +115,5 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 
 - `skipped_no_change` means Bronze checksums matched the last successful run for that source.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
+- `dfe_characteristics` now runs the Phase S release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

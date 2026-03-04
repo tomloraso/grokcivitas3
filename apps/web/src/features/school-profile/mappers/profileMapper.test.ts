@@ -97,7 +97,7 @@ const BASE_PROFILE: SchoolProfileResponse = {
   completeness: {
     demographics: {
       status: "partial",
-      reason_code: "source_not_provided",
+      reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: null
     },
@@ -150,7 +150,7 @@ const BASE_TRENDS: SchoolTrendsResponse = {
   },
   completeness: {
     status: "partial",
-    reason_code: "source_missing",
+    reason_code: "insufficient_years_published",
     last_updated_at: "2026-01-31T09:00:00Z",
     years_available: ["2023/24", "2024/25"]
   }
@@ -202,6 +202,19 @@ describe("fallback", () => {
 describe("mapCompletenessReasonToMessageKey", () => {
   it("maps backend reason codes to stable UI message keys", () => {
     expect(mapCompletenessReasonToMessageKey("source_missing")).toBe("missing");
+    expect(mapCompletenessReasonToMessageKey("insufficient_years_published")).toBe(
+      "insufficientYearsPublished"
+    );
+    expect(mapCompletenessReasonToMessageKey("source_not_in_catalog")).toBe("sourceNotInCatalog");
+    expect(mapCompletenessReasonToMessageKey("source_file_missing_for_year")).toBe(
+      "sourceFileMissingForYear"
+    );
+    expect(mapCompletenessReasonToMessageKey("source_schema_incompatible_for_year")).toBe(
+      "sourceSchemaIncompatibleForYear"
+    );
+    expect(mapCompletenessReasonToMessageKey("partial_metric_coverage")).toBe(
+      "partialMetricCoverage"
+    );
     expect(mapCompletenessReasonToMessageKey("source_not_provided")).toBe("notProvided");
     expect(mapCompletenessReasonToMessageKey("rejected_by_validation")).toBe("validationRejected");
     expect(mapCompletenessReasonToMessageKey("not_joined_yet")).toBe("notJoinedYet");
@@ -365,7 +378,7 @@ describe("mapProfileToVM", () => {
       completeness: {
         demographics: {
           status: "unavailable",
-          reason_code: "source_missing",
+          reason_code: "source_file_missing_for_year",
           last_updated_at: null,
           years_available: null
         },
@@ -419,14 +432,14 @@ describe("mapProfileToVM", () => {
     const vm = mapProfileToVM(BASE_PROFILE, BASE_TRENDS);
 
     expect(vm.completeness.demographics.status).toBe("partial");
-    expect(vm.completeness.demographics.messageKey).toBe("notProvided");
+    expect(vm.completeness.demographics.messageKey).toBe("partialMetricCoverage");
     expect(vm.completeness.demographics.lastUpdatedAt).toMatch(/31.*Jan.*2026/);
 
     expect(vm.completeness.areaCrime.status).toBe("partial");
     expect(vm.completeness.areaCrime.messageKey).toBe("sourceCoverageGap");
 
     expect(vm.completeness.trends.status).toBe("partial");
-    expect(vm.completeness.trends.messageKey).toBe("missing");
+    expect(vm.completeness.trends.messageKey).toBe("insufficientYearsPublished");
     expect(vm.completeness.trends.yearsAvailable).toEqual(["2023/24", "2024/25"]);
   });
 
@@ -504,7 +517,7 @@ describe("mapProfileToVM", () => {
       completeness: {
         demographics: {
           status: "unavailable",
-          reason_code: "source_missing",
+          reason_code: "source_file_missing_for_year",
           last_updated_at: null,
           years_available: null
         },

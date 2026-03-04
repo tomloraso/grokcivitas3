@@ -569,7 +569,7 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
         "anti-social-behaviour",
     )
     assert result.completeness.demographics.status == "partial"
-    assert result.completeness.demographics.reason_code == "source_not_provided"
+    assert result.completeness.demographics.reason_code == "partial_metric_coverage"
     assert result.completeness.demographics.last_updated_at is not None
     assert result.completeness.ofsted_latest.status == "available"
     assert result.completeness.ofsted_timeline.status == "available"

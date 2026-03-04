@@ -98,7 +98,9 @@ def _profile(
         completeness = SchoolProfileCompleteness(
             demographics=SchoolProfileSectionCompleteness(
                 status="available" if demographics_latest is not None else "unavailable",
-                reason_code=None if demographics_latest is not None else "source_missing",
+                reason_code=(
+                    None if demographics_latest is not None else "source_file_missing_for_year"
+                ),
                 last_updated_at=None,
                 years_available=None,
             ),
@@ -219,7 +221,7 @@ def test_get_school_profile_returns_contract_dto() -> None:
             completeness=SchoolProfileCompleteness(
                 demographics=SchoolProfileSectionCompleteness(
                     status="partial",
-                    reason_code="source_not_provided",
+                    reason_code="partial_metric_coverage",
                     last_updated_at=None,
                     years_available=None,
                 ),
@@ -269,7 +271,7 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.area_context.coverage.has_deprivation is True
     assert result.area_context.coverage.has_crime is True
     assert result.completeness.demographics.status == "partial"
-    assert result.completeness.demographics.reason_code == "source_not_provided"
+    assert result.completeness.demographics.reason_code == "partial_metric_coverage"
 
 
 def test_get_school_profile_raises_not_found_when_repository_returns_none() -> None:

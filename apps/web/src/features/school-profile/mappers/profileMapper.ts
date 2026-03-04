@@ -143,6 +143,11 @@ const TREND_METRIC_LABELS: Record<string, string> = {
 
 const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionCompletenessMessageKey> = {
   source_missing: "missing",
+  insufficient_years_published: "insufficientYearsPublished",
+  source_not_in_catalog: "sourceNotInCatalog",
+  source_file_missing_for_year: "sourceFileMissingForYear",
+  source_schema_incompatible_for_year: "sourceSchemaIncompatibleForYear",
+  partial_metric_coverage: "partialMetricCoverage",
   source_not_provided: "notProvided",
   rejected_by_validation: "validationRejected",
   not_joined_yet: "notJoinedYet",

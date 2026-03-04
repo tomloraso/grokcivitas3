@@ -8,9 +8,6 @@ from uuid import uuid4
 
 from civitas.infrastructure.pipelines.base import PipelineRunContext, PipelineSource
 from civitas.infrastructure.pipelines.contracts import (
-    dfe as dfe_contract,
-)
-from civitas.infrastructure.pipelines.contracts import (
     gias as gias_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
@@ -25,11 +22,11 @@ from civitas.infrastructure.pipelines.contracts import (
 from civitas.infrastructure.pipelines.contracts import (
     police as police_contract,
 )
-from civitas.infrastructure.pipelines.dfe_characteristics import (
-    BRONZE_FILE_NAME as DFE_BRONZE_FILE_NAME,
+from civitas.infrastructure.pipelines.demographics_release_files import (
+    BRONZE_MANIFEST_FILE_NAME as DEMOGRAPHICS_MANIFEST_FILE_NAME,
 )
-from civitas.infrastructure.pipelines.dfe_characteristics import (
-    DfeCharacteristicsPipeline,
+from civitas.infrastructure.pipelines.demographics_release_files import (
+    DemographicsReleaseFilesPipeline,
 )
 from civitas.infrastructure.pipelines.gias import (
     BRONZE_FILE_NAME as GIAS_BRONZE_FILE_NAME,
@@ -84,20 +81,53 @@ def test_gias_download_writes_contract_version_to_metadata(tmp_path: Path) -> No
     assert payload["normalization_contract_version"] == gias_contract.CONTRACT_VERSION
 
 
-def test_dfe_download_writes_contract_version_to_metadata(tmp_path: Path) -> None:
-    fixture = FIXTURES_ROOT / "dfe_characteristics" / "school_characteristics_valid.csv"
-    pipeline = DfeCharacteristicsPipeline(
+def test_demographics_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    spc_release_html = (
+        '<html><script id="__NEXT_DATA__" type="application/json">'
+        '{"props":{"pageProps":{"releaseVersion":{"id":"spc-rv-1","downloadFiles":[{"id":"spc-file-1","name":"School level underlying data 2025"}]}}}}'
+        "</script></html>"
+    )
+    sen_release_html = (
+        '<html><script id="__NEXT_DATA__" type="application/json">'
+        '{"props":{"pageProps":{"releaseVersion":{"id":"sen-rv-1","downloadFiles":[{"id":"sen-file-1","name":"School level underlying data 2025"}]}}}}'
+        "</script></html>"
+    )
+    spc_csv = (
+        "urn,time_period,% of pupils known to be eligible for free school meals (Performance Tables),"
+        "% of pupils whose first language is known or believed to be other than English,"
+        "% of pupils whose first language is known or believed to be English,"
+        "% of pupils whose first language is unclassified\n"
+        "100001,202425,18.2,8.4,90.6,1.0\n"
+    )
+    sen_csv = "URN,time_period,Total pupils,SEN support,EHC plan\n100001,202425,240,36,9\n"
+    responses = {
+        "https://explore-education-statistics.service.gov.uk/find-statistics/school-pupils-and-their-characteristics/2024-25": spc_release_html,
+        "https://explore-education-statistics.service.gov.uk/find-statistics/special-educational-needs-in-england/2024-25": sen_release_html,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/spc-rv-1/files/spc-file-1": spc_csv,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/sen-rv-1/files/sen-file-1": sen_csv,
+    }
+
+    def fetcher(url: str) -> str:
+        if url not in responses:
+            raise AssertionError(f"Unexpected URL: {url}")
+        return responses[url]
+
+    pipeline = DemographicsReleaseFilesPipeline(
         engine=None,
-        source_dataset_id="dataset-1",
-        source_csv=str(fixture),
+        spc_publication_slug="school-pupils-and-their-characteristics",
+        sen_publication_slug="special-educational-needs-in-england",
+        release_slugs=("2024-25",),
+        lookback_years=1,
+        fetcher=fetcher,
     )
     context = _context(PipelineSource.DFE_CHARACTERISTICS, tmp_path / "bronze")
 
     pipeline.download(context)
 
-    metadata_path = context.bronze_source_path / DFE_BRONZE_FILE_NAME
-    payload = json.loads(metadata_path.with_suffix(".metadata.json").read_text(encoding="utf-8"))
-    assert payload["normalization_contract_version"] == dfe_contract.CONTRACT_VERSION
+    manifest_path = context.bronze_source_path / DEMOGRAPHICS_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == "demographics_release_files.v1"
+    assert len(payload["assets"]) == 2
 
 
 def test_ofsted_latest_download_writes_contract_version_to_metadata(tmp_path: Path) -> None:

@@ -139,7 +139,7 @@ def test_get_school_profile_returns_expected_contract() -> None:
             completeness=SchoolProfileCompletenessDto(
                 demographics=SchoolProfileSectionCompletenessDto(
                     status="partial",
-                    reason_code="source_not_provided",
+                    reason_code="partial_metric_coverage",
                     last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
                     years_available=None,
                 ),
@@ -256,7 +256,7 @@ def test_get_school_profile_returns_expected_contract() -> None:
         "completeness": {
             "demographics": {
                 "status": "partial",
-                "reason_code": "source_not_provided",
+                "reason_code": "partial_metric_coverage",
                 "last_updated_at": "2026-01-31T09:00:00Z",
                 "years_available": None,
             },
@@ -309,7 +309,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             completeness=SchoolProfileCompletenessDto(
                 demographics=SchoolProfileSectionCompletenessDto(
                     status="unavailable",
-                    reason_code="source_missing",
+                    reason_code="source_file_missing_for_year",
                     last_updated_at=None,
                     years_available=None,
                 ),
@@ -368,7 +368,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert response.json()["completeness"] == {
         "demographics": {
             "status": "unavailable",
-            "reason_code": "source_missing",
+            "reason_code": "source_file_missing_for_year",
             "last_updated_at": None,
             "years_available": None,
         },

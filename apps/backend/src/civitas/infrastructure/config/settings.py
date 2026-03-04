@@ -8,8 +8,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
 DEFAULT_BRONZE_ROOT = Path("data/bronze")
-DEFAULT_DFE_CHARACTERISTICS_DATASET_ID = "019afee4-ba17-73cb-85e0-f88c101bb734"
-DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS = 5
+DEFAULT_DEMOGRAPHICS_SOURCE_MODE = "release_files"
+DEFAULT_DEMOGRAPHICS_SPC_PUBLICATION_SLUG = "school-pupils-and-their-characteristics"
+DEFAULT_DEMOGRAPHICS_SEN_PUBLICATION_SLUG = "special-educational-needs-in-england"
+DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS = (
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23",
+    "2023-24",
+    "2024-25",
+)
+DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS = 6
+DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE = True
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
@@ -42,11 +53,12 @@ class PipelineSettings(BaseModel):
     bronze_root: Path
     gias_source_csv: str | None = None
     gias_source_zip: str | None = None
-    dfe_characteristics_source_csv: str | None = None
-    dfe_characteristics_dataset_id: str
-    dfe_characteristics_lookback_years: PositiveInt
-    dfe_characteristics_backfill_enabled: bool = False
-    dfe_characteristics_dataset_catalog: tuple[str, ...] = ()
+    demographics_source_mode: str
+    demographics_spc_publication_slug: str
+    demographics_sen_publication_slug: str
+    demographics_release_slugs: tuple[str, ...]
+    demographics_lookback_years: PositiveInt
+    demographics_source_strict_mode: bool
     imd_source_csv: str | None = None
     imd_release: str
     police_crime_source_archive_url: str | None = None
@@ -131,26 +143,32 @@ class AppSettings(BaseSettings):
         default=None,
         validation_alias="CIVITAS_GIAS_SOURCE_ZIP",
     )
-    dfe_characteristics_source_csv: str | None = Field(
-        default=None,
-        validation_alias="CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV",
-    )
-    dfe_characteristics_dataset_id: str = Field(
-        default=DEFAULT_DFE_CHARACTERISTICS_DATASET_ID,
+    demographics_source_mode: str = Field(
+        default=DEFAULT_DEMOGRAPHICS_SOURCE_MODE,
         min_length=1,
-        validation_alias="CIVITAS_DFE_CHARACTERISTICS_DATASET_ID",
+        validation_alias="CIVITAS_DEMOGRAPHICS_SOURCE_MODE",
     )
-    dfe_characteristics_lookback_years: PositiveInt = Field(
-        default=DEFAULT_DFE_CHARACTERISTICS_LOOKBACK_YEARS,
-        validation_alias="CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS",
+    demographics_spc_publication_slug: str = Field(
+        default=DEFAULT_DEMOGRAPHICS_SPC_PUBLICATION_SLUG,
+        min_length=1,
+        validation_alias="CIVITAS_DEMOGRAPHICS_SPC_PUBLICATION_SLUG",
     )
-    dfe_characteristics_backfill_enabled: bool = Field(
-        default=False,
-        validation_alias="CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED",
+    demographics_sen_publication_slug: str = Field(
+        default=DEFAULT_DEMOGRAPHICS_SEN_PUBLICATION_SLUG,
+        min_length=1,
+        validation_alias="CIVITAS_DEMOGRAPHICS_SEN_PUBLICATION_SLUG",
     )
-    dfe_characteristics_dataset_catalog: str | None = Field(
-        default=None,
-        validation_alias="CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG",
+    demographics_release_slugs: str | None = Field(
+        default=",".join(DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS),
+        validation_alias="CIVITAS_DEMOGRAPHICS_RELEASE_SLUGS",
+    )
+    demographics_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS",
+    )
+    demographics_source_strict_mode: bool = Field(
+        default=DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE,
+        validation_alias="CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE",
     )
     imd_source_csv: str | None = Field(
         default=None,
@@ -331,13 +349,12 @@ class AppSettings(BaseSettings):
             bronze_root=self.bronze_root,
             gias_source_csv=self.gias_source_csv,
             gias_source_zip=self.gias_source_zip,
-            dfe_characteristics_source_csv=self.dfe_characteristics_source_csv,
-            dfe_characteristics_dataset_id=self.dfe_characteristics_dataset_id,
-            dfe_characteristics_lookback_years=self.dfe_characteristics_lookback_years,
-            dfe_characteristics_backfill_enabled=self.dfe_characteristics_backfill_enabled,
-            dfe_characteristics_dataset_catalog=_parse_csv_tokens(
-                self.dfe_characteristics_dataset_catalog
-            ),
+            demographics_source_mode=self.demographics_source_mode,
+            demographics_spc_publication_slug=self.demographics_spc_publication_slug,
+            demographics_sen_publication_slug=self.demographics_sen_publication_slug,
+            demographics_release_slugs=_parse_csv_tokens(self.demographics_release_slugs),
+            demographics_lookback_years=self.demographics_lookback_years,
+            demographics_source_strict_mode=self.demographics_source_strict_mode,
             imd_source_csv=self.imd_source_csv,
             imd_release=self.imd_release,
             police_crime_source_archive_url=self.police_crime_source_archive_url,
@@ -407,8 +424,7 @@ class AppSettings(BaseSettings):
     @field_validator(
         "gias_source_csv",
         "gias_source_zip",
-        "dfe_characteristics_source_csv",
-        "dfe_characteristics_dataset_catalog",
+        "demographics_release_slugs",
         "imd_source_csv",
         "police_crime_source_archive_url",
         "ofsted_latest_source_csv",
@@ -425,11 +441,26 @@ class AppSettings(BaseSettings):
             return stripped if stripped else None
         return value
 
-    @field_validator("dfe_characteristics_dataset_id", mode="before")
+    @field_validator(
+        "demographics_source_mode",
+        "demographics_spc_publication_slug",
+        "demographics_sen_publication_slug",
+        mode="before",
+    )
     @classmethod
-    def _normalize_dataset_id(cls, value: object) -> object:
+    def _normalize_demographics_field(cls, value: object) -> object:
         if isinstance(value, str):
             return value.strip()
+        return value
+
+    @field_validator("demographics_source_mode", mode="before")
+    @classmethod
+    def _normalize_demographics_source_mode(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized != "release_files":
+                raise ValueError("CIVITAS_DEMOGRAPHICS_SOURCE_MODE must be one of: release_files")
+            return normalized
         return value
 
     @field_validator("imd_release", mode="before")

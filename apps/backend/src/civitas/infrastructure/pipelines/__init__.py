@@ -3,7 +3,7 @@ from sqlalchemy.engine import Engine
 from civitas.infrastructure.config.settings import PipelineSettings
 
 from .base import Pipeline, PipelineSource
-from .dfe_characteristics import DfeCharacteristicsPipeline
+from .demographics_release_files import DemographicsReleaseFilesPipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
@@ -21,10 +21,13 @@ def pipeline_registry(
             source_csv=pipeline_settings.gias_source_csv,
             source_zip=pipeline_settings.gias_source_zip,
         ),
-        PipelineSource.DFE_CHARACTERISTICS: DfeCharacteristicsPipeline(
+        PipelineSource.DFE_CHARACTERISTICS: DemographicsReleaseFilesPipeline(
             engine=engine,
-            source_dataset_id=pipeline_settings.dfe_characteristics_dataset_id,
-            source_csv=pipeline_settings.dfe_characteristics_source_csv,
+            spc_publication_slug=pipeline_settings.demographics_spc_publication_slug,
+            sen_publication_slug=pipeline_settings.demographics_sen_publication_slug,
+            release_slugs=pipeline_settings.demographics_release_slugs,
+            lookback_years=pipeline_settings.demographics_lookback_years,
+            strict_mode=pipeline_settings.demographics_source_strict_mode,
         ),
         PipelineSource.OFSTED_LATEST: OfstedLatestPipeline(
             engine=engine,

@@ -97,10 +97,9 @@ Set `CIVITAS_DATABASE_URL` in `.env` to target a different database.
 uv run --project apps/backend python tools/scripts/verify_phase1_sources.py
 uv run --project apps/backend python tools/scripts/verify_phase2_sources.py
 uv run --project apps/backend python tools/scripts/verify_source_contracts_runtime.py
-uv run --project apps/backend python tools/scripts/discover_dfe_characteristics_history.py
+uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
-uv run --project apps/backend civitas pipeline backfill --source dfe_characteristics --lookback-years 5
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
@@ -110,6 +109,7 @@ uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>
 uv run --project apps/backend civitas pipeline run --all
 uv run --project apps/backend civitas ops data-quality snapshot
 uv run --project apps/backend python tools/scripts/check_data_quality_slo.py --strict
+uv run --project apps/backend python tools/scripts/check_demographics_trend_coverage.py --strict
 uv run --project apps/backend python tools/scripts/run_pipeline_recovery_drill.py --strict
 uv run --project apps/backend python tools/scripts/benchmark_pipeline_throughput.py --strict
 ```
@@ -130,29 +130,28 @@ CIVITAS_GIAS_SOURCE_CSV=https://example.com/edubasealldata.csv
 GIAS staging accepts `OpenDate` / `CloseDate` values in both `DD/MM/YYYY` and
 `DD-MM-YYYY` formats (with optional time components) to match current upstream extracts.
 
-For DfE characteristics runs, these optional `.env` values control dataset selection and manual CSV override:
+For demographics release-file ingestion, these `.env` values control source discovery and strictness:
 
 ```bash
-# Local CSV file or HTTP URL override
-CIVITAS_DFE_CHARACTERISTICS_SOURCE_CSV=C:\path\to\school_characteristics.csv
+# Supported value: release_files
+CIVITAS_DEMOGRAPHICS_SOURCE_MODE=release_files
 
-# Defaults to validated Phase 1 dataset id when not set
-CIVITAS_DFE_CHARACTERISTICS_DATASET_ID=019afee4-ba17-73cb-85e0-f88c101bb734
+# Publication slugs used for SPC and SEN release discovery
+CIVITAS_DEMOGRAPHICS_SPC_PUBLICATION_SLUG=school-pupils-and-their-characteristics
+CIVITAS_DEMOGRAPHICS_SEN_PUBLICATION_SLUG=special-educational-needs-in-england
 
-# Default historical lookback used by `pipeline backfill` when --lookback-years is omitted
-CIVITAS_DFE_CHARACTERISTICS_LOOKBACK_YEARS=5
+# Comma-separated release slugs; lookback selects the newest N values
+CIVITAS_DEMOGRAPHICS_RELEASE_SLUGS=2019-20,2020-21,2021-22,2022-23,2023-24,2024-25
+CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS=6
 
-# Guardrail: must be true to run backfill mode
-CIVITAS_DFE_CHARACTERISTICS_BACKFILL_ENABLED=false
-
-# Optional explicit historical dataset id catalog (comma-separated)
-# CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG=dataset-id-2023,dataset-id-2024,dataset-id-2025
+# When true, any release/file/schema discovery issue fails the run
+CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE=true
 ```
 
-Historical backfill safety notes:
-- Keep daily incremental and historical backfill separate: use `pipeline run` for daily and `pipeline backfill` for historical hydration only.
-- Use `tools/scripts/discover_dfe_characteristics_history.py` to generate a candidate inventory before setting `CIVITAS_DFE_CHARACTERISTICS_DATASET_CATALOG`.
-- Backfill writes per-asset provenance (`source_dataset_id`, `source_dataset_version`) into `school_demographics_yearly` by academic year.
+Demographics source safety notes:
+- Keep `verify_phase_s_sources.py` in pre-run checks whenever release slugs or publication slugs change.
+- Do not re-enable legacy dataset-id/backfill controls for `dfe_characteristics`; release-files is the only supported source mode.
+- Promote writes per-row provenance (`source_dataset_id`, `source_dataset_version`) into `school_demographics_yearly`.
 
 For ONS IMD runs, these optional `.env` values control release selection and manual source override:
 

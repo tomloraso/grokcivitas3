@@ -18,6 +18,16 @@ interface SectionCompletenessNoticeProps {
 const REASON_COPY: Record<NonNullable<SectionCompletenessVM["messageKey"]>, string> = {
   missing:
     "This information hasn't been published by the data source yet.",
+  insufficientYearsPublished:
+    "We currently have limited published years for this school.",
+  sourceNotInCatalog:
+    "This source is not currently in our approved school-data catalog.",
+  sourceFileMissingForYear:
+    "A published file for this year is not yet available for this school.",
+  sourceSchemaIncompatibleForYear:
+    "This year's published file couldn't be used because the format changed.",
+  partialMetricCoverage:
+    "Some measures are available, but other parts of this section are still missing.",
   notProvided:
     "The data source only records some of this information for this school.",
   validationRejected:
@@ -36,6 +46,24 @@ const REASON_COPY: Record<NonNullable<SectionCompletenessVM["messageKey"]>, stri
     "No incidents were recorded in this area for the latest reporting window."
 };
 
+function resolveReasonCopy(completeness: SectionCompletenessVM): string | null {
+  if (completeness.messageKey === null) {
+    return null;
+  }
+
+  if (completeness.messageKey === "insufficientYearsPublished") {
+    const publishedYears = completeness.yearsAvailable?.length ?? 0;
+    if (publishedYears === 1) {
+      return "We currently have one published year for this school.";
+    }
+    if (publishedYears > 1) {
+      return `We currently have ${publishedYears} published years for this school.`;
+    }
+  }
+
+  return REASON_COPY[completeness.messageKey];
+}
+
 export function SectionCompletenessNotice({
   sectionLabel,
   completeness,
@@ -45,7 +73,7 @@ export function SectionCompletenessNotice({
     return null;
   }
 
-  const reasonCopy = completeness.messageKey ? REASON_COPY[completeness.messageKey] : null;
+  const reasonCopy = resolveReasonCopy(completeness);
 
   // Partial: lightweight inline indicator (icon + badge)
   if (completeness.status === "partial") {

@@ -92,7 +92,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
             ),
             completeness=SchoolTrendsCompletenessDto(
                 status="partial",
-                reason_code="source_missing",
+                reason_code="insufficient_years_published",
                 last_updated_at=None,
                 years_available=("2024/25",),
             ),
@@ -147,7 +147,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
         },
         "completeness": {
             "status": "partial",
-            "reason_code": "source_missing",
+            "reason_code": "insufficient_years_published",
             "last_updated_at": None,
             "years_available": ["2024/25"],
         },

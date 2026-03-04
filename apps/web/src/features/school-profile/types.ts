@@ -150,6 +150,11 @@ export type SectionCompletenessStatus = "available" | "partial" | "unavailable";
 
 export type SectionCompletenessReasonCode =
   | "source_missing"
+  | "insufficient_years_published"
+  | "source_not_in_catalog"
+  | "source_file_missing_for_year"
+  | "source_schema_incompatible_for_year"
+  | "partial_metric_coverage"
   | "source_not_provided"
   | "rejected_by_validation"
   | "not_joined_yet"
@@ -161,6 +166,11 @@ export type SectionCompletenessReasonCode =
 
 export type SectionCompletenessMessageKey =
   | "missing"
+  | "insufficientYearsPublished"
+  | "sourceNotInCatalog"
+  | "sourceFileMissingForYear"
+  | "sourceSchemaIncompatibleForYear"
+  | "partialMetricCoverage"
   | "notProvided"
   | "validationRejected"
   | "notJoinedYet"

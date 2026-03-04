@@ -6,7 +6,6 @@ import typer
 from civitas.bootstrap.container import (
     create_task_use_case,
     data_quality_slo_check_use_case,
-    dfe_characteristics_backfill_runner,
     list_tasks_use_case,
     pipeline_runner,
 )
@@ -97,34 +96,6 @@ def resume_pipeline(run_id: str = typer.Option(..., "--run-id")) -> None:
 
     typer.echo(
         f"{result_source.value}: {result.status.value} "
-        f"(downloaded={result.downloaded_rows}, staged={result.staged_rows}, "
-        f"promoted={result.promoted_rows}, rejected={result.rejected_rows})"
-    )
-    if result.error_message:
-        typer.echo(f"  error: {result.error_message}")
-    if result.status.is_hard_failure():
-        raise typer.Exit(code=1)
-
-
-@pipeline_app.command("backfill")
-def backfill_pipeline(
-    source: str = typer.Option(..., "--source", case_sensitive=False),
-    lookback_years: int | None = typer.Option(
-        None,
-        "--lookback-years",
-        min=1,
-    ),
-) -> None:
-    normalized_source = source.strip().lower()
-    if normalized_source != "dfe_characteristics":
-        typer.echo("Only dfe_characteristics is supported for --backfill.")
-        raise typer.Exit(code=2)
-
-    runner = dfe_characteristics_backfill_runner()
-    result = runner.run(lookback_years=lookback_years)
-
-    typer.echo(
-        f"{normalized_source} backfill: {result.status.value} "
         f"(downloaded={result.downloaded_rows}, staged={result.staged_rows}, "
         f"promoted={result.promoted_rows}, rejected={result.rejected_rows})"
     )
