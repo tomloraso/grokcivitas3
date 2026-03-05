@@ -19,7 +19,7 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.execute(
         """
-        CREATE TABLE app_cache_versions (
+        CREATE TABLE IF NOT EXISTS app_cache_versions (
             cache_key text PRIMARY KEY,
             version_updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
         )
@@ -35,7 +35,7 @@ def upgrade() -> None:
 
     op.execute(
         """
-        CREATE TABLE area_crime_global_metadata (
+        CREATE TABLE IF NOT EXISTS area_crime_global_metadata (
             id smallint PRIMARY KEY CHECK (id = 1),
             months_available integer NOT NULL,
             latest_updated_at timestamptz NULL,
