@@ -4,6 +4,7 @@ import json
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 from civitas.infrastructure.pipelines.base import PipelineRunContext, PipelineSource
@@ -147,7 +148,10 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
     ks4_dataset_id = "ks4-dataset"
 
     def fake_download_json(url: str, *, timeout_seconds: float) -> dict[str, object]:
-        if url.endswith(f"/data-sets/{ks2_dataset_id}/meta"):
+        parsed_url = urlsplit(url)
+        query = parse_qs(parsed_url.query)
+        if parsed_url.path.endswith(f"/data-sets/{ks2_dataset_id}/meta"):
+            assert query.get("dataSetVersion") == ["ks2-v1"]
             return {
                 "locations": {
                     "options": [
@@ -155,7 +159,8 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
                     ]
                 }
             }
-        if url.endswith(f"/data-sets/{ks4_dataset_id}/meta"):
+        if parsed_url.path.endswith(f"/data-sets/{ks4_dataset_id}/meta"):
+            assert query.get("dataSetVersion") == ["ks4-v1"]
             return {
                 "locations": {
                     "options": [
@@ -163,9 +168,11 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
                     ]
                 }
             }
-        if url.endswith(f"/data-sets/{ks2_dataset_id}"):
+        if parsed_url.path.endswith(f"/data-sets/{ks2_dataset_id}"):
+            assert query == {}
             return {"latestVersion": {"version": "ks2-v1"}}
-        if url.endswith(f"/data-sets/{ks4_dataset_id}"):
+        if parsed_url.path.endswith(f"/data-sets/{ks4_dataset_id}"):
+            assert query == {}
             return {"latestVersion": {"version": "ks4-v1"}}
         raise AssertionError(f"Unexpected URL: {url}")
 
@@ -175,9 +182,12 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
         payload: dict[str, object],
         timeout_seconds: float,
     ) -> dict[str, object]:
+        parsed_url = urlsplit(url)
+        query = parse_qs(parsed_url.query)
         assert payload["page"] == 1
         assert payload["pageSize"] == 10_000
-        if url.endswith(f"/data-sets/{ks2_dataset_id}/query"):
+        if parsed_url.path.endswith(f"/data-sets/{ks2_dataset_id}/query"):
+            assert query.get("dataSetVersion") == ["ks2-v1"]
             assert payload["indicators"] == list(performance_contract.KS2_INDICATOR_IDS.values())
             return {
                 "results": [
@@ -190,7 +200,8 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
                 ],
                 "paging": {"totalPages": 1},
             }
-        if url.endswith(f"/data-sets/{ks4_dataset_id}/query"):
+        if parsed_url.path.endswith(f"/data-sets/{ks4_dataset_id}/query"):
+            assert query.get("dataSetVersion") == ["ks4-v1"]
             assert payload["indicators"] == list(performance_contract.KS4_INDICATOR_IDS.values())
             return {
                 "results": [

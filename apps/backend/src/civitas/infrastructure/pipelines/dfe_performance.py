@@ -3,6 +3,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import urllib.parse
 import urllib.request
 from contextlib import suppress
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ BRONZE_MANIFEST_FILE_NAME = "dfe_performance.manifest.json"
 DEFAULT_LOOKBACK_YEARS = 3
 DEFAULT_PAGE_SIZE = 10_000
 MAX_PAGE_SIZE = 10_000
+SCHOOL_LOCATION_LEVEL_CODE = "SCH"
 
 
 @dataclass(frozen=True)
@@ -199,6 +201,8 @@ class DfePerformancePipeline:
         ks4_urn_lookup = _school_location_urn_lookup(
             _load_json_dict(context.bronze_source_path / ks4_dataset["meta_file_name"])
         )
+        _validate_school_location_lookup(lookup=ks2_urn_lookup, dataset_key="ks2")
+        _validate_school_location_lookup(lookup=ks4_urn_lookup, dataset_key="ks4")
 
         rows_by_key: dict[tuple[str, str], _PerformanceAccumulator] = {}
         rejected_rows: list[tuple[str, dict[str, object]]] = []
@@ -645,9 +649,16 @@ class DfePerformancePipeline:
         dataset_url = DFE_DATASET_URL_TEMPLATE.format(dataset_id=dataset_id)
         query_url = DFE_DATASET_QUERY_URL_TEMPLATE.format(dataset_id=dataset_id)
 
-        meta_payload = _download_json(meta_url, timeout_seconds=context.http_timeout_seconds)
         dataset_payload = _download_json(dataset_url, timeout_seconds=context.http_timeout_seconds)
         dataset_version = _extract_dataset_version(dataset_payload)
+        meta_request_url = _with_dataset_version(meta_url, dataset_version=dataset_version)
+        query_request_url = _with_dataset_version(query_url, dataset_version=dataset_version)
+
+        meta_payload = _download_json(
+            meta_request_url, timeout_seconds=context.http_timeout_seconds
+        )
+        school_lookup = _school_location_urn_lookup(meta_payload)
+        _validate_school_location_lookup(lookup=school_lookup, dataset_key=dataset_key)
 
         meta_file_name = f"{dataset_key}.meta.json"
         meta_path = context.bronze_source_path / meta_file_name
@@ -659,7 +670,7 @@ class DfePerformancePipeline:
         assets: list[dict[str, object]] = [
             {
                 "bronze_file_name": meta_file_name,
-                "source_reference": meta_url,
+                "source_reference": meta_request_url,
                 "sha256": _sha256_file(meta_path),
                 "rows": 0,
             }
@@ -676,7 +687,7 @@ class DfePerformancePipeline:
                 "pageSize": self._page_size,
             }
             query_response = _post_json(
-                query_url,
+                query_request_url,
                 payload=query_payload,
                 timeout_seconds=context.http_timeout_seconds,
             )
@@ -695,7 +706,7 @@ class DfePerformancePipeline:
             assets.append(
                 {
                     "bronze_file_name": page_file_name,
-                    "source_reference": query_url,
+                    "source_reference": query_request_url,
                     "sha256": _sha256_file(page_path),
                     "rows": page_rows,
                     "page": page,
@@ -797,18 +808,26 @@ def _normalize_result_key(
 
     with suppress(ValueError):
         academic_year = performance_contract.normalize_academic_year_from_period(period)
-        urn = _extract_urn(_as_dict(result.get("locations")), urn_lookup=urn_lookup)
+        urn = _extract_urn_from_locations(_as_dict(result.get("locations")), urn_lookup=urn_lookup)
         if urn is None:
             return None, "missing_school_location"
         return (urn, academic_year), None
     return None, "invalid_time_period"
 
 
-def _extract_urn(
+def _extract_urn_from_locations(
     locations_payload: Mapping[str, object],
     *,
     urn_lookup: Mapping[str, str],
 ) -> str | None:
+    school_location_token = _as_str(locations_payload.get(SCHOOL_LOCATION_LEVEL_CODE))
+    if school_location_token is not None:
+        mapped_token = urn_lookup.get(school_location_token, school_location_token)
+        normalized_school_urn = _normalize_urn(mapped_token)
+        if normalized_school_urn is not None:
+            return normalized_school_urn
+
+    # Backward-compatible fallback for older locations payload shapes.
     for value in locations_payload.values():
         token = _as_str(value)
         if token is None:
@@ -831,8 +850,7 @@ def _normalize_urn(value: str) -> str | None:
 
 
 def _school_location_urn_lookup(meta_payload: Mapping[str, object]) -> dict[str, str]:
-    locations_payload = _as_dict(meta_payload.get("locations"))
-    options_payload = _as_list(locations_payload.get("options"))
+    options_payload = _school_location_options(meta_payload)
     lookup: dict[str, str] = {}
 
     for raw_option in options_payload:
@@ -840,17 +858,54 @@ def _school_location_urn_lookup(meta_payload: Mapping[str, object]) -> dict[str,
         option_id = _as_str(option.get("id"))
         if option_id is None:
             continue
-        code_candidate = (
-            _as_str(option.get("code"))
+        urn_candidate = (
+            _as_str(option.get("urn"))
+            or _as_str(option.get("code"))
             or _as_str(option.get("value"))
             or _as_str(option.get("label"))
-            or option_id
         )
-        normalized_urn = _normalize_urn(code_candidate)
+        if urn_candidate is None:
+            continue
+        normalized_urn = _normalize_urn(urn_candidate)
         if normalized_urn is None:
             continue
         lookup[option_id] = normalized_urn
     return lookup
+
+
+def _school_location_options(meta_payload: Mapping[str, object]) -> list[object]:
+    raw_locations = meta_payload.get("locations")
+    if isinstance(raw_locations, Mapping):
+        return _as_list(_as_dict(raw_locations).get("options"))
+
+    location_groups = _as_list(raw_locations)
+    school_options: list[object] = []
+    all_options: list[object] = []
+    for raw_group in location_groups:
+        group = _as_dict(raw_group)
+        group_options = _as_list(group.get("options"))
+        all_options.extend(group_options)
+        level_code = _location_level_code(group)
+        if level_code == SCHOOL_LOCATION_LEVEL_CODE:
+            school_options.extend(group_options)
+
+    return school_options or all_options
+
+
+def _location_level_code(group_payload: Mapping[str, object]) -> str | None:
+    level_payload = _as_dict(group_payload.get("level"))
+    level_code = _as_str(level_payload.get("code"))
+    if level_code is not None:
+        return level_code
+    return _as_str(group_payload.get("geographicLevel"))
+
+
+def _validate_school_location_lookup(*, lookup: Mapping[str, str], dataset_key: str) -> None:
+    if lookup:
+        return
+    raise ValueError(
+        f"DfE performance metadata for '{dataset_key}' does not expose school URN location mappings."
+    )
 
 
 def _parse_manifest_datasets(
@@ -915,6 +970,26 @@ def _extract_dataset_version(payload: Mapping[str, object]) -> str | None:
             return candidate
 
     return _as_str(payload.get("version"))
+
+
+def _with_dataset_version(url: str, *, dataset_version: str | None) -> str:
+    if dataset_version is None:
+        return url
+
+    parsed_url = urllib.parse.urlsplit(url)
+    query_items = urllib.parse.parse_qsl(parsed_url.query, keep_blank_values=True)
+    if not any(key == "dataSetVersion" for key, _ in query_items):
+        query_items.append(("dataSetVersion", dataset_version))
+
+    return urllib.parse.urlunsplit(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            parsed_url.path,
+            urllib.parse.urlencode(query_items),
+            parsed_url.fragment,
+        )
+    )
 
 
 def _download_json(url: str, *, timeout_seconds: float) -> dict[str, object]:
