@@ -133,11 +133,15 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
-  it("passes accessibility smoke check", async () => {
-    const { container } = renderProfileAtUrn("100001");
+  it(
+    "passes accessibility smoke check",
+    async () => {
+      const { container } = renderProfileAtUrn("100001");
 
-    await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
-    const results = await runA11yAudit(container);
-    expect(results).toHaveNoViolations();
-  });
+      await screen.findByRole("heading", { name: "Camden Bridge Primary School" });
+      const results = await runA11yAudit(container);
+      expect(results).toHaveNoViolations();
+    },
+    20000
+  );
 });

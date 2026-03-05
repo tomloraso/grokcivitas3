@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import random
+import shutil
 import time
 import urllib.error
 from collections.abc import Callable, Mapping
@@ -679,6 +680,7 @@ class PipelineRunner:
         self._pipelines = dict(pipelines)
         self._run_store = run_store
         self._bronze_root = bronze_root
+        self._bronze_root_key = _normalize_pipeline_path(bronze_root)
         self._quality_config_by_source = dict(quality_config_by_source or {})
         self._retry_policy = retry_policy or PipelineRetryPolicy(max_retries=0)
         self._stage_chunk_size = stage_chunk_size
@@ -697,6 +699,7 @@ class PipelineRunner:
         source: PipelineSource | str,
         *,
         resume: bool = False,
+        force_refresh: bool = False,
         run_id: UUID | str | None = None,
     ) -> PipelineResult:
         resolved_source = PipelineSource(source) if isinstance(source, str) else source
@@ -706,6 +709,8 @@ class PipelineRunner:
 
         if run_id is not None and not resume:
             raise ValueError("run_id can only be provided when resume=True.")
+        if force_refresh and resume:
+            raise ValueError("force_refresh cannot be used when resume=True.")
         if resume and not self._resume_enabled:
             raise ValueError(
                 "Pipeline resume is disabled. Set CIVITAS_PIPELINE_RESUME_ENABLED=true to resume."
@@ -716,6 +721,7 @@ class PipelineRunner:
             resume=resume,
             run_id=run_id,
         )
+        self._assert_context_bronze_root(context)
 
         if resumed:
             self._run_store.record_resumed(context)
@@ -748,6 +754,9 @@ class PipelineRunner:
         )
 
         try:
+            if force_refresh:
+                _clear_bronze_source_path(context.bronze_source_path)
+
             if _is_checkpoint_completed(checkpoints, PipelineStep.DOWNLOAD):
                 downloaded_rows = _checkpoint_int(
                     checkpoints[PipelineStep.DOWNLOAD].payload,
@@ -767,9 +776,11 @@ class PipelineRunner:
                     f"gate_id=download_nonzero downloaded_rows=0 source={resolved_source.value}"
                 )
             else:
-                if not _is_checkpoint_completed(
-                    checkpoints, PipelineStep.STAGE
-                ) and not _is_checkpoint_completed(checkpoints, PipelineStep.PROMOTE):
+                if (
+                    not force_refresh
+                    and not _is_checkpoint_completed(checkpoints, PipelineStep.STAGE)
+                    and not _is_checkpoint_completed(checkpoints, PipelineStep.PROMOTE)
+                ):
                     current_checksum = _resolve_bronze_checksum(context.bronze_source_path)
                     previous_bronze_path = self._run_store.last_successful_bronze_path(
                         source=resolved_source,
@@ -883,22 +894,36 @@ class PipelineRunner:
             run_id=resolved_run_id,
         )
 
-    def run_all(self) -> dict[PipelineSource, PipelineResult]:
+    def run_all(self, *, force_refresh: bool = False) -> dict[PipelineSource, PipelineResult]:
         ordered_sources = list(self._pipelines)
         if self._max_concurrent_sources <= 1 or len(ordered_sources) <= 1:
-            return {source: self.run_source(source) for source in ordered_sources}
+            return {
+                source: self.run_source(source, force_refresh=force_refresh)
+                for source in ordered_sources
+            }
 
         unordered_results: dict[PipelineSource, PipelineResult] = {}
         with ThreadPoolExecutor(
             max_workers=min(self._max_concurrent_sources, len(ordered_sources))
         ) as executor:
             futures = {
-                executor.submit(self.run_source, source): source for source in ordered_sources
+                executor.submit(self.run_source, source, force_refresh=force_refresh): source
+                for source in ordered_sources
             }
             for future in as_completed(futures):
                 source = futures[future]
                 unordered_results[source] = future.result()
         return {source: unordered_results[source] for source in ordered_sources}
+
+    def _assert_context_bronze_root(self, context: PipelineRunContext) -> None:
+        if _normalize_pipeline_path(context.bronze_root) == self._bronze_root_key:
+            return
+        raise ValueError(
+            "Pipeline run bronze root "
+            f"'{context.bronze_root}' does not match the configured bronze root "
+            f"'{self._bronze_root}'. Start a new run with the current configuration instead "
+            "of resuming across Bronze roots."
+        )
 
     def _resolve_run_context(
         self,
@@ -1155,6 +1180,22 @@ def _load_json_dict(path: Path) -> dict[str, object] | None:
     if isinstance(payload, dict):
         return payload
     return None
+
+
+def _clear_bronze_source_path(bronze_source_path: Path) -> None:
+    if not bronze_source_path.exists():
+        return
+    if bronze_source_path.is_dir():
+        shutil.rmtree(bronze_source_path)
+        return
+    bronze_source_path.unlink()
+
+
+def _normalize_pipeline_path(path: Path) -> Path:
+    candidate = path.expanduser()
+    if not candidate.is_absolute():
+        candidate = Path.cwd() / candidate
+    return candidate.resolve(strict=False)
 
 
 def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]:

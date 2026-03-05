@@ -38,6 +38,7 @@ def run_pipeline(
     source: str | None = typer.Option(None, "--source", case_sensitive=False),
     run_all: bool = typer.Option(False, "--all"),
     resume: bool = typer.Option(False, "--resume"),
+    force_refresh: bool = typer.Option(False, "--force-refresh"),
 ) -> None:
     normalized_source = source.strip().lower() if source is not None else None
 
@@ -47,6 +48,8 @@ def run_pipeline(
         raise typer.BadParameter("Use either --source or --all, not both.")
     if resume and run_all:
         raise typer.BadParameter("--resume can only be used with --source.")
+    if resume and force_refresh:
+        raise typer.BadParameter("--force-refresh cannot be used with --resume.")
 
     runner = pipeline_runner()
     available_sources = set(runner.available_sources())
@@ -61,11 +64,13 @@ def run_pipeline(
             normalized_source: runner.run_source(
                 normalized_source,
                 resume=resume,
+                force_refresh=force_refresh,
             )
         }
     else:
         results = {
-            result_source.value: result for result_source, result in runner.run_all().items()
+            result_source.value: result
+            for result_source, result in runner.run_all(force_refresh=force_refresh).items()
         }
 
     has_failed = False

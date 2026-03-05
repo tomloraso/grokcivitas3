@@ -7,6 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from civitas.infrastructure.config.settings import (
+    DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT,
     DEFAULT_BRONZE_ROOT,
     DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD,
     DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -59,6 +60,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in (
         "CIVITAS_DATABASE_URL",
         "CIVITAS_BRONZE_ROOT",
+        "CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT",
         "CIVITAS_GIAS_SOURCE_CSV",
         "CIVITAS_GIAS_SOURCE_ZIP",
         "CIVITAS_DEMOGRAPHICS_SOURCE_MODE",
@@ -136,6 +138,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = AppSettings(_env_file=None)
 
     assert settings.database.url == DEFAULT_DATABASE_URL
+    assert settings.allow_noncanonical_bronze_root is DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT
     assert settings.pipeline.bronze_root == DEFAULT_BRONZE_ROOT
     assert settings.pipeline.gias_source_csv is None
     assert settings.pipeline.gias_source_zip is None
@@ -280,6 +283,7 @@ def test_app_settings_reads_environment_overrides(
         "CIVITAS_DATABASE_URL", "postgresql+psycopg://override:override@localhost:5432/app"
     )
     monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
+    monkeypatch.setenv("CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT", "true")
     monkeypatch.setenv("CIVITAS_GIAS_SOURCE_CSV", "  https://example.com/gias.csv  ")
     monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_MODE", " release_files ")
     monkeypatch.setenv(
@@ -363,6 +367,7 @@ def test_app_settings_reads_environment_overrides(
     settings = AppSettings(_env_file=None)
 
     assert settings.database.url == "postgresql+psycopg://override:override@localhost:5432/app"
+    assert settings.allow_noncanonical_bronze_root is True
     assert settings.pipeline.bronze_root == tmp_path / "custom-bronze"
     assert settings.pipeline.gias_source_csv == "https://example.com/gias.csv"
     assert settings.pipeline.demographics_source_mode == "release_files"
@@ -436,6 +441,19 @@ def test_app_settings_reads_environment_overrides(
     assert settings.school_search.postcode_cache_ttl_days == 45
     assert settings.school_search.profile_cache_ttl_seconds == 120
     assert settings.school_search.profile_cache_invalidation_poll_seconds == 3.0
+
+
+def test_app_settings_rejects_noncanonical_bronze_root_without_override(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
+
+    with pytest.raises(
+        ValidationError,
+        match="CIVITAS_BRONZE_ROOT must remain at data/bronze",
+    ):
+        AppSettings(_env_file=None)
 
 
 def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.MonkeyPatch) -> None:

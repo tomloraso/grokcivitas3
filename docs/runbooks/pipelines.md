@@ -31,7 +31,8 @@ Default runtime setting:
 
 - `CIVITAS_BRONZE_ROOT=data/bronze`
 
-Use alternate Bronze roots only for isolated experiments or drills, not for normal operation.
+Non-canonical Bronze roots are rejected by default. An alternate root is only allowed when
+`CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT=true` is set for an explicitly approved drill.
 
 ## Zone Responsibilities
 
@@ -83,6 +84,8 @@ flowchart TD
   C --> D[promote]
   D --> E[pipeline_runs status]
   F[pipeline run --all] --> A
+  I[pipeline run --source <name> --force-refresh] --> J[clear current Bronze source path]
+  J --> A
   G[pipeline run --source <name> --resume] --> C
   H[pipeline resume --run-id <id>] --> C
 ```
@@ -90,6 +93,7 @@ flowchart TD
 Common commands:
 
 - `uv run --project apps/backend civitas pipeline run --source gias`
+- `uv run --project apps/backend civitas pipeline run --source gias --force-refresh`
 - `uv run --project apps/backend civitas pipeline run --source dfe_performance`
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
@@ -126,6 +130,8 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 ## Operational Notes
 
 - `skipped_no_change` means Bronze checksums matched the last successful run for that source.
+- `--force-refresh` clears the current source/day Bronze directory before download and bypasses the
+  no-change short-circuit for that run.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
 - `dfe_characteristics` now runs the Phase S release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
 - `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.

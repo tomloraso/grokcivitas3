@@ -3,6 +3,8 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
+import pytest
+
 from civitas.infrastructure.pipelines.base import (
     PipelineCheckpoint,
     PipelineQualityConfig,
@@ -12,15 +14,24 @@ from civitas.infrastructure.pipelines.base import (
     PipelineSource,
     PipelineStep,
     StageResult,
+    utc_now,
 )
 from civitas.infrastructure.pipelines.runner import PipelineRunner
 
 
 class RecordingRunStore:
-    def __init__(self, previous_successful_bronze_path: Path | None = None) -> None:
+    def __init__(
+        self,
+        previous_successful_bronze_path: Path | None = None,
+        *,
+        loaded_context: PipelineRunContext | None = None,
+        latest_context: PipelineRunContext | None = None,
+    ) -> None:
         self.started: list[PipelineRunContext] = []
         self.finished: list[tuple[PipelineRunContext, PipelineResult, datetime]] = []
         self.previous_successful_bronze_path = previous_successful_bronze_path
+        self.loaded_context = loaded_context
+        self.latest_context = latest_context
 
     def record_started(self, context: PipelineRunContext) -> None:
         self.started.append(context)
@@ -64,12 +75,14 @@ class RecordingRunStore:
         return {}
 
     def load_run_context(self, *, run_id: UUID) -> PipelineRunContext | None:
-        _ = run_id
-        return None
+        if self.loaded_context is None:
+            return None
+        return self.loaded_context if self.loaded_context.run_id == run_id else None
 
     def latest_resumable_context(self, *, source: PipelineSource) -> PipelineRunContext | None:
-        _ = source
-        return None
+        if self.latest_context is None:
+            return None
+        return self.latest_context if self.latest_context.source == source else None
 
 
 class StubPipeline:
@@ -292,6 +305,72 @@ def test_pipeline_runner_skips_when_checksum_matches_previous_success(tmp_path: 
     assert result.promoted_rows == 0
     assert result.rejected_rows == 0
     assert result.error_message is None
+
+
+def test_pipeline_runner_force_refresh_clears_same_day_bronze_and_runs_full_pipeline(
+    tmp_path: Path,
+) -> None:
+    current_bronze_path = tmp_path / "gias" / utc_now().date().isoformat()
+    current_bronze_path.mkdir(parents=True, exist_ok=True)
+    stale_artifact = current_bronze_path / "stale.txt"
+    stale_artifact.write_text("stale", encoding="utf-8")
+
+    pipeline = StubPipeline(
+        downloaded_rows=12,
+        staged_rows=10,
+        rejected_rows=1,
+        promoted_rows=10,
+        bronze_checksum="same-checksum",
+    )
+    store = RecordingRunStore(previous_successful_bronze_path=current_bronze_path)
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: pipeline},
+        run_store=store,
+        bronze_root=tmp_path,
+        quality_config_by_source=_quality(),
+    )
+
+    result = runner.run_source(PipelineSource.GIAS, force_refresh=True)
+
+    assert pipeline.calls == ["download", "stage", "promote"]
+    assert result.status == PipelineRunStatus.SUCCEEDED
+    assert stale_artifact.exists() is False
+
+
+def test_pipeline_runner_force_refresh_rejects_resume(tmp_path: Path) -> None:
+    pipeline = StubPipeline(downloaded_rows=12, staged_rows=10, promoted_rows=10)
+    store = RecordingRunStore()
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: pipeline},
+        run_store=store,
+        bronze_root=tmp_path,
+        quality_config_by_source=_quality(),
+    )
+
+    with pytest.raises(ValueError, match="force_refresh cannot be used when resume=True"):
+        runner.run_source(PipelineSource.GIAS, resume=True, force_refresh=True)
+
+
+def test_pipeline_runner_rejects_resumed_context_with_mismatched_bronze_root(
+    tmp_path: Path,
+) -> None:
+    pipeline = StubPipeline(downloaded_rows=12, staged_rows=10, promoted_rows=10)
+    loaded_context = PipelineRunContext(
+        run_id=UUID("6f3f1a49-ecfb-4889-9efd-2913f6f821cc"),
+        source=PipelineSource.GIAS,
+        started_at=datetime.now().astimezone(),
+        bronze_root=tmp_path / "legacy-bronze",
+    )
+    store = RecordingRunStore(loaded_context=loaded_context)
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: pipeline},
+        run_store=store,
+        bronze_root=tmp_path / "data-bronze",
+        quality_config_by_source=_quality(),
+    )
+
+    with pytest.raises(ValueError, match="does not match the configured bronze root"):
+        runner.run_source(PipelineSource.GIAS, resume=True, run_id=loaded_context.run_id)
 
 
 def test_pipeline_runner_logs_unexpected_failure_with_partial_counts(tmp_path: Path) -> None:

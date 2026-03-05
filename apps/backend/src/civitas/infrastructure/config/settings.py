@@ -3,7 +3,15 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import BaseModel, Field, NonNegativeInt, PositiveFloat, PositiveInt, field_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    NonNegativeInt,
+    PositiveFloat,
+    PositiveInt,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
@@ -65,6 +73,7 @@ DEFAULT_PIPELINE_STAGE_CHUNK_SIZE = 1000
 DEFAULT_PIPELINE_PROMOTE_CHUNK_SIZE = 1000
 DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES = 1
 DEFAULT_PIPELINE_RESUME_ENABLED = True
+DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT = False
 DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL = (
     "https://www.gov.uk/government/statistical-data-sets/"
     "monthly-management-information-ofsteds-school-inspections-outcomes"
@@ -203,6 +212,10 @@ class AppSettings(BaseSettings):
     bronze_root: Path = Field(
         default=DEFAULT_BRONZE_ROOT,
         validation_alias="CIVITAS_BRONZE_ROOT",
+    )
+    allow_noncanonical_bronze_root: bool = Field(
+        default=DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT,
+        validation_alias="CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT",
     )
     gias_source_csv: str | None = Field(
         default=None,
@@ -734,6 +747,20 @@ class AppSettings(BaseSettings):
             raise ValueError("CIVITAS_POLICE_CRIME_SOURCE_MODE must be one of: api, archive")
         return value
 
+    @model_validator(mode="after")
+    def _validate_bronze_root(self) -> AppSettings:
+        if self.allow_noncanonical_bronze_root:
+            return self
+
+        configured_root = _normalize_config_path(self.bronze_root)
+        canonical_root = _normalize_config_path(DEFAULT_BRONZE_ROOT)
+        if configured_root != canonical_root:
+            raise ValueError(
+                "CIVITAS_BRONZE_ROOT must remain at data/bronze unless "
+                "CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT=true is set for an approved exception."
+            )
+        return self
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> AppSettings:
@@ -753,3 +780,10 @@ def _parse_csv_tokens(raw_value: str | None) -> tuple[str, ...]:
         seen.add(normalized)
         tokens.append(normalized)
     return tuple(tokens)
+
+
+def _normalize_config_path(path: Path) -> Path:
+    candidate = path.expanduser()
+    if not candidate.is_absolute():
+        candidate = Path.cwd() / candidate
+    return candidate.resolve(strict=False)

@@ -10,18 +10,22 @@ class FakePipelineRunner:
         self._result = result
         self.ran_source: str | None = None
         self.ran_source_resume = False
+        self.ran_source_force_refresh = False
         self.ran_run_id: str | None = None
         self.ran_all = False
+        self.ran_all_force_refresh = False
 
     def run_source(
         self,
         source: str,
         *,
         resume: bool = False,
+        force_refresh: bool = False,
         run_id: str | None = None,
     ) -> PipelineResult:
         self.ran_source = source
         self.ran_source_resume = resume
+        self.ran_source_force_refresh = force_refresh
         self.ran_run_id = run_id
         return self._result
 
@@ -39,8 +43,9 @@ class FakePipelineRunner:
             "police_crime_context",
         )
 
-    def run_all(self) -> dict[PipelineSource, PipelineResult]:
+    def run_all(self, *, force_refresh: bool = False) -> dict[PipelineSource, PipelineResult]:
         self.ran_all = True
+        self.ran_all_force_refresh = force_refresh
         return {PipelineSource.GIAS: self._result}
 
     def resume_run(self, run_id: str) -> tuple[PipelineSource, PipelineResult]:
@@ -69,6 +74,7 @@ def test_pipeline_run_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_source == "gias"
     assert fake_runner.ran_source_resume is False
+    assert fake_runner.ran_source_force_refresh is False
     assert "gias: succeeded" in result.stdout.lower()
 
 
@@ -249,6 +255,7 @@ def test_pipeline_run_all(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert result.exit_code == 0
     assert fake_runner.ran_all is True
+    assert fake_runner.ran_all_force_refresh is False
     assert "gias: succeeded" in result.stdout.lower()
 
 
@@ -262,6 +269,44 @@ def test_pipeline_run_source_resume(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_source == "gias"
     assert fake_runner.ran_source_resume is True
+
+
+def test_pipeline_run_source_force_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "gias", "--force-refresh"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "gias"
+    assert fake_runner.ran_source_force_refresh is True
+
+
+def test_pipeline_run_all_force_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--all", "--force-refresh"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_all is True
+    assert fake_runner.ran_all_force_refresh is True
+
+
+def test_pipeline_run_resume_rejects_force_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        ["pipeline", "run", "--source", "gias", "--resume", "--force-refresh"],
+    )
+
+    assert result.exit_code == 2
+    assert fake_runner.ran_source is None
 
 
 def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
