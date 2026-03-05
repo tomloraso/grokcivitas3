@@ -20,6 +20,7 @@ This deliverable is intentionally lighter than `AI-1` through `AI-3`. It capture
 
 - Prompt template registry (add new summary types by adding a module).
 - Generic batch generation pipeline step (configurable per summary type).
+- Validation policy registry per summary type.
 - Summary history table for version tracking.
 - Extension point documentation for adding new AI features.
 - Candidate feature specifications (not full implementation).
@@ -59,10 +60,26 @@ class GenerateSummariesUseCase:
     def execute(self, summary_type: SummaryType, urns: list[str] | None = None) -> BatchResult:
         template = REGISTRY[summary_type]
         context_assembler = self._context_assemblers[summary_type]
-        # ... assemble, hash, generate, store
+        validation_policy = self._validation_policies[summary_type]
+        # ... assemble, hash, generate, validate, store
 ```
 
 Context assemblers are registered per summary type and responsible for querying Gold tables and building the appropriate context dataclass.
+
+### Validation policy registry
+
+```python
+VALIDATION_POLICIES: dict[SummaryType, SummaryValidationPolicy] = {
+    "overview": overview_validation_policy,
+    "groks_take": groks_take_validation_policy,
+}
+```
+
+Each policy defines:
+- word-count bounds
+- banned phrasing / recommendation rules
+- context-reference checks
+- corrective-retry behavior
 
 ### Summary history table
 
@@ -131,39 +148,48 @@ On each upsert to `school_ai_summaries`, the previous row is archived to `school
    - Refactor `GenerateSchoolOverviewsUseCase` and `GenerateGroksTakeUseCase` into generic `GenerateSummariesUseCase`.
 
 3. `apps/backend/src/civitas/application/school_summaries/context_assemblers.py` (new)
+   - Formalise the context-assembly pattern already introduced in `AI-2` / `AI-3`.
    - `OverviewContextAssembler`, `PremiumContextAssembler` classes.
    - Registry pattern for future assemblers.
 
-4. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai4_summary_history.py` (new)
+4. `apps/backend/src/civitas/domain/school_summaries/services.py`
+   - Extract reusable validation policy objects by summary type.
+
+5. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai4_summary_history.py` (new)
    - Create `school_ai_summary_history` table.
 
-5. `apps/backend/src/civitas/infrastructure/persistence/postgres_summary_repository.py`
+6. `apps/backend/src/civitas/infrastructure/persistence/postgres_summary_repository.py`
    - Add history archival on upsert.
 
-6. `docs/architecture/ai-extension-guide.md` (new)
-   - Document the pattern: create context dataclass, create prompt template module, register in `REGISTRY`, add context assembler, run batch.
+7. `docs/architecture/ai-extension-guide.md` (new)
+   - Document the pattern: create context dataclass, create prompt template module, register in `REGISTRY`, add context assembler, define validation policy, run batch.
 
-7. `apps/backend/tests/unit/test_prompt_registry.py` (new)
+8. `apps/backend/tests/unit/test_prompt_registry.py` (new)
    - All registered templates have required attributes.
    - Render functions produce valid output.
 
-8. `apps/backend/tests/unit/test_summary_history.py` (new)
+9. `apps/backend/tests/unit/test_summary_history.py` (new)
    - Upsert archives previous version.
    - History is queryable by URN and type.
+
+10. `apps/backend/tests/unit/test_summary_validation_policies.py` (new)
+    - All registered summary types expose deterministic validation policies.
 
 ## Codex Execution Checklist
 
 1. Refactor existing use cases into generic pattern.
 2. Extract context assemblers.
 3. Formalise prompt template registry.
-4. Add summary history table and archival logic.
-5. Write extension guide documentation.
-6. Run full `make lint` and `make test` to verify zero regressions.
+4. Formalise validation policy registry.
+5. Add summary history table and archival logic.
+6. Write extension guide documentation.
+7. Run full `make lint` and `make test` to verify zero regressions.
 
 ## Required Commands
 
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_prompt_registry.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_summary_history.py -q`
+- `uv run --project apps/backend pytest apps/backend/tests/unit/test_summary_validation_policies.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/ -q`
 - `make lint`
 - `make test`
@@ -173,8 +199,9 @@ On each upsert to `school_ai_summaries`, the previous row is archived to `school
 1. New AI features can be added by creating a prompt template module and context assembler without modifying core AI infrastructure.
 2. Summary history table retains previous versions on each regeneration.
 3. Generic `GenerateSummariesUseCase` supports all registered summary types.
-4. Extension guide in `docs/` explains the step-by-step process for adding a new AI capability.
-5. All existing overview and premium generation continues to work after refactoring.
+4. Validation policies are registered per summary type so new AI features inherit deterministic post-generation guardrails.
+5. Extension guide in `docs/` explains the step-by-step process for adding a new AI capability.
+6. All existing overview and premium generation continues to work after refactoring.
 
 ## Risks And Mitigations
 

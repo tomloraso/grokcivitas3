@@ -16,7 +16,7 @@ The phase targets:
 
 1. Widening the GIAS pipeline to extract ~20 additional fields already present in Bronze CSV (website, phone, head teacher, address, age range, religious character, admissions policy, trust/MAT, etc.).
 2. AI-generated factual school overviews using a port-based LLM integration that follows existing hexagonal architecture.
-3. AI-generated premium analysis ("Grok's Take") with deeper metric-by-metric commentary.
+3. AI-generated premium analysis ("Grok's Take") with deeper metric-by-metric commentary, generated ahead of time and exposed publicly only once Phase 4 auth + entitlement controls exist.
 4. An extensible AI platform foundation for future features (comparison narratives, natural-language search, trend interpretation).
 
 ## Key Finding
@@ -78,6 +78,7 @@ flowchart LR
 7. No AI-generated content may include rankings, subjective advice, recommendations, or suitability guidance.
 8. AI outputs must be grounded in assembled Civitas data context only (no open-web lookup or model-memory claims in this phase).
 9. Premium content exposure must be enforced by backend entitlement checks, never client-provided tier flags.
+10. Every generated output must pass deterministic post-generation validation before it is persisted or served; invalid outputs are quarantined through run telemetry and remain unavailable until regenerated successfully.
 
 ## Delivery Model
 
@@ -92,7 +93,7 @@ Phase AI is split into four deliverables:
 
 1. Complete `AI-1` first - enriched school data is a prerequisite for meaningful AI summaries.
 2. Complete `AI-2` - factual overview requires enriched profile data from all Gold sources.
-3. Complete `AI-3` - premium analysis builds on the same AI infrastructure with deeper prompts.
+3. Complete `AI-3` - premium analysis generation builds on the same AI infrastructure with deeper prompts; public API/UI exposure is deferred until Phase 4 auth + entitlement work is complete.
 4. Complete `AI-4` - generalisation only after concrete features prove the pattern.
 
 ## Dependencies
@@ -101,3 +102,4 @@ Phase AI is split into four deliverables:
 - Phase Hardening quality gates must be in place before AI-generated content enters Gold.
 - Phase Source Stabilization multi-year demographics should be complete for richer summaries.
 - AI summary generation runs only after successful Bronze -> Silver -> Gold completion.
+- Public exposure of premium AI output depends on Phase 4 authentication and backend-enforced entitlements.

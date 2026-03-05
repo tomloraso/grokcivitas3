@@ -18,9 +18,11 @@ Introduce a pre-generated, factual school overview (120-180 words) for every sch
 ### In scope
 
 - Domain port protocol for summary generation.
+- Gold-backed context assembly port for summary inputs.
 - Application use case for generating and retrieving school overviews.
 - Infrastructure LLM adapter (swappable provider).
 - Prompt template for factual school overview.
+- Deterministic post-generation validation and quarantine rules.
 - Data-version-hash cache to detect stale summaries.
 - Database storage of generated text with provenance metadata.
 - Operational integration for batch pre-generation after successful Gold refresh.
@@ -42,10 +44,13 @@ Introduce a pre-generated, factual school overview (120-180 words) for every sch
 6. **Versioned prompts.** Prompt templates are version-controlled Python modules, not database-stored strings.
 7. **Cost model.** ~25,000 schools x 2 refreshes/year at Grok 4.1 pricing is expected to stay under GBP 50/year.
 8. **Provider selection via config.** `CIVITAS_AI_PROVIDER` selects an infrastructure adapter (`grok`, `openai`, or `openai_compatible`). Bootstrap resolves the adapter through a factory without changing application code.
+9. **Context assembly stays behind an application port.** Batch generation use cases receive `SchoolOverviewContext` objects from a dedicated read port/repository. They do not query Gold tables or know SQL/table layout.
+10. **Validation before persistence is mandatory.** Generated outputs are deterministically checked for word count, banned recommendation/suitability phrasing, prohibited comparative language, and references to entities absent from the assembled context. Invalid outputs are never written to `school_ai_summaries`.
+11. **One corrective retry maximum.** If validation fails, the generator may receive one immediate corrective retry using machine-readable validation reason codes. If the retry also fails, the item is recorded as `validation_failed` and remains unavailable until a later rerun succeeds.
 
 ## Data Assembly
 
-The overview prompt receives a structured data context assembled from Gold tables:
+The overview prompt receives a structured data context assembled by a dedicated application port from Gold-serving tables:
 
 ```
 SchoolOverviewContext:
@@ -90,9 +95,11 @@ AI summary generation is explicitly a **post-promote** operation:
 
 1. Bronze -> Silver -> Gold runs complete first using the existing pipeline runner.
 2. AI generation executes only after required source runs are `succeeded` or `skipped_no_change`.
-3. AI generation reads Gold tables, computes current hashes, and upserts stale summaries.
-4. AI generation failures do not silently pass; the command exits non-zero with failure counts.
-5. Generation is resumable (`--resume-run-id`) and idempotent (current hashes are skipped).
+3. AI generation reads current contexts through `SummaryContextRepository`, computes current hashes, and queues stale URNs.
+4. Each item runs `generate -> validate -> optional corrective retry -> validate`.
+5. Only validated outputs are upserted into `school_ai_summaries`; generation failures and validation failures are recorded in run telemetry and remain unavailable to the API.
+6. AI generation failures do not silently pass; the command exits non-zero with failure counts.
+7. Generation is resumable (`--resume-run-id`) and idempotent (current hashes are skipped).
 
 This keeps the core data pipeline contract unchanged while providing deterministic AI refresh behavior.
 
@@ -137,6 +144,38 @@ Design notes:
 - `prompt_version` and `model_id` provide full provenance for audit.
 - Previous versions are not retained in this table (simplicity first; add history table in `AI-4` if needed).
 
+New operational tables:
+
+```sql
+CREATE TABLE ai_generation_runs (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    summary_type text NOT NULL,
+    trigger text NOT NULL,              -- 'pipeline' | 'manual'
+    requested_count integer NOT NULL,
+    succeeded_count integer NOT NULL DEFAULT 0,
+    generation_failed_count integer NOT NULL DEFAULT 0,
+    validation_failed_count integer NOT NULL DEFAULT 0,
+    started_at timestamptz NOT NULL,
+    completed_at timestamptz NULL,
+    status text NOT NULL                -- 'running' | 'succeeded' | 'failed' | 'partial'
+);
+
+CREATE TABLE ai_generation_run_items (
+    run_id uuid NOT NULL REFERENCES ai_generation_runs(id) ON DELETE CASCADE,
+    urn text NOT NULL,
+    summary_type text NOT NULL,
+    status text NOT NULL,               -- 'succeeded' | 'generation_failed' | 'validation_failed' | 'skipped_current'
+    attempt_count integer NOT NULL DEFAULT 0,
+    failure_reason_codes text[] NULL,
+    completed_at timestamptz NULL,
+    PRIMARY KEY (run_id, urn, summary_type)
+);
+```
+
+Design notes:
+- `ai_generation_run_items` is the resumability source of truth for per-URN progress.
+- Validation failures are quarantined here rather than being exposed through serving tables.
+
 ## Hexagonal Architecture Mapping
 
 ### Domain layer
@@ -147,6 +186,9 @@ Design notes:
    - `SchoolSummary` frozen dataclass: `urn`, `summary_type`, `text`, `data_version_hash`, `prompt_version`, `model_id`, `generated_at`, `generation_duration_ms`.
    - `SchoolOverviewContext` frozen dataclass: assembled data context for prompt.
    - `SummaryType` literal: `"overview"`, `"groks_take"`.
+2. `services.py` (new)
+   - `validate_generated_summary(summary_type, text, context) -> SummaryValidationResult`.
+   - Pure validation for word count, banned phrasing, and context-reference policy.
 
 ### Application layer
 
@@ -158,7 +200,15 @@ Design notes:
      class SummaryGenerator(Protocol):
          def generate_overview(self, context: SchoolOverviewContext) -> GeneratedSummary: ...
      ```
-2. `ports/summary_repository.py` (new)
+2. `ports/summary_context_repository.py` (new)
+   - `SummaryContextRepository` Protocol:
+     ```python
+     class SummaryContextRepository(Protocol):
+         def list_overview_contexts(
+             self, urns: Sequence[str] | None = None
+         ) -> list[SchoolOverviewContext]: ...
+     ```
+3. `ports/summary_repository.py` (new)
    - `SummaryRepository` Protocol:
      ```python
      class SummaryRepository(Protocol):
@@ -166,10 +216,11 @@ Design notes:
          def upsert_summary(self, summary: SchoolSummary) -> None: ...
          def list_stale(self, current_hashes: dict[str, str]) -> list[str]: ...
      ```
-3. `use_cases.py` (new)
+4. `use_cases.py` (new)
    - `GetSchoolOverviewUseCase`: retrieve cached summary by URN.
    - `GenerateSchoolOverviewsUseCase`: batch generate/refresh overviews for stale schools.
-4. `dto.py` (new)
+   - Use case flow is `context repository -> generator -> validator -> summary repository/run telemetry`.
+5. `dto.py` (new)
    - `SchoolSummaryDto`: application-layer DTO for API mapping.
 
 ### Infrastructure layer
@@ -193,6 +244,7 @@ Common adapter behavior:
 - Use `httpx` transport at infrastructure layer only.
 - Handle rate limiting, retries, and timeout.
 - Model selection from settings.
+- Support one corrective retry when validation reason codes are returned by the use case.
 
 5. `prompt_templates/school_overview.py` (new)
    - `SYSTEM_PROMPT`, `USER_TEMPLATE`, `VERSION` constants.
@@ -207,26 +259,29 @@ Common adapter behavior:
    - `PostgresSummaryRepository` implementing `SummaryRepository` protocol.
    - SQL for get, upsert, list_stale operations.
 
+8. `postgres_summary_context_repository.py` (new)
+   - `PostgresSummaryContextRepository` implementing `SummaryContextRepository`.
+   - Owns Gold-table joins required to assemble `SchoolOverviewContext`.
+
 ### API layer
 
 `apps/backend/src/civitas/api/`
 
-5. `routes.py`
-   - Add `overview_text: str | None` to `SchoolProfileResponse` (or nested in school section).
-   - Alternatively, add `/api/v1/schools/{urn}/summary` endpoint if separation preferred.
+1. `routes.py`
+   - Add `overview_text: str | None` to `SchoolProfileResponse`.
 
-6. `schemas/` (if separate)
-   - `SchoolSummaryResponse` Pydantic model.
+2. `schemas/school_profiles.py`
+   - Extend the profile response schema with `overview_text`.
 
 ### Bootstrap
 
-7. `apps/backend/src/civitas/bootstrap/container.py`
-   - Wire `SummaryGenerator` via `provider_factory` and `PostgresSummaryRepository` into DI container.
-   - Inject into summary use cases.
+1. `apps/backend/src/civitas/bootstrap/container.py`
+   - Wire `SummaryGenerator`, `SummaryContextRepository`, and `PostgresSummaryRepository` into the DI container.
+   - Inject the validator flow into summary use cases.
 
 ### CLI
 
-8. `apps/backend/src/civitas/cli/main.py`
+1. `apps/backend/src/civitas/cli/main.py`
    - Add `generate-summaries` command for manual batch generation.
    - Add `--force` flag to regenerate all regardless of staleness.
    - Add `--urn` flag to regenerate for a specific school.
@@ -234,7 +289,7 @@ Common adapter behavior:
 
 ### Settings
 
-9. `apps/backend/src/civitas/infrastructure/config/settings.py`
+1. `apps/backend/src/civitas/infrastructure/config/settings.py`
    - `CIVITAS_AI_PROVIDER`: `grok|openai|openai_compatible`.
    - `CIVITAS_AI_MODEL_ID`: model identifier (default: configured model).
    - `CIVITAS_AI_API_KEY`: API key (secret).
@@ -249,55 +304,63 @@ Common adapter behavior:
 1. `apps/backend/src/civitas/domain/school_summaries/__init__.py` (new)
 2. `apps/backend/src/civitas/domain/school_summaries/models.py` (new)
    - `SchoolSummary`, `SchoolOverviewContext`, `SummaryType`.
-3. `apps/backend/src/civitas/application/school_summaries/__init__.py` (new)
-4. `apps/backend/src/civitas/application/school_summaries/ports/__init__.py` (new)
-5. `apps/backend/src/civitas/application/school_summaries/ports/summary_generator.py` (new)
+3. `apps/backend/src/civitas/domain/school_summaries/services.py` (new)
+   - Summary validation rules and result model.
+4. `apps/backend/src/civitas/application/school_summaries/__init__.py` (new)
+5. `apps/backend/src/civitas/application/school_summaries/ports/__init__.py` (new)
+6. `apps/backend/src/civitas/application/school_summaries/ports/summary_generator.py` (new)
    - `SummaryGenerator` protocol.
-6. `apps/backend/src/civitas/application/school_summaries/ports/summary_repository.py` (new)
+7. `apps/backend/src/civitas/application/school_summaries/ports/summary_context_repository.py` (new)
+   - `SummaryContextRepository` protocol.
+8. `apps/backend/src/civitas/application/school_summaries/ports/summary_repository.py` (new)
    - `SummaryRepository` protocol.
-7. `apps/backend/src/civitas/application/school_summaries/use_cases.py` (new)
+9. `apps/backend/src/civitas/application/school_summaries/use_cases.py` (new)
    - `GetSchoolOverviewUseCase`, `GenerateSchoolOverviewsUseCase`.
-8. `apps/backend/src/civitas/application/school_summaries/dto.py` (new)
-   - `SchoolSummaryDto`.
-9. `apps/backend/src/civitas/infrastructure/ai/__init__.py` (new)
-10. `apps/backend/src/civitas/infrastructure/ai/provider_factory.py` (new)
-   - Maps `CIVITAS_AI_PROVIDER` to concrete adapter.
-11. `apps/backend/src/civitas/infrastructure/ai/providers/grok_summary_generator.py` (new)
-12. `apps/backend/src/civitas/infrastructure/ai/providers/openai_summary_generator.py` (new)
-13. `apps/backend/src/civitas/infrastructure/ai/providers/openai_compatible_summary_generator.py` (new)
-14. `apps/backend/src/civitas/infrastructure/ai/prompt_templates/__init__.py` (new)
-15. `apps/backend/src/civitas/infrastructure/ai/prompt_templates/school_overview.py` (new)
+10. `apps/backend/src/civitas/application/school_summaries/dto.py` (new)
+    - `SchoolSummaryDto`.
+11. `apps/backend/src/civitas/infrastructure/ai/__init__.py` (new)
+12. `apps/backend/src/civitas/infrastructure/ai/provider_factory.py` (new)
+    - Maps `CIVITAS_AI_PROVIDER` to concrete adapter.
+13. `apps/backend/src/civitas/infrastructure/ai/providers/grok_summary_generator.py` (new)
+14. `apps/backend/src/civitas/infrastructure/ai/providers/openai_summary_generator.py` (new)
+15. `apps/backend/src/civitas/infrastructure/ai/providers/openai_compatible_summary_generator.py` (new)
+16. `apps/backend/src/civitas/infrastructure/ai/prompt_templates/__init__.py` (new)
+17. `apps/backend/src/civitas/infrastructure/ai/prompt_templates/school_overview.py` (new)
     - System prompt, user template, version, render function.
-16. `apps/backend/src/civitas/infrastructure/persistence/postgres_summary_repository.py` (new)
+18. `apps/backend/src/civitas/infrastructure/persistence/postgres_summary_repository.py` (new)
     - `PostgresSummaryRepository` implementing `SummaryRepository`.
-17. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai2_school_ai_summaries.py` (new)
+19. `apps/backend/src/civitas/infrastructure/persistence/postgres_summary_context_repository.py` (new)
+    - `PostgresSummaryContextRepository` implementing `SummaryContextRepository`.
+20. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai2_school_ai_summaries.py` (new)
     - Create `school_ai_summaries` table.
-18. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai2_ai_generation_runs.py` (new)
-    - Create `ai_generation_runs` table for operational telemetry and resumability.
-19. `apps/backend/src/civitas/infrastructure/config/settings.py`
+21. `apps/backend/alembic/versions/YYYYMMDD_NN_phase_ai2_ai_generation_runs.py` (new)
+    - Create `ai_generation_runs` and `ai_generation_run_items`.
+22. `apps/backend/src/civitas/infrastructure/config/settings.py`
     - Add AI settings block.
-20. `apps/backend/src/civitas/bootstrap/container.py`
-    - Wire AI components.
-21. `apps/backend/src/civitas/cli/main.py`
+23. `apps/backend/src/civitas/bootstrap/container.py`
+    - Wire AI generator, context repository, summary repository, and validator flow.
+24. `apps/backend/src/civitas/cli/main.py`
     - Add `generate-summaries` CLI command.
-22. `apps/backend/src/civitas/api/routes.py`
+25. `apps/backend/src/civitas/api/routes.py`
     - Expose overview text in profile response.
-23. `apps/backend/src/civitas/application/school_profiles/use_cases.py`
+26. `apps/backend/src/civitas/api/schemas/school_profiles.py`
+    - Extend profile schema.
+27. `apps/backend/src/civitas/application/school_profiles/use_cases.py`
     - Incorporate summary into profile assembly.
-24. `apps/web/src/features/school-profile/`
+28. `apps/web/src/features/school-profile/`
     - Add overview display component.
-25. `apps/web/src/api/generated-types.ts`
+29. `apps/web/src/api/generated-types.ts`
     - Regenerate from OpenAPI.
 
 ## Codex Execution Checklist
 
 1. Create domain models and application ports first (no infrastructure dependency).
-2. Add Alembic migration for `school_ai_summaries` table.
-3. Implement `PostgresSummaryRepository` with tests.
-4. Implement prompt template with static render tests.
-5. Implement provider adapters and `provider_factory` with mocked LLM tests.
-6. Implement use cases with mocked ports.
-7. Add `ai_generation_runs` persistence and resumable CLI behavior.
+2. Add Alembic migrations for `school_ai_summaries`, `ai_generation_runs`, and `ai_generation_run_items`.
+3. Implement `PostgresSummaryContextRepository` so context assembly stays outside the use case.
+4. Implement `PostgresSummaryRepository` with tests.
+5. Implement prompt template with static render tests.
+6. Implement provider adapters and `provider_factory` with mocked LLM tests.
+7. Implement deterministic validator and corrective-retry flow in use cases with mocked ports.
 8. Wire into bootstrap container.
 9. Add CLI command.
 10. Extend profile API and frontend.
@@ -306,11 +369,13 @@ Common adapter behavior:
 ## Required Commands
 
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_school_summary_models.py -q`
+- `uv run --project apps/backend pytest apps/backend/tests/unit/test_summary_validator.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_summary_generator.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_summary_generator_factory.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_school_overview_prompt.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_generate_summaries_use_case.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/unit/test_ai_generation_runs.py -q`
+- `uv run --project apps/backend pytest apps/backend/tests/integration/test_summary_context_repository.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/integration/test_summary_repository.py -q`
 - `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_profile_api.py -q`
 - `make lint`
@@ -321,16 +386,18 @@ Common adapter behavior:
 ### Required tests
 
 - Domain model construction and equality.
+- Validator rejects outputs that fail word count, banned-phrase, or context-reference rules.
 - Prompt template renders valid system/user messages from context.
 - Prompt template enforces word count constraints (120-180).
 - Provider factory maps `CIVITAS_AI_PROVIDER` to the correct adapter.
 - Provider adapters return structured results from mocked APIs.
 - Provider adapters handle API errors gracefully.
+- `PostgresSummaryContextRepository` assembles overview contexts without leaking SQL into application use cases.
 - `PostgresSummaryRepository` upserts and retrieves correctly.
 - `list_stale` correctly identifies mismatched hashes.
-- `GenerateSchoolOverviewsUseCase` calls generator for stale schools only.
+- `GenerateSchoolOverviewsUseCase` calls generator for stale schools only and performs at most one corrective retry after validation failure.
 - `GetSchoolOverviewUseCase` returns cached summary.
-- `ai_generation_runs` captures success/failure counts and supports resume behavior.
+- `ai_generation_runs` and `ai_generation_run_items` capture success/failure counts, validation failure reason codes, and support resume behavior.
 - Profile API includes overview text when available.
 - Profile API returns `null` overview when not yet generated.
 - CLI `generate-summaries` exits cleanly and reports counts.
@@ -345,20 +412,22 @@ Common adapter behavior:
 
 1. `school_ai_summaries` table exists with composite PK `(urn, summary_type)`.
 2. `SummaryGenerator` protocol is defined in application ports, not infrastructure.
-3. LLM provider and model are swappable via settings without code changes.
-4. Overview prompt produces 120-180 word factual summaries.
-5. Data-version hash correctly detects stale summaries after pipeline runs.
-6. CLI can batch-generate overviews for all schools or specific URNs, with resumable runs.
-7. Profile API exposes overview text.
-8. Frontend displays overview on school profile page.
-9. `CIVITAS_AI_ENABLED=false` disables all AI generation (feature flag).
+3. Overview contexts are assembled through an application port/repository, not directly inside use cases.
+4. LLM provider and model are swappable via settings without code changes.
+5. Overview prompt produces 120-180 word factual summaries.
+6. Data-version hash correctly detects stale summaries after pipeline runs.
+7. CLI can batch-generate overviews for all schools or specific URNs, with resumable runs.
+8. Invalid outputs are not persisted or served; validation failures are recorded per URN with reason codes.
+9. Profile API exposes overview text only when a validated summary exists.
+10. Frontend displays overview on school profile page.
+11. `CIVITAS_AI_ENABLED=false` disables all AI generation (feature flag).
 
 ## Risks And Mitigations
 
 - Risk: LLM API rate limits during batch generation of 25,000 schools.
   - Mitigation: configurable batch size, exponential backoff, resumable generation (skip already-current hashes).
 - Risk: Generated text contains hallucinated facts not in the input data.
-  - Mitigation: prompt explicitly constraints output to provided data only; integration tests validate no external claims.
+  - Mitigation: prompt explicitly constrains output to provided data only; deterministic validators reject banned phrasing and non-context entity references before persistence.
 - Risk: API key exposure in config.
   - Mitigation: key loaded from environment variable, never committed; settings validation fails fast on missing key when AI enabled.
 - Risk: LLM providers differ in API behavior, rate limits, and output style.
