@@ -347,7 +347,9 @@ function renderProfileAtUrn(urn: string) {
 
 describe("SchoolProfileFeature", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    profileMock.mockResolvedValue(PROFILE_RESPONSE);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
   });
 
   it("renders loading state initially", async () => {
@@ -403,7 +405,7 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Disadvantaged/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("School Performance")).toBeInTheDocument();
+    expect(await screen.findByText("Academic Performance")).toBeInTheDocument();
     expect(screen.getByText("Attainment 8")).toBeInTheDocument();
     expect(screen.getByText("47.2")).toBeInTheDocument();
     expect(screen.getByText("Quality of education")).toBeInTheDocument();
@@ -490,6 +492,8 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Area Deprivation");
     expect(screen.getByText("IMD Decile")).toBeInTheDocument();
+    expect(screen.getByText("IDACI Decile")).toBeInTheDocument();
+
     expect(screen.getByText("IMD Rank")).toBeInTheDocument();
     expect(screen.getByText("IMD Score")).toBeInTheDocument();
     expect(screen.getByText("10,234")).toBeInTheDocument();

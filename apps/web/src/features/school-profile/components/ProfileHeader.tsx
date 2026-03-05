@@ -1,4 +1,4 @@
-import { Calendar, MapPin, GraduationCap, Building2, FileCheck } from "lucide-react";
+import { MapPin, GraduationCap, Building2, FileCheck } from "lucide-react";
 
 import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { Badge } from "../../../components/ui/Badge";
@@ -256,27 +256,6 @@ export function ProfileHeader({
 
   const hasSignals =
     ofsted || areaContext.deprivation || needSignal;
-  const ofstedSubJudgements = ofsted
-    ? [
-        { key: "quality", label: "Quality of education", value: ofsted.qualityOfEducationLabel },
-        {
-          key: "behaviour",
-          label: "Behaviour and attitudes",
-          value: ofsted.behaviourAndAttitudesLabel,
-        },
-        {
-          key: "personal-development",
-          label: "Personal development",
-          value: ofsted.personalDevelopmentLabel,
-        },
-        {
-          key: "leadership",
-          label: "Leadership and management",
-          value: ofsted.leadershipAndManagementLabel,
-        },
-      ]
-    : [];
-  const hasOfstedSubJudgements = ofstedSubJudgements.some((item) => Boolean(item.value));
 
   return (
     <header className="space-y-6">
@@ -354,40 +333,6 @@ export function ProfileHeader({
             ) : null}
           </div>
         </>
-      ) : null}
-
-      {/* Ofsted detail — ungraded outcome */}
-      {ofsted?.ungradedOutcome ? (
-        <p className="text-sm text-secondary">
-          Outcome: <span className="font-medium text-primary">{ofsted.ungradedOutcome}</span>
-          {ofsted.publicationDate ? (
-            <span className="ml-3 inline-flex items-center gap-1 text-xs text-disabled">
-              <Calendar className="h-3 w-3" aria-hidden />
-              Published {ofsted.publicationDate}
-            </span>
-          ) : null}
-        </p>
-      ) : null}
-
-      {hasOfstedSubJudgements ? (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {ofstedSubJudgements.map((judgement) => (
-            <div
-              key={judgement.key}
-              className="rounded-md border border-border-subtle/70 bg-surface/60 px-3 py-2"
-            >
-              <p className="text-[11px] text-disabled">{judgement.label}</p>
-              <p className="text-sm font-medium text-primary">
-                {judgement.value ?? "Not published"}
-              </p>
-            </div>
-          ))}
-          {ofsted?.latestOeifInspectionDate ? (
-            <p className="sm:col-span-2 lg:col-span-4 text-[11px] text-disabled">
-              Sub-judgements from inspection starting {ofsted.latestOeifInspectionDate}
-            </p>
-          ) : null}
-        </div>
       ) : null}
 
       {/* Completeness notice for Ofsted if needed */}

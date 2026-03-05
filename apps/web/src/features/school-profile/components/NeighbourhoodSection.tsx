@@ -165,32 +165,35 @@ export function NeighbourhoodSection({
               <>
                 <DeprivationGauge decile={deprivation.imdDecile} />
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-5">
-                  <StatCard
-                    label={<GlossaryTerm term="imd">IMD Decile</GlossaryTerm>}
-                    value={`${deprivation.imdDecile}`}
-                    className="p-3"
-                  />
-                  <StatCard
-                    label={<GlossaryTerm term="imd">IMD Rank</GlossaryTerm>}
-                    value={deprivation.imdRank.toLocaleString("en-GB")}
-                    className="p-3"
-                  />
-                  <StatCard
-                    label={<GlossaryTerm term="imd">IMD Score</GlossaryTerm>}
-                    value={deprivation.imdScore.toFixed(3)}
-                    className="p-3"
-                  />
-                  <StatCard
-                    label={<GlossaryTerm term="idaci">IDACI Decile</GlossaryTerm>}
-                    value={`${deprivation.idaciDecile}`}
-                    className="p-3"
-                  />
-                  <StatCard
-                    label={<GlossaryTerm term="idaci">IDACI Score</GlossaryTerm>}
-                    value={deprivation.idaciScore.toFixed(3)}
-                    className="p-3"
-                  />
+                {/* Key indices — two compact rows */}
+                <div className="space-y-1 text-sm">
+                  <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                    <span className="text-secondary">
+                      <GlossaryTerm term="imd">IMD Decile</GlossaryTerm>{" "}
+                      <span className="font-semibold text-primary">{deprivation.imdDecile}</span>
+                    </span>
+                    <span className="text-border-subtle/60 hidden sm:inline" aria-hidden>&middot;</span>
+                    <span className="text-secondary">
+                      <GlossaryTerm term="idaci">IDACI Decile</GlossaryTerm>{" "}
+                      <span className="font-semibold text-primary">{deprivation.idaciDecile}</span>
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-secondary">
+                    <span>
+                      <GlossaryTerm term="imd">IMD Rank</GlossaryTerm>{" "}
+                      <span className="font-semibold text-primary">{deprivation.imdRank.toLocaleString("en-GB")}</span>
+                    </span>
+                    <span className="text-border-subtle/60 hidden sm:inline" aria-hidden>&middot;</span>
+                    <span>
+                      <GlossaryTerm term="imd">IMD Score</GlossaryTerm>{" "}
+                      <span className="font-semibold text-primary">{deprivation.imdScore.toFixed(3)}</span>
+                    </span>
+                    <span className="text-border-subtle/60 hidden sm:inline" aria-hidden>&middot;</span>
+                    <span>
+                      <GlossaryTerm term="idaci">IDACI Score</GlossaryTerm>{" "}
+                      <span className="font-semibold text-primary">{deprivation.idaciScore.toFixed(3)}</span>
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-sm text-secondary">

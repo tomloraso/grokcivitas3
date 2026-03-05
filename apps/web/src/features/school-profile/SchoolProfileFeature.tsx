@@ -6,10 +6,11 @@ import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
+import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsAndTrendsPanel } from "./components/DemographicsAndTrendsPanel";
 import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
-import { OfstedTimelineCard } from "./components/OfstedTimelineCard";
+import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
@@ -95,20 +96,26 @@ export function SchoolProfileFeature(): JSX.Element {
 
             {/* Zone 2: The School */}
             <div className="space-y-10 sm:space-y-12">
-              {/* Ofsted timeline - inspection record comes first */}
-              <OfstedTimelineCard
+              {/* Ofsted profile — sub-judgements + inspection history */}
+              <OfstedProfileSection
+                ofsted={profile.ofsted}
                 timeline={profile.ofstedTimeline}
-                completeness={profile.completeness.ofstedTimeline}
+                ofstedCompleteness={profile.completeness.ofstedLatest}
+                timelineCompleteness={profile.completeness.ofstedTimeline}
               />
 
-              {/* Demographics & Trends - unified section */}
+              {/* Pupil demographics — who the pupils are */}
               <DemographicsAndTrendsPanel
                 demographics={profile.demographics}
-                performance={profile.performance}
                 trends={profile.trends}
                 demographicsCompleteness={profile.completeness.demographics}
-                performanceCompleteness={profile.completeness.performance}
                 trendsCompleteness={profile.completeness.trends}
+              />
+
+              {/* Academic performance — how the school performs */}
+              <AcademicPerformanceSection
+                performance={profile.performance}
+                completeness={profile.completeness.performance}
               />
             </div>
 
