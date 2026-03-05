@@ -8,11 +8,15 @@ from civitas.domain.school_profiles.models import (
     SchoolAreaContext,
     SchoolAreaContextCoverage,
     SchoolAreaCrime,
+    SchoolAreaCrimeAnnualRate,
     SchoolAreaCrimeCategory,
     SchoolAreaDeprivation,
+    SchoolAttendanceLatest,
+    SchoolBehaviourLatest,
     SchoolDemographicsCoverage,
     SchoolDemographicsEthnicityGroup,
     SchoolDemographicsLatest,
+    SchoolLeadershipSnapshot,
     SchoolOfstedLatest,
     SchoolOfstedTimeline,
     SchoolOfstedTimelineCoverage,
@@ -22,6 +26,7 @@ from civitas.domain.school_profiles.models import (
     SchoolProfileCompleteness,
     SchoolProfileSchool,
     SchoolProfileSectionCompleteness,
+    SchoolWorkforceLatest,
 )
 from civitas.domain.schools.models import PostcodeCoordinates
 
@@ -66,6 +71,10 @@ class FakePostcodeContextResolver:
 
 def _profile(
     demographics_latest: SchoolDemographicsLatest | None = None,
+    attendance_latest: SchoolAttendanceLatest | None = None,
+    behaviour_latest: SchoolBehaviourLatest | None = None,
+    workforce_latest: SchoolWorkforceLatest | None = None,
+    leadership_snapshot: SchoolLeadershipSnapshot | None = None,
     performance: SchoolPerformance | None = None,
     ofsted_latest: SchoolOfstedLatest | None = None,
     ofsted_timeline: SchoolOfstedTimeline | None = None,
@@ -86,10 +95,13 @@ def _profile(
         area_context = SchoolAreaContext(
             deprivation=None,
             crime=None,
+            house_prices=None,
             coverage=SchoolAreaContextCoverage(
                 has_deprivation=False,
                 has_crime=False,
                 crime_months_available=0,
+                has_house_prices=False,
+                house_price_months_available=0,
             ),
         )
     if completeness is None:
@@ -104,6 +116,30 @@ def _profile(
                 reason_code=(
                     None if demographics_latest is not None else "source_file_missing_for_year"
                 ),
+                last_updated_at=None,
+                years_available=None,
+            ),
+            attendance=SchoolProfileSectionCompleteness(
+                status="available" if attendance_latest is not None else "unavailable",
+                reason_code=None if attendance_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            behaviour=SchoolProfileSectionCompleteness(
+                status="available" if behaviour_latest is not None else "unavailable",
+                reason_code=None if behaviour_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            workforce=SchoolProfileSectionCompleteness(
+                status="available" if workforce_latest is not None else "unavailable",
+                reason_code=None if workforce_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            leadership=SchoolProfileSectionCompleteness(
+                status="available" if leadership_snapshot is not None else "unavailable",
+                reason_code=None if leadership_snapshot is not None else "source_missing",
                 last_updated_at=None,
                 years_available=None,
             ),
@@ -137,6 +173,12 @@ def _profile(
                 last_updated_at=None,
                 years_available=None,
             ),
+            area_house_prices=SchoolProfileSectionCompleteness(
+                status="available" if area_context.house_prices is not None else "unavailable",
+                reason_code=None if area_context.house_prices is not None else "not_joined_yet",
+                last_updated_at=None,
+                years_available=None,
+            ),
         )
     return SchoolProfile(
         school=SchoolProfileSchool(
@@ -150,6 +192,10 @@ def _profile(
             lng=-0.14,
         ),
         demographics_latest=demographics_latest,
+        attendance_latest=attendance_latest,
+        behaviour_latest=behaviour_latest,
+        workforce_latest=workforce_latest,
+        leadership_snapshot=leadership_snapshot,
         performance=performance,
         ofsted_latest=ofsted_latest,
         ofsted_timeline=ofsted_timeline,
@@ -183,6 +229,34 @@ def test_get_school_profile_returns_contract_dto() -> None:
                         count=98,
                     ),
                 ),
+            ),
+            attendance_latest=SchoolAttendanceLatest(
+                academic_year="2024/25",
+                overall_attendance_pct=93.2,
+                overall_absence_pct=6.8,
+                persistent_absence_pct=14.1,
+            ),
+            behaviour_latest=SchoolBehaviourLatest(
+                academic_year="2024/25",
+                suspensions_count=121,
+                suspensions_rate=16.4,
+                permanent_exclusions_count=1,
+                permanent_exclusions_rate=0.1,
+            ),
+            workforce_latest=SchoolWorkforceLatest(
+                academic_year="2024/25",
+                pupil_teacher_ratio=16.3,
+                supply_staff_pct=2.4,
+                teachers_3plus_years_pct=76.5,
+                teacher_turnover_pct=9.8,
+                qts_pct=95.2,
+                qualifications_level6_plus_pct=81.1,
+            ),
+            leadership_snapshot=SchoolLeadershipSnapshot(
+                headteacher_name="A. Jones",
+                headteacher_start_date=date(2020, 9, 1),
+                headteacher_tenure_years=4.5,
+                leadership_turnover_score=1.2,
             ),
             ofsted_latest=SchoolOfstedLatest(
                 overall_effectiveness_code="2",
@@ -233,12 +307,50 @@ def test_get_school_profile_returns_contract_dto() -> None:
                     imd_decile=3,
                     idaci_score=0.241,
                     idaci_decile=2,
+                    income_score=0.12,
+                    income_rank=7200,
+                    income_decile=2,
+                    employment_score=0.11,
+                    employment_rank=7000,
+                    employment_decile=2,
+                    education_score=0.16,
+                    education_rank=8100,
+                    education_decile=3,
+                    health_score=0.13,
+                    health_rank=7600,
+                    health_decile=3,
+                    crime_score=0.18,
+                    crime_rank=8900,
+                    crime_decile=4,
+                    barriers_score=0.14,
+                    barriers_rank=7800,
+                    barriers_decile=3,
+                    living_environment_score=0.17,
+                    living_environment_rank=8400,
+                    living_environment_decile=4,
+                    population_total=2000,
+                    local_authority_district_code="E09000033",
+                    local_authority_district_name="Westminster",
                     source_release="IoD2025",
                 ),
                 crime=SchoolAreaCrime(
                     radius_miles=1.0,
                     latest_month="2026-01",
                     total_incidents=486,
+                    population_denominator=2000,
+                    incidents_per_1000=243.0,
+                    annual_incidents_per_1000=(
+                        SchoolAreaCrimeAnnualRate(
+                            year=2025,
+                            total_incidents=240,
+                            incidents_per_1000=120.0,
+                        ),
+                        SchoolAreaCrimeAnnualRate(
+                            year=2026,
+                            total_incidents=486,
+                            incidents_per_1000=243.0,
+                        ),
+                    ),
                     categories=(
                         SchoolAreaCrimeCategory(
                             category="violent-crime",
@@ -246,16 +358,43 @@ def test_get_school_profile_returns_contract_dto() -> None:
                         ),
                     ),
                 ),
+                house_prices=None,
                 coverage=SchoolAreaContextCoverage(
                     has_deprivation=True,
                     has_crime=True,
                     crime_months_available=12,
+                    has_house_prices=False,
+                    house_price_months_available=0,
                 ),
             ),
             completeness=SchoolProfileCompleteness(
                 demographics=SchoolProfileSectionCompleteness(
                     status="partial",
                     reason_code="partial_metric_coverage",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                attendance=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                behaviour=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                workforce=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                leadership=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
                     last_updated_at=None,
                     years_available=None,
                 ),
@@ -289,6 +428,12 @@ def test_get_school_profile_returns_contract_dto() -> None:
                     last_updated_at=None,
                     years_available=None,
                 ),
+                area_house_prices=SchoolProfileSectionCompleteness(
+                    status="unavailable",
+                    reason_code="not_joined_yet",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
             ),
         )
     )
@@ -304,6 +449,14 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.demographics_latest.coverage.ethnicity_supported is True
     assert result.demographics_latest.ethnicity_breakdown[0].key == "white_british"
     assert result.demographics_latest.ethnicity_breakdown[0].percentage == 49.0
+    assert result.attendance_latest is not None
+    assert result.attendance_latest.overall_attendance_pct == 93.2
+    assert result.behaviour_latest is not None
+    assert result.behaviour_latest.suspensions_count == 121
+    assert result.workforce_latest is not None
+    assert result.workforce_latest.pupil_teacher_ratio == 16.3
+    assert result.leadership_snapshot is not None
+    assert result.leadership_snapshot.headteacher_name == "A. Jones"
     assert result.ofsted_latest is not None
     assert result.ofsted_latest.overall_effectiveness_label == "Good"
     assert result.ofsted_latest.quality_of_education_label == "Good"
@@ -317,9 +470,15 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.area_context.deprivation.imd_score == 27.1
     assert result.area_context.deprivation.imd_rank == 4825
     assert result.area_context.coverage.has_crime is True
+    assert result.area_context.coverage.has_house_prices is False
     assert result.completeness.demographics.status == "partial"
+    assert result.completeness.attendance.status == "available"
+    assert result.completeness.behaviour.status == "available"
+    assert result.completeness.workforce.status == "available"
+    assert result.completeness.leadership.status == "available"
     assert result.completeness.performance.status == "available"
     assert result.completeness.demographics.reason_code == "partial_metric_coverage"
+    assert result.completeness.area_house_prices.status == "unavailable"
 
 
 def test_get_school_profile_raises_not_found_when_repository_returns_none() -> None:
@@ -337,16 +496,24 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     result = use_case.execute(urn="123456")
 
     assert result.demographics_latest is None
+    assert result.attendance_latest is None
+    assert result.behaviour_latest is None
+    assert result.workforce_latest is None
+    assert result.leadership_snapshot is None
     assert result.ofsted_latest is None
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.events == ()
     assert result.area_context is not None
     assert result.area_context.deprivation is None
     assert result.area_context.crime is None
+    assert result.area_context.house_prices is None
     assert result.completeness.demographics.status == "unavailable"
+    assert result.completeness.workforce.status == "unavailable"
+    assert result.completeness.leadership.status == "unavailable"
     assert result.completeness.performance.status == "unavailable"
     assert result.completeness.ofsted_timeline.status == "unavailable"
     assert result.completeness.area_deprivation.reason_code == "not_joined_yet"
+    assert result.completeness.area_house_prices.reason_code == "not_joined_yet"
 
 
 def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing() -> None:
@@ -362,12 +529,50 @@ def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing(
                         imd_decile=3,
                         idaci_score=0.241,
                         idaci_decile=2,
+                        income_score=0.12,
+                        income_rank=7200,
+                        income_decile=2,
+                        employment_score=0.11,
+                        employment_rank=7000,
+                        employment_decile=2,
+                        education_score=0.16,
+                        education_rank=8100,
+                        education_decile=3,
+                        health_score=0.13,
+                        health_rank=7600,
+                        health_decile=3,
+                        crime_score=0.18,
+                        crime_rank=8900,
+                        crime_decile=4,
+                        barriers_score=0.14,
+                        barriers_rank=7800,
+                        barriers_decile=3,
+                        living_environment_score=0.17,
+                        living_environment_rank=8400,
+                        living_environment_decile=4,
+                        population_total=2000,
+                        local_authority_district_code="E09000033",
+                        local_authority_district_name="Westminster",
                         source_release="IoD2025",
                     ),
                     crime=SchoolAreaCrime(
                         radius_miles=1.0,
                         latest_month="2026-01",
                         total_incidents=486,
+                        population_denominator=2000,
+                        incidents_per_1000=243.0,
+                        annual_incidents_per_1000=(
+                            SchoolAreaCrimeAnnualRate(
+                                year=2025,
+                                total_incidents=240,
+                                incidents_per_1000=120.0,
+                            ),
+                            SchoolAreaCrimeAnnualRate(
+                                year=2026,
+                                total_incidents=486,
+                                incidents_per_1000=243.0,
+                            ),
+                        ),
                         categories=(
                             SchoolAreaCrimeCategory(
                                 category="violent-crime",
@@ -375,10 +580,13 @@ def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing(
                             ),
                         ),
                     ),
+                    house_prices=None,
                     coverage=SchoolAreaContextCoverage(
                         has_deprivation=True,
                         has_crime=True,
                         crime_months_available=12,
+                        has_house_prices=False,
+                        house_price_months_available=0,
                     ),
                 ),
             ),

@@ -33,11 +33,47 @@ export type SchoolProfileDemographicsCoverage =
 export type SchoolProfileOfstedLatest =
   components["schemas"]["SchoolProfileOfstedLatestResponse"];
 
+export type SchoolProfileAttendanceLatest =
+  components["schemas"]["SchoolProfileAttendanceLatestResponse"];
+
+export type SchoolProfileBehaviourLatest =
+  components["schemas"]["SchoolProfileBehaviourLatestResponse"];
+
+export type SchoolProfileWorkforceLatest =
+  components["schemas"]["SchoolProfileWorkforceLatestResponse"];
+
+export type SchoolProfileLeadershipSnapshot =
+  components["schemas"]["SchoolProfileLeadershipSnapshotResponse"];
+
+export type SchoolProfileBenchmarks =
+  components["schemas"]["SchoolProfileBenchmarksResponse"];
+
+export type SchoolProfileMetricBenchmark =
+  components["schemas"]["SchoolProfileMetricBenchmarkResponse"];
+
+export type SchoolProfileAreaContext =
+  components["schemas"]["SchoolProfileAreaContextResponse"];
+
+export type SchoolProfileAreaHousePrices =
+  components["schemas"]["SchoolProfileAreaHousePricesResponse"];
+
 export type SchoolTrendsResponse = components["schemas"]["SchoolTrendsResponse"];
 
 export type SchoolTrendsSeries = components["schemas"]["SchoolTrendsSeriesResponse"];
 
 export type SchoolTrendPoint = components["schemas"]["SchoolTrendPointResponse"];
 
+export type SchoolTrendBenchmarkPoint =
+  components["schemas"]["SchoolTrendBenchmarkPointResponse"];
+
 export type SchoolTrendsHistoryQuality =
   components["schemas"]["SchoolTrendsHistoryQualityResponse"];
+
+export type SchoolTrendDashboardResponse =
+  components["schemas"]["SchoolTrendDashboardResponse"];
+
+export type SchoolTrendDashboardSection =
+  components["schemas"]["SchoolTrendDashboardSectionResponse"];
+
+export type SchoolTrendDashboardMetric =
+  components["schemas"]["SchoolTrendDashboardMetricResponse"];

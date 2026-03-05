@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 
-import { getSchoolProfile, getSchoolTrends, ApiClientError } from "../../../api/client";
+import {
+  ApiClientError,
+  getSchoolProfile,
+  getSchoolTrendDashboard,
+  getSchoolTrends
+} from "../../../api/client";
 import { mapProfileToVM } from "../mappers/profileMapper";
 import type { SchoolProfileVM } from "../types";
 
@@ -57,17 +62,40 @@ export function useSchoolProfile(urn: string | undefined) {
       }
 
       // Render core profile immediately; trends can hydrate after first paint.
-      dispatch({ type: "FETCH_SUCCESS", profile: mapProfileToVM(profileRes, null) });
+      let trendsRes: Awaited<ReturnType<typeof getSchoolTrends>> | null = null;
+      let dashboardRes: Awaited<ReturnType<typeof getSchoolTrendDashboard>> | null = null;
+
+      const pushMappedProfile = () => {
+        dispatch({
+          type: "FETCH_SUCCESS",
+          profile: mapProfileToVM(profileRes, trendsRes, dashboardRes)
+        });
+      };
+
+      pushMappedProfile();
 
       void getSchoolTrends(urn)
-        .then((trendsRes) => {
+        .then((resolvedTrends) => {
           if (requestId !== requestSeqRef.current) {
             return;
           }
-          dispatch({ type: "FETCH_SUCCESS", profile: mapProfileToVM(profileRes, trendsRes) });
+          trendsRes = resolvedTrends;
+          pushMappedProfile();
         })
         .catch(() => {
           // Trends are optional; keep core profile visible when trends fail.
+        });
+
+      void getSchoolTrendDashboard(urn)
+        .then((resolvedDashboard) => {
+          if (requestId !== requestSeqRef.current) {
+            return;
+          }
+          dashboardRes = resolvedDashboard;
+          pushMappedProfile();
+        })
+        .catch(() => {
+          // Benchmark trends are optional; the latest benchmark snapshot still renders.
         });
     } catch (err: unknown) {
       if (requestId !== requestSeqRef.current) {

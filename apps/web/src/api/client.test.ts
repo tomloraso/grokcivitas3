@@ -4,10 +4,15 @@ import {
   __resetApiRequestCacheForTests,
   ApiClientError,
   getSchoolProfile,
+  getSchoolTrendDashboard,
   getSchoolTrends,
   prefetchSchoolProfile
 } from "./client";
-import type { SchoolProfileResponse, SchoolTrendsResponse } from "./types";
+import type {
+  SchoolProfileResponse,
+  SchoolTrendDashboardResponse,
+  SchoolTrendsResponse
+} from "./types";
 
 const URN = "136655";
 
@@ -38,6 +43,11 @@ const trendsPayload = {
     years_available: []
   }
 } as unknown as SchoolTrendsResponse;
+
+const dashboardPayload = {
+  urn: URN,
+  sections: []
+} as unknown as SchoolTrendDashboardResponse;
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -106,7 +116,7 @@ describe("api client school endpoint cache", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("prefetches profile + trends and warms cache for subsequent reads", async () => {
+  it("prefetches profile + trends and leaves dashboard lazy for the detail page", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
       const url =
         typeof input === "string"
@@ -114,6 +124,9 @@ describe("api client school endpoint cache", () => {
           : input instanceof URL
             ? input.toString()
             : input.url;
+      if (url.endsWith("/trends/dashboard")) {
+        return jsonResponse(dashboardPayload);
+      }
       if (url.endsWith("/trends")) {
         return jsonResponse(trendsPayload);
       }
@@ -126,6 +139,7 @@ describe("api client school endpoint cache", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     await expect(getSchoolProfile(URN)).resolves.toEqual(profilePayload);
     await expect(getSchoolTrends(URN)).resolves.toEqual(trendsPayload);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await expect(getSchoolTrendDashboard(URN)).resolves.toEqual(dashboardPayload);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

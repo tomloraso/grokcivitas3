@@ -1,14 +1,24 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
-from civitas.api.dependencies import get_school_trends_use_case
+from civitas.api.dependencies import (
+    get_school_trend_dashboard_use_case,
+    get_school_trends_use_case,
+)
 from civitas.api.main import app
 from civitas.application.school_trends.dto import (
+    SchoolTrendBenchmarkPointDto,
+    SchoolTrendDashboardMetricDto,
+    SchoolTrendDashboardResponseDto,
+    SchoolTrendDashboardSectionDto,
     SchoolTrendPointDto,
+    SchoolTrendsBenchmarksDto,
     SchoolTrendsCompletenessDto,
     SchoolTrendsHistoryQualityDto,
     SchoolTrendsResponseDto,
+    SchoolTrendsSectionCompletenessDto,
     SchoolTrendsSeriesDto,
 )
 from civitas.application.school_trends.errors import (
@@ -38,6 +48,27 @@ class FakeGetSchoolTrendsUseCase:
         return self._result
 
 
+class FakeGetSchoolTrendDashboardUseCase:
+    def __init__(
+        self,
+        result: SchoolTrendDashboardResponseDto | None = None,
+        error: Exception | None = None,
+    ) -> None:
+        self._result = result
+        self._error = error
+        self.calls: list[str] = []
+
+    def execute(self, *, urn: str) -> SchoolTrendDashboardResponseDto:
+        self.calls.append(urn)
+        if self._error is not None:
+            raise self._error
+        if self._result is None:
+            raise AssertionError(
+                "FakeGetSchoolTrendDashboardUseCase configured without result or error"
+            )
+        return self._result
+
+
 def setup_function() -> None:
     app.dependency_overrides.clear()
 
@@ -61,6 +92,22 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     SchoolTrendPointDto(
                         academic_year="2024/25",
                         value=17.2,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                fsm_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=16.9,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                fsm6_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=18.1,
                         delta=None,
                         direction=None,
                     ),
@@ -105,12 +152,216 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                male_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=49.2,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                female_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=50.8,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                pupil_mobility_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=3.4,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                overall_attendance_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=93.2,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                overall_absence_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=6.8,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                persistent_absence_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=14.1,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                suspensions_count=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=121,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                suspensions_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=16.4,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                permanent_exclusions_count=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                permanent_exclusions_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=0.1,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                pupil_teacher_ratio=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=16.3,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                supply_staff_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=2.4,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teachers_3plus_years_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=76.5,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_turnover_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=9.8,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                qts_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=95.2,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                qualifications_level6_plus_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=81.1,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+            ),
+            benchmarks=SchoolTrendsBenchmarksDto(
+                disadvantaged_pct=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=17.2,
+                        national_value=16.0,
+                        local_value=16.7,
+                        school_vs_national_delta=1.2,
+                        school_vs_local_delta=0.5,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                fsm_pct=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=16.9,
+                        national_value=15.1,
+                        local_value=16.2,
+                        school_vs_national_delta=1.8,
+                        school_vs_local_delta=0.7,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                fsm6_pct=(),
+                sen_pct=(),
+                ehcp_pct=(),
+                eal_pct=(),
+                first_language_english_pct=(),
+                first_language_unclassified_pct=(),
+                male_pct=(),
+                female_pct=(),
+                pupil_mobility_pct=(),
+                overall_attendance_pct=(),
+                overall_absence_pct=(),
+                persistent_absence_pct=(),
+                suspensions_count=(),
+                suspensions_rate=(),
+                permanent_exclusions_count=(),
+                permanent_exclusions_rate=(),
+                pupil_teacher_ratio=(),
+                supply_staff_pct=(),
+                teachers_3plus_years_pct=(),
+                teacher_turnover_pct=(),
+                qts_pct=(),
+                qualifications_level6_plus_pct=(),
             ),
             completeness=SchoolTrendsCompletenessDto(
                 status="partial",
                 reason_code="insufficient_years_published",
                 last_updated_at=None,
                 years_available=("2024/25",),
+            ),
+            section_completeness=SchoolTrendsSectionCompletenessDto(
+                demographics=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2024/25",),
+                ),
+                attendance=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2024/25",),
+                ),
+                behaviour=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2024/25",),
+                ),
+                workforce=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2024/25",),
+                ),
             ),
         )
     )
@@ -119,71 +370,15 @@ def test_get_school_trends_returns_expected_contract() -> None:
     response = client.get("/api/v1/schools/123456/trends")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "urn": "123456",
-        "years_available": ["2024/25"],
-        "history_quality": {
-            "is_partial_history": True,
-            "min_years_for_delta": 2,
-            "years_count": 1,
-        },
-        "series": {
-            "disadvantaged_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 17.2,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-            "sen_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 13.0,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-            "ehcp_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 2.1,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-            "eal_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 8.4,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-            "first_language_english_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 90.6,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-            "first_language_unclassified_pct": [
-                {
-                    "academic_year": "2024/25",
-                    "value": 1.0,
-                    "delta": None,
-                    "direction": None,
-                }
-            ],
-        },
-        "completeness": {
-            "status": "partial",
-            "reason_code": "insufficient_years_published",
-            "last_updated_at": None,
-            "years_available": ["2024/25"],
-        },
-    }
+    payload = response.json()
+    assert payload["urn"] == "123456"
+    assert payload["years_available"] == ["2024/25"]
+    assert payload["history_quality"]["years_count"] == 1
+    assert payload["series"]["fsm_pct"][0]["value"] == 16.9
+    assert payload["completeness"]["reason_code"] == "insufficient_years_published"
+    assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
+    assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"
+    assert payload["benchmarks"]["fsm_pct"][0]["school_vs_national_delta"] == pytest.approx(1.8)
     assert fake_use_case.calls == ["123456"]
 
 
@@ -204,6 +399,109 @@ def test_get_school_trends_returns_503_when_datastore_is_unavailable() -> None:
     app.dependency_overrides[get_school_trends_use_case] = lambda: fake_use_case
 
     response = client.get("/api/v1/schools/123456/trends")
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "School trends datastore is unavailable."}
+
+
+def test_get_school_trend_dashboard_returns_expected_contract() -> None:
+    fake_use_case = FakeGetSchoolTrendDashboardUseCase(
+        result=SchoolTrendDashboardResponseDto(
+            urn="123456",
+            years_available=("2024", "2024/25"),
+            sections=(
+                SchoolTrendDashboardSectionDto(
+                    key="demographics",
+                    metrics=(
+                        SchoolTrendDashboardMetricDto(
+                            metric_key="fsm_pct",
+                            label="Free School Meals (%)",
+                            unit="percent",
+                            points=(
+                                SchoolTrendBenchmarkPointDto(
+                                    academic_year="2024/25",
+                                    school_value=16.9,
+                                    national_value=15.1,
+                                    local_value=16.2,
+                                    school_vs_national_delta=1.8,
+                                    school_vs_local_delta=0.7,
+                                    local_scope="local_authority_district",
+                                    local_area_code="E09000033",
+                                    local_area_label="Westminster",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+                SchoolTrendDashboardSectionDto(
+                    key="performance",
+                    metrics=(
+                        SchoolTrendDashboardMetricDto(
+                            metric_key="attainment8_average",
+                            label="Attainment 8",
+                            unit="score",
+                            points=(
+                                SchoolTrendBenchmarkPointDto(
+                                    academic_year="2024/25",
+                                    school_value=55.2,
+                                    national_value=49.8,
+                                    local_value=52.3,
+                                    school_vs_national_delta=5.4,
+                                    school_vs_local_delta=2.9,
+                                    local_scope="local_authority_district",
+                                    local_area_code="E09000033",
+                                    local_area_label="Westminster",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+                SchoolTrendDashboardSectionDto(key="attendance", metrics=()),
+                SchoolTrendDashboardSectionDto(key="behaviour", metrics=()),
+                SchoolTrendDashboardSectionDto(key="workforce", metrics=()),
+                SchoolTrendDashboardSectionDto(key="area", metrics=()),
+            ),
+            completeness=SchoolTrendsCompletenessDto(
+                status="partial",
+                reason_code="partial_metric_coverage",
+                last_updated_at=None,
+                years_available=("2024/25",),
+            ),
+        )
+    )
+    app.dependency_overrides[get_school_trend_dashboard_use_case] = lambda: fake_use_case
+
+    response = client.get("/api/v1/schools/123456/trends/dashboard")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["urn"] == "123456"
+    assert payload["years_available"] == ["2024", "2024/25"]
+    assert payload["sections"][0]["key"] == "demographics"
+    assert payload["sections"][0]["metrics"][0]["metric_key"] == "fsm_pct"
+    assert payload["sections"][1]["metrics"][0]["points"][0][
+        "school_vs_national_delta"
+    ] == pytest.approx(5.4)
+    assert fake_use_case.calls == ["123456"]
+
+
+def test_get_school_trend_dashboard_returns_404_for_unknown_urn() -> None:
+    fake_use_case = FakeGetSchoolTrendDashboardUseCase(error=SchoolTrendsNotFoundError("999999"))
+    app.dependency_overrides[get_school_trend_dashboard_use_case] = lambda: fake_use_case
+
+    response = client.get("/api/v1/schools/999999/trends/dashboard")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "School with URN '999999' was not found."}
+
+
+def test_get_school_trend_dashboard_returns_503_when_datastore_is_unavailable() -> None:
+    fake_use_case = FakeGetSchoolTrendDashboardUseCase(
+        error=SchoolTrendsDataUnavailableError("School trends datastore is unavailable.")
+    )
+    app.dependency_overrides[get_school_trend_dashboard_use_case] = lambda: fake_use_case
+
+    response = client.get("/api/v1/schools/123456/trends/dashboard")
 
     assert response.status_code == 503
     assert response.json() == {"detail": "School trends datastore is unavailable."}

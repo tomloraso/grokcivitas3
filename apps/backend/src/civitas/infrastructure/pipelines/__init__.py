@@ -4,12 +4,16 @@ from civitas.infrastructure.config.settings import PipelineSettings
 
 from .base import Pipeline, PipelineSource
 from .demographics_release_files import DemographicsReleaseFilesPipeline
+from .dfe_attendance import DfeAttendancePipeline
+from .dfe_behaviour import DfeBehaviourPipeline
 from .dfe_performance import DfePerformancePipeline
+from .dfe_workforce import DfeWorkforcePipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
 from .ons_imd import OnsImdPipeline
 from .police_crime_context import PoliceCrimeContextPipeline
+from .uk_house_prices import UkHousePricesPipeline
 
 
 def pipeline_registry(
@@ -29,6 +33,27 @@ def pipeline_registry(
             release_slugs=pipeline_settings.demographics_release_slugs,
             lookback_years=pipeline_settings.demographics_lookback_years,
             strict_mode=pipeline_settings.demographics_source_strict_mode,
+        ),
+        PipelineSource.DFE_ATTENDANCE: DfeAttendancePipeline(
+            engine=engine,
+            publication_slug=pipeline_settings.dfe_attendance_publication_slug,
+            release_slugs=pipeline_settings.dfe_attendance_release_slugs,
+            lookback_years=pipeline_settings.dfe_attendance_lookback_years,
+            strict_mode=pipeline_settings.dfe_attendance_source_strict_mode,
+        ),
+        PipelineSource.DFE_BEHAVIOUR: DfeBehaviourPipeline(
+            engine=engine,
+            publication_slug=pipeline_settings.dfe_behaviour_publication_slug,
+            release_slugs=pipeline_settings.dfe_behaviour_release_slugs,
+            lookback_years=pipeline_settings.dfe_behaviour_lookback_years,
+            strict_mode=pipeline_settings.dfe_behaviour_source_strict_mode,
+        ),
+        PipelineSource.DFE_WORKFORCE: DfeWorkforcePipeline(
+            engine=engine,
+            publication_slug=pipeline_settings.dfe_workforce_publication_slug,
+            release_slugs=pipeline_settings.dfe_workforce_release_slugs,
+            lookback_years=pipeline_settings.dfe_workforce_lookback_years,
+            strict_mode=pipeline_settings.dfe_workforce_source_strict_mode,
         ),
         PipelineSource.DFE_PERFORMANCE: DfePerformancePipeline(
             engine=engine,
@@ -54,6 +79,11 @@ def pipeline_registry(
             engine=engine,
             source_csv=pipeline_settings.imd_source_csv,
             source_release=pipeline_settings.imd_release,
+        ),
+        PipelineSource.UK_HOUSE_PRICES: UkHousePricesPipeline(
+            engine=engine,
+            source_csv=pipeline_settings.house_prices_source_csv,
+            source_url=pipeline_settings.house_prices_source_url,
         ),
         PipelineSource.POLICE_CRIME_CONTEXT: PoliceCrimeContextPipeline(
             engine=engine,

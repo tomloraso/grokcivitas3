@@ -1,22 +1,23 @@
 import { EthnicityBreakdown } from "../../../components/data/EthnicityBreakdown";
-import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
+import { Card } from "../../../components/ui/Card";
+import {
+  DEMOGRAPHICS_METRIC_KEYS,
+  getMetricCatalogEntry
+} from "../metricCatalog";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type {
   DemographicMetricVM,
+  DemographicsCategoryVM,
   DemographicsVM,
   SectionCompletenessVM,
   TrendSeriesVM,
   TrendsVM
 } from "../types";
-
-/* ------------------------------------------------------------------ */
-/* Props                                                               */
-/* ------------------------------------------------------------------ */
 
 interface DemographicsAndTrendsPanelProps {
   demographics: DemographicsVM | null;
@@ -25,53 +26,83 @@ interface DemographicsAndTrendsPanelProps {
   trendsCompleteness: SectionCompletenessVM;
 }
 
-/* ------------------------------------------------------------------ */
-/* Glossary wiring                                                     */
-/* ------------------------------------------------------------------ */
+function toSparkData(series: TrendSeriesVM | undefined): number[] {
+  if (!series) {
+    return [];
+  }
 
-const METRIC_GLOSSARY_KEYS: Record<string, string> = {
-  disadvantaged_pct: "disadvantaged",
-  fsm_pct: "fsm",
-  sen_pct: "sen",
-  ehcp_pct: "ehcp",
-  eal_pct: "eal",
-  first_language_english_pct: "first_language_english",
-  first_language_unclassified_pct: "first_language_unclassified"
-};
-
-function glossaryLabel(metricKey: string, fallbackLabel: string): React.ReactNode {
-  const key = METRIC_GLOSSARY_KEYS[metricKey];
-  return key ? <GlossaryTerm term={key}>{fallbackLabel}</GlossaryTerm> : fallbackLabel;
-}
-
-const ALL_METRIC_KEYS = [
-  "disadvantaged_pct",
-  "sen_pct",
-  "ehcp_pct",
-  "eal_pct",
-  "first_language_english_pct",
-  "first_language_unclassified_pct"
-] as const;
-
-const METRIC_LABEL_OVERRIDES: Record<string, string> = {
-  disadvantaged_pct: "Disadvantaged (DfE measure)",
-  eal_pct: "EAL"
-};
-
-function displayLabel(metric: DemographicMetricVM): string {
-  return METRIC_LABEL_OVERRIDES[metric.metricKey] ?? metric.label;
-}
-
-function buildMetricLookup(
-  demographics: DemographicsVM | null
-): Map<string, DemographicMetricVM> {
-  return new Map(demographics?.metrics.map((metric) => [metric.metricKey, metric]) ?? []);
-}
-
-function toSparkData(series: TrendSeriesVM): number[] {
   return series.points
     .map((point) => point.value)
     .filter((value): value is number => value !== null);
+}
+
+function renderTrendFooter(metric: DemographicMetricVM, series: TrendSeriesVM | undefined) {
+  if (!series || series.latestDelta === null) {
+    return null;
+  }
+
+  const sparkData = toSparkData(series);
+  return (
+    <div className="flex items-center justify-between gap-2">
+      {sparkData.length > 1 ? (
+        <Sparkline
+          data={sparkData}
+          width={92}
+          height={30}
+          aria-label={`${metric.label} trend`}
+        />
+      ) : null}
+      <TrendIndicator
+        delta={series.latestDelta}
+        direction={series.latestDirection ?? undefined}
+        unit="pp"
+      />
+    </div>
+  );
+}
+
+function RankedListCard({
+  title,
+  items,
+  emptyLabel
+}: {
+  title: string;
+  items: DemographicsCategoryVM[];
+  emptyLabel: string;
+}): JSX.Element {
+  return (
+    <Card className="space-y-4">
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold text-primary">{title}</h3>
+        <p className="text-xs text-secondary">Highest published categories for the latest year.</p>
+      </div>
+
+      {items.length === 0 ? (
+        <MetricUnavailable metricLabel={emptyLabel} />
+      ) : (
+        <ol className="space-y-2">
+          {items.map((item, index) => (
+            <li
+              key={item.key}
+              className="flex items-center justify-between gap-3 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-primary">
+                  {item.rank ?? index + 1}. {item.label}
+                </p>
+                <p className="text-xs text-secondary">
+                  {(item.count ?? 0).toLocaleString("en-GB")} pupils
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-primary">
+                {item.percentageLabel ?? "n/a"}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Card>
+  );
 }
 
 export function DemographicsAndTrendsPanel({
@@ -80,23 +111,21 @@ export function DemographicsAndTrendsPanel({
   demographicsCompleteness,
   trendsCompleteness
 }: DemographicsAndTrendsPanelProps): JSX.Element {
-  const metricLookup = buildMetricLookup(demographics);
-
-  const hasTrendableData = trends !== null && trends.yearsCount >= 2;
-  const trendableSeries = hasTrendableData
-    ? trends.series.filter((series) => series.points.length >= 2 && series.latestDelta !== null)
-    : [];
-  const trendSeriesByMetric = new Map(
-    trendableSeries.map((series) => [series.metricKey, series] as const)
+  const metricLookup = new Map(
+    demographics?.metrics.map((metric) => [metric.metricKey, metric] as const) ?? []
   );
-  const trendYearRange =
+  const trendLookup = new Map(
+    trends?.series.map((series) => [series.metricKey, series] as const) ?? []
+  );
+  const yearRange =
     trends && trends.yearsAvailable.length > 1
       ? `${trends.yearsAvailable[0]}-${trends.yearsAvailable[trends.yearsAvailable.length - 1]}`
-      : null;
+      : demographics?.academicYear ?? null;
 
-  const visibleMetrics = ALL_METRIC_KEYS.map((key) => metricLookup.get(key)).filter(
-    (m): m is DemographicMetricVM => m !== undefined && m.value !== null
-  );
+  const hasAnyMetrics = DEMOGRAPHICS_METRIC_KEYS.some((metricKey) => {
+    const metric = metricLookup.get(metricKey);
+    return metric?.value !== null;
+  });
 
   return (
     <section
@@ -111,12 +140,11 @@ export function DemographicsAndTrendsPanel({
           <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
           Pupil Demographics
         </h2>
-        <span
-          className="text-xs text-secondary"
-          style={{ opacity: "var(--text-opacity-muted)" }}
-        >
-          {[demographics?.academicYear, trendYearRange].filter(Boolean).join(" | ")}
-        </span>
+        {yearRange ? (
+          <span className="text-xs text-secondary" style={{ opacity: "var(--text-opacity-muted)" }}>
+            {yearRange}
+          </span>
+        ) : null}
       </div>
 
       <SectionCompletenessNotice
@@ -124,53 +152,52 @@ export function DemographicsAndTrendsPanel({
         completeness={demographicsCompleteness}
       />
       {trendsCompleteness.status !== "available" ? (
-        <SectionCompletenessNotice
-          sectionLabel="Trends"
-          completeness={trendsCompleteness}
-        />
+        <SectionCompletenessNotice sectionLabel="Demographic trends" completeness={trendsCompleteness} />
       ) : null}
 
-      {visibleMetrics.length > 0 ? (
-        <MetricGrid columns={3}>
-          {visibleMetrics.map((metric) => {
-            const series = trendSeriesByMetric.get(metric.metricKey);
-            const sparkData = series ? toSparkData(series) : [];
+      {!hasAnyMetrics ? (
+        <MetricUnavailable metricLabel="Pupil demographics" />
+      ) : (
+        <MetricGrid columns={4}>
+          {DEMOGRAPHICS_METRIC_KEYS.map((metricKey) => {
+            const metric = metricLookup.get(metricKey);
+            const catalog = getMetricCatalogEntry(metricKey);
+            if (!metric || !catalog) {
+              return null;
+            }
+
+            if (metric.value === null) {
+              return <MetricUnavailable key={metricKey} metricLabel={catalog.label} />;
+            }
 
             return (
               <StatCard
-                key={metric.metricKey}
-                label={glossaryLabel(metric.metricKey, displayLabel(metric))}
-                value={metric.value!}
-                footer={
-                  series && series.latestDelta !== null ? (
-                    <div className="flex items-center justify-between gap-2">
-                      {sparkData.length > 1 ? (
-                        <Sparkline
-                          data={sparkData}
-                          width={92}
-                          height={30}
-                          aria-label={`${metric.label} trend`}
-                        />
-                      ) : null}
-                      <TrendIndicator
-                        delta={series.latestDelta}
-                        direction={series.latestDirection ?? undefined}
-                        unit="pp"
-                      />
-                    </div>
-                  ) : null
-                }
+                key={metricKey}
+                label={metric.label}
+                value={metric.value}
+                footer={renderTrendFooter(metric, trendLookup.get(metricKey))}
               />
             );
           })}
         </MetricGrid>
-      ) : (
-        <MetricUnavailable metricLabel="Pupil demographics" />
       )}
 
       {demographics && demographics.ethnicityBreakdown.length > 0 ? (
         <EthnicityBreakdown groups={demographics.ethnicityBreakdown} />
       ) : null}
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <RankedListCard
+          title="SEND Primary Need"
+          items={demographics?.sendPrimaryNeeds ?? []}
+          emptyLabel="SEND primary need breakdown"
+        />
+        <RankedListCard
+          title="Top Home Languages"
+          items={demographics?.topHomeLanguages ?? []}
+          emptyLabel="Top non-English languages"
+        />
+      </div>
     </section>
   );
 }

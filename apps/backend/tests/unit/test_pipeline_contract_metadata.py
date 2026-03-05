@@ -9,7 +9,16 @@ from uuid import uuid4
 
 from civitas.infrastructure.pipelines.base import PipelineRunContext, PipelineSource
 from civitas.infrastructure.pipelines.contracts import (
+    dfe_attendance as attendance_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
+    dfe_behaviour as behaviour_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
     dfe_performance as performance_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
+    dfe_workforce as workforce_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
     gias as gias_contract,
@@ -32,11 +41,29 @@ from civitas.infrastructure.pipelines.demographics_release_files import (
 from civitas.infrastructure.pipelines.demographics_release_files import (
     DemographicsReleaseFilesPipeline,
 )
+from civitas.infrastructure.pipelines.dfe_attendance import (
+    BRONZE_MANIFEST_FILE_NAME as DFE_ATTENDANCE_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.dfe_attendance import (
+    DfeAttendancePipeline,
+)
+from civitas.infrastructure.pipelines.dfe_behaviour import (
+    BRONZE_MANIFEST_FILE_NAME as DFE_BEHAVIOUR_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.dfe_behaviour import (
+    DfeBehaviourPipeline,
+)
 from civitas.infrastructure.pipelines.dfe_performance import (
     BRONZE_MANIFEST_FILE_NAME as DFE_PERFORMANCE_MANIFEST_FILE_NAME,
 )
 from civitas.infrastructure.pipelines.dfe_performance import (
     DfePerformancePipeline,
+)
+from civitas.infrastructure.pipelines.dfe_workforce import (
+    BRONZE_MANIFEST_FILE_NAME as DFE_WORKFORCE_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.dfe_workforce import (
+    DfeWorkforcePipeline,
 )
 from civitas.infrastructure.pipelines.gias import (
     BRONZE_FILE_NAME as GIAS_BRONZE_FILE_NAME,
@@ -253,6 +280,117 @@ def test_dfe_performance_download_writes_contract_version_to_manifest(
     assert payload["normalization_contract_version"] == performance_contract.CONTRACT_VERSION
     assert len(payload["datasets"]) == 2
     assert len(payload["assets"]) == 4
+
+
+def test_dfe_attendance_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    release_html = (
+        '<html><script id="__NEXT_DATA__" type="application/json">'
+        '{"props":{"pageProps":{"releaseVersion":{"id":"attendance-rv-1","downloadFiles":[{"id":"attendance-file-1","name":"School level absence data"}]}}}}'
+        "</script></html>"
+    )
+    csv_payload = (
+        "school_urn,time_period,geographic_level,sess_overall_percent,enrolments_pa_10_exact_percent\n"
+        "100001,202324,School,6.0,14.2\n"
+    )
+    responses = {
+        "https://explore-education-statistics.service.gov.uk/find-statistics/pupil-absence-in-schools-in-england/2023-24": release_html,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/attendance-rv-1/files/attendance-file-1": csv_payload,
+    }
+
+    def fetcher(url: str) -> str:
+        if url not in responses:
+            raise AssertionError(f"Unexpected URL: {url}")
+        return responses[url]
+
+    pipeline = DfeAttendancePipeline(
+        engine=None,
+        publication_slug="pupil-absence-in-schools-in-england",
+        release_slugs=("2023-24",),
+        lookback_years=1,
+        fetcher=fetcher,
+    )
+    context = _context(PipelineSource.DFE_ATTENDANCE, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / DFE_ATTENDANCE_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == attendance_contract.CONTRACT_VERSION
+    assert len(payload["assets"]) == 1
+
+
+def test_dfe_behaviour_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    release_html = (
+        '<html><script id="__NEXT_DATA__" type="application/json">'
+        '{"props":{"pageProps":{"releaseVersion":{"id":"behaviour-rv-1","downloadFiles":[{"id":"behaviour-file-1","name":"School level suspensions and permanent exclusions data"}]}}}}'
+        "</script></html>"
+    )
+    csv_payload = (
+        "school_urn,time_period,geographic_level,suspension,susp_rate,perm_excl,perm_excl_rate\n"
+        "100001,202324,School,121,16.4,1,0.1\n"
+    )
+    responses = {
+        "https://explore-education-statistics.service.gov.uk/find-statistics/suspensions-and-permanent-exclusions-in-england/2024-25-autumn-term": release_html,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/behaviour-rv-1/files/behaviour-file-1": csv_payload,
+    }
+
+    def fetcher(url: str) -> str:
+        if url not in responses:
+            raise AssertionError(f"Unexpected URL: {url}")
+        return responses[url]
+
+    pipeline = DfeBehaviourPipeline(
+        engine=None,
+        publication_slug="suspensions-and-permanent-exclusions-in-england",
+        release_slugs=("2024-25-autumn-term",),
+        lookback_years=1,
+        fetcher=fetcher,
+    )
+    context = _context(PipelineSource.DFE_BEHAVIOUR, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / DFE_BEHAVIOUR_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == behaviour_contract.CONTRACT_VERSION
+    assert len(payload["assets"]) == 1
+
+
+def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    release_html = (
+        '<html><script id="__NEXT_DATA__" type="application/json">'
+        '{"props":{"pageProps":{"releaseVersion":{"id":"workforce-rv-1","downloadFiles":[{"id":"workforce-file-1","name":"School level workforce data"}]}}}}'
+        "</script></html>"
+    )
+    csv_payload = (
+        "school_urn,time_period,geographic_level,pupil_teacher_ratio,supply_teacher_pct\n"
+        "100001,202324,School,16.3,2.4\n"
+    )
+    responses = {
+        "https://explore-education-statistics.service.gov.uk/find-statistics/school-workforce-in-england/2024": release_html,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/workforce-rv-1/files/workforce-file-1": csv_payload,
+    }
+
+    def fetcher(url: str) -> str:
+        if url not in responses:
+            raise AssertionError(f"Unexpected URL: {url}")
+        return responses[url]
+
+    pipeline = DfeWorkforcePipeline(
+        engine=None,
+        publication_slug="school-workforce-in-england",
+        release_slugs=("2024",),
+        lookback_years=1,
+        fetcher=fetcher,
+    )
+    context = _context(PipelineSource.DFE_WORKFORCE, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / DFE_WORKFORCE_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == workforce_contract.CONTRACT_VERSION
+    assert len(payload["assets"]) == 1
 
 
 def test_ofsted_latest_download_writes_contract_version_to_metadata(tmp_path: Path) -> None:

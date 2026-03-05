@@ -1,15 +1,31 @@
-/**
- * Maps backend wire contracts to profile view models.
- * Owns translation from API contracts to UI presentation.
- */
-import type { SchoolProfileResponse, SchoolTrendsResponse } from "../../../api/types";
+import type {
+  SchoolProfileResponse,
+  SchoolTrendDashboardResponse,
+  SchoolTrendsResponse
+} from "../../../api/types";
+import {
+  DEMOGRAPHICS_METRIC_KEYS,
+  formatMetricKeyFallback,
+  formatMetricValue,
+  getMetricCatalogEntry,
+  METRIC_SECTION_LABELS,
+  METRIC_SECTION_ORDER,
+  type MetricSectionKey,
+  type MetricUnit
+} from "../metricCatalog";
 import type {
   AreaContextVM,
+  AreaDeprivationDomainVM,
+  BenchmarkDashboardVM,
+  BenchmarkMetricVM,
+  BehaviourLatestVM,
   DemographicMetricVM,
+  DemographicsCategoryVM,
   DemographicsEthnicityGroupVM,
   DemographicsVM,
-  OfstedVM,
+  LeadershipSnapshotVM,
   OfstedTimelineVM,
+  OfstedVM,
   PerformanceVM,
   PerformanceYearVM,
   ProfileCompletenessVM,
@@ -21,129 +37,19 @@ import type {
   TrendPointVM,
   TrendSeriesVM,
   TrendsVM,
-  UnsupportedMetricVM
+  UnsupportedMetricVM,
+  AttendanceLatestVM,
+  WorkforceLatestVM
 } from "../types";
 
-function fmtPct(value: number | null): string | null {
-  if (value === null) {
-    return null;
-  }
-  return `${value.toFixed(1)}%`;
-}
-
-function fallback(value: string | null | undefined, placeholder: string): string {
-  return value?.trim() ? value : placeholder;
-}
-
-function fmtDate(iso: string | null): string | null {
-  if (!iso) {
-    return null;
-  }
-
-  const date = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC"
-  });
-}
-
-function fmtMonth(month: string): string {
-  const match = /^(\d{4})-(\d{2})$/.exec(month);
-  if (!match) {
-    return month;
-  }
-
-  const year = Number(match[1]);
-  const monthIndex = Number(match[2]) - 1;
-  const date = new Date(Date.UTC(year, monthIndex, 1));
-  if (Number.isNaN(date.getTime())) {
-    return month;
-  }
-
-  return date.toLocaleDateString("en-GB", {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC"
-  });
-}
-
-function fmtDateTime(iso: string | null | undefined): string | null {
-  if (!iso) {
-    return null;
-  }
-
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-
-  return date.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC"
-  });
-}
-
-function dateKey(iso: string): number {
-  const parsed = Date.parse(`${iso}T00:00:00Z`);
-  return Number.isNaN(parsed) ? -1 : parsed;
-}
-
-function formatCrimeCategory(category: string): string {
-  return category
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
-
-interface MetricDef {
-  key: string;
-  label: string;
-  field:
-    | "disadvantaged_pct"
-    | "fsm_pct"
-    | "sen_pct"
-    | "ehcp_pct"
-    | "eal_pct"
-    | "first_language_english_pct"
-    | "first_language_unclassified_pct";
-}
-
-const DEMOGRAPHIC_METRICS: MetricDef[] = [
-  { key: "disadvantaged_pct", label: "Disadvantaged", field: "disadvantaged_pct" },
-  { key: "fsm_pct", label: "Free School Meals", field: "fsm_pct" },
-  { key: "sen_pct", label: "SEN Support", field: "sen_pct" },
-  { key: "ehcp_pct", label: "EHCP", field: "ehcp_pct" },
-  { key: "eal_pct", label: "English as Additional Language", field: "eal_pct" },
-  {
-    key: "first_language_english_pct",
-    label: "First Language English",
-    field: "first_language_english_pct"
-  },
-  {
-    key: "first_language_unclassified_pct",
-    label: "First Language Unclassified",
-    field: "first_language_unclassified_pct"
-  }
-];
-
-const TREND_METRIC_LABELS: Record<string, string> = {
-  disadvantaged_pct: "Disadvantaged",
-  sen_pct: "SEN Support",
-  ehcp_pct: "EHCP",
-  eal_pct: "English as Additional Language",
-  first_language_english_pct: "First Language English",
-  first_language_unclassified_pct: "First Language Unclassified"
+const DEPRIVATION_DOMAIN_LABELS: Record<string, string> = {
+  income: "Income",
+  employment: "Employment",
+  education: "Education",
+  health: "Health",
+  crime: "Crime",
+  barriers: "Barriers",
+  living_environment: "Living Environment"
 };
 
 const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionCompletenessMessageKey> = {
@@ -170,7 +76,97 @@ interface SectionCompletenessContract {
   years_available?: string[] | null;
 }
 
-export function mapCompletenessReasonToMessageKey(
+interface DashboardMetricMeta {
+  section: MetricSectionKey;
+  label: string;
+  unit: MetricUnit;
+  points: {
+    academic_year: string;
+    school_value: number | null;
+    national_value: number | null;
+    local_value: number | null;
+    school_vs_national_delta: number | null;
+    school_vs_local_delta: number | null;
+  }[];
+}
+
+function fallback(value: string | null | undefined, placeholder: string): string {
+  return value?.trim() ? value : placeholder;
+}
+
+function fmtDate(iso: string | null): string | null {
+  if (!iso) {
+    return null;
+  }
+
+  const date = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) {
+    return iso;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC"
+  });
+}
+
+function fmtDateTime(iso: string | null | undefined): string | null {
+  if (!iso) {
+    return null;
+  }
+
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return iso;
+  }
+
+  return date.toLocaleString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC"
+  });
+}
+
+function fmtMonth(month: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!match) {
+    return month;
+  }
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const date = new Date(Date.UTC(year, monthIndex, 1));
+  if (Number.isNaN(date.getTime())) {
+    return month;
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC"
+  });
+}
+
+function fmtPct(value: number | null): string | null {
+  return formatMetricValue(value, "percent");
+}
+
+function dateKey(iso: string): number {
+  const parsed = Date.parse(`${iso}T00:00:00Z`);
+  return Number.isNaN(parsed) ? -1 : parsed;
+}
+
+function academicYearKey(academicYear: string): number {
+  const match = /^(\d{4})/.exec(academicYear);
+  return match ? Number(match[1]) : -1;
+}
+
+function mapCompletenessReasonToMessageKey(
   reasonCode: SectionCompletenessReasonCode | null
 ): SectionCompletenessMessageKey | null {
   if (!reasonCode) {
@@ -190,104 +186,189 @@ function mapSectionCompleteness(section: SectionCompletenessContract): SectionCo
 }
 
 function mapSchool(profile: SchoolProfileResponse): SchoolIdentityVM {
-  const s = profile.school;
+  const school = profile.school;
   return {
-    urn: s.urn,
-    name: s.name,
-    phase: fallback(s.phase, "Unknown"),
-    type: fallback(s.type, "Unknown"),
-    status: fallback(s.status, "Unknown"),
-    postcode: fallback(s.postcode, "Unknown"),
-    lat: s.lat,
-    lng: s.lng
+    urn: school.urn,
+    name: school.name,
+    phase: fallback(school.phase, "Unknown"),
+    type: fallback(school.type, "Unknown"),
+    status: fallback(school.status, "Unknown"),
+    postcode: fallback(school.postcode, "Unknown"),
+    lat: school.lat,
+    lng: school.lng
   };
 }
 
 function mapDemographics(profile: SchoolProfileResponse): DemographicsVM | null {
-  const d = profile.demographics_latest;
-  if (!d) {
+  const demographics = profile.demographics_latest;
+  if (!demographics) {
     return null;
   }
 
-  const metrics: DemographicMetricVM[] = DEMOGRAPHIC_METRICS.map((def) => ({
-    label: def.label,
-    value: fmtPct(d[def.field]),
-    raw: d[def.field],
-    metricKey: def.key
-  }));
+  const metrics: DemographicMetricVM[] = DEMOGRAPHICS_METRIC_KEYS.map((metricKey) => {
+    const catalog = getMetricCatalogEntry(metricKey);
+    const rawValue = demographics[metricKey as keyof typeof demographics];
+    return {
+      label: catalog?.label ?? formatMetricKeyFallback(metricKey),
+      value:
+        typeof rawValue === "number" || rawValue === null
+          ? formatMetricValue(rawValue, catalog?.unit ?? "percent", catalog?.decimals)
+          : null,
+      raw: typeof rawValue === "number" ? rawValue : null,
+      metricKey,
+      unit: catalog?.unit ?? "percent"
+    };
+  });
 
-  const ethnicityBreakdown: DemographicsEthnicityGroupVM[] = (d.ethnicity_breakdown ?? []).map(
-    (group) => ({
+  const ethnicityBreakdown: DemographicsEthnicityGroupVM[] = (demographics.ethnicity_breakdown ?? [])
+    .filter((group) => (group.count ?? 0) > 0 || (group.percentage ?? 0) > 0)
+    .sort((left, right) => (right.percentage ?? 0) - (left.percentage ?? 0))
+    .map((group) => ({
       key: group.key,
       label: group.label,
       percentage: group.percentage,
       count: group.count,
       percentageLabel: fmtPct(group.percentage)
-    })
-  );
+    }));
+
+  const sendPrimaryNeeds: DemographicsCategoryVM[] = (demographics.send_primary_needs ?? [])
+    .filter((need) => (need.count ?? 0) > 0 || (need.percentage ?? 0) > 0)
+    .sort((left, right) => (right.percentage ?? 0) - (left.percentage ?? 0))
+    .slice(0, 5)
+    .map((need) => ({
+      key: need.key,
+      label: need.label,
+      percentage: need.percentage,
+      count: need.count,
+      percentageLabel: fmtPct(need.percentage)
+    }));
+
+  const topHomeLanguages: DemographicsCategoryVM[] = (demographics.top_home_languages ?? [])
+    .filter((language) => (language.count ?? 0) > 0 || (language.percentage ?? 0) > 0)
+    .sort((left, right) => left.rank - right.rank)
+    .slice(0, 5)
+    .map((language) => ({
+      key: language.key,
+      label: language.label,
+      rank: language.rank,
+      percentage: language.percentage,
+      count: language.count,
+      percentageLabel: fmtPct(language.percentage)
+    }));
 
   return {
-    academicYear: d.academic_year,
+    academicYear: demographics.academic_year,
     metrics,
     coverage: {
-      fsmSupported: d.coverage.fsm_supported,
-      ethnicitySupported: d.coverage.ethnicity_supported,
-      topLanguagesSupported: d.coverage.top_languages_supported
+      fsmSupported: demographics.coverage.fsm_supported,
+      fsm6Supported: demographics.coverage.fsm6_supported,
+      genderSupported: demographics.coverage.gender_supported,
+      mobilitySupported: demographics.coverage.mobility_supported,
+      sendPrimaryNeedSupported: demographics.coverage.send_primary_need_supported,
+      ethnicitySupported: demographics.coverage.ethnicity_supported,
+      topLanguagesSupported: demographics.coverage.top_languages_supported
     },
-    ethnicityBreakdown
+    ethnicityBreakdown,
+    sendPrimaryNeeds,
+    topHomeLanguages
   };
 }
 
-function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
-  const o = profile.ofsted_latest;
-  if (!o) {
+function mapAttendance(profile: SchoolProfileResponse): AttendanceLatestVM | null {
+  const attendance = profile.attendance_latest;
+  if (!attendance) {
     return null;
   }
 
   return {
-    ratingCode: o.overall_effectiveness_code,
-    ratingLabel: o.overall_effectiveness_label,
-    inspectionDate: fmtDate(o.inspection_start_date),
-    publicationDate: fmtDate(o.publication_date),
-    latestOeifInspectionDate: fmtDate(o.latest_oeif_inspection_start_date),
-    latestOeifPublicationDate: fmtDate(o.latest_oeif_publication_date),
-    latestUngradedInspectionDate: fmtDate(o.latest_ungraded_inspection_date),
-    latestUngradedPublicationDate: fmtDate(o.latest_ungraded_publication_date),
-    mostRecentInspectionDate: fmtDate(o.most_recent_inspection_date),
-    daysSinceMostRecentInspection: o.days_since_most_recent_inspection,
-    qualityOfEducationCode: o.quality_of_education_code,
-    qualityOfEducationLabel: o.quality_of_education_label,
-    behaviourAndAttitudesCode: o.behaviour_and_attitudes_code,
-    behaviourAndAttitudesLabel: o.behaviour_and_attitudes_label,
-    personalDevelopmentCode: o.personal_development_code,
-    personalDevelopmentLabel: o.personal_development_label,
-    leadershipAndManagementCode: o.leadership_and_management_code,
-    leadershipAndManagementLabel: o.leadership_and_management_label,
-    isGraded: o.is_graded,
-    ungradedOutcome: o.ungraded_outcome
+    academicYear: attendance.academic_year,
+    overallAttendancePct: attendance.overall_attendance_pct,
+    overallAbsencePct: attendance.overall_absence_pct,
+    persistentAbsencePct: attendance.persistent_absence_pct
+  };
+}
+
+function mapBehaviour(profile: SchoolProfileResponse): BehaviourLatestVM | null {
+  const behaviour = profile.behaviour_latest;
+  if (!behaviour) {
+    return null;
+  }
+
+  return {
+    academicYear: behaviour.academic_year,
+    suspensionsCount: behaviour.suspensions_count,
+    suspensionsRate: behaviour.suspensions_rate,
+    permanentExclusionsCount: behaviour.permanent_exclusions_count,
+    permanentExclusionsRate: behaviour.permanent_exclusions_rate
+  };
+}
+
+function mapWorkforce(profile: SchoolProfileResponse): WorkforceLatestVM | null {
+  const workforce = profile.workforce_latest;
+  if (!workforce) {
+    return null;
+  }
+
+  return {
+    academicYear: workforce.academic_year,
+    pupilTeacherRatio: workforce.pupil_teacher_ratio,
+    supplyStaffPct: workforce.supply_staff_pct,
+    teachers3plusYearsPct: workforce.teachers_3plus_years_pct,
+    teacherTurnoverPct: workforce.teacher_turnover_pct,
+    qtsPct: workforce.qts_pct,
+    qualificationsLevel6PlusPct: workforce.qualifications_level6_plus_pct
+  };
+}
+
+function mapLeadership(profile: SchoolProfileResponse): LeadershipSnapshotVM | null {
+  const leadership = profile.leadership_snapshot;
+  if (!leadership) {
+    return null;
+  }
+
+  return {
+    headteacherName: leadership.headteacher_name,
+    headteacherStartDate: fmtDate(leadership.headteacher_start_date),
+    headteacherTenureYears: leadership.headteacher_tenure_years,
+    leadershipTurnoverScore: leadership.leadership_turnover_score
+  };
+}
+
+function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
+  const ofsted = profile.ofsted_latest;
+  if (!ofsted) {
+    return null;
+  }
+
+  return {
+    ratingCode: ofsted.overall_effectiveness_code,
+    ratingLabel: ofsted.overall_effectiveness_label,
+    inspectionDate: fmtDate(ofsted.inspection_start_date),
+    publicationDate: fmtDate(ofsted.publication_date),
+    latestOeifInspectionDate: fmtDate(ofsted.latest_oeif_inspection_start_date),
+    latestOeifPublicationDate: fmtDate(ofsted.latest_oeif_publication_date),
+    latestUngradedInspectionDate: fmtDate(ofsted.latest_ungraded_inspection_date),
+    latestUngradedPublicationDate: fmtDate(ofsted.latest_ungraded_publication_date),
+    mostRecentInspectionDate: fmtDate(ofsted.most_recent_inspection_date),
+    daysSinceMostRecentInspection: ofsted.days_since_most_recent_inspection,
+    qualityOfEducationCode: ofsted.quality_of_education_code,
+    qualityOfEducationLabel: ofsted.quality_of_education_label,
+    behaviourAndAttitudesCode: ofsted.behaviour_and_attitudes_code,
+    behaviourAndAttitudesLabel: ofsted.behaviour_and_attitudes_label,
+    personalDevelopmentCode: ofsted.personal_development_code,
+    personalDevelopmentLabel: ofsted.personal_development_label,
+    leadershipAndManagementCode: ofsted.leadership_and_management_code,
+    leadershipAndManagementLabel: ofsted.leadership_and_management_label,
+    isGraded: ofsted.is_graded,
+    ungradedOutcome: ofsted.ungraded_outcome
   };
 }
 
 function mapOfstedTimeline(profile: SchoolProfileResponse): OfstedTimelineVM {
   const timeline = profile.ofsted_timeline;
 
-  if (!timeline) {
-    return {
-      events: [],
-      coverage: {
-        isPartialHistory: true,
-        earliestEventDate: null,
-        latestEventDate: null,
-        eventsCount: 0
-      }
-    };
-  }
-
-  const events = [...(timeline.events || [])]
-    .sort(
-      (left, right) =>
-        dateKey(right.inspection_start_date) - dateKey(left.inspection_start_date)
-    )
+  const events = [...(timeline?.events ?? [])]
+    .sort((left, right) => dateKey(right.inspection_start_date) - dateKey(left.inspection_start_date))
     .map((event) => ({
       inspectionNumber: event.inspection_number,
       inspectionDate: fmtDate(event.inspection_start_date) ?? event.inspection_start_date,
@@ -301,15 +382,17 @@ function mapOfstedTimeline(profile: SchoolProfileResponse): OfstedTimelineVM {
   return {
     events,
     coverage: {
-      isPartialHistory: timeline.coverage.is_partial_history,
-      earliestEventDate: fmtDate(timeline.coverage.earliest_event_date),
-      latestEventDate: fmtDate(timeline.coverage.latest_event_date),
-      eventsCount: timeline.coverage.events_count
+      isPartialHistory: timeline?.coverage.is_partial_history ?? true,
+      earliestEventDate: fmtDate(timeline?.coverage.earliest_event_date ?? null),
+      latestEventDate: fmtDate(timeline?.coverage.latest_event_date ?? null),
+      eventsCount: timeline?.coverage.events_count ?? 0
     }
   };
 }
 
-type PerformanceYearContract = NonNullable<NonNullable<SchoolProfileResponse["performance"]>["latest"]>;
+type PerformanceYearContract = NonNullable<
+  NonNullable<SchoolProfileResponse["performance"]>["latest"]
+>;
 
 function mapPerformanceYear(year: PerformanceYearContract): PerformanceYearVM {
   return {
@@ -346,20 +429,20 @@ function mapPerformance(profile: SchoolProfileResponse): PerformanceVM | null {
   };
 }
 
+function mapAreaDeprivationDomains(
+  deprivation: NonNullable<NonNullable<SchoolProfileResponse["area_context"]>["deprivation"]>
+): AreaDeprivationDomainVM[] {
+  return Object.entries(DEPRIVATION_DOMAIN_LABELS).map(([key, label]) => ({
+    key,
+    label,
+    score: deprivation[`${key}_score` as keyof typeof deprivation] as number | null,
+    rank: deprivation[`${key}_rank` as keyof typeof deprivation] as number | null,
+    decile: deprivation[`${key}_decile` as keyof typeof deprivation] as number | null
+  }));
+}
+
 function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
   const area = profile.area_context;
-
-  if (!area) {
-    return {
-      deprivation: null,
-      crime: null,
-      coverage: {
-        hasDeprivation: false,
-        hasCrime: false,
-        crimeMonthsAvailable: 0
-      }
-    };
-  }
 
   return {
     deprivation: area.deprivation
@@ -370,7 +453,11 @@ function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
           imdDecile: area.deprivation.imd_decile,
           idaciScore: area.deprivation.idaci_score,
           idaciDecile: area.deprivation.idaci_decile,
-          sourceRelease: area.deprivation.source_release
+          populationTotal: area.deprivation.population_total,
+          localAuthorityDistrictCode: area.deprivation.local_authority_district_code,
+          localAuthorityDistrictName: area.deprivation.local_authority_district_name,
+          sourceRelease: area.deprivation.source_release,
+          domains: mapAreaDeprivationDomains(area.deprivation)
         }
       : null,
     crime: area.crime
@@ -378,6 +465,13 @@ function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
           radiusMiles: area.crime.radius_miles,
           latestMonth: fmtMonth(area.crime.latest_month),
           totalIncidents: area.crime.total_incidents,
+          populationDenominator: area.crime.population_denominator,
+          incidentsPer1000: area.crime.incidents_per_1000,
+          annualIncidentsPer1000: (area.crime.annual_incidents_per_1000 ?? []).map((entry) => ({
+            year: entry.year,
+            totalIncidents: entry.total_incidents,
+            incidentsPer1000: entry.incidents_per_1000
+          })),
           categories: [...area.crime.categories]
             .sort(
               (left, right) =>
@@ -385,15 +479,34 @@ function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
                 left.category.localeCompare(right.category)
             )
             .map((category) => ({
-              category: formatCrimeCategory(category.category),
+              category: category.category,
               incidentCount: category.incident_count
             }))
+        }
+      : null,
+    housePrices: area.house_prices
+      ? {
+          areaCode: area.house_prices.area_code,
+          areaName: area.house_prices.area_name,
+          latestMonth: fmtMonth(area.house_prices.latest_month),
+          averagePrice: area.house_prices.average_price,
+          annualChangePct: area.house_prices.annual_change_pct,
+          monthlyChangePct: area.house_prices.monthly_change_pct,
+          threeYearChangePct: area.house_prices.three_year_change_pct,
+          trend: (area.house_prices.trend ?? []).map((point) => ({
+            month: fmtMonth(point.month),
+            averagePrice: point.average_price,
+            annualChangePct: point.annual_change_pct,
+            monthlyChangePct: point.monthly_change_pct
+          }))
         }
       : null,
     coverage: {
       hasDeprivation: area.coverage.has_deprivation,
       hasCrime: area.coverage.has_crime,
-      crimeMonthsAvailable: area.coverage.crime_months_available
+      crimeMonthsAvailable: area.coverage.crime_months_available,
+      hasHousePrices: area.coverage.has_house_prices,
+      housePriceMonthsAvailable: area.coverage.house_price_months_available
     }
   };
 }
@@ -404,31 +517,172 @@ function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
   }
 
   const series: TrendSeriesVM[] = Object.entries(trends.series)
-    .filter(([key]) => key in TREND_METRIC_LABELS)
-    .map(([key, points]) => {
-      const mappedPoints: TrendPointVM[] = points.map((p) => ({
-        year: p.academic_year,
-        value: p.value,
-        delta: p.delta,
-        direction: p.direction
-      }));
+    .map(([metricKey, points]) => {
+      const catalog = getMetricCatalogEntry(metricKey);
+      if (!catalog) {
+        return null;
+      }
 
-      const latest = mappedPoints.length > 0 ? mappedPoints[mappedPoints.length - 1] : null;
+      const mappedPoints: TrendPointVM[] = points.map((point) => ({
+        year: point.academic_year,
+        value: typeof point.value === "number" ? point.value : null,
+        delta: point.delta,
+        direction: point.direction
+      }));
+      const latestPoint = mappedPoints.length > 0 ? mappedPoints[mappedPoints.length - 1] : null;
 
       return {
-        label: TREND_METRIC_LABELS[key],
-        metricKey: key,
+        label: catalog.label,
+        metricKey,
+        unit: catalog.unit,
         points: mappedPoints,
-        latestDelta: latest?.delta ?? null,
-        latestDirection: latest?.direction ?? null
+        latestDelta: latestPoint?.delta ?? null,
+        latestDirection: latestPoint?.direction ?? null
       };
-    });
+    })
+    .filter((entry): entry is TrendSeriesVM => entry !== null);
 
   return {
     yearsAvailable: trends.years_available,
     isPartialHistory: trends.history_quality.is_partial_history,
     yearsCount: trends.history_quality.years_count,
-    series
+    series,
+    sectionCompleteness: {
+      demographics: mapSectionCompleteness(trends.section_completeness.demographics),
+      attendance: mapSectionCompleteness(trends.section_completeness.attendance),
+      behaviour: mapSectionCompleteness(trends.section_completeness.behaviour),
+      workforce: mapSectionCompleteness(trends.section_completeness.workforce)
+    }
+  };
+}
+
+function normalizeDashboardUnit(unit: string): MetricUnit {
+  switch (unit) {
+    case "count":
+    case "currency":
+    case "percent":
+    case "ratio":
+    case "rate":
+    case "score":
+      return unit;
+    default:
+      return "score";
+  }
+}
+
+function buildDashboardMetricMap(
+  dashboard: SchoolTrendDashboardResponse | null
+): Map<string, DashboardMetricMeta> {
+  const metricMap = new Map<string, DashboardMetricMeta>();
+  if (!dashboard) {
+    return metricMap;
+  }
+
+  for (const section of dashboard.sections) {
+    for (const metric of section.metrics) {
+      metricMap.set(metric.metric_key, {
+        section: section.key,
+        label: metric.label,
+        unit: normalizeDashboardUnit(metric.unit),
+        points: metric.points.map((point) => ({
+          academic_year: point.academic_year,
+          school_value: point.school_value,
+          national_value: point.national_value,
+          local_value: point.local_value,
+          school_vs_national_delta: point.school_vs_national_delta,
+          school_vs_local_delta: point.school_vs_local_delta
+        }))
+      });
+    }
+  }
+
+  return metricMap;
+}
+
+function buildBenchmarkDashboard(
+  profile: SchoolProfileResponse,
+  dashboard: SchoolTrendDashboardResponse | null
+): BenchmarkDashboardVM | null {
+  const snapshotMetrics = profile.benchmarks?.metrics ?? [];
+  if (snapshotMetrics.length === 0 && !dashboard) {
+    return null;
+  }
+
+  const dashboardMetricMap = buildDashboardMetricMap(dashboard);
+  const sectionBuckets = new Map<MetricSectionKey, BenchmarkMetricVM[]>(
+    METRIC_SECTION_ORDER.map((section) => [section, []])
+  );
+
+  for (const snapshotMetric of snapshotMetrics) {
+    const dashboardMetric = dashboardMetricMap.get(snapshotMetric.metric_key);
+    const catalogEntry = getMetricCatalogEntry(snapshotMetric.metric_key);
+    const section = dashboardMetric?.section ?? catalogEntry?.section ?? "performance";
+    const label =
+      dashboardMetric?.label ??
+      catalogEntry?.label ??
+      formatMetricKeyFallback(snapshotMetric.metric_key);
+    const unit = dashboardMetric?.unit ?? catalogEntry?.unit ?? "score";
+
+    sectionBuckets.get(section)?.push({
+      metricKey: snapshotMetric.metric_key,
+      label,
+      section,
+      unit,
+      academicYear: snapshotMetric.academic_year,
+      schoolValue:
+        typeof snapshotMetric.school_value === "number" ? snapshotMetric.school_value : null,
+      nationalValue: snapshotMetric.national_value,
+      localValue: snapshotMetric.local_value,
+      schoolVsNationalDelta: snapshotMetric.school_vs_national_delta,
+      schoolVsLocalDelta: snapshotMetric.school_vs_local_delta,
+      localScope: snapshotMetric.local_scope,
+      localAreaCode: snapshotMetric.local_area_code,
+      localAreaLabel: snapshotMetric.local_area_label,
+      trendPoints:
+        dashboardMetric?.points.map((point) => ({
+          academicYear: point.academic_year,
+          schoolValue: point.school_value,
+          nationalValue: point.national_value,
+          localValue: point.local_value,
+          schoolVsNationalDelta: point.school_vs_national_delta,
+          schoolVsLocalDelta: point.school_vs_local_delta
+        })) ?? []
+    });
+  }
+
+  const sections = METRIC_SECTION_ORDER.map((section) => {
+    const metrics = sectionBuckets.get(section) ?? [];
+    metrics.sort((left, right) => {
+      const leftCatalog = getMetricCatalogEntry(left.metricKey);
+      const rightCatalog = getMetricCatalogEntry(right.metricKey);
+      if (leftCatalog && rightCatalog) {
+        return Object.keys(METRIC_SECTION_LABELS).includes(section)
+          ? academicYearKey(right.academicYear) - academicYearKey(left.academicYear) ||
+              left.label.localeCompare(right.label)
+          : left.label.localeCompare(right.label);
+      }
+      return left.label.localeCompare(right.label);
+    });
+
+    return {
+      key: section,
+      label: METRIC_SECTION_LABELS[section],
+      metrics
+    };
+  }).filter((section) => section.metrics.length > 0);
+
+  if (sections.length === 0) {
+    return null;
+  }
+
+  return {
+    yearsAvailable:
+      dashboard?.years_available ??
+      Array.from(new Set(snapshotMetrics.map((metric) => metric.academic_year))).sort(
+        (left, right) => academicYearKey(left) - academicYearKey(right)
+      ),
+    sections,
+    completeness: dashboard ? mapSectionCompleteness(dashboard.completeness) : null
   };
 }
 
@@ -448,12 +702,17 @@ function mapCompleteness(
 
   return {
     demographics: mapSectionCompleteness(profile.completeness.demographics),
+    attendance: mapSectionCompleteness(profile.completeness.attendance),
+    behaviour: mapSectionCompleteness(profile.completeness.behaviour),
+    workforce: mapSectionCompleteness(profile.completeness.workforce),
+    leadership: mapSectionCompleteness(profile.completeness.leadership),
     performance: mapSectionCompleteness(profile.completeness.performance),
     trends: trendsCompleteness,
     ofstedLatest: mapSectionCompleteness(profile.completeness.ofsted_latest),
     ofstedTimeline: mapSectionCompleteness(profile.completeness.ofsted_timeline),
     areaDeprivation: mapSectionCompleteness(profile.completeness.area_deprivation),
-    areaCrime: mapSectionCompleteness(profile.completeness.area_crime)
+    areaCrime: mapSectionCompleteness(profile.completeness.area_crime),
+    areaHousePrices: mapSectionCompleteness(profile.completeness.area_house_prices)
   };
 }
 
@@ -468,10 +727,22 @@ function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
   if (!coverage.fsm_supported) {
     unsupported.push({ label: "Free School Meals (direct)" });
   }
+  if (!coverage.fsm6_supported) {
+    unsupported.push({ label: "FSM6" });
+  }
+  if (!coverage.gender_supported) {
+    unsupported.push({ label: "Gender split" });
+  }
+  if (!coverage.mobility_supported) {
+    unsupported.push({ label: "Pupil mobility / turnover" });
+  }
+  if (!coverage.send_primary_need_supported && (demographics.send_primary_needs ?? []).length === 0) {
+    unsupported.push({ label: "SEND primary need breakdown" });
+  }
   if (!coverage.ethnicity_supported && (demographics.ethnicity_breakdown ?? []).length === 0) {
     unsupported.push({ label: "Ethnicity breakdown" });
   }
-  if (!coverage.top_languages_supported) {
+  if (!coverage.top_languages_supported && (demographics.top_home_languages ?? []).length === 0) {
     unsupported.push({ label: "Top non-English languages" });
   }
   return unsupported;
@@ -479,19 +750,32 @@ function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
 
 export function mapProfileToVM(
   profile: SchoolProfileResponse,
-  trends: SchoolTrendsResponse | null
+  trends: SchoolTrendsResponse | null,
+  dashboard: SchoolTrendDashboardResponse | null
 ): SchoolProfileVM {
   return {
     school: mapSchool(profile),
     demographics: mapDemographics(profile),
+    attendance: mapAttendance(profile),
+    behaviour: mapBehaviour(profile),
+    workforce: mapWorkforce(profile),
+    leadership: mapLeadership(profile),
     performance: mapPerformance(profile),
     ofsted: mapOfsted(profile),
     ofstedTimeline: mapOfstedTimeline(profile),
     areaContext: mapAreaContext(profile),
     trends: mapTrends(trends),
+    benchmarkDashboard: buildBenchmarkDashboard(profile, dashboard),
     completeness: mapCompleteness(profile, trends),
     unsupportedMetrics: mapUnsupported(profile)
   };
 }
 
-export { fallback, fmtDate, fmtDateTime, fmtMonth, fmtPct };
+export {
+  fallback,
+  fmtDate,
+  fmtDateTime,
+  fmtMonth,
+  fmtPct,
+  mapCompletenessReasonToMessageKey
+};

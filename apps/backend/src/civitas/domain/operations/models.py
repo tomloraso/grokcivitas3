@@ -4,11 +4,16 @@ from typing import Literal
 
 DataQualitySection = Literal[
     "demographics",
+    "attendance",
+    "behaviour",
+    "workforce",
+    "leadership",
     "school_performance",
     "ofsted_latest",
     "ofsted_timeline",
     "area_deprivation",
     "area_crime",
+    "area_house_prices",
 ]
 
 DataQualityAlertType = Literal[

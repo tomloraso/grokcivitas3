@@ -1,9 +1,16 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
 
+import { PageContainer } from "../components/layout/PageContainer";
+import { LoadingSkeleton } from "../components/ui/LoadingSkeleton";
 import { RootLayout } from "./RootLayout";
 import { SchoolsSearchFeature } from "../features/schools-search/SchoolsSearchFeature";
-import { SchoolProfileFeature } from "../features/school-profile/SchoolProfileFeature";
 import { NotFoundPage } from "../pages/NotFoundPage";
+
+const SchoolProfileFeature = lazy(async () => {
+  const module = await import("../features/school-profile/SchoolProfileFeature");
+  return { default: module.SchoolProfileFeature };
+});
 
 const routes: RouteObject[] = [
   {
@@ -15,7 +22,21 @@ const routes: RouteObject[] = [
       },
       {
         path: "schools/:urn",
-        element: <SchoolProfileFeature />
+        element: (
+          <Suspense
+            fallback={
+              <PageContainer>
+                <div className="space-y-6">
+                  <LoadingSkeleton lines={4} />
+                  <LoadingSkeleton lines={6} />
+                  <LoadingSkeleton lines={4} />
+                </div>
+              </PageContainer>
+            }
+          >
+            <SchoolProfileFeature />
+          </Suspense>
+        )
       },
       {
         path: "*",

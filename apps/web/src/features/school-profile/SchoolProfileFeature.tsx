@@ -1,4 +1,4 @@
-import { useLocation, useParams, Link } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
@@ -7,11 +7,14 @@ import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
+import { AttendanceBehaviourSection } from "./components/AttendanceBehaviourSection";
+import { BenchmarkComparisonSection } from "./components/BenchmarkComparisonSection";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsAndTrendsPanel } from "./components/DemographicsAndTrendsPanel";
 import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
 import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
+import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
 export function SchoolProfileFeature(): JSX.Element {
@@ -24,7 +27,6 @@ export function SchoolProfileFeature(): JSX.Element {
 
   return (
     <PageContainer>
-      {/* Loading */}
       {(status === "idle" || status === "loading") ? (
         <>
           <Breadcrumbs segments={[{ label: "Loading..." }]} />
@@ -36,7 +38,6 @@ export function SchoolProfileFeature(): JSX.Element {
         </>
       ) : null}
 
-      {/* Not found */}
       {status === "not-found" ? (
         <>
           <Breadcrumbs segments={[{ label: "Not Found" }]} />
@@ -52,7 +53,6 @@ export function SchoolProfileFeature(): JSX.Element {
         </>
       ) : null}
 
-      {/* Error */}
       {status === "error" ? (
         <>
           <Breadcrumbs segments={[{ label: "Error" }]} />
@@ -66,7 +66,6 @@ export function SchoolProfileFeature(): JSX.Element {
         </>
       ) : null}
 
-      {/* Success */}
       {status === "success" && profile ? (
         <>
           <Breadcrumbs
@@ -76,16 +75,15 @@ export function SchoolProfileFeature(): JSX.Element {
                     {
                       label: `${fromSearch.postcode} - ${fromSearch.radius} mi`,
                       href: paths.home,
-                      state: { restoreSearch: fromSearch },
-                    },
+                      state: { restoreSearch: fromSearch }
+                    }
                   ]
                 : []),
-              { label: profile.school.name },
+              { label: profile.school.name }
             ]}
           />
 
           <div className="space-y-14 sm:space-y-16">
-            {/* Zone 1: Hero */}
             <ProfileHeader
               school={profile.school}
               ofsted={profile.ofsted}
@@ -94,9 +92,7 @@ export function SchoolProfileFeature(): JSX.Element {
               areaContext={profile.areaContext}
             />
 
-            {/* Zone 2: The School */}
             <div className="space-y-10 sm:space-y-12">
-              {/* Ofsted profile — sub-judgements + inspection history */}
               <OfstedProfileSection
                 ofsted={profile.ofsted}
                 timeline={profile.ofstedTimeline}
@@ -104,7 +100,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 timelineCompleteness={profile.completeness.ofstedTimeline}
               />
 
-              {/* Pupil demographics — who the pupils are */}
               <DemographicsAndTrendsPanel
                 demographics={profile.demographics}
                 trends={profile.trends}
@@ -112,21 +107,39 @@ export function SchoolProfileFeature(): JSX.Element {
                 trendsCompleteness={profile.completeness.trends}
               />
 
-              {/* Academic performance — how the school performs */}
+              <AttendanceBehaviourSection
+                attendance={profile.attendance}
+                behaviour={profile.behaviour}
+                trends={profile.trends}
+                attendanceCompleteness={profile.completeness.attendance}
+                behaviourCompleteness={profile.completeness.behaviour}
+              />
+
+              <WorkforceLeadershipSection
+                workforce={profile.workforce}
+                leadership={profile.leadership}
+                trends={profile.trends}
+                workforceCompleteness={profile.completeness.workforce}
+                leadershipCompleteness={profile.completeness.leadership}
+              />
+
               <AcademicPerformanceSection
                 performance={profile.performance}
                 completeness={profile.completeness.performance}
               />
+
+              <BenchmarkComparisonSection
+                benchmarkDashboard={profile.benchmarkDashboard}
+              />
             </div>
 
-            {/* Zone 3: The Neighbourhood */}
             <NeighbourhoodSection
               areaContext={profile.areaContext}
               deprivationCompleteness={profile.completeness.areaDeprivation}
               crimeCompleteness={profile.completeness.areaCrime}
+              housePriceCompleteness={profile.completeness.areaHousePrices}
             />
 
-            {/* Coverage notice */}
             <CoverageNotice
               unsupportedMetrics={profile.unsupportedMetrics}
               completeness={profile.completeness}

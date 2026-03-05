@@ -144,6 +144,54 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS fsm6_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS male_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS female_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS pupil_mobility_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_fsm6_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_gender_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_mobility_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_send_primary_need_data boolean NOT NULL DEFAULT false"
+            )
+        )
 
 
 def _cleanup(engine: Engine) -> None:

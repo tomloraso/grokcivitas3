@@ -22,6 +22,35 @@ IDACI_DECILE_HEADER = (
     "Income Deprivation Affecting Children Index (IDACI) Decile "
     "(where 1 is most deprived 10% of LSOAs)"
 )
+INCOME_SCORE_HEADER = "Income Score (rate)"
+INCOME_RANK_HEADER = "Income Rank (where 1 is most deprived)"
+INCOME_DECILE_HEADER = "Income Decile (where 1 is most deprived 10% of LSOAs)"
+EMPLOYMENT_SCORE_HEADER = "Employment Score (rate)"
+EMPLOYMENT_RANK_HEADER = "Employment Rank (where 1 is most deprived)"
+EMPLOYMENT_DECILE_HEADER = "Employment Decile (where 1 is most deprived 10% of LSOAs)"
+EDUCATION_SCORE_HEADER = "Education, Skills and Training Score"
+EDUCATION_RANK_HEADER = "Education, Skills and Training Rank (where 1 is most deprived)"
+EDUCATION_DECILE_HEADER = (
+    "Education, Skills and Training Decile (where 1 is most deprived 10% of LSOAs)"
+)
+HEALTH_SCORE_HEADER = "Health Deprivation and Disability Score"
+HEALTH_RANK_HEADER = "Health Deprivation and Disability Rank (where 1 is most deprived)"
+HEALTH_DECILE_HEADER = (
+    "Health Deprivation and Disability Decile (where 1 is most deprived 10% of LSOAs)"
+)
+CRIME_SCORE_HEADER = "Crime Score"
+CRIME_RANK_HEADER = "Crime Rank (where 1 is most deprived)"
+CRIME_DECILE_HEADER = "Crime Decile (where 1 is most deprived 10% of LSOAs)"
+BARRIERS_SCORE_HEADER = "Barriers to Housing and Services Score"
+BARRIERS_RANK_HEADER = "Barriers to Housing and Services Rank (where 1 is most deprived)"
+BARRIERS_DECILE_HEADER = (
+    "Barriers to Housing and Services Decile (where 1 is most deprived 10% of LSOAs)"
+)
+LIVING_ENVIRONMENT_SCORE_HEADER = "Living Environment Score"
+LIVING_ENVIRONMENT_RANK_HEADER = "Living Environment Rank (where 1 is most deprived)"
+LIVING_ENVIRONMENT_DECILE_HEADER = (
+    "Living Environment Decile (where 1 is most deprived 10% of LSOAs)"
+)
 
 RELEASE_CONFIG: dict[str, dict[str, str]] = {
     IMD_RELEASE_IOD2025: {
@@ -31,6 +60,7 @@ RELEASE_CONFIG: dict[str, dict[str, str]] = {
         "lsoa_name_header": "LSOA name (2021)",
         "lad_code_header": "Local Authority District code (2024)",
         "lad_name_header": "Local Authority District name (2024)",
+        "population_total_header": "Total population: mid 2022",
     },
     IMD_RELEASE_IOD2019: {
         "source_release_label": "IoD2019",
@@ -39,6 +69,7 @@ RELEASE_CONFIG: dict[str, dict[str, str]] = {
         "lsoa_name_header": "LSOA name (2011)",
         "lad_code_header": "Local Authority District code (2019)",
         "lad_name_header": "Local Authority District name (2019)",
+        "population_total_header": "Total population: mid 2015 (excluding prisoners)",
     },
 }
 
@@ -54,6 +85,28 @@ class NormalizedOnsImdRow(TypedDict):
     idaci_score: float
     idaci_rank: int
     idaci_decile: int
+    income_score: float
+    income_rank: int
+    income_decile: int
+    employment_score: float
+    employment_rank: int
+    employment_decile: int
+    education_score: float
+    education_rank: int
+    education_decile: int
+    health_score: float
+    health_rank: int
+    health_decile: int
+    crime_score: float
+    crime_rank: int
+    crime_decile: int
+    barriers_score: float
+    barriers_rank: int
+    barriers_decile: int
+    living_environment_score: float
+    living_environment_rank: int
+    living_environment_decile: int
+    population_total: int
     source_release: str
     lsoa_vintage: str
     source_file_url: str
@@ -78,9 +131,31 @@ def validate_headers(headers: Sequence[str], *, source_release: str) -> None:
         IMD_SCORE_HEADER,
         IMD_RANK_HEADER,
         IMD_DECILE_HEADER,
+        INCOME_SCORE_HEADER,
+        INCOME_RANK_HEADER,
+        INCOME_DECILE_HEADER,
+        EMPLOYMENT_SCORE_HEADER,
+        EMPLOYMENT_RANK_HEADER,
+        EMPLOYMENT_DECILE_HEADER,
+        EDUCATION_SCORE_HEADER,
+        EDUCATION_RANK_HEADER,
+        EDUCATION_DECILE_HEADER,
+        HEALTH_SCORE_HEADER,
+        HEALTH_RANK_HEADER,
+        HEALTH_DECILE_HEADER,
+        CRIME_SCORE_HEADER,
+        CRIME_RANK_HEADER,
+        CRIME_DECILE_HEADER,
+        BARRIERS_SCORE_HEADER,
+        BARRIERS_RANK_HEADER,
+        BARRIERS_DECILE_HEADER,
+        LIVING_ENVIRONMENT_SCORE_HEADER,
+        LIVING_ENVIRONMENT_RANK_HEADER,
+        LIVING_ENVIRONMENT_DECILE_HEADER,
         IDACI_SCORE_HEADER,
         IDACI_RANK_HEADER,
         IDACI_DECILE_HEADER,
+        release_config["population_total_header"],
     ]
     header_set = set(headers)
     missing = [header for header in required_headers if header not in header_set]
@@ -138,6 +213,124 @@ def normalize_row(
     except ValueError:
         return None, "invalid_idaci_decile"
 
+    try:
+        income_score = parse_required_float(raw_row.get(INCOME_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_income_score"
+
+    try:
+        income_rank = parse_required_integer(raw_row.get(INCOME_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_income_rank"
+
+    try:
+        income_decile = parse_required_decile(raw_row.get(INCOME_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_income_decile"
+
+    try:
+        employment_score = parse_required_float(raw_row.get(EMPLOYMENT_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_employment_score"
+
+    try:
+        employment_rank = parse_required_integer(raw_row.get(EMPLOYMENT_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_employment_rank"
+
+    try:
+        employment_decile = parse_required_decile(raw_row.get(EMPLOYMENT_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_employment_decile"
+
+    try:
+        education_score = parse_required_float(raw_row.get(EDUCATION_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_education_score"
+
+    try:
+        education_rank = parse_required_integer(raw_row.get(EDUCATION_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_education_rank"
+
+    try:
+        education_decile = parse_required_decile(raw_row.get(EDUCATION_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_education_decile"
+
+    try:
+        health_score = parse_required_float(raw_row.get(HEALTH_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_health_score"
+
+    try:
+        health_rank = parse_required_integer(raw_row.get(HEALTH_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_health_rank"
+
+    try:
+        health_decile = parse_required_decile(raw_row.get(HEALTH_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_health_decile"
+
+    try:
+        crime_score = parse_required_float(raw_row.get(CRIME_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_crime_score"
+
+    try:
+        crime_rank = parse_required_integer(raw_row.get(CRIME_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_crime_rank"
+
+    try:
+        crime_decile = parse_required_decile(raw_row.get(CRIME_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_crime_decile"
+
+    try:
+        barriers_score = parse_required_float(raw_row.get(BARRIERS_SCORE_HEADER))
+    except ValueError:
+        return None, "invalid_barriers_score"
+
+    try:
+        barriers_rank = parse_required_integer(raw_row.get(BARRIERS_RANK_HEADER))
+    except ValueError:
+        return None, "invalid_barriers_rank"
+
+    try:
+        barriers_decile = parse_required_decile(raw_row.get(BARRIERS_DECILE_HEADER))
+    except ValueError:
+        return None, "invalid_barriers_decile"
+
+    try:
+        living_environment_score = parse_required_float(
+            raw_row.get(LIVING_ENVIRONMENT_SCORE_HEADER)
+        )
+    except ValueError:
+        return None, "invalid_living_environment_score"
+
+    try:
+        living_environment_rank = parse_required_integer(
+            raw_row.get(LIVING_ENVIRONMENT_RANK_HEADER)
+        )
+    except ValueError:
+        return None, "invalid_living_environment_rank"
+
+    try:
+        living_environment_decile = parse_required_decile(
+            raw_row.get(LIVING_ENVIRONMENT_DECILE_HEADER)
+        )
+    except ValueError:
+        return None, "invalid_living_environment_decile"
+
+    try:
+        population_total = parse_required_integer(
+            raw_row.get(release_config["population_total_header"])
+        )
+    except ValueError:
+        return None, "invalid_population_total"
+
     return (
         NormalizedOnsImdRow(
             lsoa_code=lsoa_code,
@@ -154,6 +347,28 @@ def normalize_row(
             idaci_score=idaci_score,
             idaci_rank=idaci_rank,
             idaci_decile=idaci_decile,
+            income_score=income_score,
+            income_rank=income_rank,
+            income_decile=income_decile,
+            employment_score=employment_score,
+            employment_rank=employment_rank,
+            employment_decile=employment_decile,
+            education_score=education_score,
+            education_rank=education_rank,
+            education_decile=education_decile,
+            health_score=health_score,
+            health_rank=health_rank,
+            health_decile=health_decile,
+            crime_score=crime_score,
+            crime_rank=crime_rank,
+            crime_decile=crime_decile,
+            barriers_score=barriers_score,
+            barriers_rank=barriers_rank,
+            barriers_decile=barriers_decile,
+            living_environment_score=living_environment_score,
+            living_environment_rank=living_environment_rank,
+            living_environment_decile=living_environment_decile,
+            population_total=population_total,
             source_release=release_config["source_release_label"],
             lsoa_vintage=release_config["lsoa_vintage"],
             source_file_url=source_file_url,

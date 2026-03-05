@@ -20,6 +20,36 @@ _REQUIRED_FIELDS: dict[str, tuple[str, ...]] = {
     "first_language_unclassified_pct": ("% of pupils whose first language is unclassified",),
 }
 
+_OPTIONAL_FIELDS: dict[str, tuple[str, ...]] = {
+    "fsm6_pct": (
+        "% of pupils known to be eligible for free school meals (Performance Tables)",
+        "ptfsm6cla1a",
+    ),
+    "male_pct": (
+        "% of pupils who are male",
+        "% of pupils who are boys",
+        "male pupils (%)",
+        "pbelig",
+    ),
+    "female_pct": (
+        "% of pupils who are female",
+        "% of pupils who are girls",
+        "female pupils (%)",
+        "pgelig",
+    ),
+    "male_count": ("headcount total male",),
+    "female_count": ("headcount total female",),
+    "gender_total_pupils_count": (
+        "Number of pupils (used for FSM calculation in Performance Tables)",
+        "total pupils",
+    ),
+    "pupil_mobility_pct": (
+        "% of pupils who are mobile",
+        "% of mobile pupils",
+        "ptmobn",
+    ),
+}
+
 
 @dataclass(frozen=True)
 class EthnicityGroupField:
@@ -149,6 +179,20 @@ ETHNICITY_GROUP_FIELDS: tuple[EthnicityGroupField, ...] = (
 TIME_PERIOD_FIELDS: tuple[str, ...] = ("time_period", "Time period")
 SENTINEL_TOKENS: set[str] = {"", "SUPP", "NE", "N/A", "NA", "X", "Z", "C"}
 _RELEASE_SLUG_PATTERN = re.compile(r"^(?P<start>\d{4})-(?P<end>\d{2})$")
+_LANGUAGE_COUNT_PATTERN = re.compile(r"^number of pupils whose first language is (?P<label>.+)$")
+_LANGUAGE_PCT_PATTERN = re.compile(r"^% of pupils whose first language is (?P<label>.+)$")
+_EXCLUDED_LANGUAGE_LABELS: set[str] = {
+    "known or believed to be other than english",
+    "known or believed to be english",
+    "unclassified",
+}
+
+
+class NormalizedTopLanguage(TypedDict):
+    key: str
+    label: str
+    count: int | None
+    percentage: float | None
 
 
 class NormalizedSpcRow(TypedDict):
@@ -159,9 +203,18 @@ class NormalizedSpcRow(TypedDict):
     eal_pct: float | None
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
+    fsm6_pct: float | None
+    male_pct: float | None
+    female_pct: float | None
+    pupil_mobility_pct: float | None
+    has_fsm6_data: bool
+    has_gender_data: bool
+    has_mobility_data: bool
     ethnicity_percentages: dict[str, float | None]
     ethnicity_counts: dict[str, int | None]
     has_ethnicity_data: bool
+    top_home_languages: tuple[NormalizedTopLanguage, ...]
+    has_top_languages_data: bool
 
 
 def validate_headers(headers: Sequence[str]) -> dict[str, str]:
@@ -176,6 +229,11 @@ def validate_headers(headers: Sequence[str]) -> dict[str, str]:
             missing.append(candidates[0])
             continue
         resolved_fields[field_name] = resolved
+
+    for field_name, candidates in _OPTIONAL_FIELDS.items():
+        resolved = _resolve_candidate(candidates, normalized_headers)
+        if resolved is not None:
+            resolved_fields[field_name] = resolved
 
     for group in ETHNICITY_GROUP_FIELDS:
         resolved_count = _resolve_candidate((group.count_header,), normalized_headers)
@@ -247,6 +305,79 @@ def normalize_row(
     except ValueError:
         return None, "invalid_first_language_unclassified_pct"
 
+    fsm6_column = column_map.get("fsm6_pct", column_map["disadvantaged_pct"])
+    has_fsm6_data = fsm6_column in column_map.values()
+    try:
+        fsm6_pct = _parse_optional_percentage(raw_row.get(fsm6_column))
+    except ValueError:
+        return None, "invalid_fsm6_pct"
+
+    male_column = column_map.get("male_pct")
+    female_column = column_map.get("female_pct")
+    male_count_column = column_map.get("male_count")
+    female_count_column = column_map.get("female_count")
+    gender_total_pupils_count_column = column_map.get("gender_total_pupils_count")
+    has_gender_data = (
+        male_column is not None
+        or female_column is not None
+        or (
+            gender_total_pupils_count_column is not None
+            and (male_count_column is not None or female_count_column is not None)
+        )
+    )
+    try:
+        male_pct = _parse_optional_percentage(raw_row.get(male_column)) if male_column else None
+    except ValueError:
+        return None, "invalid_male_pct"
+    try:
+        female_pct = (
+            _parse_optional_percentage(raw_row.get(female_column)) if female_column else None
+        )
+    except ValueError:
+        return None, "invalid_female_pct"
+
+    if (
+        (male_pct is None or female_pct is None)
+        and gender_total_pupils_count_column is not None
+        and (male_count_column is not None or female_count_column is not None)
+    ):
+        try:
+            gender_total_pupils = _parse_optional_count(
+                raw_row.get(gender_total_pupils_count_column)
+            )
+        except ValueError:
+            return None, "invalid_gender_total_pupils_count"
+
+        if gender_total_pupils is not None and gender_total_pupils > 0:
+            if male_pct is None and male_count_column is not None:
+                try:
+                    male_count = _parse_optional_count(raw_row.get(male_count_column))
+                except ValueError:
+                    return None, "invalid_male_count"
+                male_pct = _derive_percentage_from_counts(
+                    count=male_count,
+                    total=gender_total_pupils,
+                )
+
+            if female_pct is None and female_count_column is not None:
+                try:
+                    female_count = _parse_optional_count(raw_row.get(female_count_column))
+                except ValueError:
+                    return None, "invalid_female_count"
+                female_pct = _derive_percentage_from_counts(
+                    count=female_count,
+                    total=gender_total_pupils,
+                )
+
+    mobility_column = column_map.get("pupil_mobility_pct")
+    has_mobility_data = mobility_column is not None
+    try:
+        pupil_mobility_pct = (
+            _parse_optional_percentage(raw_row.get(mobility_column)) if mobility_column else None
+        )
+    except ValueError:
+        return None, "invalid_pupil_mobility_pct"
+
     ethnicity_percentages: dict[str, float | None] = {}
     ethnicity_counts: dict[str, int | None] = {}
 
@@ -268,6 +399,8 @@ def normalize_row(
     has_ethnicity_data = any(
         value is not None for value in (*ethnicity_percentages.values(), *ethnicity_counts.values())
     )
+    top_home_languages = _extract_top_home_languages(raw_row)
+    has_top_languages_data = len(top_home_languages) > 0
 
     return (
         NormalizedSpcRow(
@@ -278,9 +411,18 @@ def normalize_row(
             eal_pct=eal_pct,
             first_language_english_pct=first_language_english_pct,
             first_language_unclassified_pct=first_language_unclassified_pct,
+            fsm6_pct=fsm6_pct,
+            male_pct=male_pct,
+            female_pct=female_pct,
+            pupil_mobility_pct=pupil_mobility_pct,
+            has_fsm6_data=has_fsm6_data,
+            has_gender_data=has_gender_data,
+            has_mobility_data=has_mobility_data,
             ethnicity_percentages=ethnicity_percentages,
             ethnicity_counts=ethnicity_counts,
             has_ethnicity_data=has_ethnicity_data,
+            top_home_languages=top_home_languages,
+            has_top_languages_data=has_top_languages_data,
         ),
         None,
     )
@@ -371,6 +513,12 @@ def _parse_optional_count(raw_value: str | None) -> int | None:
     return int(parsed)
 
 
+def _derive_percentage_from_counts(*, count: int | None, total: int) -> float | None:
+    if count is None or total <= 0:
+        return None
+    return (count / total) * 100.0
+
+
 def _resolve_candidate(
     candidates: Sequence[str],
     normalized_headers: Mapping[str, str],
@@ -384,3 +532,88 @@ def _resolve_candidate(
 
 def _normalize_header(value: str) -> str:
     return value.lstrip("\ufeff").strip().casefold()
+
+
+def _extract_top_home_languages(raw_row: Mapping[str, str]) -> tuple[NormalizedTopLanguage, ...]:
+    by_key: dict[str, NormalizedTopLanguage] = {}
+
+    for header, raw_value in raw_row.items():
+        normalized_header = _normalize_header(header)
+
+        count_match = _LANGUAGE_COUNT_PATTERN.match(normalized_header)
+        if count_match is not None:
+            normalized_label = _normalize_language_label(count_match.group("label"))
+            if normalized_label is None:
+                continue
+            key = _language_key(normalized_label)
+            entry = by_key.setdefault(
+                key,
+                NormalizedTopLanguage(
+                    key=key,
+                    label=_display_language_label(normalized_label),
+                    count=None,
+                    percentage=None,
+                ),
+            )
+            try:
+                entry["count"] = _parse_optional_count(raw_value)
+            except ValueError:
+                entry["count"] = None
+            continue
+
+        pct_match = _LANGUAGE_PCT_PATTERN.match(normalized_header)
+        if pct_match is None:
+            continue
+
+        normalized_label = _normalize_language_label(pct_match.group("label"))
+        if normalized_label is None:
+            continue
+        key = _language_key(normalized_label)
+        entry = by_key.setdefault(
+            key,
+            NormalizedTopLanguage(
+                key=key,
+                label=_display_language_label(normalized_label),
+                count=None,
+                percentage=None,
+            ),
+        )
+        try:
+            entry["percentage"] = _parse_optional_percentage(raw_value)
+        except ValueError:
+            entry["percentage"] = None
+
+    published_languages = [
+        language
+        for language in by_key.values()
+        if language["count"] is not None or language["percentage"] is not None
+    ]
+    ranked = sorted(
+        published_languages,
+        key=lambda item: (
+            item["count"] is None,
+            -(item["count"] or 0),
+            item["percentage"] is None,
+            -(item["percentage"] or 0.0),
+            item["label"],
+        ),
+    )
+
+    return tuple(ranked[:5])
+
+
+def _normalize_language_label(raw_value: str) -> str | None:
+    value = raw_value.strip().casefold()
+    if not value:
+        return None
+    if value in _EXCLUDED_LANGUAGE_LABELS:
+        return None
+    return value
+
+
+def _display_language_label(normalized_label: str) -> str:
+    return " ".join(segment.capitalize() for segment in normalized_label.split())
+
+
+def _language_key(normalized_label: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", normalized_label).strip("_")

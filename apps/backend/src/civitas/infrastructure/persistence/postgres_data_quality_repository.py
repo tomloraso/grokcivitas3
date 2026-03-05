@@ -38,6 +38,26 @@ _SECTIONS: tuple[_SectionDefinition, ...] = (
         section="demographics",
     ),
     _SectionDefinition(
+        source=PipelineSource.DFE_ATTENDANCE.value,
+        dataset="school_attendance_yearly",
+        section="attendance",
+    ),
+    _SectionDefinition(
+        source=PipelineSource.DFE_BEHAVIOUR.value,
+        dataset="school_behaviour_yearly",
+        section="behaviour",
+    ),
+    _SectionDefinition(
+        source=PipelineSource.DFE_WORKFORCE.value,
+        dataset="school_workforce_yearly",
+        section="workforce",
+    ),
+    _SectionDefinition(
+        source=PipelineSource.DFE_WORKFORCE.value,
+        dataset="school_leadership_snapshot",
+        section="leadership",
+    ),
+    _SectionDefinition(
         source=PipelineSource.DFE_PERFORMANCE.value,
         dataset="school_performance_yearly",
         section="school_performance",
@@ -56,6 +76,11 @@ _SECTIONS: tuple[_SectionDefinition, ...] = (
         source=PipelineSource.ONS_IMD.value,
         dataset="area_deprivation",
         section="area_deprivation",
+    ),
+    _SectionDefinition(
+        source=PipelineSource.UK_HOUSE_PRICES.value,
+        dataset="area_house_price_context",
+        section="area_house_prices",
     ),
     _SectionDefinition(
         source=PipelineSource.POLICE_CRIME_CONTEXT.value,
@@ -113,10 +138,15 @@ class PostgresDataQualityRepository(DataQualityRepository):
             trends_distribution = self._query_trends_distribution(connection=connection)
             section_metrics = {
                 "demographics": self._query_demographics_metrics(connection=connection),
+                "attendance": self._query_attendance_metrics(connection=connection),
+                "behaviour": self._query_behaviour_metrics(connection=connection),
+                "workforce": self._query_workforce_metrics(connection=connection),
+                "leadership": self._query_leadership_metrics(connection=connection),
                 "school_performance": self._query_school_performance_metrics(connection=connection),
                 "ofsted_latest": self._query_ofsted_latest_metrics(connection=connection),
                 "ofsted_timeline": self._query_ofsted_timeline_metrics(connection=connection),
                 "area_deprivation": self._query_area_deprivation_metrics(connection=connection),
+                "area_house_prices": self._query_area_house_price_metrics(connection=connection),
                 "area_crime": self._query_area_crime_metrics(connection=connection),
             }
 
@@ -465,6 +495,74 @@ class PostgresDataQualityRepository(DataQualityRepository):
         )
         return count, updated_at
 
+    def _query_attendance_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_attendance_yearly")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_attendance_yearly")
+            ).scalar_one()
+        )
+        return count, updated_at
+
+    def _query_behaviour_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_behaviour_yearly")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_behaviour_yearly")
+            ).scalar_one()
+        )
+        return count, updated_at
+
+    def _query_workforce_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_workforce_yearly")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_workforce_yearly")
+            ).scalar_one()
+        )
+        return count, updated_at
+
+    def _query_leadership_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_leadership_snapshot")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_leadership_snapshot")
+            ).scalar_one()
+        )
+        return count, updated_at
+
     def _query_school_performance_metrics(
         self,
         *,
@@ -536,6 +634,38 @@ class PostgresDataQualityRepository(DataQualityRepository):
         )
         updated_at = _to_optional_datetime(
             connection.execute(text("SELECT MAX(updated_at) FROM area_crime_context")).scalar_one()
+        )
+        return count, updated_at
+
+    def _query_area_house_price_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text(
+                    """
+                    SELECT COUNT(DISTINCT schools.urn)
+                    FROM schools
+                    INNER JOIN postcode_cache
+                        ON replace(upper(postcode_cache.postcode), ' ', '') =
+                           replace(upper(schools.postcode), ' ', '')
+                    INNER JOIN area_deprivation
+                        ON area_deprivation.lsoa_code = postcode_cache.lsoa_code
+                    INNER JOIN area_house_price_context
+                        ON area_house_price_context.area_code =
+                           area_deprivation.local_authority_district_code
+                    WHERE schools.postcode IS NOT NULL
+                      AND btrim(schools.postcode) <> ''
+                    """
+                )
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM area_house_price_context")
+            ).scalar_one()
         )
         return count, updated_at
 
@@ -645,10 +775,15 @@ def _to_section(value: object) -> DataQualitySection:
     raw_section = str(value)
     if raw_section not in {
         "demographics",
+        "attendance",
+        "behaviour",
+        "workforce",
+        "leadership",
         "school_performance",
         "ofsted_latest",
         "ofsted_timeline",
         "area_deprivation",
+        "area_house_prices",
         "area_crime",
     }:
         raise ValueError(f"Unknown data-quality section: {raw_section}")

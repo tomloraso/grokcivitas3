@@ -114,6 +114,54 @@ def _ensure_schema(engine: Engine) -> None:
         )
         connection.execute(
             text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS fsm6_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS male_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS female_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS pupil_mobility_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_fsm6_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_gender_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_mobility_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_send_primary_need_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
                 """
                 CREATE TABLE IF NOT EXISTS school_ofsted_latest (
                     urn text PRIMARY KEY,
@@ -190,6 +238,126 @@ def _ensure_schema(engine: Engine) -> None:
         )
         connection.execute(
             text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_name text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS income_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS employment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS education_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS health_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS crime_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS barriers_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_rank integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS population_total integer NULL"
+            )
+        )
+        connection.execute(
+            text(
                 """
                 CREATE TABLE IF NOT EXISTS area_crime_context (
                     urn text NOT NULL,
@@ -201,6 +369,64 @@ def _ensure_schema(engine: Engine) -> None:
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
                     PRIMARY KEY (urn, month, crime_category, radius_meters)
                 )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS area_house_price_context (
+                    area_code text NOT NULL,
+                    area_name text NOT NULL,
+                    month date NOT NULL,
+                    average_price double precision NOT NULL,
+                    annual_change_pct double precision NULL,
+                    monthly_change_pct double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    source_file_url text NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (area_code, month)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_dataset_id text NOT NULL DEFAULT 'uk_hpi_average_price'"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_dataset_version text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_file_url text NOT NULL DEFAULT ''"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = 'public'
+                          AND table_name = 'area_house_price_context'
+                          AND column_name = 'source_release'
+                    ) THEN
+                        ALTER TABLE area_house_price_context
+                            ALTER COLUMN source_release DROP NOT NULL;
+                        ALTER TABLE area_house_price_context
+                            ALTER COLUMN source_release SET DEFAULT 'uk_hpi_average_price';
+                    END IF;
+                END $$;
                 """
             )
         )
@@ -552,6 +778,28 @@ def _seed_data(engine: Engine) -> None:
                     idaci_score,
                     idaci_rank,
                     idaci_decile,
+                    income_score,
+                    income_rank,
+                    income_decile,
+                    employment_score,
+                    employment_rank,
+                    employment_decile,
+                    education_score,
+                    education_rank,
+                    education_decile,
+                    health_score,
+                    health_rank,
+                    health_decile,
+                    crime_score,
+                    crime_rank,
+                    crime_decile,
+                    barriers_score,
+                    barriers_rank,
+                    barriers_decile,
+                    living_environment_score,
+                    living_environment_rank,
+                    living_environment_decile,
+                    population_total,
                     source_release,
                     lsoa_vintage,
                     source_file_url,
@@ -568,12 +816,69 @@ def _seed_data(engine: Engine) -> None:
                     0.22,
                     800,
                     2,
+                    0.12,
+                    950,
+                    3,
+                    0.09,
+                    870,
+                    2,
+                    0.15,
+                    1020,
+                    4,
+                    0.11,
+                    980,
+                    3,
+                    0.18,
+                    1100,
+                    4,
+                    0.13,
+                    990,
+                    3,
+                    0.17,
+                    1080,
+                    4,
+                    1800,
                     'IoD2025',
                     '2021',
                     'https://example.com/imd.csv',
                     '2100-03-03T02:00:00+00:00'
                 )
                 ON CONFLICT (lsoa_code) DO UPDATE SET updated_at = EXCLUDED.updated_at
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO area_house_price_context (
+                    area_code,
+                    area_name,
+                    month,
+                    average_price,
+                    annual_change_pct,
+                    monthly_change_pct,
+                    source_dataset_id,
+                    source_dataset_version,
+                    source_file_url,
+                    updated_at
+                )
+                VALUES (
+                    'E09000001',
+                    'Sample District',
+                    '2026-03-01',
+                    525000.0,
+                    3.2,
+                    0.4,
+                    'uk_hpi_average_price',
+                    '2026-03',
+                    'https://example.com/house-prices.csv',
+                    '2100-03-03T02:30:00+00:00'
+                )
+                ON CONFLICT (area_code, month) DO UPDATE SET
+                    average_price = EXCLUDED.average_price,
+                    annual_change_pct = EXCLUDED.annual_change_pct,
+                    monthly_change_pct = EXCLUDED.monthly_change_pct,
+                    updated_at = EXCLUDED.updated_at
                 """
             )
         )
@@ -843,6 +1148,14 @@ def _cleanup_data(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                DELETE FROM area_house_price_context
+                WHERE area_code IN ('E09000001')
+                """
+            )
+        )
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code IN ('L001', 'L999')"))
         connection.execute(
             text("DELETE FROM postcode_cache WHERE postcode IN ('AA1 1AA', 'AA2 2AA')")
@@ -873,7 +1186,7 @@ def test_data_quality_repository_collects_snapshots_and_run_health(engine: Engin
 
     snapshots = repository.collect_snapshots(snapshot_date=snapshot_date, as_of=as_of)
 
-    assert len(snapshots) >= 5
+    assert len(snapshots) >= 6
     demographics_snapshot = next(
         snapshot for snapshot in snapshots if snapshot.section == "demographics"
     )
@@ -892,6 +1205,13 @@ def test_data_quality_repository_collects_snapshots_and_run_health(engine: Engin
     assert demographics_snapshot.source_freshness_lag_hours == pytest.approx(0.0)
     assert demographics_snapshot.section_freshness_lag_hours == pytest.approx(0.0)
     assert demographics_snapshot.contract_version is not None
+
+    area_house_prices_snapshot = next(
+        snapshot for snapshot in snapshots if snapshot.section == "area_house_prices"
+    )
+    assert area_house_prices_snapshot.schools_total_count >= 2
+    assert area_house_prices_snapshot.schools_with_section_count >= 1
+    assert 0.0 <= area_house_prices_snapshot.section_coverage_ratio <= 1.0
 
     previous_day_snapshot = demographics_snapshot.__class__(
         snapshot_date=date(2026, 3, 2),

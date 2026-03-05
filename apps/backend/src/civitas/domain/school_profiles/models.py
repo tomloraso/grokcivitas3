@@ -38,12 +38,33 @@ class SchoolDemographicsCoverage:
     fsm_supported: bool
     ethnicity_supported: bool
     top_languages_supported: bool
+    fsm6_supported: bool = False
+    gender_supported: bool = False
+    mobility_supported: bool = False
+    send_primary_need_supported: bool = False
 
 
 @dataclass(frozen=True)
 class SchoolDemographicsEthnicityGroup:
     key: str
     label: str
+    percentage: float | None
+    count: int | None
+
+
+@dataclass(frozen=True)
+class SchoolDemographicsSendPrimaryNeed:
+    key: str
+    label: str
+    percentage: float | None
+    count: int | None
+
+
+@dataclass(frozen=True)
+class SchoolDemographicsHomeLanguage:
+    key: str
+    label: str
+    rank: int
     percentage: float | None
     count: int | None
 
@@ -59,7 +80,49 @@ class SchoolDemographicsLatest:
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
     coverage: SchoolDemographicsCoverage
+    fsm6_pct: float | None = None
+    male_pct: float | None = None
+    female_pct: float | None = None
+    pupil_mobility_pct: float | None = None
     ethnicity_breakdown: tuple[SchoolDemographicsEthnicityGroup, ...] = ()
+    send_primary_needs: tuple[SchoolDemographicsSendPrimaryNeed, ...] = ()
+    top_home_languages: tuple[SchoolDemographicsHomeLanguage, ...] = ()
+
+
+@dataclass(frozen=True)
+class SchoolAttendanceLatest:
+    academic_year: str
+    overall_attendance_pct: float | None
+    overall_absence_pct: float | None
+    persistent_absence_pct: float | None
+
+
+@dataclass(frozen=True)
+class SchoolBehaviourLatest:
+    academic_year: str
+    suspensions_count: int | None
+    suspensions_rate: float | None
+    permanent_exclusions_count: int | None
+    permanent_exclusions_rate: float | None
+
+
+@dataclass(frozen=True)
+class SchoolWorkforceLatest:
+    academic_year: str
+    pupil_teacher_ratio: float | None
+    supply_staff_pct: float | None
+    teachers_3plus_years_pct: float | None
+    teacher_turnover_pct: float | None
+    qts_pct: float | None
+    qualifications_level6_plus_pct: float | None
+
+
+@dataclass(frozen=True)
+class SchoolLeadershipSnapshot:
+    headteacher_name: str | None
+    headteacher_start_date: date | None
+    headteacher_tenure_years: float | None
+    leadership_turnover_score: float | None
 
 
 @dataclass(frozen=True)
@@ -119,6 +182,30 @@ class SchoolAreaDeprivation:
     imd_decile: int
     idaci_score: float
     idaci_decile: int
+    income_score: float | None
+    income_rank: int | None
+    income_decile: int | None
+    employment_score: float | None
+    employment_rank: int | None
+    employment_decile: int | None
+    education_score: float | None
+    education_rank: int | None
+    education_decile: int | None
+    health_score: float | None
+    health_rank: int | None
+    health_decile: int | None
+    crime_score: float | None
+    crime_rank: int | None
+    crime_decile: int | None
+    barriers_score: float | None
+    barriers_rank: int | None
+    barriers_decile: int | None
+    living_environment_score: float | None
+    living_environment_rank: int | None
+    living_environment_decile: int | None
+    population_total: int | None
+    local_authority_district_code: str | None
+    local_authority_district_name: str | None
     source_release: str
 
 
@@ -133,7 +220,37 @@ class SchoolAreaCrime:
     radius_miles: float
     latest_month: str
     total_incidents: int
+    population_denominator: int | None
+    incidents_per_1000: float | None
+    annual_incidents_per_1000: tuple["SchoolAreaCrimeAnnualRate", ...]
     categories: tuple[SchoolAreaCrimeCategory, ...]
+
+
+@dataclass(frozen=True)
+class SchoolAreaCrimeAnnualRate:
+    year: int
+    total_incidents: int
+    incidents_per_1000: float | None
+
+
+@dataclass(frozen=True)
+class SchoolAreaHousePricePoint:
+    month: str
+    average_price: float
+    annual_change_pct: float | None
+    monthly_change_pct: float | None
+
+
+@dataclass(frozen=True)
+class SchoolAreaHousePrices:
+    area_code: str
+    area_name: str
+    latest_month: str
+    average_price: float
+    annual_change_pct: float | None
+    monthly_change_pct: float | None
+    three_year_change_pct: float | None
+    trend: tuple[SchoolAreaHousePricePoint, ...]
 
 
 @dataclass(frozen=True)
@@ -141,12 +258,15 @@ class SchoolAreaContextCoverage:
     has_deprivation: bool
     has_crime: bool
     crime_months_available: int
+    has_house_prices: bool
+    house_price_months_available: int
 
 
 @dataclass(frozen=True)
 class SchoolAreaContext:
     deprivation: SchoolAreaDeprivation | None
     crime: SchoolAreaCrime | None
+    house_prices: SchoolAreaHousePrices | None
     coverage: SchoolAreaContextCoverage
 
 
@@ -190,17 +310,26 @@ class SchoolProfileSectionCompleteness:
 @dataclass(frozen=True)
 class SchoolProfileCompleteness:
     demographics: SchoolProfileSectionCompleteness
+    attendance: SchoolProfileSectionCompleteness
+    behaviour: SchoolProfileSectionCompleteness
+    workforce: SchoolProfileSectionCompleteness
+    leadership: SchoolProfileSectionCompleteness
     performance: SchoolProfileSectionCompleteness
     ofsted_latest: SchoolProfileSectionCompleteness
     ofsted_timeline: SchoolProfileSectionCompleteness
     area_deprivation: SchoolProfileSectionCompleteness
     area_crime: SchoolProfileSectionCompleteness
+    area_house_prices: SchoolProfileSectionCompleteness
 
 
 @dataclass(frozen=True)
 class SchoolProfile:
     school: SchoolProfileSchool
     demographics_latest: SchoolDemographicsLatest | None
+    attendance_latest: SchoolAttendanceLatest | None
+    behaviour_latest: SchoolBehaviourLatest | None
+    workforce_latest: SchoolWorkforceLatest | None
+    leadership_snapshot: SchoolLeadershipSnapshot | None
     performance: SchoolPerformance | None
     ofsted_latest: SchoolOfstedLatest | None
     ofsted_timeline: SchoolOfstedTimeline | None

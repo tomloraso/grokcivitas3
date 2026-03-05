@@ -7,7 +7,10 @@ from civitas.application.operations.use_cases import (
     RunDataQualitySloCheckUseCase,
 )
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
-from civitas.application.school_trends.use_cases import GetSchoolTrendsUseCase
+from civitas.application.school_trends.use_cases import (
+    GetSchoolTrendDashboardUseCase,
+    GetSchoolTrendsUseCase,
+)
 from civitas.application.schools.use_cases import (
     SearchSchoolsByNameUseCase,
     SearchSchoolsByPostcodeUseCase,
@@ -142,11 +145,18 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return GetSchoolProfileUseCase(
         school_profile_repository=school_profile_repository(),
         postcode_context_resolver=postcode_resolver(),
+        school_trends_repository=school_trends_repository(),
     )
 
 
 def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
     return GetSchoolTrendsUseCase(
+        school_trends_repository=school_trends_repository(),
+    )
+
+
+def get_school_trend_dashboard_use_case() -> GetSchoolTrendDashboardUseCase:
+    return GetSchoolTrendDashboardUseCase(
         school_trends_repository=school_trends_repository(),
     )
 
@@ -189,6 +199,15 @@ def pipeline_runner() -> PipelineRunner:
         PipelineSource.DFE_CHARACTERISTICS: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_characteristics
         ),
+        PipelineSource.DFE_ATTENDANCE: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_attendance
+        ),
+        PipelineSource.DFE_BEHAVIOUR: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_behaviour
+        ),
+        PipelineSource.DFE_WORKFORCE: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_workforce
+        ),
         PipelineSource.DFE_PERFORMANCE: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_performance
         ),
@@ -200,6 +219,9 @@ def pipeline_runner() -> PipelineRunner:
         ),
         PipelineSource.ONS_IMD: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_ons_imd
+        ),
+        PipelineSource.UK_HOUSE_PRICES: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_uk_house_prices
         ),
         PipelineSource.POLICE_CRIME_CONTEXT: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_police_crime_context

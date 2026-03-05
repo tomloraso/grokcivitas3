@@ -21,11 +21,39 @@ DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS = (
 )
 DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS = 6
 DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE = True
+DEFAULT_DFE_ATTENDANCE_PUBLICATION_SLUG = "pupil-absence-in-schools-in-england"
+DEFAULT_DFE_ATTENDANCE_RELEASE_SLUGS = (
+    "2021-22",
+    "2022-23",
+    "2023-24",
+)
+DEFAULT_DFE_ATTENDANCE_LOOKBACK_YEARS = 3
+DEFAULT_DFE_ATTENDANCE_SOURCE_STRICT_MODE = True
+DEFAULT_DFE_BEHAVIOUR_PUBLICATION_SLUG = "suspensions-and-permanent-exclusions-in-england"
+DEFAULT_DFE_BEHAVIOUR_RELEASE_SLUGS = (
+    "2022-23",
+    "2023-24",
+    "2024-25-autumn-term",
+)
+DEFAULT_DFE_BEHAVIOUR_LOOKBACK_YEARS = 3
+DEFAULT_DFE_BEHAVIOUR_SOURCE_STRICT_MODE = True
+DEFAULT_DFE_WORKFORCE_PUBLICATION_SLUG = "school-workforce-in-england"
+DEFAULT_DFE_WORKFORCE_RELEASE_SLUGS = (
+    "2022",
+    "2023",
+    "2024",
+)
+DEFAULT_DFE_WORKFORCE_LOOKBACK_YEARS = 3
+DEFAULT_DFE_WORKFORCE_SOURCE_STRICT_MODE = True
 DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID = "019afee4-e5d0-72f9-9a8f-d7a1a56eac1d"
 DEFAULT_DFE_PERFORMANCE_KS4_DATASET_ID = "19e39901-a96c-be76-b9c2-6af54ae076d2"
 DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS = 3
 DEFAULT_DFE_PERFORMANCE_PAGE_SIZE = 10_000
 DEFAULT_IMD_RELEASE = "iod2025"
+DEFAULT_HOUSE_PRICES_SOURCE_URL = (
+    "https://publicdata.landregistry.gov.uk/market-trend-data/"
+    "house-price-index-data/Average-prices-2025-12.csv"
+)
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
 DEFAULT_OFSTED_TIMELINE_YEARS = 10
@@ -65,12 +93,26 @@ class PipelineSettings(BaseModel):
     demographics_release_slugs: tuple[str, ...]
     demographics_lookback_years: PositiveInt
     demographics_source_strict_mode: bool
+    dfe_attendance_publication_slug: str
+    dfe_attendance_release_slugs: tuple[str, ...]
+    dfe_attendance_lookback_years: PositiveInt
+    dfe_attendance_source_strict_mode: bool
+    dfe_behaviour_publication_slug: str
+    dfe_behaviour_release_slugs: tuple[str, ...]
+    dfe_behaviour_lookback_years: PositiveInt
+    dfe_behaviour_source_strict_mode: bool
+    dfe_workforce_publication_slug: str
+    dfe_workforce_release_slugs: tuple[str, ...]
+    dfe_workforce_lookback_years: PositiveInt
+    dfe_workforce_source_strict_mode: bool
     dfe_performance_ks2_dataset_id: str
     dfe_performance_ks4_dataset_id: str
     dfe_performance_lookback_years: PositiveInt
     dfe_performance_page_size: PositiveInt
     imd_source_csv: str | None = None
     imd_release: str
+    house_prices_source_csv: str | None = None
+    house_prices_source_url: str | None = None
     police_crime_source_archive_url: str | None = None
     police_crime_source_mode: str
     police_crime_radius_meters: PositiveFloat
@@ -81,10 +123,14 @@ class PipelineSettings(BaseModel):
     ofsted_timeline_include_historical_baseline: bool = True
     max_reject_ratio_gias: float
     max_reject_ratio_dfe_characteristics: float
+    max_reject_ratio_dfe_attendance: float
+    max_reject_ratio_dfe_behaviour: float
+    max_reject_ratio_dfe_workforce: float
     max_reject_ratio_dfe_performance: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
     max_reject_ratio_ons_imd: float
+    max_reject_ratio_uk_house_prices: float
     max_reject_ratio_police_crime_context: float
     http_timeout_seconds: PositiveFloat
     max_retries: NonNegativeInt
@@ -111,10 +157,14 @@ class SchoolSearchSettings(BaseModel):
 class DataQualitySettings(BaseModel):
     freshness_sla_hours_gias: PositiveInt
     freshness_sla_hours_dfe_characteristics: PositiveInt
+    freshness_sla_hours_dfe_attendance: PositiveInt
+    freshness_sla_hours_dfe_behaviour: PositiveInt
+    freshness_sla_hours_dfe_workforce: PositiveInt
     freshness_sla_hours_dfe_performance: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
     freshness_sla_hours_ons_imd: PositiveInt
+    freshness_sla_hours_uk_house_prices: PositiveInt
     freshness_sla_hours_police_crime_context: PositiveInt
     coverage_drift_threshold: float
     max_consecutive_hard_failures: PositiveInt
@@ -125,10 +175,14 @@ class DataQualitySettings(BaseModel):
         return {
             "gias": float(self.freshness_sla_hours_gias),
             "dfe_characteristics": float(self.freshness_sla_hours_dfe_characteristics),
+            "dfe_attendance": float(self.freshness_sla_hours_dfe_attendance),
+            "dfe_behaviour": float(self.freshness_sla_hours_dfe_behaviour),
+            "dfe_workforce": float(self.freshness_sla_hours_dfe_workforce),
             "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
             "ofsted_latest": float(self.freshness_sla_hours_ofsted_latest),
             "ofsted_timeline": float(self.freshness_sla_hours_ofsted_timeline),
             "ons_imd": float(self.freshness_sla_hours_ons_imd),
+            "uk_house_prices": float(self.freshness_sla_hours_uk_house_prices),
             "police_crime_context": float(self.freshness_sla_hours_police_crime_context),
         }
 
@@ -185,6 +239,57 @@ class AppSettings(BaseSettings):
         default=DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE,
         validation_alias="CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE",
     )
+    dfe_attendance_publication_slug: str = Field(
+        default=DEFAULT_DFE_ATTENDANCE_PUBLICATION_SLUG,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_ATTENDANCE_PUBLICATION_SLUG",
+    )
+    dfe_attendance_release_slugs: str | None = Field(
+        default=",".join(DEFAULT_DFE_ATTENDANCE_RELEASE_SLUGS),
+        validation_alias="CIVITAS_DFE_ATTENDANCE_RELEASE_SLUGS",
+    )
+    dfe_attendance_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DFE_ATTENDANCE_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DFE_ATTENDANCE_LOOKBACK_YEARS",
+    )
+    dfe_attendance_source_strict_mode: bool = Field(
+        default=DEFAULT_DFE_ATTENDANCE_SOURCE_STRICT_MODE,
+        validation_alias="CIVITAS_DFE_ATTENDANCE_SOURCE_STRICT_MODE",
+    )
+    dfe_behaviour_publication_slug: str = Field(
+        default=DEFAULT_DFE_BEHAVIOUR_PUBLICATION_SLUG,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_BEHAVIOUR_PUBLICATION_SLUG",
+    )
+    dfe_behaviour_release_slugs: str | None = Field(
+        default=",".join(DEFAULT_DFE_BEHAVIOUR_RELEASE_SLUGS),
+        validation_alias="CIVITAS_DFE_BEHAVIOUR_RELEASE_SLUGS",
+    )
+    dfe_behaviour_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DFE_BEHAVIOUR_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DFE_BEHAVIOUR_LOOKBACK_YEARS",
+    )
+    dfe_behaviour_source_strict_mode: bool = Field(
+        default=DEFAULT_DFE_BEHAVIOUR_SOURCE_STRICT_MODE,
+        validation_alias="CIVITAS_DFE_BEHAVIOUR_SOURCE_STRICT_MODE",
+    )
+    dfe_workforce_publication_slug: str = Field(
+        default=DEFAULT_DFE_WORKFORCE_PUBLICATION_SLUG,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_WORKFORCE_PUBLICATION_SLUG",
+    )
+    dfe_workforce_release_slugs: str | None = Field(
+        default=",".join(DEFAULT_DFE_WORKFORCE_RELEASE_SLUGS),
+        validation_alias="CIVITAS_DFE_WORKFORCE_RELEASE_SLUGS",
+    )
+    dfe_workforce_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DFE_WORKFORCE_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DFE_WORKFORCE_LOOKBACK_YEARS",
+    )
+    dfe_workforce_source_strict_mode: bool = Field(
+        default=DEFAULT_DFE_WORKFORCE_SOURCE_STRICT_MODE,
+        validation_alias="CIVITAS_DFE_WORKFORCE_SOURCE_STRICT_MODE",
+    )
     dfe_performance_ks2_dataset_id: str = Field(
         default=DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID,
         min_length=1,
@@ -212,6 +317,14 @@ class AppSettings(BaseSettings):
         default=DEFAULT_IMD_RELEASE,
         min_length=1,
         validation_alias="CIVITAS_IMD_RELEASE",
+    )
+    house_prices_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_HOUSE_PRICES_SOURCE_CSV",
+    )
+    house_prices_source_url: str | None = Field(
+        default=DEFAULT_HOUSE_PRICES_SOURCE_URL,
+        validation_alias="CIVITAS_HOUSE_PRICES_SOURCE_URL",
     )
     police_crime_source_archive_url: str | None = Field(
         default=None,
@@ -259,6 +372,24 @@ class AppSettings(BaseSettings):
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS",
     )
+    pipeline_max_reject_ratio_dfe_attendance: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_ATTENDANCE",
+    )
+    pipeline_max_reject_ratio_dfe_behaviour: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_BEHAVIOUR",
+    )
+    pipeline_max_reject_ratio_dfe_workforce: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_WORKFORCE",
+    )
     pipeline_max_reject_ratio_dfe_performance: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
         ge=0.0,
@@ -282,6 +413,12 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD",
+    )
+    pipeline_max_reject_ratio_uk_house_prices: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_UK_HOUSE_PRICES",
     )
     pipeline_max_reject_ratio_police_crime_context: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -354,6 +491,18 @@ class AppSettings(BaseSettings):
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS",
     )
+    data_quality_freshness_sla_hours_dfe_attendance: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_ATTENDANCE",
+    )
+    data_quality_freshness_sla_hours_dfe_behaviour: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_BEHAVIOUR",
+    )
+    data_quality_freshness_sla_hours_dfe_workforce: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_WORKFORCE",
+    )
     data_quality_freshness_sla_hours_dfe_performance: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
@@ -369,6 +518,10 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_ons_imd: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD",
+    )
+    data_quality_freshness_sla_hours_uk_house_prices: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_UK_HOUSE_PRICES",
     )
     data_quality_freshness_sla_hours_police_crime_context: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -407,12 +560,26 @@ class AppSettings(BaseSettings):
             demographics_release_slugs=_parse_csv_tokens(self.demographics_release_slugs),
             demographics_lookback_years=self.demographics_lookback_years,
             demographics_source_strict_mode=self.demographics_source_strict_mode,
+            dfe_attendance_publication_slug=self.dfe_attendance_publication_slug,
+            dfe_attendance_release_slugs=_parse_csv_tokens(self.dfe_attendance_release_slugs),
+            dfe_attendance_lookback_years=self.dfe_attendance_lookback_years,
+            dfe_attendance_source_strict_mode=self.dfe_attendance_source_strict_mode,
+            dfe_behaviour_publication_slug=self.dfe_behaviour_publication_slug,
+            dfe_behaviour_release_slugs=_parse_csv_tokens(self.dfe_behaviour_release_slugs),
+            dfe_behaviour_lookback_years=self.dfe_behaviour_lookback_years,
+            dfe_behaviour_source_strict_mode=self.dfe_behaviour_source_strict_mode,
+            dfe_workforce_publication_slug=self.dfe_workforce_publication_slug,
+            dfe_workforce_release_slugs=_parse_csv_tokens(self.dfe_workforce_release_slugs),
+            dfe_workforce_lookback_years=self.dfe_workforce_lookback_years,
+            dfe_workforce_source_strict_mode=self.dfe_workforce_source_strict_mode,
             dfe_performance_ks2_dataset_id=self.dfe_performance_ks2_dataset_id,
             dfe_performance_ks4_dataset_id=self.dfe_performance_ks4_dataset_id,
             dfe_performance_lookback_years=self.dfe_performance_lookback_years,
             dfe_performance_page_size=self.dfe_performance_page_size,
             imd_source_csv=self.imd_source_csv,
             imd_release=self.imd_release,
+            house_prices_source_csv=self.house_prices_source_csv,
+            house_prices_source_url=self.house_prices_source_url,
             police_crime_source_archive_url=self.police_crime_source_archive_url,
             police_crime_source_mode=self.police_crime_source_mode,
             police_crime_radius_meters=self.police_crime_radius_meters,
@@ -427,10 +594,14 @@ class AppSettings(BaseSettings):
             max_reject_ratio_dfe_characteristics=(
                 self.pipeline_max_reject_ratio_dfe_characteristics
             ),
+            max_reject_ratio_dfe_attendance=self.pipeline_max_reject_ratio_dfe_attendance,
+            max_reject_ratio_dfe_behaviour=self.pipeline_max_reject_ratio_dfe_behaviour,
+            max_reject_ratio_dfe_workforce=self.pipeline_max_reject_ratio_dfe_workforce,
             max_reject_ratio_dfe_performance=self.pipeline_max_reject_ratio_dfe_performance,
             max_reject_ratio_ofsted_latest=self.pipeline_max_reject_ratio_ofsted_latest,
             max_reject_ratio_ofsted_timeline=self.pipeline_max_reject_ratio_ofsted_timeline,
             max_reject_ratio_ons_imd=self.pipeline_max_reject_ratio_ons_imd,
+            max_reject_ratio_uk_house_prices=self.pipeline_max_reject_ratio_uk_house_prices,
             max_reject_ratio_police_crime_context=(
                 self.pipeline_max_reject_ratio_police_crime_context
             ),
@@ -469,6 +640,9 @@ class AppSettings(BaseSettings):
             freshness_sla_hours_dfe_characteristics=(
                 self.data_quality_freshness_sla_hours_dfe_characteristics
             ),
+            freshness_sla_hours_dfe_attendance=self.data_quality_freshness_sla_hours_dfe_attendance,
+            freshness_sla_hours_dfe_behaviour=self.data_quality_freshness_sla_hours_dfe_behaviour,
+            freshness_sla_hours_dfe_workforce=self.data_quality_freshness_sla_hours_dfe_workforce,
             freshness_sla_hours_dfe_performance=(
                 self.data_quality_freshness_sla_hours_dfe_performance
             ),
@@ -477,6 +651,9 @@ class AppSettings(BaseSettings):
                 self.data_quality_freshness_sla_hours_ofsted_timeline
             ),
             freshness_sla_hours_ons_imd=self.data_quality_freshness_sla_hours_ons_imd,
+            freshness_sla_hours_uk_house_prices=(
+                self.data_quality_freshness_sla_hours_uk_house_prices
+            ),
             freshness_sla_hours_police_crime_context=(
                 self.data_quality_freshness_sla_hours_police_crime_context
             ),
@@ -489,7 +666,12 @@ class AppSettings(BaseSettings):
         "gias_source_csv",
         "gias_source_zip",
         "demographics_release_slugs",
+        "dfe_attendance_release_slugs",
+        "dfe_behaviour_release_slugs",
+        "dfe_workforce_release_slugs",
         "imd_source_csv",
+        "house_prices_source_csv",
+        "house_prices_source_url",
         "police_crime_source_archive_url",
         "ofsted_latest_source_csv",
         "ofsted_timeline_source_index_url",
@@ -509,6 +691,9 @@ class AppSettings(BaseSettings):
         "demographics_source_mode",
         "demographics_spc_publication_slug",
         "demographics_sen_publication_slug",
+        "dfe_attendance_publication_slug",
+        "dfe_behaviour_publication_slug",
+        "dfe_workforce_publication_slug",
         "dfe_performance_ks2_dataset_id",
         "dfe_performance_ks4_dataset_id",
         mode="before",

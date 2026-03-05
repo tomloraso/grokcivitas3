@@ -108,15 +108,157 @@ def _ensure_schema(engine: Engine) -> None:
                     imd_score double precision NOT NULL,
                     imd_rank integer NOT NULL,
                     imd_decile integer NOT NULL,
+                    income_score double precision NULL,
+                    income_rank integer NULL,
+                    income_decile integer NULL,
+                    employment_score double precision NULL,
+                    employment_rank integer NULL,
+                    employment_decile integer NULL,
+                    education_score double precision NULL,
+                    education_rank integer NULL,
+                    education_decile integer NULL,
+                    health_score double precision NULL,
+                    health_rank integer NULL,
+                    health_decile integer NULL,
+                    crime_score double precision NULL,
+                    crime_rank integer NULL,
+                    crime_decile integer NULL,
+                    barriers_score double precision NULL,
+                    barriers_rank integer NULL,
+                    barriers_decile integer NULL,
+                    living_environment_score double precision NULL,
+                    living_environment_rank integer NULL,
+                    living_environment_decile integer NULL,
                     idaci_score double precision NOT NULL,
                     idaci_rank integer NOT NULL,
                     idaci_decile integer NOT NULL,
+                    population_total integer NULL,
                     source_release text NOT NULL,
                     lsoa_vintage text NOT NULL,
                     source_file_url text NOT NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_name text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS income_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS employment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS education_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS health_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS crime_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS barriers_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_rank integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS population_total integer NULL"
             )
         )
 
@@ -235,7 +377,9 @@ def test_ons_imd_pipeline_stage_and_promote_are_idempotent(
                 SELECT
                     imd_score,
                     imd_rank,
+                    income_score,
                     idaci_score,
+                    population_total,
                     source_release,
                     lsoa_vintage
                 FROM area_deprivation
@@ -243,7 +387,7 @@ def test_ons_imd_pipeline_stage_and_promote_are_idempotent(
                 """
             )
         ).one()
-        assert deduped_row == (24.0, 95, 0.4, "IoD2025", "2021")
+        assert deduped_row == (24.0, 95, 0.38, 0.4, 1800, "IoD2025", "2021")
 
         rejection_reason_codes = {
             row[0]

@@ -100,8 +100,12 @@ uv run --project apps/backend python tools/scripts/verify_source_contracts_runti
 uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source dfe_attendance
+uv run --project apps/backend civitas pipeline run --source dfe_behaviour
+uv run --project apps/backend civitas pipeline run --source dfe_workforce
 uv run --project apps/backend civitas pipeline run --source dfe_performance
 uv run --project apps/backend civitas pipeline run --source ons_imd
+uv run --project apps/backend civitas pipeline run --source uk_house_prices
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --source ofsted_timeline
@@ -167,6 +171,24 @@ CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS=3
 
 # DfE API maximum supported value is 10000
 CIVITAS_DFE_PERFORMANCE_PAGE_SIZE=10000
+```
+
+For DfE behaviour ingestion, these `.env` values configure publication/release selection:
+
+```bash
+CIVITAS_DFE_BEHAVIOUR_PUBLICATION_SLUG=suspensions-and-permanent-exclusions-in-england
+CIVITAS_DFE_BEHAVIOUR_RELEASE_SLUGS=2022-23,2023-24,2024-25-autumn-term
+CIVITAS_DFE_BEHAVIOUR_LOOKBACK_YEARS=3
+CIVITAS_DFE_BEHAVIOUR_SOURCE_STRICT_MODE=true
+```
+
+For DfE workforce ingestion, these `.env` values configure publication/release selection:
+
+```bash
+CIVITAS_DFE_WORKFORCE_PUBLICATION_SLUG=school-workforce-in-england
+CIVITAS_DFE_WORKFORCE_RELEASE_SLUGS=2022,2023,2024
+CIVITAS_DFE_WORKFORCE_LOOKBACK_YEARS=3
+CIVITAS_DFE_WORKFORCE_SOURCE_STRICT_MODE=true
 ```
 
 For ONS IMD runs, these optional `.env` values control release selection and manual source override:

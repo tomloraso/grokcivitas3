@@ -9,12 +9,18 @@ from civitas.api.main import app
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
+    SchoolAreaCrimeAnnualRateDto,
     SchoolAreaCrimeCategoryDto,
     SchoolAreaCrimeDto,
     SchoolAreaDeprivationDto,
+    SchoolAreaHousePricePointDto,
+    SchoolAreaHousePricesDto,
+    SchoolAttendanceLatestDto,
+    SchoolBehaviourLatestDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsEthnicityGroupDto,
     SchoolDemographicsLatestDto,
+    SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
     SchoolOfstedTimelineCoverageDto,
     SchoolOfstedTimelineDto,
@@ -25,6 +31,7 @@ from civitas.application.school_profiles.dto import (
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
     SchoolProfileSectionCompletenessDto,
+    SchoolWorkforceLatestDto,
 )
 from civitas.application.school_profiles.errors import (
     SchoolProfileDataUnavailableError,
@@ -76,15 +83,23 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 academic_year="2024/25",
                 disadvantaged_pct=17.2,
                 fsm_pct=16.9,
+                fsm6_pct=18.1,
                 sen_pct=13.0,
                 ehcp_pct=2.1,
                 eal_pct=8.4,
                 first_language_english_pct=90.6,
                 first_language_unclassified_pct=1.0,
+                male_pct=49.2,
+                female_pct=50.8,
+                pupil_mobility_pct=3.4,
                 coverage=SchoolDemographicsCoverageDto(
                     fsm_supported=True,
                     ethnicity_supported=True,
                     top_languages_supported=False,
+                    fsm6_supported=True,
+                    gender_supported=True,
+                    mobility_supported=True,
+                    send_primary_need_supported=False,
                 ),
                 ethnicity_breakdown=(
                     SchoolDemographicsEthnicityGroupDto(
@@ -94,6 +109,34 @@ def test_get_school_profile_returns_expected_contract() -> None:
                         count=98,
                     ),
                 ),
+            ),
+            attendance_latest=SchoolAttendanceLatestDto(
+                academic_year="2024/25",
+                overall_attendance_pct=93.2,
+                overall_absence_pct=6.8,
+                persistent_absence_pct=14.1,
+            ),
+            behaviour_latest=SchoolBehaviourLatestDto(
+                academic_year="2024/25",
+                suspensions_count=121,
+                suspensions_rate=16.4,
+                permanent_exclusions_count=1,
+                permanent_exclusions_rate=0.1,
+            ),
+            workforce_latest=SchoolWorkforceLatestDto(
+                academic_year="2024/25",
+                pupil_teacher_ratio=16.3,
+                supply_staff_pct=2.4,
+                teachers_3plus_years_pct=76.5,
+                teacher_turnover_pct=9.8,
+                qts_pct=95.2,
+                qualifications_level6_plus_pct=81.1,
+            ),
+            leadership_snapshot=SchoolLeadershipSnapshotDto(
+                headteacher_name="A. Jones",
+                headteacher_start_date=date(2020, 9, 1),
+                headteacher_tenure_years=4.5,
+                leadership_turnover_score=1.2,
             ),
             performance=SchoolPerformanceDto(
                 latest=SchoolPerformanceYearDto(
@@ -211,12 +254,50 @@ def test_get_school_profile_returns_expected_contract() -> None:
                     imd_decile=3,
                     idaci_score=0.241,
                     idaci_decile=2,
+                    income_score=0.12,
+                    income_rank=7200,
+                    income_decile=2,
+                    employment_score=0.11,
+                    employment_rank=7000,
+                    employment_decile=2,
+                    education_score=0.16,
+                    education_rank=8100,
+                    education_decile=3,
+                    health_score=0.13,
+                    health_rank=7600,
+                    health_decile=3,
+                    crime_score=0.18,
+                    crime_rank=8900,
+                    crime_decile=4,
+                    barriers_score=0.14,
+                    barriers_rank=7800,
+                    barriers_decile=3,
+                    living_environment_score=0.17,
+                    living_environment_rank=8400,
+                    living_environment_decile=4,
+                    population_total=2000,
+                    local_authority_district_code="E09000033",
+                    local_authority_district_name="Westminster",
                     source_release="IoD2025",
                 ),
                 crime=SchoolAreaCrimeDto(
                     radius_miles=1.0,
                     latest_month="2026-01",
                     total_incidents=486,
+                    population_denominator=2000,
+                    incidents_per_1000=243.0,
+                    annual_incidents_per_1000=(
+                        SchoolAreaCrimeAnnualRateDto(
+                            year=2025,
+                            total_incidents=240,
+                            incidents_per_1000=120.0,
+                        ),
+                        SchoolAreaCrimeAnnualRateDto(
+                            year=2026,
+                            total_incidents=486,
+                            incidents_per_1000=243.0,
+                        ),
+                    ),
                     categories=(
                         SchoolAreaCrimeCategoryDto(
                             category="violent-crime",
@@ -224,16 +305,71 @@ def test_get_school_profile_returns_expected_contract() -> None:
                         ),
                     ),
                 ),
+                house_prices=SchoolAreaHousePricesDto(
+                    area_code="E09000033",
+                    area_name="Westminster",
+                    latest_month="2026-01",
+                    average_price=810000.0,
+                    annual_change_pct=6.0,
+                    monthly_change_pct=0.5,
+                    three_year_change_pct=None,
+                    trend=(
+                        SchoolAreaHousePricePointDto(
+                            month="2025-11",
+                            average_price=800000.0,
+                            annual_change_pct=5.4,
+                            monthly_change_pct=0.7,
+                        ),
+                        SchoolAreaHousePricePointDto(
+                            month="2025-12",
+                            average_price=805000.0,
+                            annual_change_pct=5.7,
+                            monthly_change_pct=0.6,
+                        ),
+                        SchoolAreaHousePricePointDto(
+                            month="2026-01",
+                            average_price=810000.0,
+                            annual_change_pct=6.0,
+                            monthly_change_pct=0.5,
+                        ),
+                    ),
+                ),
                 coverage=SchoolAreaContextCoverageDto(
                     has_deprivation=True,
                     has_crime=True,
                     crime_months_available=12,
+                    has_house_prices=True,
+                    house_price_months_available=3,
                 ),
             ),
             completeness=SchoolProfileCompletenessDto(
                 demographics=SchoolProfileSectionCompletenessDto(
                     status="partial",
                     reason_code="partial_metric_coverage",
+                    last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                attendance=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                behaviour=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                workforce=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
+                leadership=SchoolProfileSectionCompletenessDto(
+                    status="available",
+                    reason_code=None,
                     last_updated_at=datetime(2026, 1, 31, 9, 0, tzinfo=timezone.utc),
                     years_available=None,
                 ),
@@ -267,6 +403,12 @@ def test_get_school_profile_returns_expected_contract() -> None:
                     last_updated_at=datetime(2026, 1, 31, 13, 0, tzinfo=timezone.utc),
                     years_available=None,
                 ),
+                area_house_prices=SchoolProfileSectionCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=datetime(2026, 1, 31, 13, 30, tzinfo=timezone.utc),
+                    years_available=None,
+                ),
             ),
         )
     )
@@ -290,13 +432,21 @@ def test_get_school_profile_returns_expected_contract() -> None:
             "academic_year": "2024/25",
             "disadvantaged_pct": 17.2,
             "fsm_pct": 16.9,
+            "fsm6_pct": 18.1,
             "sen_pct": 13.0,
             "ehcp_pct": 2.1,
             "eal_pct": 8.4,
             "first_language_english_pct": 90.6,
             "first_language_unclassified_pct": 1.0,
+            "male_pct": 49.2,
+            "female_pct": 50.8,
+            "pupil_mobility_pct": 3.4,
             "coverage": {
                 "fsm_supported": True,
+                "fsm6_supported": True,
+                "gender_supported": True,
+                "mobility_supported": True,
+                "send_primary_need_supported": False,
                 "ethnicity_supported": True,
                 "top_languages_supported": False,
             },
@@ -308,6 +458,36 @@ def test_get_school_profile_returns_expected_contract() -> None:
                     "count": 98,
                 }
             ],
+            "send_primary_needs": [],
+            "top_home_languages": [],
+        },
+        "attendance_latest": {
+            "academic_year": "2024/25",
+            "overall_attendance_pct": 93.2,
+            "overall_absence_pct": 6.8,
+            "persistent_absence_pct": 14.1,
+        },
+        "behaviour_latest": {
+            "academic_year": "2024/25",
+            "suspensions_count": 121,
+            "suspensions_rate": 16.4,
+            "permanent_exclusions_count": 1,
+            "permanent_exclusions_rate": 0.1,
+        },
+        "workforce_latest": {
+            "academic_year": "2024/25",
+            "pupil_teacher_ratio": 16.3,
+            "supply_staff_pct": 2.4,
+            "teachers_3plus_years_pct": 76.5,
+            "teacher_turnover_pct": 9.8,
+            "qts_pct": 95.2,
+            "qualifications_level6_plus_pct": 81.1,
+        },
+        "leadership_snapshot": {
+            "headteacher_name": "A. Jones",
+            "headteacher_start_date": "2020-09-01",
+            "headteacher_tenure_years": 4.5,
+            "leadership_turnover_score": 1.2,
         },
         "performance": {
             "latest": {
@@ -425,12 +605,50 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 "imd_decile": 3,
                 "idaci_score": 0.241,
                 "idaci_decile": 2,
+                "income_score": 0.12,
+                "income_rank": 7200,
+                "income_decile": 2,
+                "employment_score": 0.11,
+                "employment_rank": 7000,
+                "employment_decile": 2,
+                "education_score": 0.16,
+                "education_rank": 8100,
+                "education_decile": 3,
+                "health_score": 0.13,
+                "health_rank": 7600,
+                "health_decile": 3,
+                "crime_score": 0.18,
+                "crime_rank": 8900,
+                "crime_decile": 4,
+                "barriers_score": 0.14,
+                "barriers_rank": 7800,
+                "barriers_decile": 3,
+                "living_environment_score": 0.17,
+                "living_environment_rank": 8400,
+                "living_environment_decile": 4,
+                "population_total": 2000,
+                "local_authority_district_code": "E09000033",
+                "local_authority_district_name": "Westminster",
                 "source_release": "IoD2025",
             },
             "crime": {
                 "radius_miles": 1.0,
                 "latest_month": "2026-01",
                 "total_incidents": 486,
+                "population_denominator": 2000,
+                "incidents_per_1000": 243.0,
+                "annual_incidents_per_1000": [
+                    {
+                        "year": 2025,
+                        "total_incidents": 240,
+                        "incidents_per_1000": 120.0,
+                    },
+                    {
+                        "year": 2026,
+                        "total_incidents": 486,
+                        "incidents_per_1000": 243.0,
+                    },
+                ],
                 "categories": [
                     {
                         "category": "violent-crime",
@@ -438,16 +656,72 @@ def test_get_school_profile_returns_expected_contract() -> None:
                     }
                 ],
             },
+            "house_prices": {
+                "area_code": "E09000033",
+                "area_name": "Westminster",
+                "latest_month": "2026-01",
+                "average_price": 810000.0,
+                "annual_change_pct": 6.0,
+                "monthly_change_pct": 0.5,
+                "three_year_change_pct": None,
+                "trend": [
+                    {
+                        "month": "2025-11",
+                        "average_price": 800000.0,
+                        "annual_change_pct": 5.4,
+                        "monthly_change_pct": 0.7,
+                    },
+                    {
+                        "month": "2025-12",
+                        "average_price": 805000.0,
+                        "annual_change_pct": 5.7,
+                        "monthly_change_pct": 0.6,
+                    },
+                    {
+                        "month": "2026-01",
+                        "average_price": 810000.0,
+                        "annual_change_pct": 6.0,
+                        "monthly_change_pct": 0.5,
+                    },
+                ],
+            },
             "coverage": {
                 "has_deprivation": True,
                 "has_crime": True,
                 "crime_months_available": 12,
+                "has_house_prices": True,
+                "house_price_months_available": 3,
             },
         },
+        "benchmarks": {"metrics": []},
         "completeness": {
             "demographics": {
                 "status": "partial",
                 "reason_code": "partial_metric_coverage",
+                "last_updated_at": "2026-01-31T09:00:00Z",
+                "years_available": None,
+            },
+            "attendance": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-31T09:00:00Z",
+                "years_available": None,
+            },
+            "behaviour": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-31T09:00:00Z",
+                "years_available": None,
+            },
+            "workforce": {
+                "status": "available",
+                "reason_code": None,
+                "last_updated_at": "2026-01-31T09:00:00Z",
+                "years_available": None,
+            },
+            "leadership": {
+                "status": "available",
+                "reason_code": None,
                 "last_updated_at": "2026-01-31T09:00:00Z",
                 "years_available": None,
             },
@@ -481,6 +755,12 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 "last_updated_at": "2026-01-31T13:00:00Z",
                 "years_available": None,
             },
+            "area_house_prices": {
+                "status": "partial",
+                "reason_code": "insufficient_years_published",
+                "last_updated_at": "2026-01-31T13:30:00Z",
+                "years_available": None,
+            },
         },
     }
     assert fake_use_case.calls == ["123456"]
@@ -500,6 +780,10 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
                 lng=-0.1416,
             ),
             demographics_latest=None,
+            attendance_latest=None,
+            behaviour_latest=None,
+            workforce_latest=None,
+            leadership_snapshot=None,
             performance=None,
             ofsted_latest=None,
             ofsted_timeline=None,
@@ -508,6 +792,30 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
                 demographics=SchoolProfileSectionCompletenessDto(
                     status="unavailable",
                     reason_code="source_file_missing_for_year",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                attendance=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                behaviour=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                workforce=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                leadership=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="source_missing",
                     last_updated_at=None,
                     years_available=None,
                 ),
@@ -541,6 +849,12 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
                     last_updated_at=None,
                     years_available=None,
                 ),
+                area_house_prices=SchoolProfileSectionCompletenessDto(
+                    status="unavailable",
+                    reason_code="not_joined_yet",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
             ),
         )
     )
@@ -550,6 +864,10 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
 
     assert response.status_code == 200
     assert response.json()["demographics_latest"] is None
+    assert response.json()["attendance_latest"] is None
+    assert response.json()["behaviour_latest"] is None
+    assert response.json()["workforce_latest"] is None
+    assert response.json()["leadership_snapshot"] is None
     assert response.json()["performance"] is None
     assert response.json()["ofsted_latest"] is None
     assert response.json()["ofsted_timeline"] == {
@@ -564,16 +882,43 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert response.json()["area_context"] == {
         "deprivation": None,
         "crime": None,
+        "house_prices": None,
         "coverage": {
             "has_deprivation": False,
             "has_crime": False,
             "crime_months_available": 0,
+            "has_house_prices": False,
+            "house_price_months_available": 0,
         },
     }
     assert response.json()["completeness"] == {
         "demographics": {
             "status": "unavailable",
             "reason_code": "source_file_missing_for_year",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "attendance": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "behaviour": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "workforce": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "leadership": {
+            "status": "unavailable",
+            "reason_code": "source_missing",
             "last_updated_at": None,
             "years_available": None,
         },
@@ -602,6 +947,12 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             "years_available": None,
         },
         "area_crime": {
+            "status": "unavailable",
+            "reason_code": "not_joined_yet",
+            "last_updated_at": None,
+            "years_available": None,
+        },
+        "area_house_prices": {
             "status": "unavailable",
             "reason_code": "not_joined_yet",
             "last_updated_at": None,

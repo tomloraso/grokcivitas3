@@ -104,8 +104,12 @@ From repo root:
 ```bash
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source dfe_attendance
+uv run --project apps/backend civitas pipeline run --source dfe_behaviour
+uv run --project apps/backend civitas pipeline run --source dfe_workforce
 uv run --project apps/backend civitas pipeline run --source dfe_performance
 uv run --project apps/backend civitas pipeline run --source ons_imd
+uv run --project apps/backend civitas pipeline run --source uk_house_prices
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --source ofsted_timeline
@@ -125,5 +129,9 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
 - `dfe_characteristics` now runs the Phase S release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
 - `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.
+- `dfe_attendance` promotes yearly school attendance and persistent-absence metrics into `school_attendance_yearly`.
+- `dfe_behaviour` promotes yearly school suspensions and exclusions metrics into `school_behaviour_yearly`.
+- `dfe_workforce` promotes yearly workforce rows into `school_workforce_yearly` and latest leadership attributes into `school_leadership_snapshot`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
+- `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

@@ -1162,6 +1162,12 @@ def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]
         return ("schools", None)
     if source == PipelineSource.DFE_CHARACTERISTICS:
         return ("school_demographics_yearly", "demographics")
+    if source == PipelineSource.DFE_ATTENDANCE:
+        return ("school_attendance_yearly", "attendance")
+    if source == PipelineSource.DFE_BEHAVIOUR:
+        return ("school_behaviour_yearly", "behaviour")
+    if source == PipelineSource.DFE_WORKFORCE:
+        return ("school_workforce_yearly", "workforce")
     if source == PipelineSource.DFE_PERFORMANCE:
         return ("school_performance_yearly", "school_performance")
     if source == PipelineSource.OFSTED_LATEST:
@@ -1170,6 +1176,8 @@ def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]
         return ("ofsted_inspections", "ofsted_timeline")
     if source == PipelineSource.ONS_IMD:
         return ("area_deprivation", "area_deprivation")
+    if source == PipelineSource.UK_HOUSE_PRICES:
+        return ("area_house_price_context", "area_house_prices")
     if source == PipelineSource.POLICE_CRIME_CONTEXT:
         return ("area_crime_context", "area_crime")
     return (source.value, None)

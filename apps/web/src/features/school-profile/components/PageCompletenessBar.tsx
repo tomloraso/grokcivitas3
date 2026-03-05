@@ -17,12 +17,17 @@ export function PageCompletenessBar({
 }: PageCompletenessBarProps): JSX.Element | null {
   const sections = [
     { label: "Demographics", ...completeness.demographics },
+    { label: "Attendance", ...completeness.attendance },
+    { label: "Behaviour", ...completeness.behaviour },
+    { label: "Workforce", ...completeness.workforce },
+    { label: "Leadership", ...completeness.leadership },
     { label: "Performance", ...completeness.performance },
     { label: "Trends", ...completeness.trends },
     { label: "Ofsted", ...completeness.ofstedLatest },
     { label: "Ofsted history", ...completeness.ofstedTimeline },
     { label: "Area deprivation", ...completeness.areaDeprivation },
-    { label: "Area crime", ...completeness.areaCrime }
+    { label: "Area crime", ...completeness.areaCrime },
+    { label: "Area house prices", ...completeness.areaHousePrices }
   ];
 
   const incomplete = sections.filter((s) => s.status !== "available");

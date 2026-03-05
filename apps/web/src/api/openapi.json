@@ -306,6 +306,55 @@
           }
         }
       }
+    },
+    "/api/v1/schools/{urn}/trends/dashboard": {
+      "get": {
+        "tags": [
+          "tasks",
+          "schools"
+        ],
+        "summary": "Get School Trend Dashboard",
+        "operationId": "get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Urn"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolTrendDashboardResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "School URN not found."
+          },
+          "503": {
+            "description": "School trends datastore unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -357,13 +406,23 @@
           "crime_months_available": {
             "type": "integer",
             "title": "Crime Months Available"
+          },
+          "has_house_prices": {
+            "type": "boolean",
+            "title": "Has House Prices"
+          },
+          "house_price_months_available": {
+            "type": "integer",
+            "title": "House Price Months Available"
           }
         },
         "type": "object",
         "required": [
           "has_deprivation",
           "has_crime",
-          "crime_months_available"
+          "crime_months_available",
+          "has_house_prices",
+          "house_price_months_available"
         ],
         "title": "SchoolProfileAreaContextCoverageResponse"
       },
@@ -389,6 +448,16 @@
               }
             ]
           },
+          "house_prices": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileAreaHousePricesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "coverage": {
             "$ref": "#/components/schemas/SchoolProfileAreaContextCoverageResponse"
           }
@@ -397,9 +466,40 @@
         "required": [
           "deprivation",
           "crime",
+          "house_prices",
           "coverage"
         ],
         "title": "SchoolProfileAreaContextResponse"
+      },
+      "SchoolProfileAreaCrimeAnnualRateResponse": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "total_incidents": {
+            "type": "integer",
+            "title": "Total Incidents"
+          },
+          "incidents_per_1000": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incidents Per 1000"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "total_incidents",
+          "incidents_per_1000"
+        ],
+        "title": "SchoolProfileAreaCrimeAnnualRateResponse"
       },
       "SchoolProfileAreaCrimeCategoryResponse": {
         "properties": {
@@ -433,6 +533,35 @@
             "type": "integer",
             "title": "Total Incidents"
           },
+          "population_denominator": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Denominator"
+          },
+          "incidents_per_1000": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incidents Per 1000"
+          },
+          "annual_incidents_per_1000": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileAreaCrimeAnnualRateResponse"
+            },
+            "type": "array",
+            "title": "Annual Incidents Per 1000"
+          },
           "categories": {
             "items": {
               "$ref": "#/components/schemas/SchoolProfileAreaCrimeCategoryResponse"
@@ -446,6 +575,9 @@
           "radius_miles",
           "latest_month",
           "total_incidents",
+          "population_denominator",
+          "incidents_per_1000",
+          "annual_incidents_per_1000",
           "categories"
         ],
         "title": "SchoolProfileAreaCrimeResponse"
@@ -476,6 +608,270 @@
             "type": "integer",
             "title": "Idaci Decile"
           },
+          "income_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Score"
+          },
+          "income_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Rank"
+          },
+          "income_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Decile"
+          },
+          "employment_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Score"
+          },
+          "employment_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Rank"
+          },
+          "employment_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Decile"
+          },
+          "education_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Education Score"
+          },
+          "education_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Education Rank"
+          },
+          "education_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Education Decile"
+          },
+          "health_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Health Score"
+          },
+          "health_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Health Rank"
+          },
+          "health_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Health Decile"
+          },
+          "crime_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crime Score"
+          },
+          "crime_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crime Rank"
+          },
+          "crime_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crime Decile"
+          },
+          "barriers_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barriers Score"
+          },
+          "barriers_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barriers Rank"
+          },
+          "barriers_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barriers Decile"
+          },
+          "living_environment_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Living Environment Score"
+          },
+          "living_environment_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Living Environment Rank"
+          },
+          "living_environment_decile": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Living Environment Decile"
+          },
+          "population_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Population Total"
+          },
+          "local_authority_district_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Authority District Code"
+          },
+          "local_authority_district_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Authority District Name"
+          },
           "source_release": {
             "type": "string",
             "title": "Source Release"
@@ -489,13 +885,286 @@
           "imd_decile",
           "idaci_score",
           "idaci_decile",
+          "income_score",
+          "income_rank",
+          "income_decile",
+          "employment_score",
+          "employment_rank",
+          "employment_decile",
+          "education_score",
+          "education_rank",
+          "education_decile",
+          "health_score",
+          "health_rank",
+          "health_decile",
+          "crime_score",
+          "crime_rank",
+          "crime_decile",
+          "barriers_score",
+          "barriers_rank",
+          "barriers_decile",
+          "living_environment_score",
+          "living_environment_rank",
+          "living_environment_decile",
+          "population_total",
+          "local_authority_district_code",
+          "local_authority_district_name",
           "source_release"
         ],
         "title": "SchoolProfileAreaDeprivationResponse"
       },
+      "SchoolProfileAreaHousePricePointResponse": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "average_price": {
+            "type": "number",
+            "title": "Average Price"
+          },
+          "annual_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Change Pct"
+          },
+          "monthly_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Change Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "average_price",
+          "annual_change_pct",
+          "monthly_change_pct"
+        ],
+        "title": "SchoolProfileAreaHousePricePointResponse"
+      },
+      "SchoolProfileAreaHousePricesResponse": {
+        "properties": {
+          "area_code": {
+            "type": "string",
+            "title": "Area Code"
+          },
+          "area_name": {
+            "type": "string",
+            "title": "Area Name"
+          },
+          "latest_month": {
+            "type": "string",
+            "title": "Latest Month"
+          },
+          "average_price": {
+            "type": "number",
+            "title": "Average Price"
+          },
+          "annual_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annual Change Pct"
+          },
+          "monthly_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Monthly Change Pct"
+          },
+          "three_year_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Three Year Change Pct"
+          },
+          "trend": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileAreaHousePricePointResponse"
+            },
+            "type": "array",
+            "title": "Trend"
+          }
+        },
+        "type": "object",
+        "required": [
+          "area_code",
+          "area_name",
+          "latest_month",
+          "average_price",
+          "annual_change_pct",
+          "monthly_change_pct",
+          "three_year_change_pct",
+          "trend"
+        ],
+        "title": "SchoolProfileAreaHousePricesResponse"
+      },
+      "SchoolProfileAttendanceLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "overall_attendance_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Attendance Pct"
+          },
+          "overall_absence_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Absence Pct"
+          },
+          "persistent_absence_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Persistent Absence Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "overall_attendance_pct",
+          "overall_absence_pct",
+          "persistent_absence_pct"
+        ],
+        "title": "SchoolProfileAttendanceLatestResponse"
+      },
+      "SchoolProfileBehaviourLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "suspensions_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspensions Count"
+          },
+          "suspensions_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspensions Rate"
+          },
+          "permanent_exclusions_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permanent Exclusions Count"
+          },
+          "permanent_exclusions_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permanent Exclusions Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "suspensions_count",
+          "suspensions_rate",
+          "permanent_exclusions_count",
+          "permanent_exclusions_rate"
+        ],
+        "title": "SchoolProfileBehaviourLatestResponse"
+      },
+      "SchoolProfileBenchmarksResponse": {
+        "properties": {
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileMetricBenchmarkResponse"
+            },
+            "type": "array",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "title": "SchoolProfileBenchmarksResponse"
+      },
       "SchoolProfileCompletenessResponse": {
         "properties": {
           "demographics": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "attendance": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "behaviour": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "workforce": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "leadership": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           },
           "performance": {
@@ -512,16 +1181,24 @@
           },
           "area_crime": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
+          "area_house_prices": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           }
         },
         "type": "object",
         "required": [
           "demographics",
+          "attendance",
+          "behaviour",
+          "workforce",
+          "leadership",
           "performance",
           "ofsted_latest",
           "ofsted_timeline",
           "area_deprivation",
-          "area_crime"
+          "area_crime",
+          "area_house_prices"
         ],
         "title": "SchoolProfileCompletenessResponse"
       },
@@ -530,6 +1207,22 @@
           "fsm_supported": {
             "type": "boolean",
             "title": "Fsm Supported"
+          },
+          "fsm6_supported": {
+            "type": "boolean",
+            "title": "Fsm6 Supported"
+          },
+          "gender_supported": {
+            "type": "boolean",
+            "title": "Gender Supported"
+          },
+          "mobility_supported": {
+            "type": "boolean",
+            "title": "Mobility Supported"
+          },
+          "send_primary_need_supported": {
+            "type": "boolean",
+            "title": "Send Primary Need Supported"
           },
           "ethnicity_supported": {
             "type": "boolean",
@@ -543,6 +1236,10 @@
         "type": "object",
         "required": [
           "fsm_supported",
+          "fsm6_supported",
+          "gender_supported",
+          "mobility_supported",
+          "send_primary_need_supported",
           "ethnicity_supported",
           "top_languages_supported"
         ],
@@ -590,6 +1287,53 @@
         ],
         "title": "SchoolProfileDemographicsEthnicityGroupResponse"
       },
+      "SchoolProfileDemographicsHomeLanguageResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentage"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "rank",
+          "percentage",
+          "count"
+        ],
+        "title": "SchoolProfileDemographicsHomeLanguageResponse"
+      },
       "SchoolProfileDemographicsLatestResponse": {
         "properties": {
           "academic_year": {
@@ -617,6 +1361,17 @@
               }
             ],
             "title": "Fsm Pct"
+          },
+          "fsm6_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsm6 Pct"
           },
           "sen_pct": {
             "anyOf": [
@@ -673,6 +1428,39 @@
             ],
             "title": "First Language Unclassified Pct"
           },
+          "male_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Male Pct"
+          },
+          "female_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Female Pct"
+          },
+          "pupil_mobility_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pupil Mobility Pct"
+          },
           "coverage": {
             "$ref": "#/components/schemas/SchoolProfileDemographicsCoverageResponse"
           },
@@ -682,6 +1470,20 @@
             },
             "type": "array",
             "title": "Ethnicity Breakdown"
+          },
+          "send_primary_needs": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileDemographicsSendPrimaryNeedResponse"
+            },
+            "type": "array",
+            "title": "Send Primary Needs"
+          },
+          "top_home_languages": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileDemographicsHomeLanguageResponse"
+            },
+            "type": "array",
+            "title": "Top Home Languages"
           }
         },
         "type": "object",
@@ -697,6 +1499,205 @@
           "coverage"
         ],
         "title": "SchoolProfileDemographicsLatestResponse"
+      },
+      "SchoolProfileDemographicsSendPrimaryNeedResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentage"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "percentage",
+          "count"
+        ],
+        "title": "SchoolProfileDemographicsSendPrimaryNeedResponse"
+      },
+      "SchoolProfileLeadershipSnapshotResponse": {
+        "properties": {
+          "headteacher_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headteacher Name"
+          },
+          "headteacher_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headteacher Start Date"
+          },
+          "headteacher_tenure_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headteacher Tenure Years"
+          },
+          "leadership_turnover_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leadership Turnover Score"
+          }
+        },
+        "type": "object",
+        "required": [
+          "headteacher_name",
+          "headteacher_start_date",
+          "headteacher_tenure_years",
+          "leadership_turnover_score"
+        ],
+        "title": "SchoolProfileLeadershipSnapshotResponse"
+      },
+      "SchoolProfileMetricBenchmarkResponse": {
+        "properties": {
+          "metric_key": {
+            "type": "string",
+            "title": "Metric Key"
+          },
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "school_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Value"
+          },
+          "national_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "National Value"
+          },
+          "local_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Value"
+          },
+          "school_vs_national_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs National Delta"
+          },
+          "school_vs_local_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs Local Delta"
+          },
+          "local_scope": {
+            "type": "string",
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
+            "title": "Local Scope"
+          },
+          "local_area_code": {
+            "type": "string",
+            "title": "Local Area Code"
+          },
+          "local_area_label": {
+            "type": "string",
+            "title": "Local Area Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "academic_year",
+          "school_value",
+          "national_value",
+          "local_value",
+          "school_vs_national_delta",
+          "school_vs_local_delta",
+          "local_scope",
+          "local_area_code",
+          "local_area_label"
+        ],
+        "title": "SchoolProfileMetricBenchmarkResponse"
       },
       "SchoolProfileOfstedLatestResponse": {
         "properties": {
@@ -1360,6 +2361,46 @@
               }
             ]
           },
+          "attendance_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileAttendanceLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "behaviour_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileBehaviourLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "workforce_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileWorkforceLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leadership_snapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileLeadershipSnapshotResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "performance": {
             "anyOf": [
               {
@@ -1386,6 +2427,9 @@
           "area_context": {
             "$ref": "#/components/schemas/SchoolProfileAreaContextResponse"
           },
+          "benchmarks": {
+            "$ref": "#/components/schemas/SchoolProfileBenchmarksResponse"
+          },
           "completeness": {
             "$ref": "#/components/schemas/SchoolProfileCompletenessResponse"
           }
@@ -1394,6 +2438,10 @@
         "required": [
           "school",
           "demographics_latest",
+          "attendance_latest",
+          "behaviour_latest",
+          "workforce_latest",
+          "leadership_snapshot",
           "performance",
           "ofsted_latest",
           "ofsted_timeline",
@@ -1551,6 +2599,91 @@
         ],
         "title": "SchoolProfileSectionCompletenessResponse"
       },
+      "SchoolProfileWorkforceLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "pupil_teacher_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pupil Teacher Ratio"
+          },
+          "supply_staff_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supply Staff Pct"
+          },
+          "teachers_3plus_years_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teachers 3Plus Years Pct"
+          },
+          "teacher_turnover_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Turnover Pct"
+          },
+          "qts_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qts Pct"
+          },
+          "qualifications_level6_plus_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qualifications Level6 Plus Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "pupil_teacher_ratio",
+          "supply_staff_pct",
+          "teachers_3plus_years_pct",
+          "teacher_turnover_pct",
+          "qts_pct",
+          "qualifications_level6_plus_pct"
+        ],
+        "title": "SchoolProfileWorkforceLatestResponse"
+      },
       "SchoolSearchItemResponse": {
         "properties": {
           "urn": {
@@ -1620,6 +2753,194 @@
         ],
         "title": "SchoolSearchItemResponse"
       },
+      "SchoolTrendBenchmarkPointResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "school_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Value"
+          },
+          "national_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "National Value"
+          },
+          "local_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Value"
+          },
+          "school_vs_national_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs National Delta"
+          },
+          "school_vs_local_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs Local Delta"
+          },
+          "local_scope": {
+            "type": "string",
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
+            "title": "Local Scope"
+          },
+          "local_area_code": {
+            "type": "string",
+            "title": "Local Area Code"
+          },
+          "local_area_label": {
+            "type": "string",
+            "title": "Local Area Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "school_value",
+          "national_value",
+          "local_value",
+          "school_vs_national_delta",
+          "school_vs_local_delta",
+          "local_scope",
+          "local_area_code",
+          "local_area_label"
+        ],
+        "title": "SchoolTrendBenchmarkPointResponse"
+      },
+      "SchoolTrendDashboardMetricResponse": {
+        "properties": {
+          "metric_key": {
+            "type": "string",
+            "title": "Metric Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Points"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "label",
+          "unit",
+          "points"
+        ],
+        "title": "SchoolTrendDashboardMetricResponse"
+      },
+      "SchoolTrendDashboardResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "years_available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Years Available"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendDashboardSectionResponse"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "years_available",
+          "sections",
+          "completeness"
+        ],
+        "title": "SchoolTrendDashboardResponse"
+      },
+      "SchoolTrendDashboardSectionResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "demographics",
+              "attendance",
+              "behaviour",
+              "workforce",
+              "performance",
+              "area"
+            ],
+            "title": "Key"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendDashboardMetricResponse"
+            },
+            "type": "array",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "metrics"
+        ],
+        "title": "SchoolTrendDashboardSectionResponse"
+      },
       "SchoolTrendPointResponse": {
         "properties": {
           "academic_year": {
@@ -1630,6 +2951,9 @@
             "anyOf": [
               {
                 "type": "number"
+              },
+              {
+                "type": "integer"
               },
               {
                 "type": "null"
@@ -1673,6 +2997,206 @@
           "direction"
         ],
         "title": "SchoolTrendPointResponse"
+      },
+      "SchoolTrendsBenchmarksResponse": {
+        "properties": {
+          "disadvantaged_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Disadvantaged Pct"
+          },
+          "fsm_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Fsm Pct"
+          },
+          "fsm6_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Fsm6 Pct"
+          },
+          "sen_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Sen Pct"
+          },
+          "ehcp_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Ehcp Pct"
+          },
+          "eal_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Eal Pct"
+          },
+          "first_language_english_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "First Language English Pct"
+          },
+          "first_language_unclassified_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "First Language Unclassified Pct"
+          },
+          "male_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Male Pct"
+          },
+          "female_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Female Pct"
+          },
+          "pupil_mobility_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Pupil Mobility Pct"
+          },
+          "overall_attendance_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Overall Attendance Pct"
+          },
+          "overall_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Overall Absence Pct"
+          },
+          "persistent_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Persistent Absence Pct"
+          },
+          "suspensions_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Suspensions Count"
+          },
+          "suspensions_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Suspensions Rate"
+          },
+          "permanent_exclusions_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Permanent Exclusions Count"
+          },
+          "permanent_exclusions_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Permanent Exclusions Rate"
+          },
+          "pupil_teacher_ratio": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Pupil Teacher Ratio"
+          },
+          "supply_staff_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Supply Staff Pct"
+          },
+          "teachers_3plus_years_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teachers 3Plus Years Pct"
+          },
+          "teacher_turnover_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Turnover Pct"
+          },
+          "qts_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Qts Pct"
+          },
+          "qualifications_level6_plus_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Qualifications Level6 Plus Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disadvantaged_pct",
+          "fsm_pct",
+          "fsm6_pct",
+          "sen_pct",
+          "ehcp_pct",
+          "eal_pct",
+          "first_language_english_pct",
+          "first_language_unclassified_pct",
+          "male_pct",
+          "female_pct",
+          "pupil_mobility_pct",
+          "overall_attendance_pct",
+          "overall_absence_pct",
+          "persistent_absence_pct",
+          "suspensions_count",
+          "suspensions_rate",
+          "permanent_exclusions_count",
+          "permanent_exclusions_rate",
+          "pupil_teacher_ratio",
+          "supply_staff_pct",
+          "teachers_3plus_years_pct",
+          "teacher_turnover_pct",
+          "qts_pct",
+          "qualifications_level6_plus_pct"
+        ],
+        "title": "SchoolTrendsBenchmarksResponse"
       },
       "SchoolTrendsCompletenessResponse": {
         "properties": {
@@ -1786,8 +3310,14 @@
           "series": {
             "$ref": "#/components/schemas/SchoolTrendsSeriesResponse"
           },
+          "benchmarks": {
+            "$ref": "#/components/schemas/SchoolTrendsBenchmarksResponse"
+          },
           "completeness": {
             "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
+          "section_completeness": {
+            "$ref": "#/components/schemas/SchoolTrendsSectionCompletenessResponse"
           }
         },
         "type": "object",
@@ -1796,9 +3326,35 @@
           "years_available",
           "history_quality",
           "series",
-          "completeness"
+          "benchmarks",
+          "completeness",
+          "section_completeness"
         ],
         "title": "SchoolTrendsResponse"
+      },
+      "SchoolTrendsSectionCompletenessResponse": {
+        "properties": {
+          "demographics": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
+          "attendance": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
+          "behaviour": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
+          "workforce": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "demographics",
+          "attendance",
+          "behaviour",
+          "workforce"
+        ],
+        "title": "SchoolTrendsSectionCompletenessResponse"
       },
       "SchoolTrendsSeriesResponse": {
         "properties": {
@@ -1808,6 +3364,20 @@
             },
             "type": "array",
             "title": "Disadvantaged Pct"
+          },
+          "fsm_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Fsm Pct"
+          },
+          "fsm6_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Fsm6 Pct"
           },
           "sen_pct": {
             "items": {
@@ -1843,16 +3413,146 @@
             },
             "type": "array",
             "title": "First Language Unclassified Pct"
+          },
+          "male_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Male Pct"
+          },
+          "female_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Female Pct"
+          },
+          "pupil_mobility_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Pupil Mobility Pct"
+          },
+          "overall_attendance_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Overall Attendance Pct"
+          },
+          "overall_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Overall Absence Pct"
+          },
+          "persistent_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Persistent Absence Pct"
+          },
+          "suspensions_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Suspensions Count"
+          },
+          "suspensions_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Suspensions Rate"
+          },
+          "permanent_exclusions_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Permanent Exclusions Count"
+          },
+          "permanent_exclusions_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Permanent Exclusions Rate"
+          },
+          "pupil_teacher_ratio": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Pupil Teacher Ratio"
+          },
+          "supply_staff_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Supply Staff Pct"
+          },
+          "teachers_3plus_years_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teachers 3Plus Years Pct"
+          },
+          "teacher_turnover_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Turnover Pct"
+          },
+          "qts_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Qts Pct"
+          },
+          "qualifications_level6_plus_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Qualifications Level6 Plus Pct"
           }
         },
         "type": "object",
         "required": [
           "disadvantaged_pct",
+          "fsm_pct",
+          "fsm6_pct",
           "sen_pct",
           "ehcp_pct",
           "eal_pct",
           "first_language_english_pct",
-          "first_language_unclassified_pct"
+          "first_language_unclassified_pct",
+          "male_pct",
+          "female_pct",
+          "pupil_mobility_pct",
+          "overall_attendance_pct",
+          "overall_absence_pct",
+          "persistent_absence_pct",
+          "suspensions_count",
+          "suspensions_rate",
+          "permanent_exclusions_count",
+          "permanent_exclusions_rate",
+          "pupil_teacher_ratio",
+          "supply_staff_pct",
+          "teachers_3plus_years_pct",
+          "teacher_turnover_pct",
+          "qts_pct",
+          "qualifications_level6_plus_pct"
         ],
         "title": "SchoolTrendsSeriesResponse"
       },

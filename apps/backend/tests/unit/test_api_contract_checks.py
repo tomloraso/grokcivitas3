@@ -22,10 +22,15 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
         {
             "school": {},
             "demographics_latest": {},
+            "attendance_latest": {},
+            "behaviour_latest": {},
+            "workforce_latest": {},
+            "leadership_snapshot": {},
             "performance": {},
             "ofsted_latest": {},
             "ofsted_timeline": {},
             "area_context": {},
+            "benchmarks": {},
             "completeness": {},
         }
     )
@@ -39,6 +44,7 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
             "school": {},
             "demographics_latest": {},
             "ofsted_latest": {},
+            "benchmarks": {},
             "completeness": {},
         }
     )
@@ -47,7 +53,8 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
         RuntimeError,
         match=(
             "SchoolProfileResponse missing required properties: "
-            "area_context, ofsted_timeline, performance"
+            "area_context, attendance_latest, behaviour_latest, leadership_snapshot, "
+            "ofsted_timeline, performance, workforce_latest"
         ),
     ):
         validate_school_profile_response_contract(openapi_schema)

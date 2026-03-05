@@ -150,3 +150,46 @@ def test_normalize_row_rejects_invalid_ethnicity_percentage() -> None:
 def test_parse_release_slug_academic_year_rejects_invalid_slug() -> None:
     with pytest.raises(ValueError):
         demographics_spc.parse_release_slug_academic_year("2024")
+
+
+def test_normalize_row_derives_gender_percentages_from_headcounts() -> None:
+    row = _row(
+        **{
+            "Number of pupils (used for FSM calculation in Performance Tables)": "200",
+            "headcount total male": "90",
+            "headcount total female": "110",
+        }
+    )
+    column_map = demographics_spc.validate_headers(list(row.keys()))
+
+    normalized, rejection = demographics_spc.normalize_row(
+        row,
+        column_map=column_map,
+        release_slug="2024-25",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized["male_pct"] == pytest.approx(45.0)
+    assert normalized["female_pct"] == pytest.approx(55.0)
+    assert normalized["has_gender_data"] is True
+
+
+def test_normalize_row_rejects_invalid_gender_headcount() -> None:
+    row = _row(
+        **{
+            "Number of pupils (used for FSM calculation in Performance Tables)": "200",
+            "headcount total male": "oops",
+            "headcount total female": "110",
+        }
+    )
+    column_map = demographics_spc.validate_headers(list(row.keys()))
+
+    normalized, rejection = demographics_spc.normalize_row(
+        row,
+        column_map=column_map,
+        release_slug="2024-25",
+    )
+
+    assert normalized is None
+    assert rejection == "invalid_male_count"

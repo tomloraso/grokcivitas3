@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schools/{urn}/trends/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Trend Dashboard */
+        get: operations["get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -131,12 +148,26 @@ export interface components {
             has_crime: boolean;
             /** Crime Months Available */
             crime_months_available: number;
+            /** Has House Prices */
+            has_house_prices: boolean;
+            /** House Price Months Available */
+            house_price_months_available: number;
         };
         /** SchoolProfileAreaContextResponse */
         SchoolProfileAreaContextResponse: {
             deprivation: components["schemas"]["SchoolProfileAreaDeprivationResponse"] | null;
             crime: components["schemas"]["SchoolProfileAreaCrimeResponse"] | null;
+            house_prices: components["schemas"]["SchoolProfileAreaHousePricesResponse"] | null;
             coverage: components["schemas"]["SchoolProfileAreaContextCoverageResponse"];
+        };
+        /** SchoolProfileAreaCrimeAnnualRateResponse */
+        SchoolProfileAreaCrimeAnnualRateResponse: {
+            /** Year */
+            year: number;
+            /** Total Incidents */
+            total_incidents: number;
+            /** Incidents Per 1000 */
+            incidents_per_1000: number | null;
         };
         /** SchoolProfileAreaCrimeCategoryResponse */
         SchoolProfileAreaCrimeCategoryResponse: {
@@ -153,6 +184,12 @@ export interface components {
             latest_month: string;
             /** Total Incidents */
             total_incidents: number;
+            /** Population Denominator */
+            population_denominator: number | null;
+            /** Incidents Per 1000 */
+            incidents_per_1000: number | null;
+            /** Annual Incidents Per 1000 */
+            annual_incidents_per_1000: components["schemas"]["SchoolProfileAreaCrimeAnnualRateResponse"][];
             /** Categories */
             categories: components["schemas"]["SchoolProfileAreaCrimeCategoryResponse"][];
         };
@@ -170,22 +207,142 @@ export interface components {
             idaci_score: number;
             /** Idaci Decile */
             idaci_decile: number;
+            /** Income Score */
+            income_score: number | null;
+            /** Income Rank */
+            income_rank: number | null;
+            /** Income Decile */
+            income_decile: number | null;
+            /** Employment Score */
+            employment_score: number | null;
+            /** Employment Rank */
+            employment_rank: number | null;
+            /** Employment Decile */
+            employment_decile: number | null;
+            /** Education Score */
+            education_score: number | null;
+            /** Education Rank */
+            education_rank: number | null;
+            /** Education Decile */
+            education_decile: number | null;
+            /** Health Score */
+            health_score: number | null;
+            /** Health Rank */
+            health_rank: number | null;
+            /** Health Decile */
+            health_decile: number | null;
+            /** Crime Score */
+            crime_score: number | null;
+            /** Crime Rank */
+            crime_rank: number | null;
+            /** Crime Decile */
+            crime_decile: number | null;
+            /** Barriers Score */
+            barriers_score: number | null;
+            /** Barriers Rank */
+            barriers_rank: number | null;
+            /** Barriers Decile */
+            barriers_decile: number | null;
+            /** Living Environment Score */
+            living_environment_score: number | null;
+            /** Living Environment Rank */
+            living_environment_rank: number | null;
+            /** Living Environment Decile */
+            living_environment_decile: number | null;
+            /** Population Total */
+            population_total: number | null;
+            /** Local Authority District Code */
+            local_authority_district_code: string | null;
+            /** Local Authority District Name */
+            local_authority_district_name: string | null;
             /** Source Release */
             source_release: string;
+        };
+        /** SchoolProfileAreaHousePricePointResponse */
+        SchoolProfileAreaHousePricePointResponse: {
+            /** Month */
+            month: string;
+            /** Average Price */
+            average_price: number;
+            /** Annual Change Pct */
+            annual_change_pct: number | null;
+            /** Monthly Change Pct */
+            monthly_change_pct: number | null;
+        };
+        /** SchoolProfileAreaHousePricesResponse */
+        SchoolProfileAreaHousePricesResponse: {
+            /** Area Code */
+            area_code: string;
+            /** Area Name */
+            area_name: string;
+            /** Latest Month */
+            latest_month: string;
+            /** Average Price */
+            average_price: number;
+            /** Annual Change Pct */
+            annual_change_pct: number | null;
+            /** Monthly Change Pct */
+            monthly_change_pct: number | null;
+            /** Three Year Change Pct */
+            three_year_change_pct: number | null;
+            /** Trend */
+            trend: components["schemas"]["SchoolProfileAreaHousePricePointResponse"][];
+        };
+        /** SchoolProfileAttendanceLatestResponse */
+        SchoolProfileAttendanceLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Overall Attendance Pct */
+            overall_attendance_pct: number | null;
+            /** Overall Absence Pct */
+            overall_absence_pct: number | null;
+            /** Persistent Absence Pct */
+            persistent_absence_pct: number | null;
+        };
+        /** SchoolProfileBehaviourLatestResponse */
+        SchoolProfileBehaviourLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Suspensions Count */
+            suspensions_count: number | null;
+            /** Suspensions Rate */
+            suspensions_rate: number | null;
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: number | null;
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: number | null;
+        };
+        /** SchoolProfileBenchmarksResponse */
+        SchoolProfileBenchmarksResponse: {
+            /** Metrics */
+            metrics?: components["schemas"]["SchoolProfileMetricBenchmarkResponse"][];
         };
         /** SchoolProfileCompletenessResponse */
         SchoolProfileCompletenessResponse: {
             demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            attendance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            behaviour: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            workforce: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            leadership: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             area_crime: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_house_prices: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
         };
         /** SchoolProfileDemographicsCoverageResponse */
         SchoolProfileDemographicsCoverageResponse: {
             /** Fsm Supported */
             fsm_supported: boolean;
+            /** Fsm6 Supported */
+            fsm6_supported: boolean;
+            /** Gender Supported */
+            gender_supported: boolean;
+            /** Mobility Supported */
+            mobility_supported: boolean;
+            /** Send Primary Need Supported */
+            send_primary_need_supported: boolean;
             /** Ethnicity Supported */
             ethnicity_supported: boolean;
             /** Top Languages Supported */
@@ -202,6 +359,19 @@ export interface components {
             /** Count */
             count: number | null;
         };
+        /** SchoolProfileDemographicsHomeLanguageResponse */
+        SchoolProfileDemographicsHomeLanguageResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Rank */
+            rank: number;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
+        };
         /** SchoolProfileDemographicsLatestResponse */
         SchoolProfileDemographicsLatestResponse: {
             /** Academic Year */
@@ -210,6 +380,8 @@ export interface components {
             disadvantaged_pct: number | null;
             /** Fsm Pct */
             fsm_pct: number | null;
+            /** Fsm6 Pct */
+            fsm6_pct?: number | null;
             /** Sen Pct */
             sen_pct: number | null;
             /** Ehcp Pct */
@@ -220,9 +392,67 @@ export interface components {
             first_language_english_pct: number | null;
             /** First Language Unclassified Pct */
             first_language_unclassified_pct: number | null;
+            /** Male Pct */
+            male_pct?: number | null;
+            /** Female Pct */
+            female_pct?: number | null;
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct?: number | null;
             coverage: components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
             /** Ethnicity Breakdown */
             ethnicity_breakdown?: components["schemas"]["SchoolProfileDemographicsEthnicityGroupResponse"][];
+            /** Send Primary Needs */
+            send_primary_needs?: components["schemas"]["SchoolProfileDemographicsSendPrimaryNeedResponse"][];
+            /** Top Home Languages */
+            top_home_languages?: components["schemas"]["SchoolProfileDemographicsHomeLanguageResponse"][];
+        };
+        /** SchoolProfileDemographicsSendPrimaryNeedResponse */
+        SchoolProfileDemographicsSendPrimaryNeedResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
+        };
+        /** SchoolProfileLeadershipSnapshotResponse */
+        SchoolProfileLeadershipSnapshotResponse: {
+            /** Headteacher Name */
+            headteacher_name: string | null;
+            /** Headteacher Start Date */
+            headteacher_start_date: string | null;
+            /** Headteacher Tenure Years */
+            headteacher_tenure_years: number | null;
+            /** Leadership Turnover Score */
+            leadership_turnover_score: number | null;
+        };
+        /** SchoolProfileMetricBenchmarkResponse */
+        SchoolProfileMetricBenchmarkResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
         };
         /** SchoolProfileOfstedLatestResponse */
         SchoolProfileOfstedLatestResponse: {
@@ -355,10 +585,15 @@ export interface components {
         SchoolProfileResponse: {
             school: components["schemas"]["SchoolProfileSchoolResponse"];
             demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
+            attendance_latest: components["schemas"]["SchoolProfileAttendanceLatestResponse"] | null;
+            behaviour_latest: components["schemas"]["SchoolProfileBehaviourLatestResponse"] | null;
+            workforce_latest: components["schemas"]["SchoolProfileWorkforceLatestResponse"] | null;
+            leadership_snapshot: components["schemas"]["SchoolProfileLeadershipSnapshotResponse"] | null;
             performance: components["schemas"]["SchoolProfilePerformanceResponse"] | null;
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
             ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
             area_context: components["schemas"]["SchoolProfileAreaContextResponse"];
+            benchmarks?: components["schemas"]["SchoolProfileBenchmarksResponse"];
             completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
         };
         /** SchoolProfileSchoolResponse */
@@ -394,6 +629,23 @@ export interface components {
             /** Years Available */
             years_available?: string[] | null;
         };
+        /** SchoolProfileWorkforceLatestResponse */
+        SchoolProfileWorkforceLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: number | null;
+            /** Supply Staff Pct */
+            supply_staff_pct: number | null;
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: number | null;
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: number | null;
+            /** Qts Pct */
+            qts_pct: number | null;
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: number | null;
+        };
         /** SchoolSearchItemResponse */
         SchoolSearchItemResponse: {
             /** Urn */
@@ -413,6 +665,61 @@ export interface components {
             /** Distance Miles */
             distance_miles: number;
         };
+        /** SchoolTrendBenchmarkPointResponse */
+        SchoolTrendBenchmarkPointResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
+        };
+        /** SchoolTrendDashboardMetricResponse */
+        SchoolTrendDashboardMetricResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Points */
+            points: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+        };
+        /** SchoolTrendDashboardResponse */
+        SchoolTrendDashboardResponse: {
+            /** Urn */
+            urn: string;
+            /** Years Available */
+            years_available: string[];
+            /** Sections */
+            sections: components["schemas"]["SchoolTrendDashboardSectionResponse"][];
+            completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
+        };
+        /** SchoolTrendDashboardSectionResponse */
+        SchoolTrendDashboardSectionResponse: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            /** Metrics */
+            metrics: components["schemas"]["SchoolTrendDashboardMetricResponse"][];
+        };
         /** SchoolTrendPointResponse */
         SchoolTrendPointResponse: {
             /** Academic Year */
@@ -423,6 +730,57 @@ export interface components {
             delta: number | null;
             /** Direction */
             direction: ("up" | "down" | "flat") | null;
+        };
+        /** SchoolTrendsBenchmarksResponse */
+        SchoolTrendsBenchmarksResponse: {
+            /** Disadvantaged Pct */
+            disadvantaged_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Fsm Pct */
+            fsm_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Fsm6 Pct */
+            fsm6_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Sen Pct */
+            sen_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Ehcp Pct */
+            ehcp_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Eal Pct */
+            eal_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** First Language English Pct */
+            first_language_english_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Male Pct */
+            male_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Female Pct */
+            female_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Overall Attendance Pct */
+            overall_attendance_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Overall Absence Pct */
+            overall_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Persistent Absence Pct */
+            persistent_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Suspensions Count */
+            suspensions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Suspensions Rate */
+            suspensions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Supply Staff Pct */
+            supply_staff_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Qts Pct */
+            qts_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
         };
         /** SchoolTrendsCompletenessResponse */
         SchoolTrendsCompletenessResponse: {
@@ -455,12 +813,25 @@ export interface components {
             years_available: string[];
             history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
             series: components["schemas"]["SchoolTrendsSeriesResponse"];
+            benchmarks: components["schemas"]["SchoolTrendsBenchmarksResponse"];
             completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            section_completeness: components["schemas"]["SchoolTrendsSectionCompletenessResponse"];
+        };
+        /** SchoolTrendsSectionCompletenessResponse */
+        SchoolTrendsSectionCompletenessResponse: {
+            demographics: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            attendance: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            behaviour: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            workforce: components["schemas"]["SchoolTrendsCompletenessResponse"];
         };
         /** SchoolTrendsSeriesResponse */
         SchoolTrendsSeriesResponse: {
             /** Disadvantaged Pct */
             disadvantaged_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Fsm Pct */
+            fsm_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Fsm6 Pct */
+            fsm6_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Sen Pct */
             sen_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Ehcp Pct */
@@ -471,6 +842,38 @@ export interface components {
             first_language_english_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** First Language Unclassified Pct */
             first_language_unclassified_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Male Pct */
+            male_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Female Pct */
+            female_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Overall Attendance Pct */
+            overall_attendance_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Overall Absence Pct */
+            overall_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Persistent Absence Pct */
+            persistent_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Suspensions Count */
+            suspensions_count: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Suspensions Rate */
+            suspensions_rate: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Supply Staff Pct */
+            supply_staff_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Qts Pct */
+            qts_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {
@@ -766,6 +1169,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SchoolTrendsResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School trends datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolTrendDashboardResponse"];
                 };
             };
             /** @description School URN not found. */

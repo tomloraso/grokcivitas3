@@ -78,3 +78,25 @@ def test_normalize_row_rejects_out_of_range_percentage() -> None:
 
     assert normalized is None
     assert rejection == "invalid_sen_support"
+
+
+def test_normalize_row_extracts_coded_primary_need_columns() -> None:
+    column_map = demographics_sen.validate_headers(list(_row().keys()))
+
+    normalized, rejection = demographics_sen.normalize_row(
+        _row(
+            **{
+                "EHC_Primary_need_asd": "8",
+                "EHC_Primary_need_mld": "2",
+            }
+        ),
+        column_map=column_map,
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized["has_primary_need_data"] is True
+    by_key = {item["key"]: item for item in normalized["primary_needs"]}
+    assert by_key["autistic_spectrum_disorder"]["count"] == 8
+    assert by_key["autistic_spectrum_disorder"]["percentage"] == pytest.approx(3.2)
+    assert by_key["moderate_learning_difficulty"]["count"] == 2

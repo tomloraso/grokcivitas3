@@ -51,6 +51,7 @@ pytestmark = pytest.mark.skipif(
 def engine() -> Engine:
     engine = _build_engine(DATABASE_URL)
     _ensure_schema(engine)
+    _cleanup(engine)
     try:
         yield engine
     finally:
@@ -126,15 +127,23 @@ def _ensure_schema(engine: Engine) -> None:
                     academic_year text NOT NULL,
                     disadvantaged_pct double precision NULL,
                     fsm_pct double precision NULL,
+                    fsm6_pct double precision NULL,
                     sen_pct double precision NULL,
                     sen_support_pct double precision NULL,
                     ehcp_pct double precision NULL,
                     eal_pct double precision NULL,
                     first_language_english_pct double precision NULL,
                     first_language_unclassified_pct double precision NULL,
+                    male_pct double precision NULL,
+                    female_pct double precision NULL,
+                    pupil_mobility_pct double precision NULL,
                     total_pupils integer NULL,
+                    has_fsm6_data boolean NOT NULL DEFAULT false,
+                    has_gender_data boolean NOT NULL DEFAULT false,
+                    has_mobility_data boolean NOT NULL DEFAULT false,
                     has_ethnicity_data boolean NOT NULL DEFAULT false,
                     has_top_languages_data boolean NOT NULL DEFAULT false,
+                    has_send_primary_need_data boolean NOT NULL DEFAULT false,
                     source_dataset_id text NOT NULL,
                     source_dataset_version text NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
@@ -195,10 +204,101 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS fsm6_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS male_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS female_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS pupil_mobility_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_fsm6_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_gender_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_mobility_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_send_primary_need_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_send_primary_need_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    need_key text NOT NULL,
+                    need_label text NOT NULL,
+                    pupil_count integer NULL,
+                    percentage double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, need_key)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_home_language_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    language_key text NOT NULL,
+                    language_label text NOT NULL,
+                    rank integer NOT NULL,
+                    pupil_count integer NULL,
+                    percentage double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, language_key)
+                )
+                """
+            )
+        )
 
 
 def _cleanup(engine: Engine) -> None:
     with engine.begin() as connection:
+        connection.execute(
+            text("DELETE FROM school_home_language_yearly WHERE urn IN ('100001', '100002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_send_primary_need_yearly WHERE urn IN ('100001', '100002')")
+        )
         connection.execute(
             text("DELETE FROM school_ethnicity_yearly WHERE urn IN ('100001', '100002')")
         )
@@ -294,6 +394,13 @@ def _write_manifest_and_files(context: PipelineRunContext) -> None:
         "% of pupils whose first language is known or believed to be other than English,"
         "% of pupils whose first language is known or believed to be English,"
         "% of pupils whose first language is unclassified,"
+        "% of pupils who are male,"
+        "% of pupils who are female,"
+        "% of pupils who are mobile,"
+        "number of pupils whose first language is Somali,"
+        "% of pupils whose first language is Somali,"
+        "number of pupils whose first language is Polish,"
+        "% of pupils whose first language is Polish,"
         "number of pupils classified as white British ethnic origin,"
         "% of pupils classified as white British ethnic origin,"
         "number of pupils classified as Irish ethnic origin,"
@@ -332,19 +439,23 @@ def _write_manifest_and_files(context: PipelineRunContext) -> None:
         "% of pupils classified as any other ethnic group ethnic origin,"
         "number of pupils unclassified,"
         "% of pupils unclassified\n"
-        "100001,202324,19.1,19.5,9.5,88.0,2.5,101,50.5,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,9,4.5\n"
-        "100001,202425,17.2,18.0,8.8,89.4,1.8,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n"
-        "100002,202425,SUPP,SUPP,11.1,85.7,3.2,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP\n"
-        ",202425,18.2,18.2,9.0,90.0,1.0,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n",
+        "100001,202324,19.1,19.5,9.5,88.0,2.5,49.3,50.7,3.2,18,7.5,12,5.0,101,50.5,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,9,4.5\n"
+        "100001,202425,17.2,18.0,8.8,89.4,1.8,49.1,50.9,2.8,17,6.8,13,5.2,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n"
+        "100002,202425,SUPP,SUPP,11.1,85.7,3.2,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP\n"
+        ",202425,18.2,18.2,9.0,90.0,1.0,49.0,51.0,2.0,20,8.0,11,4.4,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n",
         encoding="utf-8",
     )
 
     (context.bronze_source_path / sen_name).write_text(
-        "URN,time_period,Total pupils,SEN support,EHC plan\n"
-        "100001,202324,240,36,9\n"
-        "100001,202425,250,37,11\n"
-        "100002,202425,200,40,8\n"
-        "100002,202325,oops,35,7\n",
+        "URN,time_period,Total pupils,SEN support,EHC plan,"
+        "number of pupils with specific learning difficulty as primary need,"
+        "% of pupils with specific learning difficulty as primary need,"
+        "number of pupils with speech language and communication needs as primary need,"
+        "% of pupils with speech language and communication needs as primary need\n"
+        "100001,202324,240,36,9,12,5.0,8,3.3\n"
+        "100001,202425,250,37,11,14,5.6,9,3.6\n"
+        "100002,202425,200,40,8,9,4.5,6,3.0\n"
+        "100002,202325,oops,35,7,8,4.0,5,2.5\n",
         encoding="utf-8",
     )
 
@@ -427,7 +538,16 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
                 """
                 SELECT
                     fsm_pct,
+                    fsm6_pct,
                     disadvantaged_pct,
+                    male_pct,
+                    female_pct,
+                    pupil_mobility_pct,
+                    has_fsm6_data,
+                    has_gender_data,
+                    has_mobility_data,
+                    has_send_primary_need_data,
+                    has_top_languages_data,
                     sen_pct,
                     ehcp_pct,
                     total_pupils,
@@ -440,12 +560,21 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         ).one()
         assert row_202425[0] == 17.2
         assert row_202425[1] == 18.0
-        assert row_202425[2] == pytest.approx(14.8)
-        assert row_202425[3] == pytest.approx(4.4)
-        assert row_202425[4] == 250
-        assert "spc:spc-rv-2024" in row_202425[5]
-        assert "sen:sen-rv-2024" in row_202425[5]
+        assert row_202425[2] == 18.0
+        assert row_202425[3] == 49.1
+        assert row_202425[4] == 50.9
+        assert row_202425[5] == 2.8
         assert row_202425[6] is True
+        assert row_202425[7] is True
+        assert row_202425[8] is True
+        assert row_202425[9] is True
+        assert row_202425[10] is True
+        assert row_202425[11] == pytest.approx(14.8)
+        assert row_202425[12] == pytest.approx(4.4)
+        assert row_202425[13] == 250
+        assert "spc:spc-rv-2024" in row_202425[14]
+        assert "sen:sen-rv-2024" in row_202425[14]
+        assert row_202425[15] is True
 
         row_partial = connection.execute(
             text(
@@ -459,6 +588,28 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         assert row_partial[0] is None
         assert row_partial[1] == pytest.approx(20.0)
         assert row_partial[2] is False
+
+        send_need_count = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_send_primary_need_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert send_need_count == 6
+
+        top_language_count = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_home_language_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert top_language_count == 4
 
         ethnicity_count = connection.execute(
             text(

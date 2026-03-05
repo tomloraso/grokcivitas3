@@ -2,7 +2,9 @@ import { gzipSync } from "node:zlib";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
+const DIST_ROOT = path.resolve("dist");
 const DIST_ASSETS = path.resolve("dist", "assets");
+const DIST_INDEX_HTML = path.join(DIST_ROOT, "index.html");
 
 const BUDGETS_BYTES = {
   appShellJs: 170 * 1024,
@@ -25,6 +27,21 @@ function collectAssetFiles() {
     .filter((entry) => statSync(entry).isFile());
 }
 
+function collectEntryAssetFiles() {
+  const html = readFileSync(DIST_INDEX_HTML, "utf8");
+  const assetPaths = new Set();
+
+  for (const match of html.matchAll(/<(?:script|link)[^>]+(?:src|href)="([^"]+)"/g)) {
+    const assetPath = match[1];
+    if (!assetPath.startsWith("/assets/")) {
+      continue;
+    }
+    assetPaths.add(path.join(DIST_ROOT, assetPath.replace(/^\//, "")));
+  }
+
+  return [...assetPaths].filter((entry) => statSync(entry).isFile());
+}
+
 function sumSizes(filePaths) {
   return filePaths.reduce((total, filePath) => total + toGzipSize(filePath), 0);
 }
@@ -36,9 +53,12 @@ function isMapChunk(filePath) {
 
 function run() {
   const assets = collectAssetFiles();
-  const cssAssets = assets.filter((asset) => asset.endsWith(".css"));
+  const entryAssets = collectEntryAssetFiles();
+  const cssAssets = entryAssets.filter((asset) => asset.endsWith(".css"));
   const mapJsAssets = assets.filter(isMapChunk);
-  const appJsAssets = assets.filter((asset) => asset.endsWith(".js") && !isMapChunk(asset));
+  const appJsAssets = entryAssets.filter(
+    (asset) => asset.endsWith(".js") && !isMapChunk(asset)
+  );
 
   const appShellJsSize = sumSizes(appJsAssets);
   const appShellCssSize = sumSizes(cssAssets);

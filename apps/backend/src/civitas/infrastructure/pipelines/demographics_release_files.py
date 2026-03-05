@@ -79,10 +79,19 @@ class _SpcRecord:
     urn: str
     academic_year: str
     fsm_pct: float | None
+    fsm6_pct: float | None
     disadvantaged_pct: float | None
     eal_pct: float | None
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
+    male_pct: float | None
+    female_pct: float | None
+    pupil_mobility_pct: float | None
+    has_fsm6_data: bool
+    has_gender_data: bool
+    has_mobility_data: bool
+    top_home_languages: tuple[demographics_spc.NormalizedTopLanguage, ...]
+    has_top_languages_data: bool
     ethnicity_percentages: dict[str, float | None]
     ethnicity_counts: dict[str, int | None]
     has_ethnicity_data: bool
@@ -97,6 +106,8 @@ class _SenRecord:
     sen_support_pct: float | None
     ehcp_pct: float | None
     total_pupils: int | None
+    primary_needs: tuple[demographics_sen.NormalizedPrimaryNeed, ...]
+    has_primary_need_data: bool
     release_version_id: str
     file_id: str
 
@@ -106,6 +117,7 @@ class _MergedRecord:
     urn: str
     academic_year: str
     fsm_pct: float | None
+    fsm6_pct: float | None
     disadvantaged_pct: float | None
     sen_pct: float | None
     sen_support_pct: float | None
@@ -113,8 +125,16 @@ class _MergedRecord:
     eal_pct: float | None
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
+    male_pct: float | None
+    female_pct: float | None
+    pupil_mobility_pct: float | None
     total_pupils: int | None
+    has_fsm6_data: bool
+    has_gender_data: bool
+    has_mobility_data: bool
     has_ethnicity_data: bool
+    has_top_languages_data: bool
+    has_send_primary_need_data: bool
     source_dataset_id: str
     source_dataset_version: str | None
 
@@ -125,6 +145,31 @@ class _EthnicityRecord:
     academic_year: str
     percentages: dict[str, float | None]
     counts: dict[str, int | None]
+    source_dataset_id: str
+    source_dataset_version: str | None
+
+
+@dataclass(frozen=True)
+class _SendPrimaryNeedRecord:
+    urn: str
+    academic_year: str
+    need_key: str
+    need_label: str
+    pupil_count: int | None
+    percentage: float | None
+    source_dataset_id: str
+    source_dataset_version: str | None
+
+
+@dataclass(frozen=True)
+class _HomeLanguageRecord:
+    urn: str
+    academic_year: str
+    language_key: str
+    language_label: str
+    rank: int
+    pupil_count: int | None
+    percentage: float | None
     source_dataset_id: str
     source_dataset_version: str | None
 
@@ -281,12 +326,21 @@ class DemographicsReleaseFilesPipeline:
                             urn=normalized_spc["urn"],
                             academic_year=normalized_spc["academic_year"],
                             fsm_pct=normalized_spc["fsm_pct"],
+                            fsm6_pct=normalized_spc["fsm6_pct"],
                             disadvantaged_pct=normalized_spc["disadvantaged_pct"],
                             eal_pct=normalized_spc["eal_pct"],
                             first_language_english_pct=normalized_spc["first_language_english_pct"],
                             first_language_unclassified_pct=normalized_spc[
                                 "first_language_unclassified_pct"
                             ],
+                            male_pct=normalized_spc["male_pct"],
+                            female_pct=normalized_spc["female_pct"],
+                            pupil_mobility_pct=normalized_spc["pupil_mobility_pct"],
+                            has_fsm6_data=normalized_spc["has_fsm6_data"],
+                            has_gender_data=normalized_spc["has_gender_data"],
+                            has_mobility_data=normalized_spc["has_mobility_data"],
+                            top_home_languages=normalized_spc["top_home_languages"],
+                            has_top_languages_data=normalized_spc["has_top_languages_data"],
                             ethnicity_percentages=normalized_spc["ethnicity_percentages"],
                             ethnicity_counts=normalized_spc["ethnicity_counts"],
                             has_ethnicity_data=normalized_spc["has_ethnicity_data"],
@@ -312,14 +366,25 @@ class DemographicsReleaseFilesPipeline:
                             sen_support_pct=normalized_sen["sen_support_pct"],
                             ehcp_pct=normalized_sen["ehcp_pct"],
                             total_pupils=normalized_sen["total_pupils"],
+                            primary_needs=normalized_sen["primary_needs"],
+                            has_primary_need_data=normalized_sen["has_primary_need_data"],
                             release_version_id=asset.release_version_id,
                             file_id=asset.file_id,
                         )
 
-        merged_rows, ethnicity_rows = _merge_rows(spc_rows=spc_rows, sen_rows=sen_rows)
+        (
+            merged_rows,
+            ethnicity_rows,
+            send_primary_need_rows,
+            home_language_rows,
+        ) = _merge_rows(spc_rows=spc_rows, sen_rows=sen_rows)
 
         staging_table_name = self._staging_table_name(context)
         ethnicity_staging_table_name = self._ethnicity_staging_table_name(context)
+        send_primary_need_staging_table_name = self._send_primary_need_staging_table_name(context)
+        home_language_staging_table_name = self._home_language_staging_table_name(context)
+        send_primary_need_staging_table_name = self._send_primary_need_staging_table_name(context)
+        home_language_staging_table_name = self._home_language_staging_table_name(context)
         ethnicity_column_definitions = ",\n                        ".join(
             [f"{column} double precision NULL" for column in _ETHNICITY_PERCENTAGE_COLUMNS]
             + [f"{column} integer NULL" for column in _ETHNICITY_COUNT_COLUMNS]
@@ -357,12 +422,19 @@ class DemographicsReleaseFilesPipeline:
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{ethnicity_staging_table_name}"))
             connection.execute(
+                text(f"DROP TABLE IF EXISTS staging.{send_primary_need_staging_table_name}")
+            )
+            connection.execute(
+                text(f"DROP TABLE IF EXISTS staging.{home_language_staging_table_name}")
+            )
+            connection.execute(
                 text(
                     f"""
                     CREATE TABLE staging.{staging_table_name} (
                         urn text NOT NULL,
                         academic_year text NOT NULL,
                         fsm_pct double precision NULL,
+                        fsm6_pct double precision NULL,
                         disadvantaged_pct double precision NULL,
                         sen_pct double precision NULL,
                         sen_support_pct double precision NULL,
@@ -370,8 +442,16 @@ class DemographicsReleaseFilesPipeline:
                         eal_pct double precision NULL,
                         first_language_english_pct double precision NULL,
                         first_language_unclassified_pct double precision NULL,
+                        male_pct double precision NULL,
+                        female_pct double precision NULL,
+                        pupil_mobility_pct double precision NULL,
                         total_pupils integer NULL,
+                        has_fsm6_data boolean NOT NULL,
+                        has_gender_data boolean NOT NULL,
+                        has_mobility_data boolean NOT NULL,
                         has_ethnicity_data boolean NOT NULL,
+                        has_top_languages_data boolean NOT NULL,
+                        has_send_primary_need_data boolean NOT NULL,
                         source_dataset_id text NOT NULL,
                         source_dataset_version text NULL,
                         PRIMARY KEY (urn, academic_year)
@@ -393,6 +473,41 @@ class DemographicsReleaseFilesPipeline:
                     """
                 )
             )
+            connection.execute(
+                text(
+                    f"""
+                    CREATE TABLE staging.{send_primary_need_staging_table_name} (
+                        urn text NOT NULL,
+                        academic_year text NOT NULL,
+                        need_key text NOT NULL,
+                        need_label text NOT NULL,
+                        pupil_count integer NULL,
+                        percentage double precision NULL,
+                        source_dataset_id text NOT NULL,
+                        source_dataset_version text NULL,
+                        PRIMARY KEY (urn, academic_year, need_key)
+                    )
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
+                    CREATE TABLE staging.{home_language_staging_table_name} (
+                        urn text NOT NULL,
+                        academic_year text NOT NULL,
+                        language_key text NOT NULL,
+                        language_label text NOT NULL,
+                        rank integer NOT NULL,
+                        pupil_count integer NULL,
+                        percentage double precision NULL,
+                        source_dataset_id text NOT NULL,
+                        source_dataset_version text NULL,
+                        PRIMARY KEY (urn, academic_year, language_key)
+                    )
+                    """
+                )
+            )
             if merged_rows:
                 staged_insert = text(
                     f"""
@@ -400,6 +515,7 @@ class DemographicsReleaseFilesPipeline:
                         urn,
                         academic_year,
                         fsm_pct,
+                        fsm6_pct,
                         disadvantaged_pct,
                         sen_pct,
                         sen_support_pct,
@@ -407,14 +523,23 @@ class DemographicsReleaseFilesPipeline:
                         eal_pct,
                         first_language_english_pct,
                         first_language_unclassified_pct,
+                        male_pct,
+                        female_pct,
+                        pupil_mobility_pct,
                         total_pupils,
+                        has_fsm6_data,
+                        has_gender_data,
+                        has_mobility_data,
                         has_ethnicity_data,
+                        has_top_languages_data,
+                        has_send_primary_need_data,
                         source_dataset_id,
                         source_dataset_version
                     ) VALUES (
                         :urn,
                         :academic_year,
                         :fsm_pct,
+                        :fsm6_pct,
                         :disadvantaged_pct,
                         :sen_pct,
                         :sen_support_pct,
@@ -422,13 +547,22 @@ class DemographicsReleaseFilesPipeline:
                         :eal_pct,
                         :first_language_english_pct,
                         :first_language_unclassified_pct,
+                        :male_pct,
+                        :female_pct,
+                        :pupil_mobility_pct,
                         :total_pupils,
+                        :has_fsm6_data,
+                        :has_gender_data,
+                        :has_mobility_data,
                         :has_ethnicity_data,
+                        :has_top_languages_data,
+                        :has_send_primary_need_data,
                         :source_dataset_id,
                         :source_dataset_version
                     )
                     ON CONFLICT (urn, academic_year) DO UPDATE SET
                         fsm_pct = EXCLUDED.fsm_pct,
+                        fsm6_pct = EXCLUDED.fsm6_pct,
                         disadvantaged_pct = EXCLUDED.disadvantaged_pct,
                         sen_pct = EXCLUDED.sen_pct,
                         sen_support_pct = EXCLUDED.sen_support_pct,
@@ -436,8 +570,16 @@ class DemographicsReleaseFilesPipeline:
                         eal_pct = EXCLUDED.eal_pct,
                         first_language_english_pct = EXCLUDED.first_language_english_pct,
                         first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
+                        male_pct = EXCLUDED.male_pct,
+                        female_pct = EXCLUDED.female_pct,
+                        pupil_mobility_pct = EXCLUDED.pupil_mobility_pct,
                         total_pupils = EXCLUDED.total_pupils,
+                        has_fsm6_data = EXCLUDED.has_fsm6_data,
+                        has_gender_data = EXCLUDED.has_gender_data,
+                        has_mobility_data = EXCLUDED.has_mobility_data,
                         has_ethnicity_data = EXCLUDED.has_ethnicity_data,
+                        has_top_languages_data = EXCLUDED.has_top_languages_data,
+                        has_send_primary_need_data = EXCLUDED.has_send_primary_need_data,
                         source_dataset_id = EXCLUDED.source_dataset_id,
                         source_dataset_version = EXCLUDED.source_dataset_version
                     """
@@ -450,6 +592,7 @@ class DemographicsReleaseFilesPipeline:
                                 "urn": row.urn,
                                 "academic_year": row.academic_year,
                                 "fsm_pct": row.fsm_pct,
+                                "fsm6_pct": row.fsm6_pct,
                                 "disadvantaged_pct": row.disadvantaged_pct,
                                 "sen_pct": row.sen_pct,
                                 "sen_support_pct": row.sen_support_pct,
@@ -459,8 +602,16 @@ class DemographicsReleaseFilesPipeline:
                                 "first_language_unclassified_pct": (
                                     row.first_language_unclassified_pct
                                 ),
+                                "male_pct": row.male_pct,
+                                "female_pct": row.female_pct,
+                                "pupil_mobility_pct": row.pupil_mobility_pct,
                                 "total_pupils": row.total_pupils,
+                                "has_fsm6_data": row.has_fsm6_data,
+                                "has_gender_data": row.has_gender_data,
+                                "has_mobility_data": row.has_mobility_data,
                                 "has_ethnicity_data": row.has_ethnicity_data,
+                                "has_top_languages_data": row.has_top_languages_data,
+                                "has_send_primary_need_data": row.has_send_primary_need_data,
                                 "source_dataset_id": row.source_dataset_id,
                                 "source_dataset_version": row.source_dataset_version,
                             }
@@ -494,6 +645,106 @@ class DemographicsReleaseFilesPipeline:
                             payload[f"{group.key}_count"] = row.counts.get(group.key)
                         parameters.append(payload)
                     connection.execute(ethnicity_staged_insert, parameters)
+
+            if send_primary_need_rows:
+                send_need_insert = text(
+                    f"""
+                    INSERT INTO staging.{send_primary_need_staging_table_name} (
+                        urn,
+                        academic_year,
+                        need_key,
+                        need_label,
+                        pupil_count,
+                        percentage,
+                        source_dataset_id,
+                        source_dataset_version
+                    ) VALUES (
+                        :urn,
+                        :academic_year,
+                        :need_key,
+                        :need_label,
+                        :pupil_count,
+                        :percentage,
+                        :source_dataset_id,
+                        :source_dataset_version
+                    )
+                    ON CONFLICT (urn, academic_year, need_key) DO UPDATE SET
+                        need_label = EXCLUDED.need_label,
+                        pupil_count = EXCLUDED.pupil_count,
+                        percentage = EXCLUDED.percentage,
+                        source_dataset_id = EXCLUDED.source_dataset_id,
+                        source_dataset_version = EXCLUDED.source_dataset_version
+                    """
+                )
+                for send_need_chunk in chunked(send_primary_need_rows, context.stage_chunk_size):
+                    connection.execute(
+                        send_need_insert,
+                        [
+                            {
+                                "urn": row.urn,
+                                "academic_year": row.academic_year,
+                                "need_key": row.need_key,
+                                "need_label": row.need_label,
+                                "pupil_count": row.pupil_count,
+                                "percentage": row.percentage,
+                                "source_dataset_id": row.source_dataset_id,
+                                "source_dataset_version": row.source_dataset_version,
+                            }
+                            for row in send_need_chunk
+                        ],
+                    )
+
+            if home_language_rows:
+                home_language_insert = text(
+                    f"""
+                    INSERT INTO staging.{home_language_staging_table_name} (
+                        urn,
+                        academic_year,
+                        language_key,
+                        language_label,
+                        rank,
+                        pupil_count,
+                        percentage,
+                        source_dataset_id,
+                        source_dataset_version
+                    ) VALUES (
+                        :urn,
+                        :academic_year,
+                        :language_key,
+                        :language_label,
+                        :rank,
+                        :pupil_count,
+                        :percentage,
+                        :source_dataset_id,
+                        :source_dataset_version
+                    )
+                    ON CONFLICT (urn, academic_year, language_key) DO UPDATE SET
+                        language_label = EXCLUDED.language_label,
+                        rank = EXCLUDED.rank,
+                        pupil_count = EXCLUDED.pupil_count,
+                        percentage = EXCLUDED.percentage,
+                        source_dataset_id = EXCLUDED.source_dataset_id,
+                        source_dataset_version = EXCLUDED.source_dataset_version
+                    """
+                )
+                for home_language_chunk in chunked(home_language_rows, context.stage_chunk_size):
+                    connection.execute(
+                        home_language_insert,
+                        [
+                            {
+                                "urn": row.urn,
+                                "academic_year": row.academic_year,
+                                "language_key": row.language_key,
+                                "language_label": row.language_label,
+                                "rank": row.rank,
+                                "pupil_count": row.pupil_count,
+                                "percentage": row.percentage,
+                                "source_dataset_id": row.source_dataset_id,
+                                "source_dataset_version": row.source_dataset_version,
+                            }
+                            for row in home_language_chunk
+                        ],
+                    )
 
             if rejected_rows:
                 rejection_insert = text(
@@ -542,6 +793,8 @@ class DemographicsReleaseFilesPipeline:
 
         staging_table_name = self._staging_table_name(context)
         ethnicity_staging_table_name = self._ethnicity_staging_table_name(context)
+        send_primary_need_staging_table_name = self._send_primary_need_staging_table_name(context)
+        home_language_staging_table_name = self._home_language_staging_table_name(context)
         ethnicity_columns_sql = ",\n                                ".join(
             [*_ETHNICITY_PERCENTAGE_COLUMNS, *_ETHNICITY_COUNT_COLUMNS]
         )
@@ -571,15 +824,23 @@ class DemographicsReleaseFilesPipeline:
                                 academic_year,
                                 disadvantaged_pct,
                                 fsm_pct,
+                                fsm6_pct,
                                 sen_pct,
                                 sen_support_pct,
                                 ehcp_pct,
                                 eal_pct,
                                 first_language_english_pct,
                                 first_language_unclassified_pct,
+                                male_pct,
+                                female_pct,
+                                pupil_mobility_pct,
                                 total_pupils,
+                                has_fsm6_data,
+                                has_gender_data,
+                                has_mobility_data,
                                 has_ethnicity_data,
                                 has_top_languages_data,
+                                has_send_primary_need_data,
                                 source_dataset_id,
                                 source_dataset_version,
                                 updated_at
@@ -589,15 +850,23 @@ class DemographicsReleaseFilesPipeline:
                                 staged.academic_year,
                                 staged.disadvantaged_pct,
                                 staged.fsm_pct,
+                                staged.fsm6_pct,
                                 staged.sen_pct,
                                 staged.sen_support_pct,
                                 staged.ehcp_pct,
                                 staged.eal_pct,
                                 staged.first_language_english_pct,
                                 staged.first_language_unclassified_pct,
+                                staged.male_pct,
+                                staged.female_pct,
+                                staged.pupil_mobility_pct,
                                 staged.total_pupils,
+                                staged.has_fsm6_data,
+                                staged.has_gender_data,
+                                staged.has_mobility_data,
                                 staged.has_ethnicity_data,
-                                FALSE,
+                                staged.has_top_languages_data,
+                                staged.has_send_primary_need_data,
                                 staged.source_dataset_id,
                                 staged.source_dataset_version,
                                 timezone('utc', now())
@@ -606,15 +875,23 @@ class DemographicsReleaseFilesPipeline:
                             ON CONFLICT (urn, academic_year) DO UPDATE SET
                                 disadvantaged_pct = EXCLUDED.disadvantaged_pct,
                                 fsm_pct = EXCLUDED.fsm_pct,
+                                fsm6_pct = EXCLUDED.fsm6_pct,
                                 sen_pct = EXCLUDED.sen_pct,
                                 sen_support_pct = EXCLUDED.sen_support_pct,
                                 ehcp_pct = EXCLUDED.ehcp_pct,
                                 eal_pct = EXCLUDED.eal_pct,
                                 first_language_english_pct = EXCLUDED.first_language_english_pct,
                                 first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
+                                male_pct = EXCLUDED.male_pct,
+                                female_pct = EXCLUDED.female_pct,
+                                pupil_mobility_pct = EXCLUDED.pupil_mobility_pct,
                                 total_pupils = EXCLUDED.total_pupils,
+                                has_fsm6_data = EXCLUDED.has_fsm6_data,
+                                has_gender_data = EXCLUDED.has_gender_data,
+                                has_mobility_data = EXCLUDED.has_mobility_data,
                                 has_ethnicity_data = EXCLUDED.has_ethnicity_data,
                                 has_top_languages_data = EXCLUDED.has_top_languages_data,
+                                has_send_primary_need_data = EXCLUDED.has_send_primary_need_data,
                                 source_dataset_id = EXCLUDED.source_dataset_id,
                                 source_dataset_version = EXCLUDED.source_dataset_version,
                                 updated_at = timezone('utc', now())
@@ -653,6 +930,81 @@ class DemographicsReleaseFilesPipeline:
             connection.execute(
                 text(
                     f"""
+                    INSERT INTO school_send_primary_need_yearly (
+                        urn,
+                        academic_year,
+                        need_key,
+                        need_label,
+                        pupil_count,
+                        percentage,
+                        source_dataset_id,
+                        source_dataset_version,
+                        updated_at
+                    )
+                    SELECT
+                        staged.urn,
+                        staged.academic_year,
+                        staged.need_key,
+                        staged.need_label,
+                        staged.pupil_count,
+                        staged.percentage,
+                        staged.source_dataset_id,
+                        staged.source_dataset_version,
+                        timezone('utc', now())
+                    FROM staging.{send_primary_need_staging_table_name} AS staged
+                    INNER JOIN schools ON schools.urn = staged.urn
+                    ON CONFLICT (urn, academic_year, need_key) DO UPDATE SET
+                        need_label = EXCLUDED.need_label,
+                        pupil_count = EXCLUDED.pupil_count,
+                        percentage = EXCLUDED.percentage,
+                        source_dataset_id = EXCLUDED.source_dataset_id,
+                        source_dataset_version = EXCLUDED.source_dataset_version,
+                        updated_at = timezone('utc', now())
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
+                    INSERT INTO school_home_language_yearly (
+                        urn,
+                        academic_year,
+                        language_key,
+                        language_label,
+                        rank,
+                        pupil_count,
+                        percentage,
+                        source_dataset_id,
+                        source_dataset_version,
+                        updated_at
+                    )
+                    SELECT
+                        staged.urn,
+                        staged.academic_year,
+                        staged.language_key,
+                        staged.language_label,
+                        staged.rank,
+                        staged.pupil_count,
+                        staged.percentage,
+                        staged.source_dataset_id,
+                        staged.source_dataset_version,
+                        timezone('utc', now())
+                    FROM staging.{home_language_staging_table_name} AS staged
+                    INNER JOIN schools ON schools.urn = staged.urn
+                    ON CONFLICT (urn, academic_year, language_key) DO UPDATE SET
+                        language_label = EXCLUDED.language_label,
+                        rank = EXCLUDED.rank,
+                        pupil_count = EXCLUDED.pupil_count,
+                        percentage = EXCLUDED.percentage,
+                        source_dataset_id = EXCLUDED.source_dataset_id,
+                        source_dataset_version = EXCLUDED.source_dataset_version,
+                        updated_at = timezone('utc', now())
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
                     DELETE FROM school_ethnicity_yearly AS target
                     USING staging.{staging_table_name} AS staged
                     WHERE
@@ -662,8 +1014,52 @@ class DemographicsReleaseFilesPipeline:
                     """
                 )
             )
+            connection.execute(
+                text(
+                    f"""
+                    DELETE FROM school_send_primary_need_yearly AS target
+                    USING staging.{staging_table_name} AS staged
+                    WHERE
+                        target.urn = staged.urn
+                        AND target.academic_year = staged.academic_year
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM staging.{send_primary_need_staging_table_name} AS source_rows
+                            WHERE
+                                source_rows.urn = target.urn
+                                AND source_rows.academic_year = target.academic_year
+                                AND source_rows.need_key = target.need_key
+                        )
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
+                    DELETE FROM school_home_language_yearly AS target
+                    USING staging.{staging_table_name} AS staged
+                    WHERE
+                        target.urn = staged.urn
+                        AND target.academic_year = staged.academic_year
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM staging.{home_language_staging_table_name} AS source_rows
+                            WHERE
+                                source_rows.urn = target.urn
+                                AND source_rows.academic_year = target.academic_year
+                                AND source_rows.language_key = target.language_key
+                        )
+                    """
+                )
+            )
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{ethnicity_staging_table_name}"))
+            connection.execute(
+                text(f"DROP TABLE IF EXISTS staging.{send_primary_need_staging_table_name}")
+            )
+            connection.execute(
+                text(f"DROP TABLE IF EXISTS staging.{home_language_staging_table_name}")
+            )
 
         return promoted_rows
 
@@ -766,6 +1162,14 @@ class DemographicsReleaseFilesPipeline:
     def _ethnicity_staging_table_name(context: PipelineRunContext) -> str:
         return f"dfe_characteristics_ethnicity__{context.run_id.hex}"
 
+    @staticmethod
+    def _send_primary_need_staging_table_name(context: PipelineRunContext) -> str:
+        return f"dfe_characteristics_send_need__{context.run_id.hex}"
+
+    @staticmethod
+    def _home_language_staging_table_name(context: PipelineRunContext) -> str:
+        return f"dfe_characteristics_home_lang__{context.run_id.hex}"
+
 
 def build_release_page_url(*, publication_slug: str, release_slug: str) -> str:
     return RELEASE_PAGE_URL_TEMPLATE.format(
@@ -832,9 +1236,16 @@ def _merge_rows(
     *,
     spc_rows: Mapping[tuple[str, str], _SpcRecord],
     sen_rows: Mapping[tuple[str, str], _SenRecord],
-) -> tuple[list[_MergedRecord], list[_EthnicityRecord]]:
+) -> tuple[
+    list[_MergedRecord],
+    list[_EthnicityRecord],
+    list[_SendPrimaryNeedRecord],
+    list[_HomeLanguageRecord],
+]:
     merged: list[_MergedRecord] = []
     ethnicity_rows: list[_EthnicityRecord] = []
+    send_primary_need_rows: list[_SendPrimaryNeedRecord] = []
+    home_language_rows: list[_HomeLanguageRecord] = []
     keys = sorted(set(spc_rows.keys()) | set(sen_rows.keys()))
     for key in keys:
         spc_row = spc_rows.get(key)
@@ -854,6 +1265,7 @@ def _merge_rows(
                 urn=key[0],
                 academic_year=key[1],
                 fsm_pct=spc_row.fsm_pct if spc_row is not None else None,
+                fsm6_pct=spc_row.fsm6_pct if spc_row is not None else None,
                 disadvantaged_pct=spc_row.disadvantaged_pct if spc_row is not None else None,
                 sen_pct=sen_row.sen_support_pct if sen_row is not None else None,
                 sen_support_pct=sen_row.sen_support_pct if sen_row is not None else None,
@@ -865,8 +1277,20 @@ def _merge_rows(
                 first_language_unclassified_pct=(
                     spc_row.first_language_unclassified_pct if spc_row is not None else None
                 ),
+                male_pct=spc_row.male_pct if spc_row is not None else None,
+                female_pct=spc_row.female_pct if spc_row is not None else None,
+                pupil_mobility_pct=spc_row.pupil_mobility_pct if spc_row is not None else None,
                 total_pupils=sen_row.total_pupils if sen_row is not None else None,
+                has_fsm6_data=spc_row.has_fsm6_data if spc_row is not None else False,
+                has_gender_data=spc_row.has_gender_data if spc_row is not None else False,
+                has_mobility_data=spc_row.has_mobility_data if spc_row is not None else False,
                 has_ethnicity_data=(spc_row.has_ethnicity_data if spc_row is not None else False),
+                has_top_languages_data=(
+                    spc_row.has_top_languages_data if spc_row is not None else False
+                ),
+                has_send_primary_need_data=(
+                    sen_row.has_primary_need_data if sen_row is not None else False
+                ),
                 source_dataset_id="|".join(source_dataset_tokens),
                 source_dataset_version=(
                     "|".join(source_dataset_version_tokens)
@@ -886,8 +1310,38 @@ def _merge_rows(
                     source_dataset_version=f"spc:{spc_row.file_id}",
                 )
             )
+        if sen_row is not None and sen_row.primary_needs:
+            for need in sen_row.primary_needs:
+                send_primary_need_rows.append(
+                    _SendPrimaryNeedRecord(
+                        urn=sen_row.urn,
+                        academic_year=sen_row.academic_year,
+                        need_key=need["key"],
+                        need_label=need["label"],
+                        pupil_count=need["count"],
+                        percentage=need["percentage"],
+                        source_dataset_id=f"sen:{sen_row.release_version_id}",
+                        source_dataset_version=f"sen:{sen_row.file_id}",
+                    )
+                )
 
-    return merged, ethnicity_rows
+        if spc_row is not None and spc_row.top_home_languages:
+            for rank, language in enumerate(spc_row.top_home_languages, start=1):
+                home_language_rows.append(
+                    _HomeLanguageRecord(
+                        urn=spc_row.urn,
+                        academic_year=spc_row.academic_year,
+                        language_key=language["key"],
+                        language_label=language["label"],
+                        rank=rank,
+                        pupil_count=language["count"],
+                        percentage=language["percentage"],
+                        source_dataset_id=f"spc:{spc_row.release_version_id}",
+                        source_dataset_version=f"spc:{spc_row.file_id}",
+                    )
+                )
+
+    return merged, ethnicity_rows, send_primary_need_rows, home_language_rows
 
 
 def _build_bronze_file_name(descriptor: ReleaseFileDescriptor) -> str:

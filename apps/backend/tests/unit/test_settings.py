@@ -18,10 +18,19 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_DEMOGRAPHICS_SEN_PUBLICATION_SLUG,
     DEFAULT_DEMOGRAPHICS_SOURCE_MODE,
     DEFAULT_DEMOGRAPHICS_SPC_PUBLICATION_SLUG,
+    DEFAULT_DFE_ATTENDANCE_LOOKBACK_YEARS,
+    DEFAULT_DFE_ATTENDANCE_PUBLICATION_SLUG,
+    DEFAULT_DFE_ATTENDANCE_RELEASE_SLUGS,
+    DEFAULT_DFE_BEHAVIOUR_LOOKBACK_YEARS,
+    DEFAULT_DFE_BEHAVIOUR_PUBLICATION_SLUG,
+    DEFAULT_DFE_BEHAVIOUR_RELEASE_SLUGS,
     DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID,
     DEFAULT_DFE_PERFORMANCE_KS4_DATASET_ID,
     DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS,
     DEFAULT_DFE_PERFORMANCE_PAGE_SIZE,
+    DEFAULT_DFE_WORKFORCE_LOOKBACK_YEARS,
+    DEFAULT_DFE_WORKFORCE_PUBLICATION_SLUG,
+    DEFAULT_DFE_WORKFORCE_RELEASE_SLUGS,
     DEFAULT_IMD_RELEASE,
     DEFAULT_OFSTED_TIMELINE_YEARS,
     DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS,
@@ -58,6 +67,18 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DEMOGRAPHICS_RELEASE_SLUGS",
         "CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS",
         "CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE",
+        "CIVITAS_DFE_ATTENDANCE_PUBLICATION_SLUG",
+        "CIVITAS_DFE_ATTENDANCE_RELEASE_SLUGS",
+        "CIVITAS_DFE_ATTENDANCE_LOOKBACK_YEARS",
+        "CIVITAS_DFE_ATTENDANCE_SOURCE_STRICT_MODE",
+        "CIVITAS_DFE_BEHAVIOUR_PUBLICATION_SLUG",
+        "CIVITAS_DFE_BEHAVIOUR_RELEASE_SLUGS",
+        "CIVITAS_DFE_BEHAVIOUR_LOOKBACK_YEARS",
+        "CIVITAS_DFE_BEHAVIOUR_SOURCE_STRICT_MODE",
+        "CIVITAS_DFE_WORKFORCE_PUBLICATION_SLUG",
+        "CIVITAS_DFE_WORKFORCE_RELEASE_SLUGS",
+        "CIVITAS_DFE_WORKFORCE_LOOKBACK_YEARS",
+        "CIVITAS_DFE_WORKFORCE_SOURCE_STRICT_MODE",
         "CIVITAS_DFE_PERFORMANCE_KS2_DATASET_ID",
         "CIVITAS_DFE_PERFORMANCE_KS4_DATASET_ID",
         "CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS",
@@ -74,6 +95,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_OFSTED_TIMELINE_INCLUDE_HISTORICAL_BASELINE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_ATTENDANCE",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_BEHAVIOUR",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_WORKFORCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
@@ -95,6 +119,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_ATTENDANCE",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_BEHAVIOUR",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_WORKFORCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
@@ -125,6 +152,24 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.demographics_lookback_years == DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS
     assert settings.pipeline.demographics_source_strict_mode is True
     assert (
+        settings.pipeline.dfe_attendance_publication_slug == DEFAULT_DFE_ATTENDANCE_PUBLICATION_SLUG
+    )
+    assert settings.pipeline.dfe_attendance_release_slugs == DEFAULT_DFE_ATTENDANCE_RELEASE_SLUGS
+    assert settings.pipeline.dfe_attendance_lookback_years == DEFAULT_DFE_ATTENDANCE_LOOKBACK_YEARS
+    assert settings.pipeline.dfe_attendance_source_strict_mode is True
+    assert (
+        settings.pipeline.dfe_behaviour_publication_slug == DEFAULT_DFE_BEHAVIOUR_PUBLICATION_SLUG
+    )
+    assert settings.pipeline.dfe_behaviour_release_slugs == DEFAULT_DFE_BEHAVIOUR_RELEASE_SLUGS
+    assert settings.pipeline.dfe_behaviour_lookback_years == DEFAULT_DFE_BEHAVIOUR_LOOKBACK_YEARS
+    assert settings.pipeline.dfe_behaviour_source_strict_mode is True
+    assert (
+        settings.pipeline.dfe_workforce_publication_slug == DEFAULT_DFE_WORKFORCE_PUBLICATION_SLUG
+    )
+    assert settings.pipeline.dfe_workforce_release_slugs == DEFAULT_DFE_WORKFORCE_RELEASE_SLUGS
+    assert settings.pipeline.dfe_workforce_lookback_years == DEFAULT_DFE_WORKFORCE_LOOKBACK_YEARS
+    assert settings.pipeline.dfe_workforce_source_strict_mode is True
+    assert (
         settings.pipeline.dfe_performance_ks2_dataset_id == DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID
     )
     assert (
@@ -150,6 +195,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.ofsted_timeline_include_historical_baseline is True
     assert settings.pipeline.max_reject_ratio_gias == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_characteristics == 1.0
+    assert settings.pipeline.max_reject_ratio_dfe_attendance == 1.0
+    assert settings.pipeline.max_reject_ratio_dfe_behaviour == 1.0
+    assert settings.pipeline.max_reject_ratio_dfe_workforce == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_performance == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_latest == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_timeline == 1.0
@@ -176,6 +224,18 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert (
         settings.data_quality.freshness_sla_hours_dfe_characteristics
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_dfe_attendance
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_dfe_behaviour
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_dfe_workforce
         == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
     )
     assert (
@@ -236,6 +296,30 @@ def test_app_settings_reads_environment_overrides(
     )
     monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS", "5")
     monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE", "false")
+    monkeypatch.setenv(
+        "CIVITAS_DFE_ATTENDANCE_PUBLICATION_SLUG",
+        " pupil-absence-in-schools-in-england ",
+    )
+    monkeypatch.setenv("CIVITAS_DFE_ATTENDANCE_RELEASE_SLUGS", " 2021-22, 2022-23, 2023-24 ")
+    monkeypatch.setenv("CIVITAS_DFE_ATTENDANCE_LOOKBACK_YEARS", "2")
+    monkeypatch.setenv("CIVITAS_DFE_ATTENDANCE_SOURCE_STRICT_MODE", "false")
+    monkeypatch.setenv(
+        "CIVITAS_DFE_BEHAVIOUR_PUBLICATION_SLUG",
+        " suspensions-and-permanent-exclusions-in-england ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_DFE_BEHAVIOUR_RELEASE_SLUGS",
+        " 2022-23, 2023-24, 2024-25-autumn-term ",
+    )
+    monkeypatch.setenv("CIVITAS_DFE_BEHAVIOUR_LOOKBACK_YEARS", "2")
+    monkeypatch.setenv("CIVITAS_DFE_BEHAVIOUR_SOURCE_STRICT_MODE", "false")
+    monkeypatch.setenv(
+        "CIVITAS_DFE_WORKFORCE_PUBLICATION_SLUG",
+        " school-workforce-in-england ",
+    )
+    monkeypatch.setenv("CIVITAS_DFE_WORKFORCE_RELEASE_SLUGS", " 2022, 2023, 2024 ")
+    monkeypatch.setenv("CIVITAS_DFE_WORKFORCE_LOOKBACK_YEARS", "2")
+    monkeypatch.setenv("CIVITAS_DFE_WORKFORCE_SOURCE_STRICT_MODE", "false")
     monkeypatch.setenv(
         "CIVITAS_DFE_PERFORMANCE_KS2_DATASET_ID",
         " 019afee4-e5d0-72f9-9a8f-d7a1a56eac1d ",
@@ -301,6 +385,27 @@ def test_app_settings_reads_environment_overrides(
     assert settings.pipeline.demographics_lookback_years == 5
     assert settings.pipeline.demographics_source_strict_mode is False
     assert (
+        settings.pipeline.dfe_attendance_publication_slug == "pupil-absence-in-schools-in-england"
+    )
+    assert settings.pipeline.dfe_attendance_release_slugs == ("2021-22", "2022-23", "2023-24")
+    assert settings.pipeline.dfe_attendance_lookback_years == 2
+    assert settings.pipeline.dfe_attendance_source_strict_mode is False
+    assert (
+        settings.pipeline.dfe_behaviour_publication_slug
+        == "suspensions-and-permanent-exclusions-in-england"
+    )
+    assert settings.pipeline.dfe_behaviour_release_slugs == (
+        "2022-23",
+        "2023-24",
+        "2024-25-autumn-term",
+    )
+    assert settings.pipeline.dfe_behaviour_lookback_years == 2
+    assert settings.pipeline.dfe_behaviour_source_strict_mode is False
+    assert settings.pipeline.dfe_workforce_publication_slug == "school-workforce-in-england"
+    assert settings.pipeline.dfe_workforce_release_slugs == ("2022", "2023", "2024")
+    assert settings.pipeline.dfe_workforce_lookback_years == 2
+    assert settings.pipeline.dfe_workforce_source_strict_mode is False
+    assert (
         settings.pipeline.dfe_performance_ks2_dataset_id == "019afee4-e5d0-72f9-9a8f-d7a1a56eac1d"
     )
     assert (
@@ -337,6 +442,9 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_DATABASE_URL", "")
     monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_SOURCE_MODE", "legacy")
     monkeypatch.setenv("CIVITAS_DEMOGRAPHICS_LOOKBACK_YEARS", "0")
+    monkeypatch.setenv("CIVITAS_DFE_ATTENDANCE_LOOKBACK_YEARS", "0")
+    monkeypatch.setenv("CIVITAS_DFE_BEHAVIOUR_LOOKBACK_YEARS", "0")
+    monkeypatch.setenv("CIVITAS_DFE_WORKFORCE_LOOKBACK_YEARS", "0")
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS", "0")
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_PAGE_SIZE", "10001")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", "not-a-release")

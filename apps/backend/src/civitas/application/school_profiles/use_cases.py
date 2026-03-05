@@ -1,22 +1,33 @@
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
+    SchoolAreaCrimeAnnualRateDto,
     SchoolAreaCrimeCategoryDto,
     SchoolAreaCrimeDto,
     SchoolAreaDeprivationDto,
+    SchoolAreaHousePricePointDto,
+    SchoolAreaHousePricesDto,
+    SchoolAttendanceLatestDto,
+    SchoolBehaviourLatestDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsEthnicityGroupDto,
+    SchoolDemographicsHomeLanguageDto,
     SchoolDemographicsLatestDto,
+    SchoolDemographicsSendPrimaryNeedDto,
+    SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
     SchoolOfstedTimelineCoverageDto,
     SchoolOfstedTimelineDto,
     SchoolOfstedTimelineEventDto,
     SchoolPerformanceDto,
     SchoolPerformanceYearDto,
+    SchoolProfileBenchmarksDto,
     SchoolProfileCompletenessDto,
+    SchoolProfileMetricBenchmarkDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
     SchoolProfileSectionCompletenessDto,
+    SchoolWorkforceLatestDto,
 )
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
 from civitas.application.school_profiles.ports.postcode_context_resolver import (
@@ -25,7 +36,11 @@ from civitas.application.school_profiles.ports.postcode_context_resolver import 
 from civitas.application.school_profiles.ports.school_profile_repository import (
     SchoolProfileRepository,
 )
+from civitas.application.school_trends.ports.school_trends_repository import (
+    SchoolTrendsRepository,
+)
 from civitas.domain.school_profiles.models import SchoolProfile
+from civitas.domain.school_trends.models import SchoolMetricBenchmarkYearlyRow
 
 
 class GetSchoolProfileUseCase:
@@ -33,9 +48,11 @@ class GetSchoolProfileUseCase:
         self,
         school_profile_repository: SchoolProfileRepository,
         postcode_context_resolver: PostcodeContextResolver | None = None,
+        school_trends_repository: SchoolTrendsRepository | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
         self._postcode_context_resolver = postcode_context_resolver
+        self._school_trends_repository = school_trends_repository
 
     def execute(self, *, urn: str) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
@@ -53,13 +70,23 @@ class GetSchoolProfileUseCase:
                 academic_year=profile.demographics_latest.academic_year,
                 disadvantaged_pct=profile.demographics_latest.disadvantaged_pct,
                 fsm_pct=profile.demographics_latest.fsm_pct,
+                fsm6_pct=profile.demographics_latest.fsm6_pct,
                 sen_pct=profile.demographics_latest.sen_pct,
                 ehcp_pct=profile.demographics_latest.ehcp_pct,
                 eal_pct=profile.demographics_latest.eal_pct,
                 first_language_english_pct=profile.demographics_latest.first_language_english_pct,
                 first_language_unclassified_pct=profile.demographics_latest.first_language_unclassified_pct,
+                male_pct=profile.demographics_latest.male_pct,
+                female_pct=profile.demographics_latest.female_pct,
+                pupil_mobility_pct=profile.demographics_latest.pupil_mobility_pct,
                 coverage=SchoolDemographicsCoverageDto(
                     fsm_supported=profile.demographics_latest.coverage.fsm_supported,
+                    fsm6_supported=profile.demographics_latest.coverage.fsm6_supported,
+                    gender_supported=profile.demographics_latest.coverage.gender_supported,
+                    mobility_supported=profile.demographics_latest.coverage.mobility_supported,
+                    send_primary_need_supported=(
+                        profile.demographics_latest.coverage.send_primary_need_supported
+                    ),
                     ethnicity_supported=profile.demographics_latest.coverage.ethnicity_supported,
                     top_languages_supported=profile.demographics_latest.coverage.top_languages_supported,
                 ),
@@ -72,6 +99,67 @@ class GetSchoolProfileUseCase:
                     )
                     for group in profile.demographics_latest.ethnicity_breakdown
                 ),
+                send_primary_needs=tuple(
+                    SchoolDemographicsSendPrimaryNeedDto(
+                        key=need.key,
+                        label=need.label,
+                        percentage=need.percentage,
+                        count=need.count,
+                    )
+                    for need in profile.demographics_latest.send_primary_needs
+                ),
+                top_home_languages=tuple(
+                    SchoolDemographicsHomeLanguageDto(
+                        key=language.key,
+                        label=language.label,
+                        rank=language.rank,
+                        percentage=language.percentage,
+                        count=language.count,
+                    )
+                    for language in profile.demographics_latest.top_home_languages
+                ),
+            )
+
+        attendance_latest = None
+        if profile.attendance_latest is not None:
+            attendance_latest = SchoolAttendanceLatestDto(
+                academic_year=profile.attendance_latest.academic_year,
+                overall_attendance_pct=profile.attendance_latest.overall_attendance_pct,
+                overall_absence_pct=profile.attendance_latest.overall_absence_pct,
+                persistent_absence_pct=profile.attendance_latest.persistent_absence_pct,
+            )
+
+        behaviour_latest = None
+        if profile.behaviour_latest is not None:
+            behaviour_latest = SchoolBehaviourLatestDto(
+                academic_year=profile.behaviour_latest.academic_year,
+                suspensions_count=profile.behaviour_latest.suspensions_count,
+                suspensions_rate=profile.behaviour_latest.suspensions_rate,
+                permanent_exclusions_count=profile.behaviour_latest.permanent_exclusions_count,
+                permanent_exclusions_rate=profile.behaviour_latest.permanent_exclusions_rate,
+            )
+
+        workforce_latest = None
+        if profile.workforce_latest is not None:
+            workforce_latest = SchoolWorkforceLatestDto(
+                academic_year=profile.workforce_latest.academic_year,
+                pupil_teacher_ratio=profile.workforce_latest.pupil_teacher_ratio,
+                supply_staff_pct=profile.workforce_latest.supply_staff_pct,
+                teachers_3plus_years_pct=profile.workforce_latest.teachers_3plus_years_pct,
+                teacher_turnover_pct=profile.workforce_latest.teacher_turnover_pct,
+                qts_pct=profile.workforce_latest.qts_pct,
+                qualifications_level6_plus_pct=(
+                    profile.workforce_latest.qualifications_level6_plus_pct
+                ),
+            )
+
+        leadership_snapshot = None
+        if profile.leadership_snapshot is not None:
+            leadership_snapshot = SchoolLeadershipSnapshotDto(
+                headteacher_name=profile.leadership_snapshot.headteacher_name,
+                headteacher_start_date=profile.leadership_snapshot.headteacher_start_date,
+                headteacher_tenure_years=profile.leadership_snapshot.headteacher_tenure_years,
+                leadership_turnover_score=profile.leadership_snapshot.leadership_turnover_score,
             )
 
         ofsted_latest = None
@@ -187,6 +275,40 @@ class GetSchoolProfileUseCase:
                     imd_decile=profile.area_context.deprivation.imd_decile,
                     idaci_score=profile.area_context.deprivation.idaci_score,
                     idaci_decile=profile.area_context.deprivation.idaci_decile,
+                    income_score=profile.area_context.deprivation.income_score,
+                    income_rank=profile.area_context.deprivation.income_rank,
+                    income_decile=profile.area_context.deprivation.income_decile,
+                    employment_score=profile.area_context.deprivation.employment_score,
+                    employment_rank=profile.area_context.deprivation.employment_rank,
+                    employment_decile=profile.area_context.deprivation.employment_decile,
+                    education_score=profile.area_context.deprivation.education_score,
+                    education_rank=profile.area_context.deprivation.education_rank,
+                    education_decile=profile.area_context.deprivation.education_decile,
+                    health_score=profile.area_context.deprivation.health_score,
+                    health_rank=profile.area_context.deprivation.health_rank,
+                    health_decile=profile.area_context.deprivation.health_decile,
+                    crime_score=profile.area_context.deprivation.crime_score,
+                    crime_rank=profile.area_context.deprivation.crime_rank,
+                    crime_decile=profile.area_context.deprivation.crime_decile,
+                    barriers_score=profile.area_context.deprivation.barriers_score,
+                    barriers_rank=profile.area_context.deprivation.barriers_rank,
+                    barriers_decile=profile.area_context.deprivation.barriers_decile,
+                    living_environment_score=(
+                        profile.area_context.deprivation.living_environment_score
+                    ),
+                    living_environment_rank=(
+                        profile.area_context.deprivation.living_environment_rank
+                    ),
+                    living_environment_decile=(
+                        profile.area_context.deprivation.living_environment_decile
+                    ),
+                    population_total=profile.area_context.deprivation.population_total,
+                    local_authority_district_code=(
+                        profile.area_context.deprivation.local_authority_district_code
+                    ),
+                    local_authority_district_name=(
+                        profile.area_context.deprivation.local_authority_district_name
+                    ),
                     source_release=profile.area_context.deprivation.source_release,
                 )
 
@@ -196,6 +318,16 @@ class GetSchoolProfileUseCase:
                     radius_miles=profile.area_context.crime.radius_miles,
                     latest_month=profile.area_context.crime.latest_month,
                     total_incidents=profile.area_context.crime.total_incidents,
+                    population_denominator=profile.area_context.crime.population_denominator,
+                    incidents_per_1000=profile.area_context.crime.incidents_per_1000,
+                    annual_incidents_per_1000=tuple(
+                        SchoolAreaCrimeAnnualRateDto(
+                            year=row.year,
+                            total_incidents=row.total_incidents,
+                            incidents_per_1000=row.incidents_per_1000,
+                        )
+                        for row in profile.area_context.crime.annual_incidents_per_1000
+                    ),
                     categories=tuple(
                         SchoolAreaCrimeCategoryDto(
                             category=category.category,
@@ -205,13 +337,39 @@ class GetSchoolProfileUseCase:
                     ),
                 )
 
+            house_prices = None
+            if profile.area_context.house_prices is not None:
+                house_prices = SchoolAreaHousePricesDto(
+                    area_code=profile.area_context.house_prices.area_code,
+                    area_name=profile.area_context.house_prices.area_name,
+                    latest_month=profile.area_context.house_prices.latest_month,
+                    average_price=profile.area_context.house_prices.average_price,
+                    annual_change_pct=profile.area_context.house_prices.annual_change_pct,
+                    monthly_change_pct=profile.area_context.house_prices.monthly_change_pct,
+                    three_year_change_pct=profile.area_context.house_prices.three_year_change_pct,
+                    trend=tuple(
+                        SchoolAreaHousePricePointDto(
+                            month=point.month,
+                            average_price=point.average_price,
+                            annual_change_pct=point.annual_change_pct,
+                            monthly_change_pct=point.monthly_change_pct,
+                        )
+                        for point in profile.area_context.house_prices.trend
+                    ),
+                )
+
             area_context = SchoolAreaContextDto(
                 deprivation=deprivation,
                 crime=crime,
+                house_prices=house_prices,
                 coverage=SchoolAreaContextCoverageDto(
                     has_deprivation=profile.area_context.coverage.has_deprivation,
                     has_crime=profile.area_context.coverage.has_crime,
                     crime_months_available=profile.area_context.coverage.crime_months_available,
+                    has_house_prices=profile.area_context.coverage.has_house_prices,
+                    house_price_months_available=(
+                        profile.area_context.coverage.house_price_months_available
+                    ),
                 ),
             )
 
@@ -221,6 +379,30 @@ class GetSchoolProfileUseCase:
                 reason_code=profile.completeness.demographics.reason_code,
                 last_updated_at=profile.completeness.demographics.last_updated_at,
                 years_available=profile.completeness.demographics.years_available,
+            ),
+            attendance=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.attendance.status,
+                reason_code=profile.completeness.attendance.reason_code,
+                last_updated_at=profile.completeness.attendance.last_updated_at,
+                years_available=profile.completeness.attendance.years_available,
+            ),
+            behaviour=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.behaviour.status,
+                reason_code=profile.completeness.behaviour.reason_code,
+                last_updated_at=profile.completeness.behaviour.last_updated_at,
+                years_available=profile.completeness.behaviour.years_available,
+            ),
+            workforce=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.workforce.status,
+                reason_code=profile.completeness.workforce.reason_code,
+                last_updated_at=profile.completeness.workforce.last_updated_at,
+                years_available=profile.completeness.workforce.years_available,
+            ),
+            leadership=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.leadership.status,
+                reason_code=profile.completeness.leadership.reason_code,
+                last_updated_at=profile.completeness.leadership.last_updated_at,
+                years_available=profile.completeness.leadership.years_available,
             ),
             performance=SchoolProfileSectionCompletenessDto(
                 status=profile.completeness.performance.status,
@@ -252,7 +434,14 @@ class GetSchoolProfileUseCase:
                 last_updated_at=profile.completeness.area_crime.last_updated_at,
                 years_available=profile.completeness.area_crime.years_available,
             ),
+            area_house_prices=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.area_house_prices.status,
+                reason_code=profile.completeness.area_house_prices.reason_code,
+                last_updated_at=profile.completeness.area_house_prices.last_updated_at,
+                years_available=profile.completeness.area_house_prices.years_available,
+            ),
         )
+        benchmarks = self._build_profile_benchmarks(normalized_urn)
 
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
@@ -266,12 +455,57 @@ class GetSchoolProfileUseCase:
                 lng=profile.school.lng,
             ),
             demographics_latest=demographics_latest,
+            attendance_latest=attendance_latest,
+            behaviour_latest=behaviour_latest,
+            workforce_latest=workforce_latest,
+            leadership_snapshot=leadership_snapshot,
             performance=performance,
             ofsted_latest=ofsted_latest,
             ofsted_timeline=ofsted_timeline,
             area_context=area_context,
+            benchmarks=benchmarks,
             completeness=completeness,
         )
+
+    def _build_profile_benchmarks(self, urn: str) -> SchoolProfileBenchmarksDto:
+        if self._school_trends_repository is None:
+            return SchoolProfileBenchmarksDto(metrics=())
+
+        benchmark_series = self._school_trends_repository.get_metric_benchmark_series(urn)
+        if benchmark_series is None:
+            return SchoolProfileBenchmarksDto(metrics=())
+
+        latest_by_metric: dict[str, SchoolMetricBenchmarkYearlyRow] = {}
+        for row in benchmark_series.rows:
+            existing = latest_by_metric.get(row.metric_key)
+            if existing is None or existing.academic_year < row.academic_year:
+                latest_by_metric[row.metric_key] = row
+
+        metrics = tuple(
+            SchoolProfileMetricBenchmarkDto(
+                metric_key=row.metric_key,
+                academic_year=row.academic_year,
+                school_value=row.school_value,
+                national_value=row.national_value,
+                local_value=row.local_value,
+                school_vs_national_delta=_to_optional_delta(
+                    school_value=row.school_value,
+                    benchmark_value=row.national_value,
+                ),
+                school_vs_local_delta=_to_optional_delta(
+                    school_value=row.school_value,
+                    benchmark_value=row.local_value,
+                ),
+                local_scope=row.local_scope,
+                local_area_code=row.local_area_code,
+                local_area_label=row.local_area_label,
+            )
+            for row in sorted(
+                latest_by_metric.values(),
+                key=lambda item: item.metric_key,
+            )
+        )
+        return SchoolProfileBenchmarksDto(metrics=metrics)
 
     def _refresh_profile_context_if_needed(
         self,
@@ -300,3 +534,13 @@ class GetSchoolProfileUseCase:
         if refreshed_profile is None:
             return profile
         return refreshed_profile
+
+
+def _to_optional_delta(
+    *,
+    school_value: float | int | None,
+    benchmark_value: float | None,
+) -> float | None:
+    if school_value is None or benchmark_value is None:
+        return None
+    return float(school_value) - float(benchmark_value)

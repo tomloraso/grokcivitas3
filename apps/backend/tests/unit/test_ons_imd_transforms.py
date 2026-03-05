@@ -4,16 +4,11 @@ from pathlib import Path
 
 import pytest
 
+from civitas.infrastructure.pipelines.contracts import ons_imd as ons_imd_contract
 from civitas.infrastructure.pipelines.ons_imd import (
-    IDACI_DECILE_HEADER,
-    IDACI_RANK_HEADER,
-    IDACI_SCORE_HEADER,
-    IMD_DECILE_HEADER,
-    IMD_RANK_HEADER,
     IMD_RELEASE_CONFIG,
     IMD_RELEASE_IOD2019,
     IMD_RELEASE_IOD2025,
-    IMD_SCORE_HEADER,
     normalize_ons_imd_row,
     validate_ons_imd_headers,
 )
@@ -27,12 +22,34 @@ def _row_2025(**overrides: str) -> dict[str, str]:
         "LSOA name (2021)": "Alpha 001A",
         "Local Authority District code (2024)": "E09000001",
         "Local Authority District name (2024)": "Alpha District",
-        IMD_SCORE_HEADER: "25.1",
-        IMD_RANK_HEADER: "100",
-        IMD_DECILE_HEADER: "1",
-        IDACI_SCORE_HEADER: "0.45",
-        IDACI_RANK_HEADER: "120",
-        IDACI_DECILE_HEADER: "1",
+        ons_imd_contract.IMD_SCORE_HEADER: "25.1",
+        ons_imd_contract.IMD_RANK_HEADER: "100",
+        ons_imd_contract.IMD_DECILE_HEADER: "1",
+        ons_imd_contract.INCOME_SCORE_HEADER: "0.41",
+        ons_imd_contract.INCOME_RANK_HEADER: "150",
+        ons_imd_contract.INCOME_DECILE_HEADER: "1",
+        ons_imd_contract.EMPLOYMENT_SCORE_HEADER: "0.34",
+        ons_imd_contract.EMPLOYMENT_RANK_HEADER: "210",
+        ons_imd_contract.EMPLOYMENT_DECILE_HEADER: "1",
+        ons_imd_contract.EDUCATION_SCORE_HEADER: "18.0",
+        ons_imd_contract.EDUCATION_RANK_HEADER: "305",
+        ons_imd_contract.EDUCATION_DECILE_HEADER: "2",
+        ons_imd_contract.HEALTH_SCORE_HEADER: "0.27",
+        ons_imd_contract.HEALTH_RANK_HEADER: "340",
+        ons_imd_contract.HEALTH_DECILE_HEADER: "2",
+        ons_imd_contract.CRIME_SCORE_HEADER: "0.19",
+        ons_imd_contract.CRIME_RANK_HEADER: "450",
+        ons_imd_contract.CRIME_DECILE_HEADER: "2",
+        ons_imd_contract.BARRIERS_SCORE_HEADER: "23.0",
+        ons_imd_contract.BARRIERS_RANK_HEADER: "780",
+        ons_imd_contract.BARRIERS_DECILE_HEADER: "3",
+        ons_imd_contract.LIVING_ENVIRONMENT_SCORE_HEADER: "16.3",
+        ons_imd_contract.LIVING_ENVIRONMENT_RANK_HEADER: "820",
+        ons_imd_contract.LIVING_ENVIRONMENT_DECILE_HEADER: "3",
+        ons_imd_contract.IDACI_SCORE_HEADER: "0.45",
+        ons_imd_contract.IDACI_RANK_HEADER: "120",
+        ons_imd_contract.IDACI_DECILE_HEADER: "1",
+        ons_imd_contract.RELEASE_CONFIG[IMD_RELEASE_IOD2025]["population_total_header"]: "1820",
     }
     row.update(overrides)
     return row
@@ -44,12 +61,34 @@ def _row_2019(**overrides: str) -> dict[str, str]:
         "LSOA name (2011)": "Beta 001A",
         "Local Authority District code (2019)": "E09000002",
         "Local Authority District name (2019)": "Beta District",
-        IMD_SCORE_HEADER: "19.8",
-        IMD_RANK_HEADER: "540",
-        IMD_DECILE_HEADER: "2",
-        IDACI_SCORE_HEADER: "0.31",
-        IDACI_RANK_HEADER: "700",
-        IDACI_DECILE_HEADER: "2",
+        ons_imd_contract.IMD_SCORE_HEADER: "19.8",
+        ons_imd_contract.IMD_RANK_HEADER: "540",
+        ons_imd_contract.IMD_DECILE_HEADER: "2",
+        ons_imd_contract.INCOME_SCORE_HEADER: "0.27",
+        ons_imd_contract.INCOME_RANK_HEADER: "550",
+        ons_imd_contract.INCOME_DECILE_HEADER: "2",
+        ons_imd_contract.EMPLOYMENT_SCORE_HEADER: "0.22",
+        ons_imd_contract.EMPLOYMENT_RANK_HEADER: "620",
+        ons_imd_contract.EMPLOYMENT_DECILE_HEADER: "2",
+        ons_imd_contract.EDUCATION_SCORE_HEADER: "14.2",
+        ons_imd_contract.EDUCATION_RANK_HEADER: "740",
+        ons_imd_contract.EDUCATION_DECILE_HEADER: "3",
+        ons_imd_contract.HEALTH_SCORE_HEADER: "0.17",
+        ons_imd_contract.HEALTH_RANK_HEADER: "810",
+        ons_imd_contract.HEALTH_DECILE_HEADER: "3",
+        ons_imd_contract.CRIME_SCORE_HEADER: "0.14",
+        ons_imd_contract.CRIME_RANK_HEADER: "910",
+        ons_imd_contract.CRIME_DECILE_HEADER: "3",
+        ons_imd_contract.BARRIERS_SCORE_HEADER: "19.4",
+        ons_imd_contract.BARRIERS_RANK_HEADER: "1020",
+        ons_imd_contract.BARRIERS_DECILE_HEADER: "4",
+        ons_imd_contract.LIVING_ENVIRONMENT_SCORE_HEADER: "12.9",
+        ons_imd_contract.LIVING_ENVIRONMENT_RANK_HEADER: "1100",
+        ons_imd_contract.LIVING_ENVIRONMENT_DECILE_HEADER: "4",
+        ons_imd_contract.IDACI_SCORE_HEADER: "0.31",
+        ons_imd_contract.IDACI_RANK_HEADER: "700",
+        ons_imd_contract.IDACI_DECILE_HEADER: "2",
+        ons_imd_contract.RELEASE_CONFIG[IMD_RELEASE_IOD2019]["population_total_header"]: "2100",
     }
     row.update(overrides)
     return row
@@ -62,11 +101,33 @@ def test_validate_ons_imd_headers_rejects_missing_2025_field() -> None:
         release_headers["lsoa_name_header"],
         release_headers["lad_code_header"],
         release_headers["lad_name_header"],
-        IMD_SCORE_HEADER,
-        IMD_RANK_HEADER,
-        IMD_DECILE_HEADER,
-        IDACI_SCORE_HEADER,
-        IDACI_RANK_HEADER,
+        ons_imd_contract.IMD_SCORE_HEADER,
+        ons_imd_contract.IMD_RANK_HEADER,
+        ons_imd_contract.IMD_DECILE_HEADER,
+        ons_imd_contract.INCOME_SCORE_HEADER,
+        ons_imd_contract.INCOME_RANK_HEADER,
+        ons_imd_contract.INCOME_DECILE_HEADER,
+        ons_imd_contract.EMPLOYMENT_SCORE_HEADER,
+        ons_imd_contract.EMPLOYMENT_RANK_HEADER,
+        ons_imd_contract.EMPLOYMENT_DECILE_HEADER,
+        ons_imd_contract.EDUCATION_SCORE_HEADER,
+        ons_imd_contract.EDUCATION_RANK_HEADER,
+        ons_imd_contract.EDUCATION_DECILE_HEADER,
+        ons_imd_contract.HEALTH_SCORE_HEADER,
+        ons_imd_contract.HEALTH_RANK_HEADER,
+        ons_imd_contract.HEALTH_DECILE_HEADER,
+        ons_imd_contract.CRIME_SCORE_HEADER,
+        ons_imd_contract.CRIME_RANK_HEADER,
+        ons_imd_contract.CRIME_DECILE_HEADER,
+        ons_imd_contract.BARRIERS_SCORE_HEADER,
+        ons_imd_contract.BARRIERS_RANK_HEADER,
+        ons_imd_contract.BARRIERS_DECILE_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_SCORE_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_RANK_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_DECILE_HEADER,
+        ons_imd_contract.IDACI_SCORE_HEADER,
+        ons_imd_contract.IDACI_RANK_HEADER,
+        release_headers["population_total_header"],
     ]
 
     with pytest.raises(ValueError, match="IDACI"):
@@ -80,12 +141,34 @@ def test_validate_ons_imd_headers_accepts_2019_schema() -> None:
         release_headers["lsoa_name_header"],
         release_headers["lad_code_header"],
         release_headers["lad_name_header"],
-        IMD_SCORE_HEADER,
-        IMD_RANK_HEADER,
-        IMD_DECILE_HEADER,
-        IDACI_SCORE_HEADER,
-        IDACI_RANK_HEADER,
-        IDACI_DECILE_HEADER,
+        ons_imd_contract.IMD_SCORE_HEADER,
+        ons_imd_contract.IMD_RANK_HEADER,
+        ons_imd_contract.IMD_DECILE_HEADER,
+        ons_imd_contract.INCOME_SCORE_HEADER,
+        ons_imd_contract.INCOME_RANK_HEADER,
+        ons_imd_contract.INCOME_DECILE_HEADER,
+        ons_imd_contract.EMPLOYMENT_SCORE_HEADER,
+        ons_imd_contract.EMPLOYMENT_RANK_HEADER,
+        ons_imd_contract.EMPLOYMENT_DECILE_HEADER,
+        ons_imd_contract.EDUCATION_SCORE_HEADER,
+        ons_imd_contract.EDUCATION_RANK_HEADER,
+        ons_imd_contract.EDUCATION_DECILE_HEADER,
+        ons_imd_contract.HEALTH_SCORE_HEADER,
+        ons_imd_contract.HEALTH_RANK_HEADER,
+        ons_imd_contract.HEALTH_DECILE_HEADER,
+        ons_imd_contract.CRIME_SCORE_HEADER,
+        ons_imd_contract.CRIME_RANK_HEADER,
+        ons_imd_contract.CRIME_DECILE_HEADER,
+        ons_imd_contract.BARRIERS_SCORE_HEADER,
+        ons_imd_contract.BARRIERS_RANK_HEADER,
+        ons_imd_contract.BARRIERS_DECILE_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_SCORE_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_RANK_HEADER,
+        ons_imd_contract.LIVING_ENVIRONMENT_DECILE_HEADER,
+        ons_imd_contract.IDACI_SCORE_HEADER,
+        ons_imd_contract.IDACI_RANK_HEADER,
+        ons_imd_contract.IDACI_DECILE_HEADER,
+        release_headers["population_total_header"],
     ]
 
     validate_ons_imd_headers(headers, source_release=IMD_RELEASE_IOD2019)
@@ -109,6 +192,14 @@ def test_normalize_ons_imd_row_returns_typed_record_for_valid_input() -> None:
     assert normalized.idaci_score == 0.45
     assert normalized.idaci_rank == 120
     assert normalized.idaci_decile == 1
+    assert normalized.income_score == 0.41
+    assert normalized.employment_score == 0.34
+    assert normalized.education_score == 18.0
+    assert normalized.health_score == 0.27
+    assert normalized.crime_score == 0.19
+    assert normalized.barriers_score == 23.0
+    assert normalized.living_environment_score == 16.3
+    assert normalized.population_total == 1820
     assert normalized.source_release == "IoD2025"
     assert normalized.lsoa_vintage == "2021"
 
@@ -142,7 +233,7 @@ def test_normalize_ons_imd_row_rejects_missing_lsoa_code() -> None:
 
 def test_normalize_ons_imd_row_rejects_invalid_decile() -> None:
     normalized, rejection = normalize_ons_imd_row(
-        _row_2025(**{IMD_DECILE_HEADER: "11"}),
+        _row_2025(**{ons_imd_contract.IMD_DECILE_HEADER: "11"}),
         source_release=IMD_RELEASE_IOD2025,
         source_file_url="https://example.com/file_7.csv",
     )
@@ -153,7 +244,7 @@ def test_normalize_ons_imd_row_rejects_invalid_decile() -> None:
 
 def test_normalize_ons_imd_row_rejects_invalid_idaci_score() -> None:
     normalized, rejection = normalize_ons_imd_row(
-        _row_2025(**{IDACI_SCORE_HEADER: "oops"}),
+        _row_2025(**{ons_imd_contract.IDACI_SCORE_HEADER: "oops"}),
         source_release=IMD_RELEASE_IOD2025,
         source_file_url="https://example.com/file_7.csv",
     )

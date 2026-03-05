@@ -29,6 +29,9 @@ class FakePipelineRunner:
         return (
             "gias",
             "dfe_characteristics",
+            "dfe_attendance",
+            "dfe_behaviour",
+            "dfe_workforce",
             "dfe_performance",
             "ofsted_latest",
             "ofsted_timeline",
@@ -149,6 +152,42 @@ def test_pipeline_run_ofsted_source_success(monkeypatch: pytest.MonkeyPatch) -> 
     assert result.exit_code == 0
     assert fake_runner.ran_source == "ofsted_latest"
     assert "ofsted_latest: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_dfe_attendance_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "dfe_attendance"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "dfe_attendance"
+    assert "dfe_attendance: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_dfe_behaviour_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "dfe_behaviour"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "dfe_behaviour"
+    assert "dfe_behaviour: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_dfe_workforce_source_success(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "dfe_workforce"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "dfe_workforce"
+    assert "dfe_workforce: succeeded" in result.stdout.lower()
 
 
 def test_pipeline_run_dfe_performance_source_success(monkeypatch: pytest.MonkeyPatch) -> None:

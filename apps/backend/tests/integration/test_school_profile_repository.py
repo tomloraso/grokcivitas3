@@ -46,6 +46,7 @@ pytestmark = pytest.mark.skipif(
 def engine() -> Engine:
     engine = _build_engine(DATABASE_URL)
     _ensure_schema(engine)
+    _cleanup_data(engine)
     _seed_data(engine)
     try:
         yield engine
@@ -150,6 +151,126 @@ def _ensure_schema(engine: Engine) -> None:
         )
         connection.execute(
             text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS local_authority_district_name text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS income_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS income_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS employment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS employment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS education_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS education_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS health_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS health_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS crime_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_rank integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS crime_decile integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS barriers_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text("ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_rank integer NULL")
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation ADD COLUMN IF NOT EXISTS barriers_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_score double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_rank integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS living_environment_decile integer NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_deprivation "
+                "ADD COLUMN IF NOT EXISTS population_total integer NULL"
+            )
+        )
+        connection.execute(
+            text(
                 """
                 CREATE TABLE IF NOT EXISTS area_crime_context (
                     urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
@@ -186,15 +307,23 @@ def _ensure_schema(engine: Engine) -> None:
                     academic_year text NOT NULL,
                     disadvantaged_pct double precision NULL,
                     fsm_pct double precision NULL,
+                    fsm6_pct double precision NULL,
                     sen_pct double precision NULL,
                     sen_support_pct double precision NULL,
                     ehcp_pct double precision NULL,
                     eal_pct double precision NULL,
                     first_language_english_pct double precision NULL,
                     first_language_unclassified_pct double precision NULL,
+                    male_pct double precision NULL,
+                    female_pct double precision NULL,
+                    pupil_mobility_pct double precision NULL,
                     total_pupils integer NULL,
+                    has_fsm6_data boolean NOT NULL DEFAULT false,
+                    has_gender_data boolean NOT NULL DEFAULT false,
+                    has_mobility_data boolean NOT NULL DEFAULT false,
                     has_ethnicity_data boolean NOT NULL DEFAULT false,
                     has_top_languages_data boolean NOT NULL DEFAULT false,
+                    has_send_primary_need_data boolean NOT NULL DEFAULT false,
                     source_dataset_id text NOT NULL,
                     source_dataset_version text NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
@@ -251,6 +380,220 @@ def _ensure_schema(engine: Engine) -> None:
                     source_dataset_version text NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
                     PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS area_house_price_context (
+                    area_code text NOT NULL,
+                    area_name text NOT NULL,
+                    month date NOT NULL,
+                    average_price double precision NOT NULL,
+                    annual_change_pct double precision NULL,
+                    monthly_change_pct double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    source_file_url text NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (area_code, month)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_dataset_id text NOT NULL DEFAULT 'uk_hpi_average_price'"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_dataset_version text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE area_house_price_context "
+                "ADD COLUMN IF NOT EXISTS source_file_url text NOT NULL DEFAULT ''"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1
+                        FROM information_schema.columns
+                        WHERE table_schema = 'public'
+                          AND table_name = 'area_house_price_context'
+                          AND column_name = 'source_release'
+                    ) THEN
+                        ALTER TABLE area_house_price_context
+                            ALTER COLUMN source_release DROP NOT NULL;
+                        ALTER TABLE area_house_price_context
+                            ALTER COLUMN source_release SET DEFAULT 'uk_hpi_average_price';
+                    END IF;
+                END $$;
+                """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS fsm6_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS male_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS female_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS pupil_mobility_pct double precision NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_fsm6_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_gender_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_mobility_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_demographics_yearly "
+                "ADD COLUMN IF NOT EXISTS has_send_primary_need_data boolean NOT NULL DEFAULT false"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_send_primary_need_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    need_key text NOT NULL,
+                    need_label text NOT NULL,
+                    pupil_count integer NULL,
+                    percentage double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, need_key)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_home_language_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    language_key text NOT NULL,
+                    language_label text NOT NULL,
+                    rank integer NOT NULL,
+                    pupil_count integer NULL,
+                    percentage double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, language_key)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_attendance_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    overall_attendance_pct double precision NULL,
+                    overall_absence_pct double precision NULL,
+                    persistent_absence_pct double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_behaviour_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    suspensions_count integer NULL,
+                    suspensions_rate double precision NULL,
+                    permanent_exclusions_count integer NULL,
+                    permanent_exclusions_rate double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_workforce_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    pupil_teacher_ratio double precision NULL,
+                    supply_staff_pct double precision NULL,
+                    teachers_3plus_years_pct double precision NULL,
+                    teacher_turnover_pct double precision NULL,
+                    qts_pct double precision NULL,
+                    qualifications_level6_plus_pct double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_leadership_snapshot (
+                    urn text PRIMARY KEY REFERENCES schools(urn) ON DELETE CASCADE,
+                    headteacher_name text NULL,
+                    headteacher_start_date date NULL,
+                    headteacher_tenure_years double precision NULL,
+                    leadership_turnover_score double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
             )
@@ -563,6 +906,169 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO school_attendance_yearly (
+                    urn,
+                    academic_year,
+                    overall_attendance_pct,
+                    overall_absence_pct,
+                    persistent_absence_pct,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES
+                (
+                    '910001',
+                    '2023/24',
+                    92.8,
+                    7.2,
+                    15.3,
+                    'attendance:rv-2024',
+                    'attendance:file-2024'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    93.2,
+                    6.8,
+                    14.1,
+                    'attendance:rv-2025',
+                    'attendance:file-2025'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    overall_attendance_pct = EXCLUDED.overall_attendance_pct,
+                    overall_absence_pct = EXCLUDED.overall_absence_pct,
+                    persistent_absence_pct = EXCLUDED.persistent_absence_pct,
+                    source_dataset_id = EXCLUDED.source_dataset_id,
+                    source_dataset_version = EXCLUDED.source_dataset_version
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_behaviour_yearly (
+                    urn,
+                    academic_year,
+                    suspensions_count,
+                    suspensions_rate,
+                    permanent_exclusions_count,
+                    permanent_exclusions_rate,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES
+                (
+                    '910001',
+                    '2023/24',
+                    109,
+                    14.8,
+                    1,
+                    0.1,
+                    'behaviour:rv-2024',
+                    'behaviour:file-2024'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    121,
+                    16.4,
+                    1,
+                    0.1,
+                    'behaviour:rv-2025',
+                    'behaviour:file-2025'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    suspensions_count = EXCLUDED.suspensions_count,
+                    suspensions_rate = EXCLUDED.suspensions_rate,
+                    permanent_exclusions_count = EXCLUDED.permanent_exclusions_count,
+                    permanent_exclusions_rate = EXCLUDED.permanent_exclusions_rate,
+                    source_dataset_id = EXCLUDED.source_dataset_id,
+                    source_dataset_version = EXCLUDED.source_dataset_version
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_workforce_yearly (
+                    urn,
+                    academic_year,
+                    pupil_teacher_ratio,
+                    supply_staff_pct,
+                    teachers_3plus_years_pct,
+                    teacher_turnover_pct,
+                    qts_pct,
+                    qualifications_level6_plus_pct,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES
+                (
+                    '910001',
+                    '2023/24',
+                    16.7,
+                    2.8,
+                    74.0,
+                    10.2,
+                    95.1,
+                    80.3,
+                    'workforce:rv-2024',
+                    'workforce:file-2024'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    16.3,
+                    2.4,
+                    76.5,
+                    9.8,
+                    95.2,
+                    81.1,
+                    'workforce:rv-2025',
+                    'workforce:file-2025'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    pupil_teacher_ratio = EXCLUDED.pupil_teacher_ratio,
+                    supply_staff_pct = EXCLUDED.supply_staff_pct,
+                    teachers_3plus_years_pct = EXCLUDED.teachers_3plus_years_pct,
+                    teacher_turnover_pct = EXCLUDED.teacher_turnover_pct,
+                    qts_pct = EXCLUDED.qts_pct,
+                    qualifications_level6_plus_pct = EXCLUDED.qualifications_level6_plus_pct,
+                    source_dataset_id = EXCLUDED.source_dataset_id,
+                    source_dataset_version = EXCLUDED.source_dataset_version
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_leadership_snapshot (
+                    urn,
+                    headteacher_name,
+                    headteacher_start_date,
+                    headteacher_tenure_years,
+                    leadership_turnover_score,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES (
+                    '910001',
+                    'A. Jones',
+                    '2020-09-01',
+                    4.5,
+                    1.2,
+                    'workforce:rv-2025',
+                    'workforce:file-2025'
+                )
+                ON CONFLICT (urn) DO UPDATE SET
+                    headteacher_name = EXCLUDED.headteacher_name,
+                    headteacher_start_date = EXCLUDED.headteacher_start_date,
+                    headteacher_tenure_years = EXCLUDED.headteacher_tenure_years,
+                    leadership_turnover_score = EXCLUDED.leadership_turnover_score,
+                    source_dataset_id = EXCLUDED.source_dataset_id,
+                    source_dataset_version = EXCLUDED.source_dataset_version
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO ofsted_inspections (
                     inspection_number,
                     urn,
@@ -772,6 +1278,28 @@ def _seed_data(engine: Engine) -> None:
                     idaci_score,
                     idaci_rank,
                     idaci_decile,
+                    income_score,
+                    income_rank,
+                    income_decile,
+                    employment_score,
+                    employment_rank,
+                    employment_decile,
+                    education_score,
+                    education_rank,
+                    education_decile,
+                    health_score,
+                    health_rank,
+                    health_decile,
+                    crime_score,
+                    crime_rank,
+                    crime_decile,
+                    barriers_score,
+                    barriers_rank,
+                    barriers_decile,
+                    living_environment_score,
+                    living_environment_rank,
+                    living_environment_decile,
+                    population_total,
                     source_release,
                     lsoa_vintage,
                     source_file_url
@@ -786,6 +1314,28 @@ def _seed_data(engine: Engine) -> None:
                     0.241,
                     7284,
                     2,
+                    0.125,
+                    9500,
+                    3,
+                    0.102,
+                    8800,
+                    3,
+                    0.154,
+                    10400,
+                    4,
+                    0.118,
+                    9200,
+                    3,
+                    0.176,
+                    11050,
+                    4,
+                    0.129,
+                    9850,
+                    3,
+                    0.171,
+                    10920,
+                    4,
+                    2000,
                     'IoD2025',
                     '2021',
                     'https://assets.publishing.service.gov.uk/media/example/file_7.csv'
@@ -796,6 +1346,64 @@ def _seed_data(engine: Engine) -> None:
                     idaci_score = EXCLUDED.idaci_score,
                     idaci_decile = EXCLUDED.idaci_decile,
                     source_release = EXCLUDED.source_release
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO area_house_price_context (
+                    area_code,
+                    area_name,
+                    month,
+                    average_price,
+                    annual_change_pct,
+                    monthly_change_pct,
+                    source_dataset_id,
+                    source_dataset_version,
+                    source_file_url
+                )
+                VALUES
+                (
+                    'E09000033',
+                    'Westminster',
+                    '2025-11-01',
+                    800000.0,
+                    5.4,
+                    0.7,
+                    'uk_hpi_average_price',
+                    '2025-11',
+                    'https://example.com/ukhpi.csv'
+                ),
+                (
+                    'E09000033',
+                    'Westminster',
+                    '2025-12-01',
+                    805000.0,
+                    5.7,
+                    0.6,
+                    'uk_hpi_average_price',
+                    '2025-12',
+                    'https://example.com/ukhpi.csv'
+                ),
+                (
+                    'E09000033',
+                    'Westminster',
+                    '2026-01-01',
+                    810000.0,
+                    6.0,
+                    0.5,
+                    'uk_hpi_average_price',
+                    '2026-01',
+                    'https://example.com/ukhpi.csv'
+                )
+                ON CONFLICT (area_code, month) DO UPDATE SET
+                    average_price = EXCLUDED.average_price,
+                    annual_change_pct = EXCLUDED.annual_change_pct,
+                    monthly_change_pct = EXCLUDED.monthly_change_pct,
+                    source_dataset_id = EXCLUDED.source_dataset_id,
+                    source_dataset_version = EXCLUDED.source_dataset_version,
+                    source_file_url = EXCLUDED.source_file_url
                 """
             )
         )
@@ -878,8 +1486,23 @@ def _seed_data(engine: Engine) -> None:
 def _cleanup_data(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM area_crime_context WHERE urn IN ('910001', '910002')"))
+        connection.execute(
+            text("DELETE FROM area_house_price_context WHERE area_code = 'E09000033'")
+        )
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code = 'E01004736'"))
         connection.execute(text("DELETE FROM ofsted_inspections WHERE urn IN ('910001', '910002')"))
+        connection.execute(
+            text("DELETE FROM school_behaviour_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_leadership_snapshot WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_workforce_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_attendance_yearly WHERE urn IN ('910001', '910002')")
+        )
         connection.execute(
             text("DELETE FROM school_performance_yearly WHERE urn IN ('910001', '910002')")
         )
@@ -888,6 +1511,12 @@ def _cleanup_data(engine: Engine) -> None:
         )
         connection.execute(
             text("DELETE FROM school_ethnicity_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_home_language_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_send_primary_need_yearly WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
             text("DELETE FROM school_demographics_yearly WHERE urn IN ('910001', '910002')")
@@ -918,6 +1547,30 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.demographics_latest.ethnicity_breakdown[0].key == "white_british"
     assert result.demographics_latest.ethnicity_breakdown[0].percentage == 49.0
     assert result.demographics_latest.ethnicity_breakdown[0].count == 98
+    assert result.attendance_latest is not None
+    assert result.attendance_latest.academic_year == "2024/25"
+    assert result.attendance_latest.overall_attendance_pct == 93.2
+    assert result.attendance_latest.overall_absence_pct == 6.8
+    assert result.attendance_latest.persistent_absence_pct == 14.1
+    assert result.behaviour_latest is not None
+    assert result.behaviour_latest.academic_year == "2024/25"
+    assert result.behaviour_latest.suspensions_count == 121
+    assert result.behaviour_latest.suspensions_rate == 16.4
+    assert result.behaviour_latest.permanent_exclusions_count == 1
+    assert result.behaviour_latest.permanent_exclusions_rate == 0.1
+    assert result.workforce_latest is not None
+    assert result.workforce_latest.academic_year == "2024/25"
+    assert result.workforce_latest.pupil_teacher_ratio == 16.3
+    assert result.workforce_latest.supply_staff_pct == 2.4
+    assert result.workforce_latest.teachers_3plus_years_pct == 76.5
+    assert result.workforce_latest.teacher_turnover_pct == 9.8
+    assert result.workforce_latest.qts_pct == 95.2
+    assert result.workforce_latest.qualifications_level6_plus_pct == 81.1
+    assert result.leadership_snapshot is not None
+    assert result.leadership_snapshot.headteacher_name == "A. Jones"
+    assert result.leadership_snapshot.headteacher_start_date == date(2020, 9, 1)
+    assert result.leadership_snapshot.headteacher_tenure_years == pytest.approx(4.5)
+    assert result.leadership_snapshot.leadership_turnover_score == pytest.approx(1.2)
 
     assert result.ofsted_latest is not None
     assert result.ofsted_latest.overall_effectiveness_code == "2"
@@ -952,28 +1605,59 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.area_context.coverage.has_deprivation is True
     assert result.area_context.coverage.has_crime is True
     assert result.area_context.coverage.crime_months_available == 2
+    assert result.area_context.coverage.has_house_prices is True
+    assert result.area_context.coverage.house_price_months_available == 3
     assert result.area_context.deprivation is not None
     assert result.area_context.deprivation.lsoa_code == "E01004736"
     assert result.area_context.deprivation.imd_score == 22.4
     assert result.area_context.deprivation.imd_rank == 10234
     assert result.area_context.deprivation.imd_decile == 3
     assert result.area_context.deprivation.idaci_decile == 2
+    assert result.area_context.deprivation.population_total == 2000
     assert result.area_context.crime is not None
     assert result.area_context.crime.radius_miles == pytest.approx(1.0, abs=0.01)
     assert result.area_context.crime.latest_month == "2026-01"
     assert result.area_context.crime.total_incidents == 219
+    assert result.area_context.crime.population_denominator == 2000
+    assert result.area_context.crime.incidents_per_1000 == pytest.approx(109.5)
+    assert tuple(rate.year for rate in result.area_context.crime.annual_incidents_per_1000) == (
+        2025,
+        2026,
+    )
     assert tuple(category.category for category in result.area_context.crime.categories) == (
         "violent-crime",
         "anti-social-behaviour",
     )
+    assert result.area_context.house_prices is not None
+    assert result.area_context.house_prices.area_code == "E09000033"
+    assert result.area_context.house_prices.latest_month == "2026-01"
+    assert result.area_context.house_prices.average_price == pytest.approx(810000.0)
+    assert result.area_context.house_prices.annual_change_pct == pytest.approx(6.0)
+    assert result.area_context.house_prices.monthly_change_pct == pytest.approx(0.5)
+    assert result.area_context.house_prices.three_year_change_pct is None
+    assert tuple(point.month for point in result.area_context.house_prices.trend) == (
+        "2025-11",
+        "2025-12",
+        "2026-01",
+    )
     assert result.completeness.demographics.status == "partial"
     assert result.completeness.demographics.reason_code == "partial_metric_coverage"
     assert result.completeness.demographics.last_updated_at is not None
+    assert result.completeness.attendance.status == "available"
+    assert result.completeness.attendance.reason_code is None
+    assert result.completeness.behaviour.status == "available"
+    assert result.completeness.behaviour.reason_code is None
+    assert result.completeness.workforce.status == "available"
+    assert result.completeness.workforce.reason_code is None
+    assert result.completeness.leadership.status == "available"
+    assert result.completeness.leadership.reason_code is None
     assert result.completeness.ofsted_latest.status == "available"
     assert result.completeness.ofsted_timeline.status == "available"
     assert result.completeness.area_deprivation.status == "available"
     assert result.completeness.area_crime.status == "partial"
     assert result.completeness.area_crime.reason_code == "source_coverage_gap"
+    assert result.completeness.area_house_prices.status == "partial"
+    assert result.completeness.area_house_prices.reason_code == "insufficient_years_published"
 
 
 def test_school_profile_repository_returns_none_for_unknown_urn(engine: Engine) -> None:
@@ -993,10 +1677,14 @@ def test_school_profile_repository_infers_zero_incident_crime_snapshot(engine: E
     assert result.school.urn == "910002"
     assert result.area_context.coverage.has_crime is True
     assert result.area_context.coverage.crime_months_available >= 1
+    assert result.area_context.coverage.has_house_prices is False
+    assert result.area_context.coverage.house_price_months_available == 0
     assert result.area_context.crime is not None
     assert result.area_context.crime.latest_month == "2026-01"
     assert result.area_context.crime.total_incidents == 0
     assert result.area_context.crime.categories == ()
+    assert result.completeness.area_house_prices.status == "unavailable"
+    assert result.completeness.area_house_prices.reason_code == "not_applicable"
     if result.area_context.coverage.crime_months_available < 12:
         assert result.completeness.area_crime.status == "partial"
         assert result.completeness.area_crime.reason_code == "source_coverage_gap"
@@ -1028,3 +1716,5 @@ def test_school_profile_repository_marks_area_crime_stale_after_school_refresh(
     assert result.completeness.area_crime.status == "unavailable"
     assert result.completeness.area_crime.reason_code == "stale_after_school_refresh"
     assert result.completeness.area_crime.last_updated_at is not None
+    assert result.completeness.area_house_prices.status == "unavailable"
+    assert result.completeness.area_house_prices.reason_code == "not_applicable"

@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Literal
 
 TrendDirection = Literal["up", "down", "flat"]
+BenchmarkScope = Literal["local_authority_district", "phase"]
 TrendCompletenessStatus = Literal["available", "partial", "unavailable"]
 TrendCompletenessReasonCode = Literal[
     "source_missing",
@@ -22,9 +23,22 @@ TrendCompletenessReasonCode = Literal[
 @dataclass(frozen=True)
 class SchoolTrendPointDto:
     academic_year: str
-    value: float | None
+    value: float | int | None
     delta: float | None
     direction: TrendDirection | None
+
+
+@dataclass(frozen=True)
+class SchoolTrendBenchmarkPointDto:
+    academic_year: str
+    school_value: float | int | None
+    national_value: float | None
+    local_value: float | None
+    school_vs_national_delta: float | None
+    school_vs_local_delta: float | None
+    local_scope: BenchmarkScope
+    local_area_code: str
+    local_area_label: str
 
 
 @dataclass(frozen=True)
@@ -37,11 +51,57 @@ class SchoolTrendsHistoryQualityDto:
 @dataclass(frozen=True)
 class SchoolTrendsSeriesDto:
     disadvantaged_pct: tuple[SchoolTrendPointDto, ...]
+    fsm_pct: tuple[SchoolTrendPointDto, ...]
+    fsm6_pct: tuple[SchoolTrendPointDto, ...]
     sen_pct: tuple[SchoolTrendPointDto, ...]
     ehcp_pct: tuple[SchoolTrendPointDto, ...]
     eal_pct: tuple[SchoolTrendPointDto, ...]
     first_language_english_pct: tuple[SchoolTrendPointDto, ...]
     first_language_unclassified_pct: tuple[SchoolTrendPointDto, ...]
+    male_pct: tuple[SchoolTrendPointDto, ...]
+    female_pct: tuple[SchoolTrendPointDto, ...]
+    pupil_mobility_pct: tuple[SchoolTrendPointDto, ...]
+    overall_attendance_pct: tuple[SchoolTrendPointDto, ...]
+    overall_absence_pct: tuple[SchoolTrendPointDto, ...]
+    persistent_absence_pct: tuple[SchoolTrendPointDto, ...]
+    suspensions_count: tuple[SchoolTrendPointDto, ...]
+    suspensions_rate: tuple[SchoolTrendPointDto, ...]
+    permanent_exclusions_count: tuple[SchoolTrendPointDto, ...]
+    permanent_exclusions_rate: tuple[SchoolTrendPointDto, ...]
+    pupil_teacher_ratio: tuple[SchoolTrendPointDto, ...]
+    supply_staff_pct: tuple[SchoolTrendPointDto, ...]
+    teachers_3plus_years_pct: tuple[SchoolTrendPointDto, ...]
+    teacher_turnover_pct: tuple[SchoolTrendPointDto, ...]
+    qts_pct: tuple[SchoolTrendPointDto, ...]
+    qualifications_level6_plus_pct: tuple[SchoolTrendPointDto, ...]
+
+
+@dataclass(frozen=True)
+class SchoolTrendsBenchmarksDto:
+    disadvantaged_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    fsm_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    fsm6_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    sen_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    ehcp_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    eal_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    first_language_english_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    first_language_unclassified_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    male_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    female_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    pupil_mobility_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    overall_attendance_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    overall_absence_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    persistent_absence_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    suspensions_count: tuple[SchoolTrendBenchmarkPointDto, ...]
+    suspensions_rate: tuple[SchoolTrendBenchmarkPointDto, ...]
+    permanent_exclusions_count: tuple[SchoolTrendBenchmarkPointDto, ...]
+    permanent_exclusions_rate: tuple[SchoolTrendBenchmarkPointDto, ...]
+    pupil_teacher_ratio: tuple[SchoolTrendBenchmarkPointDto, ...]
+    supply_staff_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    teachers_3plus_years_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    teacher_turnover_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    qts_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    qualifications_level6_plus_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
 
 
 @dataclass(frozen=True)
@@ -53,9 +113,48 @@ class SchoolTrendsCompletenessDto:
 
 
 @dataclass(frozen=True)
+class SchoolTrendsSectionCompletenessDto:
+    demographics: SchoolTrendsCompletenessDto
+    attendance: SchoolTrendsCompletenessDto
+    behaviour: SchoolTrendsCompletenessDto
+    workforce: SchoolTrendsCompletenessDto
+
+
+@dataclass(frozen=True)
 class SchoolTrendsResponseDto:
     urn: str
     years_available: tuple[str, ...]
     history_quality: SchoolTrendsHistoryQualityDto
     series: SchoolTrendsSeriesDto
+    benchmarks: SchoolTrendsBenchmarksDto
+    completeness: SchoolTrendsCompletenessDto
+    section_completeness: SchoolTrendsSectionCompletenessDto
+
+
+@dataclass(frozen=True)
+class SchoolTrendDashboardMetricDto:
+    metric_key: str
+    label: str
+    unit: str
+    points: tuple[SchoolTrendBenchmarkPointDto, ...]
+
+
+@dataclass(frozen=True)
+class SchoolTrendDashboardSectionDto:
+    key: Literal[
+        "demographics",
+        "attendance",
+        "behaviour",
+        "workforce",
+        "performance",
+        "area",
+    ]
+    metrics: tuple[SchoolTrendDashboardMetricDto, ...]
+
+
+@dataclass(frozen=True)
+class SchoolTrendDashboardResponseDto:
+    urn: str
+    years_available: tuple[str, ...]
+    sections: tuple[SchoolTrendDashboardSectionDto, ...]
     completeness: SchoolTrendsCompletenessDto

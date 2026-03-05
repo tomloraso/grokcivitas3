@@ -1,11 +1,4 @@
-/**
- * View-model types for the school profile feature.
- * Mapped from backend wire contracts at the feature boundary.
- */
-
-/* ------------------------------------------------------------------ */
-/* School identity                                                     */
-/* ------------------------------------------------------------------ */
+import type { MetricSectionKey, MetricUnit } from "./metricCatalog";
 
 export interface SchoolIdentityVM {
   urn: string;
@@ -18,22 +11,20 @@ export interface SchoolIdentityVM {
   lng: number;
 }
 
-/* ------------------------------------------------------------------ */
-/* Demographics                                                        */
-/* ------------------------------------------------------------------ */
-
 export interface DemographicMetricVM {
   label: string;
-  /** Formatted display value (e.g. "17.2%") or null when data unavailable */
   value: string | null;
-  /** Raw numeric value for sparkline / delta use */
   raw: number | null;
-  /** Metric key for matching to trends series */
   metricKey: string;
+  unit: MetricUnit;
 }
 
 export interface DemographicsCoverageVM {
   fsmSupported: boolean;
+  fsm6Supported: boolean;
+  genderSupported: boolean;
+  mobilitySupported: boolean;
+  sendPrimaryNeedSupported: boolean;
   ethnicitySupported: boolean;
   topLanguagesSupported: boolean;
 }
@@ -46,16 +37,55 @@ export interface DemographicsEthnicityGroupVM {
   percentageLabel: string | null;
 }
 
+export interface DemographicsCategoryVM {
+  key: string;
+  label: string;
+  percentage: number | null;
+  count: number | null;
+  percentageLabel: string | null;
+  rank?: number;
+}
+
 export interface DemographicsVM {
   academicYear: string;
   metrics: DemographicMetricVM[];
   coverage: DemographicsCoverageVM;
   ethnicityBreakdown: DemographicsEthnicityGroupVM[];
+  sendPrimaryNeeds: DemographicsCategoryVM[];
+  topHomeLanguages: DemographicsCategoryVM[];
 }
 
-/* ------------------------------------------------------------------ */
-/* School performance                                                  */
-/* ------------------------------------------------------------------ */
+export interface AttendanceLatestVM {
+  academicYear: string;
+  overallAttendancePct: number | null;
+  overallAbsencePct: number | null;
+  persistentAbsencePct: number | null;
+}
+
+export interface BehaviourLatestVM {
+  academicYear: string;
+  suspensionsCount: number | null;
+  suspensionsRate: number | null;
+  permanentExclusionsCount: number | null;
+  permanentExclusionsRate: number | null;
+}
+
+export interface WorkforceLatestVM {
+  academicYear: string;
+  pupilTeacherRatio: number | null;
+  supplyStaffPct: number | null;
+  teachers3plusYearsPct: number | null;
+  teacherTurnoverPct: number | null;
+  qtsPct: number | null;
+  qualificationsLevel6PlusPct: number | null;
+}
+
+export interface LeadershipSnapshotVM {
+  headteacherName: string | null;
+  headteacherStartDate: string | null;
+  headteacherTenureYears: number | null;
+  leadershipTurnoverScore: number | null;
+}
 
 export interface PerformanceYearVM {
   academicYear: string;
@@ -83,10 +113,6 @@ export interface PerformanceVM {
   latest: PerformanceYearVM | null;
   history: PerformanceYearVM[];
 }
-
-/* ------------------------------------------------------------------ */
-/* Ofsted                                                              */
-/* ------------------------------------------------------------------ */
 
 export interface OfstedVM {
   ratingCode: string | null;
@@ -133,9 +159,13 @@ export interface OfstedTimelineVM {
   coverage: OfstedTimelineCoverageVM;
 }
 
-/* ------------------------------------------------------------------ */
-/* Area context                                                        */
-/* ------------------------------------------------------------------ */
+export interface AreaDeprivationDomainVM {
+  key: string;
+  label: string;
+  score: number | null;
+  rank: number | null;
+  decile: number | null;
+}
 
 export interface AreaDeprivationVM {
   lsoaCode: string;
@@ -144,7 +174,11 @@ export interface AreaDeprivationVM {
   imdDecile: number;
   idaciScore: number;
   idaciDecile: number;
+  populationTotal: number | null;
+  localAuthorityDistrictCode: string | null;
+  localAuthorityDistrictName: string | null;
   sourceRelease: string;
+  domains: AreaDeprivationDomainVM[];
 }
 
 export interface AreaCrimeCategoryVM {
@@ -152,28 +186,54 @@ export interface AreaCrimeCategoryVM {
   incidentCount: number;
 }
 
+export interface AreaCrimeAnnualRateVM {
+  year: number;
+  totalIncidents: number;
+  incidentsPer1000: number | null;
+}
+
 export interface AreaCrimeVM {
   radiusMiles: number;
   latestMonth: string;
   totalIncidents: number;
+  populationDenominator: number | null;
+  incidentsPer1000: number | null;
+  annualIncidentsPer1000: AreaCrimeAnnualRateVM[];
   categories: AreaCrimeCategoryVM[];
+}
+
+export interface AreaHousePricePointVM {
+  month: string;
+  averagePrice: number;
+  annualChangePct: number | null;
+  monthlyChangePct: number | null;
+}
+
+export interface AreaHousePricesVM {
+  areaCode: string;
+  areaName: string;
+  latestMonth: string;
+  averagePrice: number;
+  annualChangePct: number | null;
+  monthlyChangePct: number | null;
+  threeYearChangePct: number | null;
+  trend: AreaHousePricePointVM[];
 }
 
 export interface AreaContextCoverageVM {
   hasDeprivation: boolean;
   hasCrime: boolean;
   crimeMonthsAvailable: number;
+  hasHousePrices: boolean;
+  housePriceMonthsAvailable: number;
 }
 
 export interface AreaContextVM {
   deprivation: AreaDeprivationVM | null;
   crime: AreaCrimeVM | null;
+  housePrices: AreaHousePricesVM | null;
   coverage: AreaContextCoverageVM;
 }
-
-/* ------------------------------------------------------------------ */
-/* Trends                                                              */
-/* ------------------------------------------------------------------ */
 
 export interface TrendPointVM {
   year: string;
@@ -185,10 +245,17 @@ export interface TrendPointVM {
 export interface TrendSeriesVM {
   label: string;
   metricKey: string;
+  unit: MetricUnit;
   points: TrendPointVM[];
-  /** Latest delta for stat card footer */
   latestDelta: number | null;
   latestDirection: "up" | "down" | "flat" | null;
+}
+
+export interface TrendsSectionCompletenessVM {
+  demographics: SectionCompletenessVM;
+  attendance: SectionCompletenessVM;
+  behaviour: SectionCompletenessVM;
+  workforce: SectionCompletenessVM;
 }
 
 export interface TrendsVM {
@@ -196,11 +263,46 @@ export interface TrendsVM {
   isPartialHistory: boolean;
   yearsCount: number;
   series: TrendSeriesVM[];
+  sectionCompleteness: TrendsSectionCompletenessVM;
 }
 
-/* ------------------------------------------------------------------ */
-/* Completeness                                                        */
-/* ------------------------------------------------------------------ */
+export interface BenchmarkTrendPointVM {
+  academicYear: string;
+  schoolValue: number | null;
+  nationalValue: number | null;
+  localValue: number | null;
+  schoolVsNationalDelta: number | null;
+  schoolVsLocalDelta: number | null;
+}
+
+export interface BenchmarkMetricVM {
+  metricKey: string;
+  label: string;
+  section: MetricSectionKey;
+  unit: MetricUnit;
+  academicYear: string;
+  schoolValue: number | null;
+  nationalValue: number | null;
+  localValue: number | null;
+  schoolVsNationalDelta: number | null;
+  schoolVsLocalDelta: number | null;
+  localScope: "local_authority_district" | "phase";
+  localAreaCode: string;
+  localAreaLabel: string;
+  trendPoints: BenchmarkTrendPointVM[];
+}
+
+export interface BenchmarkSectionVM {
+  key: MetricSectionKey;
+  label: string;
+  metrics: BenchmarkMetricVM[];
+}
+
+export interface BenchmarkDashboardVM {
+  yearsAvailable: string[];
+  sections: BenchmarkSectionVM[];
+  completeness: SectionCompletenessVM | null;
+}
 
 export type SectionCompletenessStatus = "available" | "partial" | "unavailable";
 
@@ -246,34 +348,36 @@ export interface SectionCompletenessVM {
 
 export interface ProfileCompletenessVM {
   demographics: SectionCompletenessVM;
+  attendance: SectionCompletenessVM;
+  behaviour: SectionCompletenessVM;
+  workforce: SectionCompletenessVM;
+  leadership: SectionCompletenessVM;
   performance: SectionCompletenessVM;
   trends: SectionCompletenessVM;
   ofstedLatest: SectionCompletenessVM;
   ofstedTimeline: SectionCompletenessVM;
   areaDeprivation: SectionCompletenessVM;
   areaCrime: SectionCompletenessVM;
+  areaHousePrices: SectionCompletenessVM;
 }
-
-/* ------------------------------------------------------------------ */
-/* Unsupported metrics                                                 */
-/* ------------------------------------------------------------------ */
 
 export interface UnsupportedMetricVM {
   label: string;
 }
 
-/* ------------------------------------------------------------------ */
-/* Composite profile VM                                                */
-/* ------------------------------------------------------------------ */
-
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
   demographics: DemographicsVM | null;
+  attendance: AttendanceLatestVM | null;
+  behaviour: BehaviourLatestVM | null;
+  workforce: WorkforceLatestVM | null;
+  leadership: LeadershipSnapshotVM | null;
   performance: PerformanceVM | null;
   ofsted: OfstedVM | null;
   ofstedTimeline: OfstedTimelineVM;
   areaContext: AreaContextVM;
   trends: TrendsVM | null;
+  benchmarkDashboard: BenchmarkDashboardVM | null;
   completeness: ProfileCompletenessVM;
   unsupportedMetrics: UnsupportedMetricVM[];
 }

@@ -3,6 +3,7 @@ import type {
   HealthResponse,
   SchoolNameSearchResponse,
   SchoolProfileResponse,
+  SchoolTrendDashboardResponse,
   SchoolTrendsResponse,
   SearchSchoolsQuery,
   SchoolsSearchResponse,
@@ -13,6 +14,7 @@ const SCHOOL_ENDPOINT_CACHE_TTL_MS = 5 * 60 * 1000;
 const SCHOOL_ENDPOINT_CACHE_LIMIT = 200;
 const SCHOOL_PROFILE_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+$/;
 const SCHOOL_TRENDS_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends$/;
+const SCHOOL_TRENDS_DASHBOARD_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends\/dashboard$/;
 
 interface CacheEntry {
   value: unknown;
@@ -41,7 +43,11 @@ function cacheTtlForRequest(url: string, init?: RequestInit): number | null {
     return null;
   }
 
-  if (SCHOOL_PROFILE_PATH_RE.test(url) || SCHOOL_TRENDS_PATH_RE.test(url)) {
+  if (
+    SCHOOL_PROFILE_PATH_RE.test(url) ||
+    SCHOOL_TRENDS_PATH_RE.test(url) ||
+    SCHOOL_TRENDS_DASHBOARD_PATH_RE.test(url)
+  ) {
     return SCHOOL_ENDPOINT_CACHE_TTL_MS;
   }
 
@@ -177,5 +183,13 @@ export async function getSchoolProfile(urn: string): Promise<SchoolProfileRespon
 export async function getSchoolTrends(urn: string): Promise<SchoolTrendsResponse> {
   return request<SchoolTrendsResponse>(
     `/api/v1/schools/${encodeURIComponent(urn)}/trends`
+  );
+}
+
+export async function getSchoolTrendDashboard(
+  urn: string
+): Promise<SchoolTrendDashboardResponse> {
+  return request<SchoolTrendDashboardResponse>(
+    `/api/v1/schools/${encodeURIComponent(urn)}/trends/dashboard`
   );
 }

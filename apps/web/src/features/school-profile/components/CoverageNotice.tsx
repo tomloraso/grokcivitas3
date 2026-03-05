@@ -13,12 +13,17 @@ interface CoverageNoticeProps {
 
 const SECTION_LABELS: { key: keyof ProfileCompletenessVM; label: string }[] = [
   { key: "demographics", label: "Demographics" },
+  { key: "attendance", label: "Attendance" },
+  { key: "behaviour", label: "Behaviour" },
+  { key: "workforce", label: "Workforce" },
+  { key: "leadership", label: "Leadership" },
   { key: "performance", label: "Performance" },
   { key: "trends", label: "Trends" },
   { key: "ofstedLatest", label: "Ofsted" },
   { key: "ofstedTimeline", label: "Ofsted history" },
   { key: "areaDeprivation", label: "Area deprivation" },
   { key: "areaCrime", label: "Area crime" },
+  { key: "areaHousePrices", label: "Area house prices" }
 ];
 
 function formatRefreshed(completeness: ProfileCompletenessVM): string | null {
