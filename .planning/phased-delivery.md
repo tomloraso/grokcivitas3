@@ -351,12 +351,12 @@
 
 ## Phase 5 (post-MVP) - Extend + optimize
 
-**Goal:** Add datasets, operational hardening, SEO support, and growth features.
+**Goal:** Add post-MVP expansion, operational hardening, SEO support, and growth features beyond the Phase M metrics-catalog scope.
 
 ### Potential deliverables
 
-- Land Registry house price pipeline and profile integration.
-- School workforce data (teacher ratios, sickness days, supply percentage).
+- Additional public datasets beyond `.planning/metrics.md` (for example deprivation/crime/health extensions outside the school-profile baseline).
+- Advanced house-price context beyond Phase M baseline (for example affordability ratios or finer-grain geographies).
 - PDF report export (postcode and/or school reports) if business value justifies.
 - SEO-ready static/indexable location pages.
 - Operational admin dashboard (pipeline health, row counts, last refresh).
@@ -383,7 +383,7 @@
 | UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |
-| 5 | Post-MVP extensions | Additional data and operational tooling | Ongoing |
+| 5 | Post-MVP extensions | Expansion and optimization beyond Phase M coverage | Ongoing |
 
 ---
 
