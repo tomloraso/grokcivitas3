@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Extended (S1-S5 complete; S6 planned)
+- Status: Complete (S1-S6 complete)
 - Last updated: 2026-03-04
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
@@ -100,3 +100,4 @@ Phase Source Stabilization is split into six deliverables:
 - 2026-03-04: phase implementation completed with gate evidence captured in `signoff-2026-03-04.md`.
 - 2026-03-04: direct FSM percentage support is enabled from SPC release files; unsupported flag now reflects source-family availability rather than a hardcoded false.
 - 2026-03-04: S6 plan added to implement school-level ethnicity breakdown using existing SPC school-level files.
+- 2026-03-04: S6 implementation completed; profile contracts now expose school-level ethnicity breakdown where SPC source data is available.

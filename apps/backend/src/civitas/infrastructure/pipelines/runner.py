@@ -69,6 +69,8 @@ class PipelineRunStore(Protocol):
 
 
 class SqlPipelineRunStore:
+    _SCHOOL_PROFILE_CACHE_KEY = "school_profile"
+
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
@@ -158,6 +160,46 @@ class SqlPipelineRunStore:
                 },
             )
 
+    def _touch_school_profile_cache_version(self, connection: Connection) -> None:
+        if not _table_exists(connection, "app_cache_versions"):
+            return
+
+        if connection.dialect.name == "postgresql":
+            connection.execute(
+                text(
+                    """
+                    INSERT INTO app_cache_versions (
+                        cache_key,
+                        version_updated_at
+                    ) VALUES (
+                        :cache_key,
+                        timezone('utc', now())
+                    )
+                    ON CONFLICT (cache_key) DO UPDATE SET
+                        version_updated_at = timezone('utc', now())
+                    """
+                ),
+                {"cache_key": self._SCHOOL_PROFILE_CACHE_KEY},
+            )
+            return
+
+        connection.execute(
+            text(
+                """
+                INSERT INTO app_cache_versions (
+                    cache_key,
+                    version_updated_at
+                ) VALUES (
+                    :cache_key,
+                    CURRENT_TIMESTAMP
+                )
+                ON CONFLICT(cache_key) DO UPDATE SET
+                    version_updated_at = CURRENT_TIMESTAMP
+                """
+            ),
+            {"cache_key": self._SCHOOL_PROFILE_CACHE_KEY},
+        )
+
     def record_finished(
         self,
         context: PipelineRunContext,
@@ -197,6 +239,10 @@ class SqlPipelineRunStore:
                     "error_message": result.error_message,
                 },
             )
+
+            if result.status == PipelineRunStatus.SUCCEEDED:
+                self._touch_school_profile_cache_version(connection)
+
             if not _table_exists(connection, "pipeline_run_events"):
                 return
 
@@ -1116,6 +1162,8 @@ def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]
         return ("schools", None)
     if source == PipelineSource.DFE_CHARACTERISTICS:
         return ("school_demographics_yearly", "demographics")
+    if source == PipelineSource.DFE_PERFORMANCE:
+        return ("school_performance_yearly", "school_performance")
     if source == PipelineSource.OFSTED_LATEST:
         return ("school_ofsted_latest", "ofsted_latest")
     if source == PipelineSource.OFSTED_TIMELINE:

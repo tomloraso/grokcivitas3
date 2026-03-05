@@ -16,6 +16,10 @@ from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseC
 from civitas.infrastructure.config.settings import AppSettings, get_settings
 from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
 from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
+from civitas.infrastructure.persistence.cached_school_profile_repository import (
+    CachedSchoolProfileRepository,
+    PostgresSchoolProfileCacheVersionProvider,
+)
 from civitas.infrastructure.persistence.database import db_engine
 from civitas.infrastructure.persistence.in_memory_task_repository import InMemoryTaskRepository
 from civitas.infrastructure.persistence.postgres_data_quality_repository import (
@@ -67,9 +71,19 @@ def school_search_repository() -> PostgresSchoolSearchRepository:
 
 
 @lru_cache(maxsize=1)
-def school_profile_repository() -> PostgresSchoolProfileRepository:
+def school_profile_repository() -> CachedSchoolProfileRepository:
     settings = app_settings()
-    return PostgresSchoolProfileRepository(engine=db_engine(settings.database.url))
+    engine = db_engine(settings.database.url)
+    delegate = PostgresSchoolProfileRepository(engine=engine)
+    version_provider = PostgresSchoolProfileCacheVersionProvider(
+        engine=engine,
+        poll_interval_seconds=settings.school_search.profile_cache_invalidation_poll_seconds,
+    )
+    return CachedSchoolProfileRepository(
+        delegate=delegate,
+        ttl_seconds=settings.school_search.profile_cache_ttl_seconds,
+        version_provider=version_provider,
+    )
 
 
 @lru_cache(maxsize=1)
@@ -174,6 +188,9 @@ def pipeline_runner() -> PipelineRunner:
         ),
         PipelineSource.DFE_CHARACTERISTICS: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_characteristics
+        ),
+        PipelineSource.DFE_PERFORMANCE: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_performance
         ),
         PipelineSource.OFSTED_LATEST: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_ofsted_latest

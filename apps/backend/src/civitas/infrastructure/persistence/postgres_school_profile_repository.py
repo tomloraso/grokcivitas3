@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Mapping
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from civitas.application.school_profiles.errors import SchoolProfileDataUnavailableError
@@ -18,11 +18,14 @@ from civitas.domain.school_profiles.models import (
     SchoolAreaCrimeCategory,
     SchoolAreaDeprivation,
     SchoolDemographicsCoverage,
+    SchoolDemographicsEthnicityGroup,
     SchoolDemographicsLatest,
     SchoolOfstedLatest,
     SchoolOfstedTimeline,
     SchoolOfstedTimelineCoverage,
     SchoolOfstedTimelineEvent,
+    SchoolPerformance,
+    SchoolPerformanceYear,
     SchoolProfile,
     SchoolProfileCompleteness,
     SchoolProfileSchool,
@@ -48,6 +51,67 @@ SECTION_COMPLETENESS_REASON = Literal[
     "stale_after_school_refresh",
     "no_incidents_in_radius",
 ]
+ETHNICITY_GROUP_COLUMNS: tuple[tuple[str, str, str, str], ...] = (
+    ("white_british", "White British", "white_british_pct", "white_british_count"),
+    ("irish", "Irish", "irish_pct", "irish_count"),
+    (
+        "traveller_of_irish_heritage",
+        "Traveller of Irish heritage",
+        "traveller_of_irish_heritage_pct",
+        "traveller_of_irish_heritage_count",
+    ),
+    (
+        "any_other_white_background",
+        "Any other white background",
+        "any_other_white_background_pct",
+        "any_other_white_background_count",
+    ),
+    ("gypsy_roma", "Gypsy/Roma", "gypsy_roma_pct", "gypsy_roma_count"),
+    (
+        "white_and_black_caribbean",
+        "White and Black Caribbean",
+        "white_and_black_caribbean_pct",
+        "white_and_black_caribbean_count",
+    ),
+    (
+        "white_and_black_african",
+        "White and Black African",
+        "white_and_black_african_pct",
+        "white_and_black_african_count",
+    ),
+    ("white_and_asian", "White and Asian", "white_and_asian_pct", "white_and_asian_count"),
+    (
+        "any_other_mixed_background",
+        "Any other mixed background",
+        "any_other_mixed_background_pct",
+        "any_other_mixed_background_count",
+    ),
+    ("indian", "Indian", "indian_pct", "indian_count"),
+    ("pakistani", "Pakistani", "pakistani_pct", "pakistani_count"),
+    ("bangladeshi", "Bangladeshi", "bangladeshi_pct", "bangladeshi_count"),
+    (
+        "any_other_asian_background",
+        "Any other Asian background",
+        "any_other_asian_background_pct",
+        "any_other_asian_background_count",
+    ),
+    ("caribbean", "Caribbean", "caribbean_pct", "caribbean_count"),
+    ("african", "African", "african_pct", "african_count"),
+    (
+        "any_other_black_background",
+        "Any other black background",
+        "any_other_black_background_pct",
+        "any_other_black_background_count",
+    ),
+    ("chinese", "Chinese", "chinese_pct", "chinese_count"),
+    (
+        "any_other_ethnic_group",
+        "Any other ethnic group",
+        "any_other_ethnic_group_pct",
+        "any_other_ethnic_group_count",
+    ),
+    ("unclassified", "Unclassified", "unclassified_pct", "unclassified_count"),
+)
 
 
 class PostgresSchoolProfileRepository(SchoolProfileRepository):
@@ -82,12 +146,62 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                             demographics.has_ethnicity_data,
                             demographics.has_top_languages_data,
                             demographics.source_dataset_id,
+                            ethnicity.white_british_pct,
+                            ethnicity.white_british_count,
+                            ethnicity.irish_pct,
+                            ethnicity.irish_count,
+                            ethnicity.traveller_of_irish_heritage_pct,
+                            ethnicity.traveller_of_irish_heritage_count,
+                            ethnicity.any_other_white_background_pct,
+                            ethnicity.any_other_white_background_count,
+                            ethnicity.gypsy_roma_pct,
+                            ethnicity.gypsy_roma_count,
+                            ethnicity.white_and_black_caribbean_pct,
+                            ethnicity.white_and_black_caribbean_count,
+                            ethnicity.white_and_black_african_pct,
+                            ethnicity.white_and_black_african_count,
+                            ethnicity.white_and_asian_pct,
+                            ethnicity.white_and_asian_count,
+                            ethnicity.any_other_mixed_background_pct,
+                            ethnicity.any_other_mixed_background_count,
+                            ethnicity.indian_pct,
+                            ethnicity.indian_count,
+                            ethnicity.pakistani_pct,
+                            ethnicity.pakistani_count,
+                            ethnicity.bangladeshi_pct,
+                            ethnicity.bangladeshi_count,
+                            ethnicity.any_other_asian_background_pct,
+                            ethnicity.any_other_asian_background_count,
+                            ethnicity.caribbean_pct,
+                            ethnicity.caribbean_count,
+                            ethnicity.african_pct,
+                            ethnicity.african_count,
+                            ethnicity.any_other_black_background_pct,
+                            ethnicity.any_other_black_background_count,
+                            ethnicity.chinese_pct,
+                            ethnicity.chinese_count,
+                            ethnicity.any_other_ethnic_group_pct,
+                            ethnicity.any_other_ethnic_group_count,
+                            ethnicity.unclassified_pct,
+                            ethnicity.unclassified_count,
                             demographics.updated_at AS demographics_updated_at,
                             ofsted.urn AS ofsted_urn,
                             ofsted.overall_effectiveness_code,
                             ofsted.overall_effectiveness_label,
                             ofsted.inspection_start_date,
                             ofsted.publication_date,
+                            ofsted.latest_oeif_inspection_start_date,
+                            ofsted.latest_oeif_publication_date,
+                            ofsted.quality_of_education_code,
+                            ofsted.quality_of_education_label,
+                            ofsted.behaviour_and_attitudes_code,
+                            ofsted.behaviour_and_attitudes_label,
+                            ofsted.personal_development_code,
+                            ofsted.personal_development_label,
+                            ofsted.leadership_and_management_code,
+                            ofsted.leadership_and_management_label,
+                            ofsted.latest_ungraded_inspection_date,
+                            ofsted.latest_ungraded_publication_date,
                             ofsted.is_graded,
                             ofsted.ungraded_outcome,
                             ofsted.updated_at AS ofsted_latest_updated_at
@@ -113,6 +227,52 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 academic_year DESC
                             LIMIT 1
                         ) AS demographics ON TRUE
+                        LEFT JOIN LATERAL (
+                            SELECT
+                                white_british_pct,
+                                white_british_count,
+                                irish_pct,
+                                irish_count,
+                                traveller_of_irish_heritage_pct,
+                                traveller_of_irish_heritage_count,
+                                any_other_white_background_pct,
+                                any_other_white_background_count,
+                                gypsy_roma_pct,
+                                gypsy_roma_count,
+                                white_and_black_caribbean_pct,
+                                white_and_black_caribbean_count,
+                                white_and_black_african_pct,
+                                white_and_black_african_count,
+                                white_and_asian_pct,
+                                white_and_asian_count,
+                                any_other_mixed_background_pct,
+                                any_other_mixed_background_count,
+                                indian_pct,
+                                indian_count,
+                                pakistani_pct,
+                                pakistani_count,
+                                bangladeshi_pct,
+                                bangladeshi_count,
+                                any_other_asian_background_pct,
+                                any_other_asian_background_count,
+                                caribbean_pct,
+                                caribbean_count,
+                                african_pct,
+                                african_count,
+                                any_other_black_background_pct,
+                                any_other_black_background_count,
+                                chinese_pct,
+                                chinese_count,
+                                any_other_ethnic_group_pct,
+                                any_other_ethnic_group_count,
+                                unclassified_pct,
+                                unclassified_count
+                            FROM school_ethnicity_yearly
+                            WHERE
+                                school_ethnicity_yearly.urn = schools.urn
+                                AND school_ethnicity_yearly.academic_year = demographics.academic_year
+                            LIMIT 1
+                        ) AS ethnicity ON TRUE
                         LEFT JOIN school_ofsted_latest AS ofsted
                             ON ofsted.urn = schools.urn
                         WHERE schools.urn = :urn
@@ -146,6 +306,41 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                         {"urn": urn},
                     ).mappings()
                 )
+                performance_rows = list(
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                academic_year,
+                                attainment8_average,
+                                progress8_average,
+                                progress8_disadvantaged,
+                                progress8_not_disadvantaged,
+                                progress8_disadvantaged_gap,
+                                engmath_5_plus_pct,
+                                engmath_4_plus_pct,
+                                ebacc_entry_pct,
+                                ebacc_5_plus_pct,
+                                ebacc_4_plus_pct,
+                                ks2_reading_expected_pct,
+                                ks2_writing_expected_pct,
+                                ks2_maths_expected_pct,
+                                ks2_combined_expected_pct,
+                                ks2_reading_higher_pct,
+                                ks2_writing_higher_pct,
+                                ks2_maths_higher_pct,
+                                ks2_combined_higher_pct,
+                                updated_at
+                            FROM school_performance_yearly
+                            WHERE urn = :urn
+                            ORDER BY
+                                substring(academic_year from 1 for 4)::integer ASC,
+                                academic_year ASC
+                            """
+                        ),
+                        {"urn": urn},
+                    ).mappings()
+                )
                 deprivation_row = None
                 postcode = _to_optional_str(row["postcode"]) if row is not None else None
                 if postcode is not None:
@@ -155,6 +350,8 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 """
                                 SELECT
                                     deprivation.lsoa_code,
+                                    deprivation.imd_score,
+                                    deprivation.imd_rank,
                                     deprivation.imd_decile,
                                     deprivation.idaci_score,
                                     deprivation.idaci_decile,
@@ -197,40 +394,66 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     ),
                     {"urn": urn},
                 ).scalar_one()
-                global_crime_months_available = int(
-                    connection.execute(
+                global_crime_months_available: int
+                global_crime_updated_at: object
+                latest_global_crime_row: dict[str, object] | None
+                global_crime_metadata = _load_global_crime_metadata(connection)
+                if global_crime_metadata is None:
+                    global_crime_months_available = int(
+                        connection.execute(
+                            text(
+                                """
+                                SELECT COUNT(DISTINCT month)
+                                FROM area_crime_context
+                                """
+                            )
+                        ).scalar_one()
+                    )
+                    global_crime_updated_at = connection.execute(
                         text(
                             """
-                            SELECT COUNT(DISTINCT month)
+                            SELECT MAX(updated_at)
                             FROM area_crime_context
                             """
                         )
                     ).scalar_one()
-                )
-                global_crime_updated_at = connection.execute(
-                    text(
-                        """
-                        SELECT MAX(updated_at)
-                        FROM area_crime_context
-                        """
-                    )
-                ).scalar_one()
-                latest_global_crime_row = (
-                    connection.execute(
-                        text(
-                            """
-                            SELECT
-                                month,
-                                radius_meters
-                            FROM area_crime_context
-                            ORDER BY month DESC, updated_at DESC, radius_meters DESC
-                            LIMIT 1
-                            """
+                    latest_global_crime_row_mapping = (
+                        connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    month,
+                                    radius_meters
+                                FROM area_crime_context
+                                ORDER BY month DESC, updated_at DESC, radius_meters DESC
+                                LIMIT 1
+                                """
+                            )
                         )
+                        .mappings()
+                        .first()
                     )
-                    .mappings()
-                    .first()
-                )
+                    latest_global_crime_row = (
+                        dict(latest_global_crime_row_mapping)
+                        if latest_global_crime_row_mapping is not None
+                        else None
+                    )
+                else:
+                    (
+                        global_crime_months_available,
+                        global_crime_updated_at,
+                        metadata_latest_month,
+                        metadata_latest_radius_meters,
+                    ) = global_crime_metadata
+                    latest_global_crime_row = (
+                        {
+                            "month": metadata_latest_month,
+                            "radius_meters": metadata_latest_radius_meters,
+                        }
+                        if metadata_latest_month is not None
+                        and metadata_latest_radius_meters is not None
+                        else None
+                    )
                 latest_crime_row = (
                     connection.execute(
                         text(
@@ -285,6 +508,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
 
         demographics_latest = None
         if row["academic_year"] is not None:
+            ethnicity_breakdown = _build_ethnicity_breakdown(dict(row))
             demographics_latest = SchoolDemographicsLatest(
                 academic_year=str(row["academic_year"]),
                 disadvantaged_pct=_to_optional_float(row["disadvantaged_pct"]),
@@ -301,18 +525,50 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                         source_dataset_id=row["source_dataset_id"],
                         fsm_pct=row["fsm_pct"],
                     ),
-                    ethnicity_supported=bool(row["has_ethnicity_data"]),
+                    ethnicity_supported=bool(ethnicity_breakdown),
                     top_languages_supported=bool(row["has_top_languages_data"]),
                 ),
+                ethnicity_breakdown=ethnicity_breakdown,
             )
 
         ofsted_latest = None
         if row["ofsted_urn"] is not None:
+            most_recent_inspection_date = _max_optional_date(
+                (
+                    row["inspection_start_date"],
+                    row["latest_ungraded_inspection_date"],
+                )
+            )
+            days_since_most_recent_inspection = (
+                max((date.today() - most_recent_inspection_date).days, 0)
+                if most_recent_inspection_date is not None
+                else None
+            )
             ofsted_latest = SchoolOfstedLatest(
                 overall_effectiveness_code=_to_optional_str(row["overall_effectiveness_code"]),
                 overall_effectiveness_label=_to_optional_str(row["overall_effectiveness_label"]),
                 inspection_start_date=row["inspection_start_date"],
                 publication_date=row["publication_date"],
+                latest_oeif_inspection_start_date=row["latest_oeif_inspection_start_date"],
+                latest_oeif_publication_date=row["latest_oeif_publication_date"],
+                quality_of_education_code=_to_optional_str(row["quality_of_education_code"]),
+                quality_of_education_label=_to_optional_str(row["quality_of_education_label"]),
+                behaviour_and_attitudes_code=_to_optional_str(row["behaviour_and_attitudes_code"]),
+                behaviour_and_attitudes_label=_to_optional_str(
+                    row["behaviour_and_attitudes_label"]
+                ),
+                personal_development_code=_to_optional_str(row["personal_development_code"]),
+                personal_development_label=_to_optional_str(row["personal_development_label"]),
+                leadership_and_management_code=_to_optional_str(
+                    row["leadership_and_management_code"]
+                ),
+                leadership_and_management_label=_to_optional_str(
+                    row["leadership_and_management_label"]
+                ),
+                latest_ungraded_inspection_date=row["latest_ungraded_inspection_date"],
+                latest_ungraded_publication_date=row["latest_ungraded_publication_date"],
+                most_recent_inspection_date=most_recent_inspection_date,
+                days_since_most_recent_inspection=days_since_most_recent_inspection,
                 is_graded=bool(row["is_graded"]),
                 ungraded_outcome=_to_optional_str(row["ungraded_outcome"]),
             )
@@ -348,10 +604,65 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             coverage=timeline_coverage,
         )
 
+        performance_history = tuple(
+            SchoolPerformanceYear(
+                academic_year=str(performance_row["academic_year"]),
+                attainment8_average=_to_optional_float(performance_row["attainment8_average"]),
+                progress8_average=_to_optional_float(performance_row["progress8_average"]),
+                progress8_disadvantaged=_to_optional_float(
+                    performance_row["progress8_disadvantaged"]
+                ),
+                progress8_not_disadvantaged=_to_optional_float(
+                    performance_row["progress8_not_disadvantaged"]
+                ),
+                progress8_disadvantaged_gap=_to_optional_float(
+                    performance_row["progress8_disadvantaged_gap"]
+                ),
+                engmath_5_plus_pct=_to_optional_float(performance_row["engmath_5_plus_pct"]),
+                engmath_4_plus_pct=_to_optional_float(performance_row["engmath_4_plus_pct"]),
+                ebacc_entry_pct=_to_optional_float(performance_row["ebacc_entry_pct"]),
+                ebacc_5_plus_pct=_to_optional_float(performance_row["ebacc_5_plus_pct"]),
+                ebacc_4_plus_pct=_to_optional_float(performance_row["ebacc_4_plus_pct"]),
+                ks2_reading_expected_pct=_to_optional_float(
+                    performance_row["ks2_reading_expected_pct"]
+                ),
+                ks2_writing_expected_pct=_to_optional_float(
+                    performance_row["ks2_writing_expected_pct"]
+                ),
+                ks2_maths_expected_pct=_to_optional_float(
+                    performance_row["ks2_maths_expected_pct"]
+                ),
+                ks2_combined_expected_pct=_to_optional_float(
+                    performance_row["ks2_combined_expected_pct"]
+                ),
+                ks2_reading_higher_pct=_to_optional_float(
+                    performance_row["ks2_reading_higher_pct"]
+                ),
+                ks2_writing_higher_pct=_to_optional_float(
+                    performance_row["ks2_writing_higher_pct"]
+                ),
+                ks2_maths_higher_pct=_to_optional_float(performance_row["ks2_maths_higher_pct"]),
+                ks2_combined_higher_pct=_to_optional_float(
+                    performance_row["ks2_combined_higher_pct"]
+                ),
+            )
+            for performance_row in performance_rows
+        )
+        performance = (
+            SchoolPerformance(
+                latest=performance_history[-1] if performance_history else None,
+                history=performance_history,
+            )
+            if performance_history
+            else None
+        )
+
         deprivation = None
         if deprivation_row is not None:
             deprivation = SchoolAreaDeprivation(
                 lsoa_code=str(deprivation_row["lsoa_code"]),
+                imd_score=float(str(deprivation_row["imd_score"])),
+                imd_rank=int(deprivation_row["imd_rank"]),
                 imd_decile=int(deprivation_row["imd_decile"]),
                 idaci_score=float(str(deprivation_row["idaci_score"])),
                 idaci_decile=int(deprivation_row["idaci_decile"]),
@@ -359,14 +670,15 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             )
 
         school_updated_at = _to_optional_datetime(row["school_updated_at"])
-        global_latest_crime_month = (
-            latest_global_crime_row["month"] if latest_global_crime_row is not None else None
-        )
-        global_latest_radius_meters = (
-            latest_global_crime_row["radius_meters"]
-            if latest_global_crime_row is not None
-            else None
-        )
+        global_latest_crime_month: date | None = None
+        global_latest_radius_meters: float | None = None
+        if latest_global_crime_row is not None:
+            raw_global_latest_month = latest_global_crime_row["month"]
+            if isinstance(raw_global_latest_month, date):
+                global_latest_crime_month = raw_global_latest_month
+            global_latest_radius_meters = _to_optional_float(
+                latest_global_crime_row["radius_meters"]
+            )
         global_crime_updated_at_dt = _to_optional_datetime(global_crime_updated_at)
 
         inferred_no_incidents = False
@@ -421,6 +733,12 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             if school_crime_months_available > 0
             else global_crime_updated_at_dt
         )
+        performance_updated_at = _max_optional_datetime(
+            tuple(
+                _to_optional_datetime(performance_row["updated_at"])
+                for performance_row in performance_rows
+            )
+        )
 
         area_context = SchoolAreaContext(
             deprivation=deprivation,
@@ -436,6 +754,10 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             demographics=_build_demographics_completeness(
                 demographics_latest=demographics_latest,
                 demographics_updated_at=_to_optional_datetime(row["demographics_updated_at"]),
+            ),
+            performance=_build_performance_completeness(
+                performance=performance,
+                performance_updated_at=performance_updated_at,
             ),
             ofsted_latest=_build_ofsted_latest_completeness(
                 ofsted_latest=ofsted_latest,
@@ -481,6 +803,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 lng=float(row["lng"]),
             ),
             demographics_latest=demographics_latest,
+            performance=performance,
             ofsted_latest=ofsted_latest,
             ofsted_timeline=ofsted_timeline,
             area_context=area_context,
@@ -492,6 +815,12 @@ def _to_optional_float(value: object) -> float | None:
     if value is None:
         return None
     return float(str(value))
+
+
+def _to_optional_int(value: object) -> int | None:
+    if value is None:
+        return None
+    return int(float(str(value)))
 
 
 def _to_optional_str(value: object) -> str | None:
@@ -508,11 +837,98 @@ def _to_optional_datetime(value: object) -> datetime | None:
     return None
 
 
+def _load_global_crime_metadata(
+    connection: Connection,
+) -> tuple[int, datetime | None, date | None, float | None] | None:
+    if not _table_exists(connection, "area_crime_global_metadata"):
+        return None
+
+    row = (
+        connection.execute(
+            text(
+                """
+                SELECT
+                    months_available,
+                    latest_updated_at,
+                    latest_month,
+                    latest_radius_meters
+                FROM area_crime_global_metadata
+                WHERE id = 1
+                """
+            )
+        )
+        .mappings()
+        .first()
+    )
+    if row is None:
+        return None
+
+    raw_month = row["latest_month"]
+    latest_month = raw_month if isinstance(raw_month, date) else None
+    return (
+        int(row["months_available"]),
+        _to_optional_datetime(row["latest_updated_at"]),
+        latest_month,
+        _to_optional_float(row["latest_radius_meters"]),
+    )
+
+
+def _table_exists(connection: Connection, table_name: str) -> bool:
+    if connection.dialect.name == "postgresql":
+        return bool(
+            connection.execute(
+                text("SELECT to_regclass(:table_name) IS NOT NULL"),
+                {"table_name": table_name},
+            ).scalar_one()
+        )
+    if connection.dialect.name == "sqlite":
+        row = connection.execute(
+            text(
+                """
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table' AND name = :table_name
+                LIMIT 1
+                """
+            ),
+            {"table_name": table_name},
+        ).fetchone()
+        return row is not None
+    return False
+
+
 def _max_optional_datetime(values: tuple[datetime | None, ...]) -> datetime | None:
     non_null_values = [value for value in values if value is not None]
     if not non_null_values:
         return None
     return max(non_null_values)
+
+
+def _max_optional_date(values: tuple[date | None, ...]) -> date | None:
+    non_null_values = [value for value in values if value is not None]
+    if not non_null_values:
+        return None
+    return max(non_null_values)
+
+
+def _build_ethnicity_breakdown(
+    row: Mapping[str, object],
+) -> tuple[SchoolDemographicsEthnicityGroup, ...]:
+    groups: list[SchoolDemographicsEthnicityGroup] = []
+    for key, label, pct_column, count_column in ETHNICITY_GROUP_COLUMNS:
+        percentage = _to_optional_float(row.get(pct_column))
+        count = _to_optional_int(row.get(count_column))
+        if percentage is None and count is None:
+            continue
+        groups.append(
+            SchoolDemographicsEthnicityGroup(
+                key=key,
+                label=label,
+                percentage=percentage,
+                count=count,
+            )
+        )
+    return tuple(groups)
 
 
 def _section_completeness(
@@ -567,6 +983,65 @@ def _build_demographics_completeness(
         status="available",
         reason_code=None,
         last_updated_at=demographics_updated_at,
+    )
+
+
+def _build_performance_completeness(
+    *,
+    performance: SchoolPerformance | None,
+    performance_updated_at: datetime | None,
+) -> SchoolProfileSectionCompleteness:
+    if performance is None or len(performance.history) == 0:
+        return _section_completeness(
+            status="unavailable",
+            reason_code="source_missing",
+            last_updated_at=None,
+        )
+
+    if len(performance.history) < 3:
+        return _section_completeness(
+            status="partial",
+            reason_code="insufficient_years_published",
+            last_updated_at=performance_updated_at,
+        )
+
+    if any(not _performance_year_has_any_metrics(year) for year in performance.history):
+        return _section_completeness(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=performance_updated_at,
+        )
+
+    return _section_completeness(
+        status="available",
+        reason_code=None,
+        last_updated_at=performance_updated_at,
+    )
+
+
+def _performance_year_has_any_metrics(year: SchoolPerformanceYear) -> bool:
+    return any(
+        value is not None
+        for value in (
+            year.attainment8_average,
+            year.progress8_average,
+            year.progress8_disadvantaged,
+            year.progress8_not_disadvantaged,
+            year.progress8_disadvantaged_gap,
+            year.engmath_5_plus_pct,
+            year.engmath_4_plus_pct,
+            year.ebacc_entry_pct,
+            year.ebacc_5_plus_pct,
+            year.ebacc_4_plus_pct,
+            year.ks2_reading_expected_pct,
+            year.ks2_writing_expected_pct,
+            year.ks2_maths_expected_pct,
+            year.ks2_combined_expected_pct,
+            year.ks2_reading_higher_pct,
+            year.ks2_writing_higher_pct,
+            year.ks2_maths_higher_pct,
+            year.ks2_combined_higher_pct,
+        )
     )
 
 

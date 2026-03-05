@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 from civitas.infrastructure.config.settings import AppSettings
+from civitas.infrastructure.pipelines.contracts import demographics_spc
 from civitas.infrastructure.pipelines.demographics_release_files import (
     DemographicsSourceFamily,
     build_release_page_url,
@@ -30,6 +31,12 @@ REQUIRED_SPC_COLUMNS = (
     "% of pupils whose first language is known or believed to be other than English",
     "% of pupils whose first language is known or believed to be English",
     "% of pupils whose first language is unclassified",
+    *tuple(
+        group.count_header for group in demographics_spc.ETHNICITY_GROUP_FIELDS
+    ),
+    *tuple(
+        group.pct_header for group in demographics_spc.ETHNICITY_GROUP_FIELDS
+    ),
 )
 REQUIRED_SEN_COLUMNS = (
     "URN",

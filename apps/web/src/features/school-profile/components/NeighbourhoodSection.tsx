@@ -165,10 +165,20 @@ export function NeighbourhoodSection({
               <>
                 <DeprivationGauge decile={deprivation.imdDecile} />
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-5">
                   <StatCard
                     label={<GlossaryTerm term="imd">IMD Decile</GlossaryTerm>}
                     value={`${deprivation.imdDecile}`}
+                    className="p-3"
+                  />
+                  <StatCard
+                    label={<GlossaryTerm term="imd">IMD Rank</GlossaryTerm>}
+                    value={deprivation.imdRank.toLocaleString("en-GB")}
+                    className="p-3"
+                  />
+                  <StatCard
+                    label={<GlossaryTerm term="imd">IMD Score</GlossaryTerm>}
+                    value={deprivation.imdScore.toFixed(3)}
                     className="p-3"
                   />
                   <StatCard

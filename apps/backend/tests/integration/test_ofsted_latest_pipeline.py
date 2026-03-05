@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -124,6 +124,18 @@ def _ensure_schema(engine: Engine) -> None:
                     publication_date date NULL,
                     overall_effectiveness_code text NULL,
                     overall_effectiveness_label text NULL,
+                    latest_oeif_inspection_start_date date NULL,
+                    latest_oeif_publication_date date NULL,
+                    quality_of_education_code text NULL,
+                    quality_of_education_label text NULL,
+                    behaviour_and_attitudes_code text NULL,
+                    behaviour_and_attitudes_label text NULL,
+                    personal_development_code text NULL,
+                    personal_development_label text NULL,
+                    leadership_and_management_code text NULL,
+                    leadership_and_management_label text NULL,
+                    latest_ungraded_inspection_date date NULL,
+                    latest_ungraded_publication_date date NULL,
                     is_graded boolean NOT NULL DEFAULT false,
                     ungraded_outcome text NULL,
                     source_asset_url text NOT NULL,
@@ -131,6 +143,78 @@ def _ensure_schema(engine: Engine) -> None:
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_oeif_inspection_start_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_oeif_publication_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS quality_of_education_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS quality_of_education_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS behaviour_and_attitudes_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS behaviour_and_attitudes_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS personal_development_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS personal_development_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS leadership_and_management_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS leadership_and_management_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_ungraded_inspection_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_ungraded_publication_date date NULL"
             )
         )
     _seed_schools(engine)
@@ -293,6 +377,8 @@ def test_ofsted_latest_pipeline_stage_and_promote_are_idempotent(
                 SELECT
                     overall_effectiveness_code,
                     overall_effectiveness_label,
+                    quality_of_education_code,
+                    behaviour_and_attitudes_code,
                     is_graded,
                     source_asset_month
                 FROM school_ofsted_latest
@@ -300,7 +386,7 @@ def test_ofsted_latest_pipeline_stage_and_promote_are_idempotent(
                 """
             )
         ).one()
-        assert ofsted_100001 == ("1", "Outstanding", True, "2026-01")
+        assert ofsted_100001 == ("1", "Outstanding", "1", "2", True, "2026-01")
 
         ofsted_100002 = connection.execute(
             text(
@@ -309,13 +395,14 @@ def test_ofsted_latest_pipeline_stage_and_promote_are_idempotent(
                     overall_effectiveness_code,
                     overall_effectiveness_label,
                     is_graded,
+                    latest_ungraded_inspection_date,
                     ungraded_outcome
                 FROM school_ofsted_latest
                 WHERE urn = '100002'
                 """
             )
         ).one()
-        assert ofsted_100002 == (None, None, False, "Maintained standards")
+        assert ofsted_100002 == (None, None, False, date(2025, 12, 5), "Maintained standards")
 
         rejection_reason_codes = {
             row[0]

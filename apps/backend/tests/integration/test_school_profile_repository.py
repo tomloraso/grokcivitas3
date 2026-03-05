@@ -167,6 +167,20 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS area_crime_global_metadata (
+                    id smallint PRIMARY KEY,
+                    months_available integer NOT NULL,
+                    latest_updated_at timestamptz NULL,
+                    latest_month date NULL,
+                    latest_radius_meters double precision NULL,
+                    refreshed_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_demographics_yearly (
                     urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
                     academic_year text NOT NULL,
@@ -192,17 +206,187 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS school_ethnicity_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    white_british_pct double precision NULL,
+                    white_british_count integer NULL,
+                    irish_pct double precision NULL,
+                    irish_count integer NULL,
+                    traveller_of_irish_heritage_pct double precision NULL,
+                    traveller_of_irish_heritage_count integer NULL,
+                    any_other_white_background_pct double precision NULL,
+                    any_other_white_background_count integer NULL,
+                    gypsy_roma_pct double precision NULL,
+                    gypsy_roma_count integer NULL,
+                    white_and_black_caribbean_pct double precision NULL,
+                    white_and_black_caribbean_count integer NULL,
+                    white_and_black_african_pct double precision NULL,
+                    white_and_black_african_count integer NULL,
+                    white_and_asian_pct double precision NULL,
+                    white_and_asian_count integer NULL,
+                    any_other_mixed_background_pct double precision NULL,
+                    any_other_mixed_background_count integer NULL,
+                    indian_pct double precision NULL,
+                    indian_count integer NULL,
+                    pakistani_pct double precision NULL,
+                    pakistani_count integer NULL,
+                    bangladeshi_pct double precision NULL,
+                    bangladeshi_count integer NULL,
+                    any_other_asian_background_pct double precision NULL,
+                    any_other_asian_background_count integer NULL,
+                    caribbean_pct double precision NULL,
+                    caribbean_count integer NULL,
+                    african_pct double precision NULL,
+                    african_count integer NULL,
+                    any_other_black_background_pct double precision NULL,
+                    any_other_black_background_count integer NULL,
+                    chinese_pct double precision NULL,
+                    chinese_count integer NULL,
+                    any_other_ethnic_group_pct double precision NULL,
+                    any_other_ethnic_group_count integer NULL,
+                    unclassified_pct double precision NULL,
+                    unclassified_count integer NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_ofsted_latest (
                     urn text PRIMARY KEY REFERENCES schools(urn) ON DELETE CASCADE,
                     inspection_start_date date NULL,
                     publication_date date NULL,
                     overall_effectiveness_code text NULL,
                     overall_effectiveness_label text NULL,
+                    latest_oeif_inspection_start_date date NULL,
+                    latest_oeif_publication_date date NULL,
+                    quality_of_education_code text NULL,
+                    quality_of_education_label text NULL,
+                    behaviour_and_attitudes_code text NULL,
+                    behaviour_and_attitudes_label text NULL,
+                    personal_development_code text NULL,
+                    personal_development_label text NULL,
+                    leadership_and_management_code text NULL,
+                    leadership_and_management_label text NULL,
+                    latest_ungraded_inspection_date date NULL,
+                    latest_ungraded_publication_date date NULL,
                     is_graded boolean NOT NULL DEFAULT false,
                     ungraded_outcome text NULL,
                     source_asset_url text NOT NULL,
                     source_asset_month text NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_oeif_inspection_start_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_oeif_publication_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS quality_of_education_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS quality_of_education_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS behaviour_and_attitudes_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS behaviour_and_attitudes_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS personal_development_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS personal_development_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS leadership_and_management_code text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS leadership_and_management_label text NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_ungraded_inspection_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS latest_ungraded_publication_date date NULL"
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_performance_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    attainment8_average double precision NULL,
+                    progress8_average double precision NULL,
+                    progress8_disadvantaged double precision NULL,
+                    progress8_not_disadvantaged double precision NULL,
+                    progress8_disadvantaged_gap double precision NULL,
+                    engmath_5_plus_pct double precision NULL,
+                    engmath_4_plus_pct double precision NULL,
+                    ebacc_entry_pct double precision NULL,
+                    ebacc_5_plus_pct double precision NULL,
+                    ebacc_4_plus_pct double precision NULL,
+                    ks2_reading_expected_pct double precision NULL,
+                    ks2_writing_expected_pct double precision NULL,
+                    ks2_maths_expected_pct double precision NULL,
+                    ks2_combined_expected_pct double precision NULL,
+                    ks2_reading_higher_pct double precision NULL,
+                    ks2_writing_higher_pct double precision NULL,
+                    ks2_maths_higher_pct double precision NULL,
+                    ks2_combined_higher_pct double precision NULL,
+                    ks2_source_dataset_id text NULL,
+                    ks2_source_dataset_version text NULL,
+                    ks4_source_dataset_id text NULL,
+                    ks4_source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
                 )
                 """
             )
@@ -320,7 +504,7 @@ def _seed_data(engine: Engine) -> None:
                     8.4,
                     90.6,
                     1.0,
-                    false,
+                    true,
                     false,
                     'spc:spc-rv-2024|sen:sen-rv-2024'
                 )
@@ -333,6 +517,46 @@ def _seed_data(engine: Engine) -> None:
                     first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
                     has_ethnicity_data = EXCLUDED.has_ethnicity_data,
                     has_top_languages_data = EXCLUDED.has_top_languages_data
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_ethnicity_yearly (
+                    urn,
+                    academic_year,
+                    white_british_pct,
+                    white_british_count,
+                    indian_pct,
+                    indian_count,
+                    african_pct,
+                    african_count,
+                    unclassified_pct,
+                    unclassified_count,
+                    source_dataset_id
+                ) VALUES (
+                    '910001',
+                    '2024/25',
+                    49.0,
+                    98,
+                    7.0,
+                    14,
+                    6.0,
+                    12,
+                    4.0,
+                    8,
+                    'spc:spc-rv-2024'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    white_british_pct = EXCLUDED.white_british_pct,
+                    white_british_count = EXCLUDED.white_british_count,
+                    indian_pct = EXCLUDED.indian_pct,
+                    indian_count = EXCLUDED.indian_count,
+                    african_pct = EXCLUDED.african_pct,
+                    african_count = EXCLUDED.african_count,
+                    unclassified_pct = EXCLUDED.unclassified_pct,
+                    unclassified_count = EXCLUDED.unclassified_count
                 """
             )
         )
@@ -396,6 +620,18 @@ def _seed_data(engine: Engine) -> None:
                     publication_date,
                     overall_effectiveness_code,
                     overall_effectiveness_label,
+                    latest_oeif_inspection_start_date,
+                    latest_oeif_publication_date,
+                    quality_of_education_code,
+                    quality_of_education_label,
+                    behaviour_and_attitudes_code,
+                    behaviour_and_attitudes_label,
+                    personal_development_code,
+                    personal_development_label,
+                    leadership_and_management_code,
+                    leadership_and_management_label,
+                    latest_ungraded_inspection_date,
+                    latest_ungraded_publication_date,
                     is_graded,
                     ungraded_outcome,
                     source_asset_url,
@@ -406,6 +642,18 @@ def _seed_data(engine: Engine) -> None:
                     '2025-11-15',
                     '2',
                     'Good',
+                    '2025-10-10',
+                    '2025-11-15',
+                    '2',
+                    'Good',
+                    '2',
+                    'Good',
+                    '2',
+                    'Good',
+                    '2',
+                    'Good',
+                    '2026-01-02',
+                    '2026-01-20',
                     true,
                     NULL,
                     'https://assets.publishing.service.gov.uk/media/example/latest.csv',
@@ -416,9 +664,97 @@ def _seed_data(engine: Engine) -> None:
                     overall_effectiveness_label = EXCLUDED.overall_effectiveness_label,
                     inspection_start_date = EXCLUDED.inspection_start_date,
                     publication_date = EXCLUDED.publication_date,
+                    latest_oeif_inspection_start_date = EXCLUDED.latest_oeif_inspection_start_date,
+                    latest_oeif_publication_date = EXCLUDED.latest_oeif_publication_date,
+                    quality_of_education_code = EXCLUDED.quality_of_education_code,
+                    quality_of_education_label = EXCLUDED.quality_of_education_label,
+                    behaviour_and_attitudes_code = EXCLUDED.behaviour_and_attitudes_code,
+                    behaviour_and_attitudes_label = EXCLUDED.behaviour_and_attitudes_label,
+                    personal_development_code = EXCLUDED.personal_development_code,
+                    personal_development_label = EXCLUDED.personal_development_label,
+                    leadership_and_management_code = EXCLUDED.leadership_and_management_code,
+                    leadership_and_management_label = EXCLUDED.leadership_and_management_label,
+                    latest_ungraded_inspection_date = EXCLUDED.latest_ungraded_inspection_date,
+                    latest_ungraded_publication_date = EXCLUDED.latest_ungraded_publication_date,
                     is_graded = EXCLUDED.is_graded,
                     source_asset_url = EXCLUDED.source_asset_url,
                     source_asset_month = EXCLUDED.source_asset_month
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_performance_yearly (
+                    urn,
+                    academic_year,
+                    attainment8_average,
+                    progress8_average,
+                    progress8_disadvantaged,
+                    progress8_not_disadvantaged,
+                    progress8_disadvantaged_gap,
+                    engmath_5_plus_pct,
+                    engmath_4_plus_pct,
+                    ebacc_entry_pct,
+                    ebacc_5_plus_pct,
+                    ebacc_4_plus_pct,
+                    ks2_source_dataset_id,
+                    ks2_source_dataset_version,
+                    ks4_source_dataset_id,
+                    ks4_source_dataset_version
+                )
+                VALUES
+                (
+                    '910001',
+                    '2023/24',
+                    46.1,
+                    0.05,
+                    -0.19,
+                    0.16,
+                    -0.35,
+                    50.1,
+                    69.8,
+                    35.0,
+                    24.2,
+                    30.1,
+                    NULL,
+                    NULL,
+                    'ks4-v1',
+                    '1'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    47.2,
+                    0.11,
+                    -0.12,
+                    0.21,
+                    -0.33,
+                    52.3,
+                    71.4,
+                    36.2,
+                    25.5,
+                    31.3,
+                    NULL,
+                    NULL,
+                    'ks4-v1',
+                    '1'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    attainment8_average = EXCLUDED.attainment8_average,
+                    progress8_average = EXCLUDED.progress8_average,
+                    progress8_disadvantaged = EXCLUDED.progress8_disadvantaged,
+                    progress8_not_disadvantaged = EXCLUDED.progress8_not_disadvantaged,
+                    progress8_disadvantaged_gap = EXCLUDED.progress8_disadvantaged_gap,
+                    engmath_5_plus_pct = EXCLUDED.engmath_5_plus_pct,
+                    engmath_4_plus_pct = EXCLUDED.engmath_4_plus_pct,
+                    ebacc_entry_pct = EXCLUDED.ebacc_entry_pct,
+                    ebacc_5_plus_pct = EXCLUDED.ebacc_5_plus_pct,
+                    ebacc_4_plus_pct = EXCLUDED.ebacc_4_plus_pct,
+                    ks2_source_dataset_id = EXCLUDED.ks2_source_dataset_id,
+                    ks2_source_dataset_version = EXCLUDED.ks2_source_dataset_version,
+                    ks4_source_dataset_id = EXCLUDED.ks4_source_dataset_id,
+                    ks4_source_dataset_version = EXCLUDED.ks4_source_dataset_version
                 """
             )
         )
@@ -504,6 +840,39 @@ def _seed_data(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                INSERT INTO area_crime_global_metadata (
+                    id,
+                    months_available,
+                    latest_updated_at,
+                    latest_month,
+                    latest_radius_meters,
+                    refreshed_at
+                )
+                SELECT
+                    1,
+                    COUNT(DISTINCT month)::integer,
+                    MAX(updated_at),
+                    MAX(month),
+                    (
+                        SELECT radius_meters
+                        FROM area_crime_context
+                        ORDER BY month DESC, updated_at DESC, radius_meters DESC
+                        LIMIT 1
+                    ),
+                    timezone('utc', now())
+                FROM area_crime_context
+                ON CONFLICT (id) DO UPDATE SET
+                    months_available = EXCLUDED.months_available,
+                    latest_updated_at = EXCLUDED.latest_updated_at,
+                    latest_month = EXCLUDED.latest_month,
+                    latest_radius_meters = EXCLUDED.latest_radius_meters,
+                    refreshed_at = timezone('utc', now())
+                """
+            )
+        )
 
 
 def _cleanup_data(engine: Engine) -> None:
@@ -512,7 +881,13 @@ def _cleanup_data(engine: Engine) -> None:
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code = 'E01004736'"))
         connection.execute(text("DELETE FROM ofsted_inspections WHERE urn IN ('910001', '910002')"))
         connection.execute(
+            text("DELETE FROM school_performance_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
             text("DELETE FROM school_ofsted_latest WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text("DELETE FROM school_ethnicity_yearly WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
             text("DELETE FROM school_demographics_yearly WHERE urn IN ('910001', '910002')")
@@ -537,14 +912,33 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.demographics_latest.disadvantaged_pct == 20.5
     assert result.demographics_latest.fsm_pct == 20.0
     assert result.demographics_latest.coverage.fsm_supported is True
-    assert result.demographics_latest.coverage.ethnicity_supported is False
+    assert result.demographics_latest.coverage.ethnicity_supported is True
     assert result.demographics_latest.coverage.top_languages_supported is False
+    assert len(result.demographics_latest.ethnicity_breakdown) == 4
+    assert result.demographics_latest.ethnicity_breakdown[0].key == "white_british"
+    assert result.demographics_latest.ethnicity_breakdown[0].percentage == 49.0
+    assert result.demographics_latest.ethnicity_breakdown[0].count == 98
 
     assert result.ofsted_latest is not None
     assert result.ofsted_latest.overall_effectiveness_code == "2"
     assert result.ofsted_latest.overall_effectiveness_label == "Good"
     assert result.ofsted_latest.inspection_start_date == date(2025, 10, 10)
     assert result.ofsted_latest.publication_date == date(2025, 11, 15)
+    assert result.ofsted_latest.latest_oeif_inspection_start_date == date(2025, 10, 10)
+    assert result.ofsted_latest.latest_oeif_publication_date == date(2025, 11, 15)
+    assert result.ofsted_latest.quality_of_education_code == "2"
+    assert result.ofsted_latest.quality_of_education_label == "Good"
+    assert result.ofsted_latest.behaviour_and_attitudes_code == "2"
+    assert result.ofsted_latest.behaviour_and_attitudes_label == "Good"
+    assert result.ofsted_latest.personal_development_code == "2"
+    assert result.ofsted_latest.personal_development_label == "Good"
+    assert result.ofsted_latest.leadership_and_management_code == "2"
+    assert result.ofsted_latest.leadership_and_management_label == "Good"
+    assert result.ofsted_latest.latest_ungraded_inspection_date == date(2026, 1, 2)
+    assert result.ofsted_latest.latest_ungraded_publication_date == date(2026, 1, 20)
+    assert result.ofsted_latest.most_recent_inspection_date == date(2026, 1, 2)
+    assert result.ofsted_latest.days_since_most_recent_inspection is not None
+    assert result.ofsted_latest.days_since_most_recent_inspection >= 0
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.coverage.is_partial_history is False
     assert result.ofsted_timeline.coverage.earliest_event_date == date(2015, 9, 14)
@@ -560,6 +954,8 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.area_context.coverage.crime_months_available == 2
     assert result.area_context.deprivation is not None
     assert result.area_context.deprivation.lsoa_code == "E01004736"
+    assert result.area_context.deprivation.imd_score == 22.4
+    assert result.area_context.deprivation.imd_rank == 10234
     assert result.area_context.deprivation.imd_decile == 3
     assert result.area_context.deprivation.idaci_decile == 2
     assert result.area_context.crime is not None

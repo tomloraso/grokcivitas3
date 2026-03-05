@@ -6,6 +6,7 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
     {
         "school",
         "demographics_latest",
+        "performance",
         "ofsted_latest",
         "ofsted_timeline",
         "area_context",

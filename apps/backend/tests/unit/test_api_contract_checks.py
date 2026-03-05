@@ -22,6 +22,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
         {
             "school": {},
             "demographics_latest": {},
+            "performance": {},
             "ofsted_latest": {},
             "ofsted_timeline": {},
             "area_context": {},
@@ -44,7 +45,10 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
 
     with pytest.raises(
         RuntimeError,
-        match=("SchoolProfileResponse missing required properties: area_context, ofsted_timeline"),
+        match=(
+            "SchoolProfileResponse missing required properties: "
+            "area_context, ofsted_timeline, performance"
+        ),
     ):
         validate_school_profile_response_contract(openapi_schema)
 

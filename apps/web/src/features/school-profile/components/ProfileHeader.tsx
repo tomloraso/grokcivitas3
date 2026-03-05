@@ -56,6 +56,21 @@ const OFSTED_LABELS: Record<string, string> = {
   "4": "Inadequate",
 };
 
+function formatInspectionAge(daysSince: number | null): string | null {
+  if (daysSince === null) {
+    return null;
+  }
+  if (daysSince < 60) {
+    return `${daysSince} day${daysSince === 1 ? "" : "s"} ago`;
+  }
+  if (daysSince < 730) {
+    const months = Math.round(daysSince / 30);
+    return `${months} month${months === 1 ? "" : "s"} ago`;
+  }
+  const years = Math.round((daysSince / 365) * 10) / 10;
+  return `${years.toFixed(1)} years ago`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Ofsted signal — the rating as a bold visual element                 */
 /* ------------------------------------------------------------------ */
@@ -65,6 +80,7 @@ function OfstedSignal({ ofsted }: { ofsted: OfstedVM }): JSX.Element {
   const code = ofsted.ratingCode;
   const colors = code ? OFSTED_COLORS[code] : null;
   const label = ofsted.ratingLabel ?? (code ? OFSTED_LABELS[code] : null);
+  const inspectionAge = formatInspectionAge(ofsted.daysSinceMostRecentInspection);
 
   return (
     <div className="flex items-center gap-4">
@@ -91,7 +107,12 @@ function OfstedSignal({ ofsted }: { ofsted: OfstedVM }): JSX.Element {
         >
           {isUngraded ? "Ungraded" : (label ?? "Not rated")}
         </span>
-        {ofsted.inspectionDate ? (
+        {ofsted.mostRecentInspectionDate ? (
+          <span className="text-[11px] text-disabled">
+            Most recent {ofsted.mostRecentInspectionDate}
+            {inspectionAge ? ` (${inspectionAge})` : ""}
+          </span>
+        ) : ofsted.inspectionDate ? (
           <span className="text-[11px] text-disabled">
             Inspected {ofsted.inspectionDate}
           </span>
@@ -235,6 +256,27 @@ export function ProfileHeader({
 
   const hasSignals =
     ofsted || areaContext.deprivation || needSignal;
+  const ofstedSubJudgements = ofsted
+    ? [
+        { key: "quality", label: "Quality of education", value: ofsted.qualityOfEducationLabel },
+        {
+          key: "behaviour",
+          label: "Behaviour and attitudes",
+          value: ofsted.behaviourAndAttitudesLabel,
+        },
+        {
+          key: "personal-development",
+          label: "Personal development",
+          value: ofsted.personalDevelopmentLabel,
+        },
+        {
+          key: "leadership",
+          label: "Leadership and management",
+          value: ofsted.leadershipAndManagementLabel,
+        },
+      ]
+    : [];
+  const hasOfstedSubJudgements = ofstedSubJudgements.some((item) => Boolean(item.value));
 
   return (
     <header className="space-y-6">
@@ -325,6 +367,27 @@ export function ProfileHeader({
             </span>
           ) : null}
         </p>
+      ) : null}
+
+      {hasOfstedSubJudgements ? (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {ofstedSubJudgements.map((judgement) => (
+            <div
+              key={judgement.key}
+              className="rounded-md border border-border-subtle/70 bg-surface/60 px-3 py-2"
+            >
+              <p className="text-[11px] text-disabled">{judgement.label}</p>
+              <p className="text-sm font-medium text-primary">
+                {judgement.value ?? "Not published"}
+              </p>
+            </div>
+          ))}
+          {ofsted?.latestOeifInspectionDate ? (
+            <p className="sm:col-span-2 lg:col-span-4 text-[11px] text-disabled">
+              Sub-judgements from inspection starting {ofsted.latestOeifInspectionDate}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {/* Completeness notice for Ofsted if needed */}

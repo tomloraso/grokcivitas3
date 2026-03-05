@@ -4,6 +4,7 @@ from typing import Literal
 
 DataQualitySection = Literal[
     "demographics",
+    "school_performance",
     "ofsted_latest",
     "ofsted_timeline",
     "area_deprivation",

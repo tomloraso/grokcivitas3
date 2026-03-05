@@ -21,6 +21,14 @@ def _row(**overrides: str) -> dict[str, str]:
         "Inspection start date": "15/01/2026",
         "Publication date": "20/02/2026",
         "Latest OEIF overall effectiveness": "2",
+        "Inspection start date of latest OEIF graded inspection": "15/01/2026",
+        "Publication date of latest OEIF graded inspection": "20/02/2026",
+        "Latest OEIF quality of education": "2",
+        "Latest OEIF behaviour and attitudes": "2",
+        "Latest OEIF personal development": "2",
+        "Latest OEIF effectiveness of leadership and management": "2",
+        "Date of latest ungraded inspection": "",
+        "Ungraded inspection publication date": "",
         "Ungraded inspection overall outcome": "",
     }
     row.update(overrides)
@@ -65,6 +73,18 @@ def test_normalize_ofsted_row_returns_typed_record_for_graded_value() -> None:
     assert normalized.publication_date == date(2026, 2, 20)
     assert normalized.overall_effectiveness_code == "2"
     assert normalized.overall_effectiveness_label == "Good"
+    assert normalized.latest_oeif_inspection_start_date == date(2026, 1, 15)
+    assert normalized.latest_oeif_publication_date == date(2026, 2, 20)
+    assert normalized.quality_of_education_code == "2"
+    assert normalized.quality_of_education_label == "Good"
+    assert normalized.behaviour_and_attitudes_code == "2"
+    assert normalized.behaviour_and_attitudes_label == "Good"
+    assert normalized.personal_development_code == "2"
+    assert normalized.personal_development_label == "Good"
+    assert normalized.leadership_and_management_code == "2"
+    assert normalized.leadership_and_management_label == "Good"
+    assert normalized.latest_ungraded_inspection_date is None
+    assert normalized.latest_ungraded_publication_date is None
     assert normalized.is_graded is True
     assert normalized.ungraded_outcome is None
 
@@ -148,6 +168,17 @@ def test_normalize_ofsted_row_rejects_unknown_effectiveness_value() -> None:
 
     assert normalized is None
     assert rejection == "invalid_overall_effectiveness_code"
+
+
+def test_normalize_ofsted_row_rejects_unknown_sub_judgement_value() -> None:
+    normalized, rejection = normalize_ofsted_latest_row(
+        _row(**{"Latest OEIF quality of education": "5"}),
+        source_asset_url="https://assets.publishing.service.gov.uk/media/abc/latest.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert normalized is None
+    assert rejection == "invalid_quality_of_education_code"
 
 
 def test_ofsted_fixture_is_present() -> None:

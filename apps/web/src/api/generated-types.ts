@@ -160,6 +160,10 @@ export interface components {
         SchoolProfileAreaDeprivationResponse: {
             /** Lsoa Code */
             lsoa_code: string;
+            /** Imd Score */
+            imd_score: number;
+            /** Imd Rank */
+            imd_rank: number;
             /** Imd Decile */
             imd_decile: number;
             /** Idaci Score */
@@ -172,6 +176,7 @@ export interface components {
         /** SchoolProfileCompletenessResponse */
         SchoolProfileCompletenessResponse: {
             demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
@@ -185,6 +190,17 @@ export interface components {
             ethnicity_supported: boolean;
             /** Top Languages Supported */
             top_languages_supported: boolean;
+        };
+        /** SchoolProfileDemographicsEthnicityGroupResponse */
+        SchoolProfileDemographicsEthnicityGroupResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
         };
         /** SchoolProfileDemographicsLatestResponse */
         SchoolProfileDemographicsLatestResponse: {
@@ -205,6 +221,8 @@ export interface components {
             /** First Language Unclassified Pct */
             first_language_unclassified_pct: number | null;
             coverage: components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
+            /** Ethnicity Breakdown */
+            ethnicity_breakdown?: components["schemas"]["SchoolProfileDemographicsEthnicityGroupResponse"][];
         };
         /** SchoolProfileOfstedLatestResponse */
         SchoolProfileOfstedLatestResponse: {
@@ -216,6 +234,34 @@ export interface components {
             inspection_start_date: string | null;
             /** Publication Date */
             publication_date: string | null;
+            /** Latest Oeif Inspection Start Date */
+            latest_oeif_inspection_start_date: string | null;
+            /** Latest Oeif Publication Date */
+            latest_oeif_publication_date: string | null;
+            /** Quality Of Education Code */
+            quality_of_education_code: string | null;
+            /** Quality Of Education Label */
+            quality_of_education_label: string | null;
+            /** Behaviour And Attitudes Code */
+            behaviour_and_attitudes_code: string | null;
+            /** Behaviour And Attitudes Label */
+            behaviour_and_attitudes_label: string | null;
+            /** Personal Development Code */
+            personal_development_code: string | null;
+            /** Personal Development Label */
+            personal_development_label: string | null;
+            /** Leadership And Management Code */
+            leadership_and_management_code: string | null;
+            /** Leadership And Management Label */
+            leadership_and_management_label: string | null;
+            /** Latest Ungraded Inspection Date */
+            latest_ungraded_inspection_date: string | null;
+            /** Latest Ungraded Publication Date */
+            latest_ungraded_publication_date: string | null;
+            /** Most Recent Inspection Date */
+            most_recent_inspection_date: string | null;
+            /** Days Since Most Recent Inspection */
+            days_since_most_recent_inspection: number | null;
             /** Is Graded */
             is_graded: boolean;
             /** Ungraded Outcome */
@@ -258,10 +304,58 @@ export interface components {
             events: components["schemas"]["SchoolProfileOfstedTimelineEventResponse"][];
             coverage: components["schemas"]["SchoolProfileOfstedTimelineCoverageResponse"];
         };
+        /** SchoolProfilePerformanceResponse */
+        SchoolProfilePerformanceResponse: {
+            latest: components["schemas"]["SchoolProfilePerformanceYearResponse"] | null;
+            /** History */
+            history?: components["schemas"]["SchoolProfilePerformanceYearResponse"][];
+        };
+        /** SchoolProfilePerformanceYearResponse */
+        SchoolProfilePerformanceYearResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Attainment8 Average */
+            attainment8_average: number | null;
+            /** Progress8 Average */
+            progress8_average: number | null;
+            /** Progress8 Disadvantaged */
+            progress8_disadvantaged: number | null;
+            /** Progress8 Not Disadvantaged */
+            progress8_not_disadvantaged: number | null;
+            /** Progress8 Disadvantaged Gap */
+            progress8_disadvantaged_gap: number | null;
+            /** Engmath 5 Plus Pct */
+            engmath_5_plus_pct: number | null;
+            /** Engmath 4 Plus Pct */
+            engmath_4_plus_pct: number | null;
+            /** Ebacc Entry Pct */
+            ebacc_entry_pct: number | null;
+            /** Ebacc 5 Plus Pct */
+            ebacc_5_plus_pct: number | null;
+            /** Ebacc 4 Plus Pct */
+            ebacc_4_plus_pct: number | null;
+            /** Ks2 Reading Expected Pct */
+            ks2_reading_expected_pct: number | null;
+            /** Ks2 Writing Expected Pct */
+            ks2_writing_expected_pct: number | null;
+            /** Ks2 Maths Expected Pct */
+            ks2_maths_expected_pct: number | null;
+            /** Ks2 Combined Expected Pct */
+            ks2_combined_expected_pct: number | null;
+            /** Ks2 Reading Higher Pct */
+            ks2_reading_higher_pct: number | null;
+            /** Ks2 Writing Higher Pct */
+            ks2_writing_higher_pct: number | null;
+            /** Ks2 Maths Higher Pct */
+            ks2_maths_higher_pct: number | null;
+            /** Ks2 Combined Higher Pct */
+            ks2_combined_higher_pct: number | null;
+        };
         /** SchoolProfileResponse */
         SchoolProfileResponse: {
             school: components["schemas"]["SchoolProfileSchoolResponse"];
             demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
+            performance: components["schemas"]["SchoolProfilePerformanceResponse"] | null;
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
             ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
             area_context: components["schemas"]["SchoolProfileAreaContextResponse"];

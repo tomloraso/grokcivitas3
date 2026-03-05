@@ -11,11 +11,13 @@ from civitas.domain.school_profiles.models import (
     SchoolAreaCrimeCategory,
     SchoolAreaDeprivation,
     SchoolDemographicsCoverage,
+    SchoolDemographicsEthnicityGroup,
     SchoolDemographicsLatest,
     SchoolOfstedLatest,
     SchoolOfstedTimeline,
     SchoolOfstedTimelineCoverage,
     SchoolOfstedTimelineEvent,
+    SchoolPerformance,
     SchoolProfile,
     SchoolProfileCompleteness,
     SchoolProfileSchool,
@@ -64,6 +66,7 @@ class FakePostcodeContextResolver:
 
 def _profile(
     demographics_latest: SchoolDemographicsLatest | None = None,
+    performance: SchoolPerformance | None = None,
     ofsted_latest: SchoolOfstedLatest | None = None,
     ofsted_timeline: SchoolOfstedTimeline | None = None,
     area_context: SchoolAreaContext | None = None,
@@ -104,6 +107,12 @@ def _profile(
                 last_updated_at=None,
                 years_available=None,
             ),
+            performance=SchoolProfileSectionCompleteness(
+                status="unavailable",
+                reason_code="source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
             ofsted_latest=SchoolProfileSectionCompleteness(
                 status="available" if ofsted_latest is not None else "unavailable",
                 reason_code=None if ofsted_latest is not None else "source_missing",
@@ -141,6 +150,7 @@ def _profile(
             lng=-0.14,
         ),
         demographics_latest=demographics_latest,
+        performance=performance,
         ofsted_latest=ofsted_latest,
         ofsted_timeline=ofsted_timeline,
         area_context=area_context,
@@ -162,8 +172,16 @@ def test_get_school_profile_returns_contract_dto() -> None:
                 first_language_unclassified_pct=1.0,
                 coverage=SchoolDemographicsCoverage(
                     fsm_supported=True,
-                    ethnicity_supported=False,
+                    ethnicity_supported=True,
                     top_languages_supported=False,
+                ),
+                ethnicity_breakdown=(
+                    SchoolDemographicsEthnicityGroup(
+                        key="white_british",
+                        label="White British",
+                        percentage=49.0,
+                        count=98,
+                    ),
                 ),
             ),
             ofsted_latest=SchoolOfstedLatest(
@@ -171,6 +189,20 @@ def test_get_school_profile_returns_contract_dto() -> None:
                 overall_effectiveness_label="Good",
                 inspection_start_date=date(2025, 10, 10),
                 publication_date=date(2025, 11, 15),
+                latest_oeif_inspection_start_date=date(2025, 10, 10),
+                latest_oeif_publication_date=date(2025, 11, 15),
+                quality_of_education_code="2",
+                quality_of_education_label="Good",
+                behaviour_and_attitudes_code="2",
+                behaviour_and_attitudes_label="Good",
+                personal_development_code="2",
+                personal_development_label="Good",
+                leadership_and_management_code="2",
+                leadership_and_management_label="Good",
+                latest_ungraded_inspection_date=date(2026, 1, 2),
+                latest_ungraded_publication_date=date(2026, 1, 20),
+                most_recent_inspection_date=date(2026, 1, 2),
+                days_since_most_recent_inspection=60,
                 is_graded=True,
                 ungraded_outcome=None,
             ),
@@ -196,6 +228,8 @@ def test_get_school_profile_returns_contract_dto() -> None:
             area_context=SchoolAreaContext(
                 deprivation=SchoolAreaDeprivation(
                     lsoa_code="E01004736",
+                    imd_score=27.1,
+                    imd_rank=4825,
                     imd_decile=3,
                     idaci_score=0.241,
                     idaci_decile=2,
@@ -222,6 +256,12 @@ def test_get_school_profile_returns_contract_dto() -> None:
                 demographics=SchoolProfileSectionCompleteness(
                     status="partial",
                     reason_code="partial_metric_coverage",
+                    last_updated_at=None,
+                    years_available=None,
+                ),
+                performance=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
                     last_updated_at=None,
                     years_available=None,
                 ),
@@ -261,16 +301,24 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.school.name == "Example School"
     assert result.demographics_latest is not None
     assert result.demographics_latest.academic_year == "2024/25"
-    assert result.demographics_latest.coverage.ethnicity_supported is False
+    assert result.demographics_latest.coverage.ethnicity_supported is True
+    assert result.demographics_latest.ethnicity_breakdown[0].key == "white_british"
+    assert result.demographics_latest.ethnicity_breakdown[0].percentage == 49.0
     assert result.ofsted_latest is not None
     assert result.ofsted_latest.overall_effectiveness_label == "Good"
+    assert result.ofsted_latest.quality_of_education_label == "Good"
+    assert result.ofsted_latest.days_since_most_recent_inspection == 60
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.coverage.is_partial_history is False
     assert result.ofsted_timeline.events[0].inspection_number == "10426709"
     assert result.area_context is not None
     assert result.area_context.coverage.has_deprivation is True
+    assert result.area_context.deprivation is not None
+    assert result.area_context.deprivation.imd_score == 27.1
+    assert result.area_context.deprivation.imd_rank == 4825
     assert result.area_context.coverage.has_crime is True
     assert result.completeness.demographics.status == "partial"
+    assert result.completeness.performance.status == "available"
     assert result.completeness.demographics.reason_code == "partial_metric_coverage"
 
 
@@ -296,6 +344,7 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.area_context.deprivation is None
     assert result.area_context.crime is None
     assert result.completeness.demographics.status == "unavailable"
+    assert result.completeness.performance.status == "unavailable"
     assert result.completeness.ofsted_timeline.status == "unavailable"
     assert result.completeness.area_deprivation.reason_code == "not_joined_yet"
 
@@ -308,6 +357,8 @@ def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing(
                 area_context=SchoolAreaContext(
                     deprivation=SchoolAreaDeprivation(
                         lsoa_code="E01004736",
+                        imd_score=27.1,
+                        imd_rank=4825,
                         imd_decile=3,
                         idaci_score=0.241,
                         idaci_decile=2,

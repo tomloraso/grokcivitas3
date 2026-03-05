@@ -138,6 +138,20 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS area_crime_global_metadata (
+                    id smallint PRIMARY KEY,
+                    months_available integer NOT NULL,
+                    latest_updated_at timestamptz NULL,
+                    latest_month date NULL,
+                    latest_radius_meters double precision NULL,
+                    refreshed_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
 
 
 def _seed_schools(engine: Engine) -> None:
@@ -288,6 +302,24 @@ def test_police_crime_context_pipeline_stage_and_promote_are_idempotent(
             )
         ).scalar_one()
         assert promoted_rows == 3
+
+        global_crime_metadata = connection.execute(
+            text(
+                """
+                SELECT
+                    months_available,
+                    latest_updated_at,
+                    latest_month,
+                    latest_radius_meters
+                FROM area_crime_global_metadata
+                WHERE id = 1
+                """
+            )
+        ).one()
+        assert global_crime_metadata[0] >= 1
+        assert global_crime_metadata[1] is not None
+        assert global_crime_metadata[2] is not None
+        assert float(global_crime_metadata[3]) > 0
 
         alpha_violent = connection.execute(
             text(

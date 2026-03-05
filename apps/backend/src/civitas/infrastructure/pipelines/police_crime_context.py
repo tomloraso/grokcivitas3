@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 
 from .base import PipelineRunContext, PipelineSource, StageResult, chunked
 from .contracts import police as police_contract
@@ -345,6 +345,7 @@ class PoliceCrimeContextPipeline:
                     },
                 ).scalar_one()
             )
+            _refresh_area_crime_global_metadata(connection)
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
         return promoted_rows
 
@@ -565,6 +566,71 @@ def _load_download_metadata(metadata_path: Path) -> dict[str, object]:
     except json.JSONDecodeError:
         return {}
     return payload if isinstance(payload, dict) else {}
+
+
+def _refresh_area_crime_global_metadata(connection: Connection) -> None:
+    if not _table_exists(connection, "area_crime_global_metadata"):
+        return
+
+    now_sql = (
+        "timezone('utc', now())" if connection.dialect.name == "postgresql" else "CURRENT_TIMESTAMP"
+    )
+    connection.execute(
+        text(
+            f"""
+            INSERT INTO area_crime_global_metadata (
+                id,
+                months_available,
+                latest_updated_at,
+                latest_month,
+                latest_radius_meters,
+                refreshed_at
+            )
+            SELECT
+                1,
+                CAST(COALESCE((SELECT COUNT(DISTINCT month) FROM area_crime_context), 0) AS integer),
+                (SELECT MAX(updated_at) FROM area_crime_context),
+                (SELECT MAX(month) FROM area_crime_context),
+                (
+                    SELECT radius_meters
+                    FROM area_crime_context
+                    ORDER BY month DESC, updated_at DESC, radius_meters DESC
+                    LIMIT 1
+                ),
+                {now_sql}
+            ON CONFLICT (id) DO UPDATE SET
+                months_available = EXCLUDED.months_available,
+                latest_updated_at = EXCLUDED.latest_updated_at,
+                latest_month = EXCLUDED.latest_month,
+                latest_radius_meters = EXCLUDED.latest_radius_meters,
+                refreshed_at = {now_sql}
+            """
+        )
+    )
+
+
+def _table_exists(connection: Connection, table_name: str) -> bool:
+    if connection.dialect.name == "postgresql":
+        return bool(
+            connection.execute(
+                text("SELECT to_regclass(:table_name) IS NOT NULL"),
+                {"table_name": table_name},
+            ).scalar_one()
+        )
+    if connection.dialect.name == "sqlite":
+        row = connection.execute(
+            text(
+                """
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table' AND name = :table_name
+                LIMIT 1
+                """
+            ),
+            {"table_name": table_name},
+        ).fetchone()
+        return row is not None
+    return False
 
 
 def _sha256_file(path: Path) -> str:

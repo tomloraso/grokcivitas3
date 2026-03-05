@@ -18,11 +18,14 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileAreaDeprivationResponse,
     SchoolProfileCompletenessResponse,
     SchoolProfileDemographicsCoverageResponse,
+    SchoolProfileDemographicsEthnicityGroupResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileOfstedLatestResponse,
     SchoolProfileOfstedTimelineCoverageResponse,
     SchoolProfileOfstedTimelineEventResponse,
     SchoolProfileOfstedTimelineResponse,
+    SchoolProfilePerformanceResponse,
+    SchoolProfilePerformanceYearResponse,
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
     SchoolProfileSectionCompletenessResponse,
@@ -209,6 +212,15 @@ def get_school_profile(
                 ethnicity_supported=result.demographics_latest.coverage.ethnicity_supported,
                 top_languages_supported=result.demographics_latest.coverage.top_languages_supported,
             ),
+            ethnicity_breakdown=[
+                SchoolProfileDemographicsEthnicityGroupResponse(
+                    key=group.key,
+                    label=group.label,
+                    percentage=group.percentage,
+                    count=group.count,
+                )
+                for group in result.demographics_latest.ethnicity_breakdown
+            ],
         )
 
     ofsted_latest = None
@@ -218,6 +230,20 @@ def get_school_profile(
             overall_effectiveness_label=result.ofsted_latest.overall_effectiveness_label,
             inspection_start_date=result.ofsted_latest.inspection_start_date,
             publication_date=result.ofsted_latest.publication_date,
+            latest_oeif_inspection_start_date=result.ofsted_latest.latest_oeif_inspection_start_date,
+            latest_oeif_publication_date=result.ofsted_latest.latest_oeif_publication_date,
+            quality_of_education_code=result.ofsted_latest.quality_of_education_code,
+            quality_of_education_label=result.ofsted_latest.quality_of_education_label,
+            behaviour_and_attitudes_code=result.ofsted_latest.behaviour_and_attitudes_code,
+            behaviour_and_attitudes_label=result.ofsted_latest.behaviour_and_attitudes_label,
+            personal_development_code=result.ofsted_latest.personal_development_code,
+            personal_development_label=result.ofsted_latest.personal_development_label,
+            leadership_and_management_code=result.ofsted_latest.leadership_and_management_code,
+            leadership_and_management_label=result.ofsted_latest.leadership_and_management_label,
+            latest_ungraded_inspection_date=result.ofsted_latest.latest_ungraded_inspection_date,
+            latest_ungraded_publication_date=result.ofsted_latest.latest_ungraded_publication_date,
+            most_recent_inspection_date=result.ofsted_latest.most_recent_inspection_date,
+            days_since_most_recent_inspection=result.ofsted_latest.days_since_most_recent_inspection,
             is_graded=result.ofsted_latest.is_graded,
             ungraded_outcome=result.ofsted_latest.ungraded_outcome,
         )
@@ -252,10 +278,66 @@ def get_school_profile(
         ),
     )
 
+    performance = None
+    if result.performance is not None:
+        latest = None
+        if result.performance.latest is not None:
+            latest = SchoolProfilePerformanceYearResponse(
+                academic_year=result.performance.latest.academic_year,
+                attainment8_average=result.performance.latest.attainment8_average,
+                progress8_average=result.performance.latest.progress8_average,
+                progress8_disadvantaged=result.performance.latest.progress8_disadvantaged,
+                progress8_not_disadvantaged=result.performance.latest.progress8_not_disadvantaged,
+                progress8_disadvantaged_gap=result.performance.latest.progress8_disadvantaged_gap,
+                engmath_5_plus_pct=result.performance.latest.engmath_5_plus_pct,
+                engmath_4_plus_pct=result.performance.latest.engmath_4_plus_pct,
+                ebacc_entry_pct=result.performance.latest.ebacc_entry_pct,
+                ebacc_5_plus_pct=result.performance.latest.ebacc_5_plus_pct,
+                ebacc_4_plus_pct=result.performance.latest.ebacc_4_plus_pct,
+                ks2_reading_expected_pct=result.performance.latest.ks2_reading_expected_pct,
+                ks2_writing_expected_pct=result.performance.latest.ks2_writing_expected_pct,
+                ks2_maths_expected_pct=result.performance.latest.ks2_maths_expected_pct,
+                ks2_combined_expected_pct=result.performance.latest.ks2_combined_expected_pct,
+                ks2_reading_higher_pct=result.performance.latest.ks2_reading_higher_pct,
+                ks2_writing_higher_pct=result.performance.latest.ks2_writing_higher_pct,
+                ks2_maths_higher_pct=result.performance.latest.ks2_maths_higher_pct,
+                ks2_combined_higher_pct=result.performance.latest.ks2_combined_higher_pct,
+            )
+
+        performance = SchoolProfilePerformanceResponse(
+            latest=latest,
+            history=[
+                SchoolProfilePerformanceYearResponse(
+                    academic_year=year.academic_year,
+                    attainment8_average=year.attainment8_average,
+                    progress8_average=year.progress8_average,
+                    progress8_disadvantaged=year.progress8_disadvantaged,
+                    progress8_not_disadvantaged=year.progress8_not_disadvantaged,
+                    progress8_disadvantaged_gap=year.progress8_disadvantaged_gap,
+                    engmath_5_plus_pct=year.engmath_5_plus_pct,
+                    engmath_4_plus_pct=year.engmath_4_plus_pct,
+                    ebacc_entry_pct=year.ebacc_entry_pct,
+                    ebacc_5_plus_pct=year.ebacc_5_plus_pct,
+                    ebacc_4_plus_pct=year.ebacc_4_plus_pct,
+                    ks2_reading_expected_pct=year.ks2_reading_expected_pct,
+                    ks2_writing_expected_pct=year.ks2_writing_expected_pct,
+                    ks2_maths_expected_pct=year.ks2_maths_expected_pct,
+                    ks2_combined_expected_pct=year.ks2_combined_expected_pct,
+                    ks2_reading_higher_pct=year.ks2_reading_higher_pct,
+                    ks2_writing_higher_pct=year.ks2_writing_higher_pct,
+                    ks2_maths_higher_pct=year.ks2_maths_higher_pct,
+                    ks2_combined_higher_pct=year.ks2_combined_higher_pct,
+                )
+                for year in result.performance.history
+            ],
+        )
+
     deprivation = None
     if result.area_context is not None and result.area_context.deprivation is not None:
         deprivation = SchoolProfileAreaDeprivationResponse(
             lsoa_code=result.area_context.deprivation.lsoa_code,
+            imd_score=result.area_context.deprivation.imd_score,
+            imd_rank=result.area_context.deprivation.imd_rank,
             imd_decile=result.area_context.deprivation.imd_decile,
             idaci_score=result.area_context.deprivation.idaci_score,
             idaci_decile=result.area_context.deprivation.idaci_decile,
@@ -305,6 +387,7 @@ def get_school_profile(
             lng=result.school.lng,
         ),
         demographics_latest=demographics_latest,
+        performance=performance,
         ofsted_latest=ofsted_latest,
         ofsted_timeline=ofsted_timeline,
         area_context=area_context,
@@ -316,6 +399,16 @@ def get_school_profile(
                 years_available=(
                     list(result.completeness.demographics.years_available)
                     if result.completeness.demographics.years_available is not None
+                    else None
+                ),
+            ),
+            performance=SchoolProfileSectionCompletenessResponse(
+                status=result.completeness.performance.status,
+                reason_code=result.completeness.performance.reason_code,
+                last_updated_at=result.completeness.performance.last_updated_at,
+                years_available=(
+                    list(result.completeness.performance.years_available)
+                    if result.completeness.performance.years_available is not None
                     else None
                 ),
             ),

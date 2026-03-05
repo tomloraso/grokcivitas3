@@ -13,24 +13,24 @@ interface PageCompletenessBarProps {
  * bordered banner.
  */
 export function PageCompletenessBar({
-  completeness,
+  completeness
 }: PageCompletenessBarProps): JSX.Element | null {
   const sections = [
     { label: "Demographics", ...completeness.demographics },
+    { label: "Performance", ...completeness.performance },
     { label: "Trends", ...completeness.trends },
     { label: "Ofsted", ...completeness.ofstedLatest },
     { label: "Ofsted history", ...completeness.ofstedTimeline },
     { label: "Area deprivation", ...completeness.areaDeprivation },
-    { label: "Area crime", ...completeness.areaCrime },
+    { label: "Area crime", ...completeness.areaCrime }
   ];
 
   const incomplete = sections.filter((s) => s.status !== "available");
-  if (incomplete.length === 0) return null;
+  if (incomplete.length === 0) {
+    return null;
+  }
 
-  // Find the most recent refresh
-  const dates = sections
-    .map((s) => s.lastUpdatedAt)
-    .filter((d): d is string => d !== null);
+  const dates = sections.map((s) => s.lastUpdatedAt).filter((d): d is string => d !== null);
   const latestRefresh = dates.length > 0 ? dates.sort().reverse()[0] : null;
 
   const incompleteNames = incomplete.map((s) => s.label);
@@ -42,14 +42,8 @@ export function PageCompletenessBar({
       aria-label="Some data is incomplete"
     >
       <Info className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span>
-        Not yet published: {incompleteNames.join(", ")}
-      </span>
-      {latestRefresh ? (
-        <span className="before:content-['·'] before:mr-1.5">
-          {latestRefresh}
-        </span>
-      ) : null}
+      <span>Not yet published: {incompleteNames.join(", ")}</span>
+      {latestRefresh ? <span className="before:content-['|'] before:mr-1.5">{latestRefresh}</span> : null}
     </p>
   );
 }

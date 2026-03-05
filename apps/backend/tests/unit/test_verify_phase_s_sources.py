@@ -40,6 +40,56 @@ def _build_release_html(*, release_version_id: str, file_id: str, file_name: str
     """
 
 
+def _spc_ethnicity_header() -> str:
+    return (
+        "number of pupils classified as white British ethnic origin,"
+        "% of pupils classified as white British ethnic origin,"
+        "number of pupils classified as Irish ethnic origin,"
+        "% of pupils classified as Irish ethnic origin,"
+        "number of pupils classified as traveller of Irish heritage ethnic origin,"
+        "% of pupils classified as traveller of Irish heritage ethnic origin,"
+        "number of pupils classified as any other white background ethnic origin,"
+        "% of pupils classified as any other white background ethnic origin,"
+        "number of pupils classified as Gypsy/Roma ethnic origin,"
+        "% of pupils classified as Gypsy/Roma ethnic origin,"
+        "number of pupils classified as white and black Caribbean ethnic origin,"
+        "% of pupils classified as white and black Caribbean ethnic origin,"
+        "number of pupils classified as white and black African ethnic origin,"
+        "% of pupils classified as white and black African ethnic origin,"
+        "number of pupils classified as white and Asian ethnic origin,"
+        "% of pupils classified as white and Asian ethnic origin,"
+        "number of pupils classified as any other mixed background ethnic origin,"
+        "% of pupils classified as any other mixed background ethnic origin,"
+        "number of pupils classified as Indian ethnic origin,"
+        "% of pupils classified as Indian ethnic origin,"
+        "number of pupils classified as Pakistani ethnic origin,"
+        "% of pupils classified as Pakistani ethnic origin,"
+        "number of pupils classified as Bangladeshi ethnic origin,"
+        "% of pupils classified as Bangladeshi ethnic origin,"
+        "number of pupils classified as any other Asian background ethnic origin,"
+        "% of pupils classified as any other Asian background ethnic origin,"
+        "number of pupils classified as Caribbean ethnic origin,"
+        "% of pupils classified as Caribbean ethnic origin,"
+        "number of pupils classified as African ethnic origin,"
+        "% of pupils classified as African ethnic origin,"
+        "number of pupils classified as any other black background ethnic origin,"
+        "% of pupils classified as any other black background ethnic origin,"
+        "number of pupils classified as Chinese ethnic origin,"
+        "% of pupils classified as Chinese ethnic origin,"
+        "number of pupils classified as any other ethnic group ethnic origin,"
+        "% of pupils classified as any other ethnic group ethnic origin,"
+        "number of pupils unclassified,"
+        "% of pupils unclassified"
+    )
+
+
+def _spc_ethnicity_row() -> str:
+    return (
+        "98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,"
+        "14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0"
+    )
+
+
 def test_verify_phase_s_sources_passes_for_valid_catalog() -> None:
     module = _load_script_module()
 
@@ -70,8 +120,8 @@ def test_verify_phase_s_sources_passes_for_valid_catalog() -> None:
                 "% of pupils known to be eligible for free school meals (Performance Tables),"
                 "% of pupils whose first language is known or believed to be other than English,"
                 "% of pupils whose first language is known or believed to be English,"
-                "% of pupils whose first language is unclassified\n"
-                "100001,18.1,18.2,7.1,91.8,1.1\n"
+                "% of pupils whose first language is unclassified," + _spc_ethnicity_header() + "\n"
+                "100001,18.1,18.2,7.1,91.8,1.1," + _spc_ethnicity_row() + "\n"
             ),
         ),
         "https://content.explore-education-statistics.service.gov.uk/api/releases/sen-rv-2024/files/sen-file-2024": module.HttpResponse(

@@ -1,8 +1,10 @@
-import { screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { runA11yAudit } from "../../test/accessibility";
 import { renderWithProviders } from "../../test/render";
+import { EthnicityBreakdown } from "./EthnicityBreakdown";
+import type { EthnicityGroup } from "./EthnicityBreakdown";
 import { MetricGrid } from "./MetricGrid";
 import { MetricUnavailable } from "./MetricUnavailable";
 import { ProportionBar } from "./ProportionBar";
@@ -362,6 +364,83 @@ describe("Composition", () => {
         />
         <MetricUnavailable metricLabel="Ethnicity" />
       </MetricGrid>
+    );
+    const results = await runA11yAudit(container);
+    expect(results).toHaveNoViolations();
+  });
+});
+
+/* ================================================================== */
+/* EthnicityBreakdown                                                  */
+/* ================================================================== */
+
+const SAMPLE_GROUPS: EthnicityGroup[] = [
+  { key: "white_british", label: "White British", percentage: 49.4, count: 222, percentageLabel: "49.4%" },
+  { key: "any_other_ethnic", label: "Any Other Ethnic Group", percentage: 10.0, count: 45, percentageLabel: "10.0%" },
+  { key: "indian", label: "Indian", percentage: 8.7, count: 39, percentageLabel: "8.7%" },
+  { key: "white_black_caribbean", label: "White and Black Caribbean", percentage: 4.7, count: 21, percentageLabel: "4.7%" },
+  { key: "any_other_black", label: "Any Other Black Background", percentage: 4.5, count: 20, percentageLabel: "4.5%" },
+  { key: "pakistani", label: "Pakistani", percentage: 4.2, count: 19, percentageLabel: "4.2%" },
+  { key: "any_other_white", label: "Any Other White Background", percentage: 4.0, count: 18, percentageLabel: "4.0%" },
+  { key: "any_other_mixed", label: "Any Other Mixed Background", percentage: 2.7, count: 12, percentageLabel: "2.7%" },
+  { key: "any_other_asian", label: "Any Other Asian Background", percentage: 2.2, count: 10, percentageLabel: "2.2%" },
+  { key: "african", label: "African", percentage: 2.2, count: 10, percentageLabel: "2.2%" },
+  { key: "caribbean", label: "Caribbean", percentage: 2.0, count: 9, percentageLabel: "2.0%" },
+  { key: "chinese", label: "Chinese", percentage: 1.8, count: 8, percentageLabel: "1.8%" },
+  { key: "white_asian", label: "White and Asian", percentage: 1.3, count: 6, percentageLabel: "1.3%" },
+  { key: "unclassified", label: "Unclassified", percentage: 1.1, count: 5, percentageLabel: "1.1%" },
+];
+
+describe("EthnicityBreakdown", () => {
+  it("renders heading and stacked bar", () => {
+    renderWithProviders(<EthnicityBreakdown groups={SAMPLE_GROUPS} />);
+    expect(screen.getByText("Ethnicity breakdown")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /ethnicity proportions/i })).toBeInTheDocument();
+  });
+
+  it("sorts groups by percentage descending", () => {
+    renderWithProviders(<EthnicityBreakdown groups={SAMPLE_GROUPS} initialVisibleCount={20} />);
+    const labels = screen.getAllByText(/%$/).map((el) => el.textContent);
+    const values = labels.map((l) => parseFloat(l!));
+    expect(values).toEqual([...values].sort((a, b) => b - a));
+  });
+
+  it("collapses groups beyond initialVisibleCount", () => {
+    renderWithProviders(<EthnicityBreakdown groups={SAMPLE_GROUPS} initialVisibleCount={4} />);
+    expect(screen.getByText("White British")).toBeInTheDocument();
+    expect(screen.getByText("Any Other Ethnic Group")).toBeInTheDocument();
+    expect(screen.queryByText("Any Other Black Background")).not.toBeInTheDocument();
+    expect(screen.getByText(/Show \d+ more/)).toBeInTheDocument();
+  });
+
+  it("expands collapsed groups on toggle click", () => {
+    renderWithProviders(
+      <EthnicityBreakdown groups={SAMPLE_GROUPS} initialVisibleCount={4} />
+    );
+
+    const toggle = screen.getByText(/Show \d+ more/);
+    act(() => {
+      toggle.click();
+    });
+
+    expect(screen.getByText("Unclassified")).toBeInTheDocument();
+    expect(screen.getByText("Show less")).toBeInTheDocument();
+  });
+
+  it("returns null for empty groups", () => {
+    const { container } = renderWithProviders(<EthnicityBreakdown groups={[]} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("does not show toggle when all groups fit", () => {
+    const fewGroups = SAMPLE_GROUPS.slice(0, 3);
+    renderWithProviders(<EthnicityBreakdown groups={fewGroups} initialVisibleCount={8} />);
+    expect(screen.queryByText(/Show \d+ more/)).not.toBeInTheDocument();
+  });
+
+  it("passes accessibility smoke", async () => {
+    const { container } = renderWithProviders(
+      <EthnicityBreakdown groups={SAMPLE_GROUPS} />
     );
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();

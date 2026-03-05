@@ -37,6 +37,12 @@ _NEXT_DATA_PATTERN = re.compile(
     r'<script id="__NEXT_DATA__" type="application/json">(?P<payload>.*?)</script>',
     flags=re.IGNORECASE | re.DOTALL,
 )
+_ETHNICITY_PERCENTAGE_COLUMNS: tuple[str, ...] = tuple(
+    f"{group.key}_pct" for group in demographics_spc.ETHNICITY_GROUP_FIELDS
+)
+_ETHNICITY_COUNT_COLUMNS: tuple[str, ...] = tuple(
+    f"{group.key}_count" for group in demographics_spc.ETHNICITY_GROUP_FIELDS
+)
 
 
 class DemographicsSourceFamily(str, Enum):
@@ -77,6 +83,9 @@ class _SpcRecord:
     eal_pct: float | None
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
+    ethnicity_percentages: dict[str, float | None]
+    ethnicity_counts: dict[str, int | None]
+    has_ethnicity_data: bool
     release_version_id: str
     file_id: str
 
@@ -105,6 +114,17 @@ class _MergedRecord:
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
     total_pupils: int | None
+    has_ethnicity_data: bool
+    source_dataset_id: str
+    source_dataset_version: str | None
+
+
+@dataclass(frozen=True)
+class _EthnicityRecord:
+    urn: str
+    academic_year: str
+    percentages: dict[str, float | None]
+    counts: dict[str, int | None]
     source_dataset_id: str
     source_dataset_version: str | None
 
@@ -267,6 +287,9 @@ class DemographicsReleaseFilesPipeline:
                             first_language_unclassified_pct=normalized_spc[
                                 "first_language_unclassified_pct"
                             ],
+                            ethnicity_percentages=normalized_spc["ethnicity_percentages"],
+                            ethnicity_counts=normalized_spc["ethnicity_counts"],
+                            has_ethnicity_data=normalized_spc["has_ethnicity_data"],
                             release_version_id=asset.release_version_id,
                             file_id=asset.file_id,
                         )
@@ -293,12 +316,46 @@ class DemographicsReleaseFilesPipeline:
                             file_id=asset.file_id,
                         )
 
-        merged_rows = _merge_rows(spc_rows=spc_rows, sen_rows=sen_rows)
+        merged_rows, ethnicity_rows = _merge_rows(spc_rows=spc_rows, sen_rows=sen_rows)
 
         staging_table_name = self._staging_table_name(context)
+        ethnicity_staging_table_name = self._ethnicity_staging_table_name(context)
+        ethnicity_column_definitions = ",\n                        ".join(
+            [f"{column} double precision NULL" for column in _ETHNICITY_PERCENTAGE_COLUMNS]
+            + [f"{column} integer NULL" for column in _ETHNICITY_COUNT_COLUMNS]
+        )
+        ethnicity_insert_columns = ",\n                        ".join(
+            [
+                "urn",
+                "academic_year",
+                *_ETHNICITY_PERCENTAGE_COLUMNS,
+                *_ETHNICITY_COUNT_COLUMNS,
+                "source_dataset_id",
+                "source_dataset_version",
+            ]
+        )
+        ethnicity_insert_values = ",\n                        ".join(
+            [
+                ":urn",
+                ":academic_year",
+                *[f":{column}" for column in _ETHNICITY_PERCENTAGE_COLUMNS],
+                *[f":{column}" for column in _ETHNICITY_COUNT_COLUMNS],
+                ":source_dataset_id",
+                ":source_dataset_version",
+            ]
+        )
+        ethnicity_update_columns = ",\n                        ".join(
+            [f"{column} = EXCLUDED.{column}" for column in _ETHNICITY_PERCENTAGE_COLUMNS]
+            + [f"{column} = EXCLUDED.{column}" for column in _ETHNICITY_COUNT_COLUMNS]
+            + [
+                "source_dataset_id = EXCLUDED.source_dataset_id",
+                "source_dataset_version = EXCLUDED.source_dataset_version",
+            ]
+        )
         with self._engine.begin() as connection:
             connection.execute(text("CREATE SCHEMA IF NOT EXISTS staging"))
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
+            connection.execute(text(f"DROP TABLE IF EXISTS staging.{ethnicity_staging_table_name}"))
             connection.execute(
                 text(
                     f"""
@@ -314,6 +371,21 @@ class DemographicsReleaseFilesPipeline:
                         first_language_english_pct double precision NULL,
                         first_language_unclassified_pct double precision NULL,
                         total_pupils integer NULL,
+                        has_ethnicity_data boolean NOT NULL,
+                        source_dataset_id text NOT NULL,
+                        source_dataset_version text NULL,
+                        PRIMARY KEY (urn, academic_year)
+                    )
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
+                    CREATE TABLE staging.{ethnicity_staging_table_name} (
+                        urn text NOT NULL,
+                        academic_year text NOT NULL,
+                        {ethnicity_column_definitions},
                         source_dataset_id text NOT NULL,
                         source_dataset_version text NULL,
                         PRIMARY KEY (urn, academic_year)
@@ -336,6 +408,7 @@ class DemographicsReleaseFilesPipeline:
                         first_language_english_pct,
                         first_language_unclassified_pct,
                         total_pupils,
+                        has_ethnicity_data,
                         source_dataset_id,
                         source_dataset_version
                     ) VALUES (
@@ -350,6 +423,7 @@ class DemographicsReleaseFilesPipeline:
                         :first_language_english_pct,
                         :first_language_unclassified_pct,
                         :total_pupils,
+                        :has_ethnicity_data,
                         :source_dataset_id,
                         :source_dataset_version
                     )
@@ -363,6 +437,7 @@ class DemographicsReleaseFilesPipeline:
                         first_language_english_pct = EXCLUDED.first_language_english_pct,
                         first_language_unclassified_pct = EXCLUDED.first_language_unclassified_pct,
                         total_pupils = EXCLUDED.total_pupils,
+                        has_ethnicity_data = EXCLUDED.has_ethnicity_data,
                         source_dataset_id = EXCLUDED.source_dataset_id,
                         source_dataset_version = EXCLUDED.source_dataset_version
                     """
@@ -385,12 +460,40 @@ class DemographicsReleaseFilesPipeline:
                                     row.first_language_unclassified_pct
                                 ),
                                 "total_pupils": row.total_pupils,
+                                "has_ethnicity_data": row.has_ethnicity_data,
                                 "source_dataset_id": row.source_dataset_id,
                                 "source_dataset_version": row.source_dataset_version,
                             }
                             for row in row_chunk
                         ],
                     )
+
+            if ethnicity_rows:
+                ethnicity_staged_insert = text(
+                    f"""
+                    INSERT INTO staging.{ethnicity_staging_table_name} (
+                        {ethnicity_insert_columns}
+                    ) VALUES (
+                        {ethnicity_insert_values}
+                    )
+                    ON CONFLICT (urn, academic_year) DO UPDATE SET
+                        {ethnicity_update_columns}
+                    """
+                )
+                for ethnicity_chunk in chunked(ethnicity_rows, context.stage_chunk_size):
+                    parameters: list[dict[str, object]] = []
+                    for row in ethnicity_chunk:
+                        payload: dict[str, object] = {
+                            "urn": row.urn,
+                            "academic_year": row.academic_year,
+                            "source_dataset_id": row.source_dataset_id,
+                            "source_dataset_version": row.source_dataset_version,
+                        }
+                        for group in demographics_spc.ETHNICITY_GROUP_FIELDS:
+                            payload[f"{group.key}_pct"] = row.percentages.get(group.key)
+                            payload[f"{group.key}_count"] = row.counts.get(group.key)
+                        parameters.append(payload)
+                    connection.execute(ethnicity_staged_insert, parameters)
 
             if rejected_rows:
                 rejection_insert = text(
@@ -438,6 +541,25 @@ class DemographicsReleaseFilesPipeline:
             raise ValueError("Pipeline engine is required for promote.")
 
         staging_table_name = self._staging_table_name(context)
+        ethnicity_staging_table_name = self._ethnicity_staging_table_name(context)
+        ethnicity_columns_sql = ",\n                                ".join(
+            [*_ETHNICITY_PERCENTAGE_COLUMNS, *_ETHNICITY_COUNT_COLUMNS]
+        )
+        ethnicity_selected_columns_sql = ",\n                                ".join(
+            [
+                f"staged.{column}"
+                for column in [*_ETHNICITY_PERCENTAGE_COLUMNS, *_ETHNICITY_COUNT_COLUMNS]
+            ]
+        )
+        ethnicity_update_columns_sql = ",\n                                ".join(
+            [
+                *(f"{column} = EXCLUDED.{column}" for column in _ETHNICITY_PERCENTAGE_COLUMNS),
+                *(f"{column} = EXCLUDED.{column}" for column in _ETHNICITY_COUNT_COLUMNS),
+                "source_dataset_id = EXCLUDED.source_dataset_id",
+                "source_dataset_version = EXCLUDED.source_dataset_version",
+                "updated_at = timezone('utc', now())",
+            ]
+        )
         with self._engine.begin() as connection:
             promoted_rows = int(
                 connection.execute(
@@ -474,7 +596,7 @@ class DemographicsReleaseFilesPipeline:
                                 staged.first_language_english_pct,
                                 staged.first_language_unclassified_pct,
                                 staged.total_pupils,
-                                FALSE,
+                                staged.has_ethnicity_data,
                                 FALSE,
                                 staged.source_dataset_id,
                                 staged.source_dataset_version,
@@ -503,7 +625,45 @@ class DemographicsReleaseFilesPipeline:
                     )
                 ).scalar_one()
             )
+            connection.execute(
+                text(
+                    f"""
+                    INSERT INTO school_ethnicity_yearly (
+                        urn,
+                        academic_year,
+                        {ethnicity_columns_sql},
+                        source_dataset_id,
+                        source_dataset_version,
+                        updated_at
+                    )
+                    SELECT
+                        staged.urn,
+                        staged.academic_year,
+                        {ethnicity_selected_columns_sql},
+                        staged.source_dataset_id,
+                        staged.source_dataset_version,
+                        timezone('utc', now())
+                    FROM staging.{ethnicity_staging_table_name} AS staged
+                    INNER JOIN schools ON schools.urn = staged.urn
+                    ON CONFLICT (urn, academic_year) DO UPDATE SET
+                        {ethnicity_update_columns_sql}
+                    """
+                )
+            )
+            connection.execute(
+                text(
+                    f"""
+                    DELETE FROM school_ethnicity_yearly AS target
+                    USING staging.{staging_table_name} AS staged
+                    WHERE
+                        target.urn = staged.urn
+                        AND target.academic_year = staged.academic_year
+                        AND staged.has_ethnicity_data = FALSE
+                    """
+                )
+            )
             connection.execute(text(f"DROP TABLE IF EXISTS staging.{staging_table_name}"))
+            connection.execute(text(f"DROP TABLE IF EXISTS staging.{ethnicity_staging_table_name}"))
 
         return promoted_rows
 
@@ -602,6 +762,10 @@ class DemographicsReleaseFilesPipeline:
     def _staging_table_name(context: PipelineRunContext) -> str:
         return f"dfe_characteristics__{context.run_id.hex}"
 
+    @staticmethod
+    def _ethnicity_staging_table_name(context: PipelineRunContext) -> str:
+        return f"dfe_characteristics_ethnicity__{context.run_id.hex}"
+
 
 def build_release_page_url(*, publication_slug: str, release_slug: str) -> str:
     return RELEASE_PAGE_URL_TEMPLATE.format(
@@ -668,8 +832,9 @@ def _merge_rows(
     *,
     spc_rows: Mapping[tuple[str, str], _SpcRecord],
     sen_rows: Mapping[tuple[str, str], _SenRecord],
-) -> list[_MergedRecord]:
+) -> tuple[list[_MergedRecord], list[_EthnicityRecord]]:
     merged: list[_MergedRecord] = []
+    ethnicity_rows: list[_EthnicityRecord] = []
     keys = sorted(set(spc_rows.keys()) | set(sen_rows.keys()))
     for key in keys:
         spc_row = spc_rows.get(key)
@@ -701,6 +866,7 @@ def _merge_rows(
                     spc_row.first_language_unclassified_pct if spc_row is not None else None
                 ),
                 total_pupils=sen_row.total_pupils if sen_row is not None else None,
+                has_ethnicity_data=(spc_row.has_ethnicity_data if spc_row is not None else False),
                 source_dataset_id="|".join(source_dataset_tokens),
                 source_dataset_version=(
                     "|".join(source_dataset_version_tokens)
@@ -709,8 +875,19 @@ def _merge_rows(
                 ),
             )
         )
+        if spc_row is not None and spc_row.has_ethnicity_data:
+            ethnicity_rows.append(
+                _EthnicityRecord(
+                    urn=spc_row.urn,
+                    academic_year=spc_row.academic_year,
+                    percentages=dict(spc_row.ethnicity_percentages),
+                    counts=dict(spc_row.ethnicity_counts),
+                    source_dataset_id=f"spc:{spc_row.release_version_id}",
+                    source_dataset_version=f"spc:{spc_row.file_id}",
+                )
+            )
 
-    return merged
+    return merged, ethnicity_rows
 
 
 def _build_bronze_file_name(descriptor: ReleaseFileDescriptor) -> str:

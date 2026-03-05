@@ -38,10 +38,50 @@ export interface DemographicsCoverageVM {
   topLanguagesSupported: boolean;
 }
 
+export interface DemographicsEthnicityGroupVM {
+  key: string;
+  label: string;
+  percentage: number | null;
+  count: number | null;
+  percentageLabel: string | null;
+}
+
 export interface DemographicsVM {
   academicYear: string;
   metrics: DemographicMetricVM[];
   coverage: DemographicsCoverageVM;
+  ethnicityBreakdown: DemographicsEthnicityGroupVM[];
+}
+
+/* ------------------------------------------------------------------ */
+/* School performance                                                  */
+/* ------------------------------------------------------------------ */
+
+export interface PerformanceYearVM {
+  academicYear: string;
+  attainment8Average: number | null;
+  progress8Average: number | null;
+  progress8Disadvantaged: number | null;
+  progress8NotDisadvantaged: number | null;
+  progress8DisadvantagedGap: number | null;
+  engmath5PlusPct: number | null;
+  engmath4PlusPct: number | null;
+  ebaccEntryPct: number | null;
+  ebacc5PlusPct: number | null;
+  ebacc4PlusPct: number | null;
+  ks2ReadingExpectedPct: number | null;
+  ks2WritingExpectedPct: number | null;
+  ks2MathsExpectedPct: number | null;
+  ks2CombinedExpectedPct: number | null;
+  ks2ReadingHigherPct: number | null;
+  ks2WritingHigherPct: number | null;
+  ks2MathsHigherPct: number | null;
+  ks2CombinedHigherPct: number | null;
+}
+
+export interface PerformanceVM {
+  latest: PerformanceYearVM | null;
+  history: PerformanceYearVM[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -53,6 +93,20 @@ export interface OfstedVM {
   ratingLabel: string | null;
   inspectionDate: string | null;
   publicationDate: string | null;
+  latestOeifInspectionDate: string | null;
+  latestOeifPublicationDate: string | null;
+  latestUngradedInspectionDate: string | null;
+  latestUngradedPublicationDate: string | null;
+  mostRecentInspectionDate: string | null;
+  daysSinceMostRecentInspection: number | null;
+  qualityOfEducationCode: string | null;
+  qualityOfEducationLabel: string | null;
+  behaviourAndAttitudesCode: string | null;
+  behaviourAndAttitudesLabel: string | null;
+  personalDevelopmentCode: string | null;
+  personalDevelopmentLabel: string | null;
+  leadershipAndManagementCode: string | null;
+  leadershipAndManagementLabel: string | null;
   isGraded: boolean;
   ungradedOutcome: string | null;
 }
@@ -85,6 +139,8 @@ export interface OfstedTimelineVM {
 
 export interface AreaDeprivationVM {
   lsoaCode: string;
+  imdScore: number;
+  imdRank: number;
   imdDecile: number;
   idaciScore: number;
   idaciDecile: number;
@@ -190,6 +246,7 @@ export interface SectionCompletenessVM {
 
 export interface ProfileCompletenessVM {
   demographics: SectionCompletenessVM;
+  performance: SectionCompletenessVM;
   trends: SectionCompletenessVM;
   ofstedLatest: SectionCompletenessVM;
   ofstedTimeline: SectionCompletenessVM;
@@ -212,6 +269,7 @@ export interface UnsupportedMetricVM {
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
   demographics: DemographicsVM | null;
+  performance: PerformanceVM | null;
   ofsted: OfstedVM | null;
   ofstedTimeline: OfstedTimelineVM;
   areaContext: AreaContextVM;

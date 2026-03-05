@@ -38,6 +38,11 @@ _SECTIONS: tuple[_SectionDefinition, ...] = (
         section="demographics",
     ),
     _SectionDefinition(
+        source=PipelineSource.DFE_PERFORMANCE.value,
+        dataset="school_performance_yearly",
+        section="school_performance",
+    ),
+    _SectionDefinition(
         source=PipelineSource.OFSTED_LATEST.value,
         dataset="school_ofsted_latest",
         section="ofsted_latest",
@@ -108,6 +113,7 @@ class PostgresDataQualityRepository(DataQualityRepository):
             trends_distribution = self._query_trends_distribution(connection=connection)
             section_metrics = {
                 "demographics": self._query_demographics_metrics(connection=connection),
+                "school_performance": self._query_school_performance_metrics(connection=connection),
                 "ofsted_latest": self._query_ofsted_latest_metrics(connection=connection),
                 "ofsted_timeline": self._query_ofsted_timeline_metrics(connection=connection),
                 "area_deprivation": self._query_area_deprivation_metrics(connection=connection),
@@ -459,6 +465,23 @@ class PostgresDataQualityRepository(DataQualityRepository):
         )
         return count, updated_at
 
+    def _query_school_performance_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_performance_yearly")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_performance_yearly")
+            ).scalar_one()
+        )
+        return count, updated_at
+
     def _query_ofsted_timeline_metrics(
         self,
         *,
@@ -622,6 +645,7 @@ def _to_section(value: object) -> DataQualitySection:
     raw_section = str(value)
     if raw_section not in {
         "demographics",
+        "school_performance",
         "ofsted_latest",
         "ofsted_timeline",
         "area_deprivation",

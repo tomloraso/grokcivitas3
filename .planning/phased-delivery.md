@@ -184,7 +184,7 @@
 ## Phase S - Source strategy stabilization + trend history recovery (blocking)
 
 **Goal:** Replace single-year demographics source behavior with a verified multi-year source strategy so trend coverage is reliable, explainable, and phase-inclusive.
-**Status:** S1-S5 complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md`; S6 ethnicity support plan added (2026-03-04).
+**Status:** S1-S6 complete (2026-03-04), with sign-off evidence in `.planning/phases/phase-source-stabilization/signoff-2026-03-04.md` and S6 implementation tracking in `.planning/phases/phase-source-stabilization/S6-school-level-ethnicity-breakdown-support.md`.
 
 ### Detailed design
 
@@ -263,6 +263,42 @@
 
 ---
 
+## Phase M - Metrics parity and coverage closure
+
+**Goal:** Close remaining metric gaps from `.planning/metrics.md` by extending existing ingested sources and integrating new sources where required.
+
+### Detailed design
+
+- `.planning/phases/phase-metrics-parity/README.md`
+- `.planning/phases/phase-metrics-parity/M1-ofsted-depth-and-derived-indicators.md`
+- `.planning/phases/phase-metrics-parity/M2-demographics-support-depth.md`
+- `.planning/phases/phase-metrics-parity/M3-attendance-behaviour-pipelines.md`
+- `.planning/phases/phase-metrics-parity/M4-workforce-leadership-pipelines.md`
+- `.planning/phases/phase-metrics-parity/M5-area-context-and-house-prices.md`
+- `.planning/phases/phase-metrics-parity/M6-benchmarks-and-trend-dashboard.md`
+
+### Deliverables
+
+1. **M1: Ofsted depth + derived indicators** - add sub-judgements and time-since-last-inspection fields.
+2. **M2: Demographics/support depth** - close FSM6, gender, mobility, SEN primary need, and languages coverage where publishable.
+3. **M3: Attendance/behaviour pipelines** - ingest attendance, persistent absence, suspensions, and exclusions with trend history.
+4. **M4: Workforce/leadership pipelines** - ingest staffing and leadership metrics for profile + trend views.
+5. **M5: Area context expansion** - add IMD domains, crime rates, and house-price context/trends.
+6. **M6: Benchmark and dashboard layer** - deliver national/local benchmark context and a cross-metric trend dashboard.
+
+### Exit criteria
+
+- Every metric in `.planning/metrics.md` is either implemented end-to-end or explicitly marked unavailable with source-backed reason.
+- New source integrations include direct endpoint schema validation evidence before implementation.
+- Profile/trends API and web UI expose consistent completeness metadata for all newly added domains.
+
+### Dependencies
+
+- Phase S completion (source strategy and completeness semantics stable).
+- Phase H quality and observability controls in place for additional source onboarding.
+
+---
+
 ## Phase 3 - Compare experience
 
 **Goal:** Deliver side-by-side school comparison with robust metric alignment and missing-data handling.
@@ -283,6 +319,7 @@
 
 - Phase 2.
 - Phase S.
+- Phase M.
 
 ---
 
@@ -342,6 +379,7 @@
 | 2 | Ofsted timeline + area context | Rich profiles with full inspections and area data | Medium-large (multiple pipelines) |
 | H | Hardening | Deterministic pipeline quality, completeness transparency, and operational resilience | Large (cross-cutting) |
 | S | Source strategy stabilization | Reliable multi-year trend coverage and source-contract clarity | Large (cross-cutting + source integration) |
+| M | Metrics parity and coverage closure | Full metrics catalog delivery with source-backed completeness handling | Large (cross-cutting + multi-source) |
 | UX | Visual quality + interaction uplift | Map-first polished UX across search and profile interactions | Medium-large (frontend heavy) |
 | 3 | Compare experience | Side-by-side comparison with aligned/missing data handling | Medium-large |
 | 4 | Paywall + premium | Auth, entitlements, payment | Medium-large |

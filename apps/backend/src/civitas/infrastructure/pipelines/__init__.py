@@ -4,6 +4,7 @@ from civitas.infrastructure.config.settings import PipelineSettings
 
 from .base import Pipeline, PipelineSource
 from .demographics_release_files import DemographicsReleaseFilesPipeline
+from .dfe_performance import DfePerformancePipeline
 from .gias import GiasPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
@@ -28,6 +29,13 @@ def pipeline_registry(
             release_slugs=pipeline_settings.demographics_release_slugs,
             lookback_years=pipeline_settings.demographics_lookback_years,
             strict_mode=pipeline_settings.demographics_source_strict_mode,
+        ),
+        PipelineSource.DFE_PERFORMANCE: DfePerformancePipeline(
+            engine=engine,
+            ks2_dataset_id=pipeline_settings.dfe_performance_ks2_dataset_id,
+            ks4_dataset_id=pipeline_settings.dfe_performance_ks4_dataset_id,
+            lookback_years=pipeline_settings.dfe_performance_lookback_years,
+            page_size=pipeline_settings.dfe_performance_page_size,
         ),
         PipelineSource.OFSTED_LATEST: OfstedLatestPipeline(
             engine=engine,

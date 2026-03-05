@@ -44,13 +44,95 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
       fsm_supported: false,
       ethnicity_supported: false,
       top_languages_supported: false
-    }
+    },
+    ethnicity_breakdown: []
+  },
+  performance: {
+    latest: {
+      academic_year: "2024/25",
+      attainment8_average: 47.2,
+      progress8_average: 0.11,
+      progress8_disadvantaged: -0.12,
+      progress8_not_disadvantaged: 0.21,
+      progress8_disadvantaged_gap: -0.33,
+      engmath_5_plus_pct: 52.3,
+      engmath_4_plus_pct: 71.4,
+      ebacc_entry_pct: 36.2,
+      ebacc_5_plus_pct: 25.5,
+      ebacc_4_plus_pct: 31.3,
+      ks2_reading_expected_pct: 74.1,
+      ks2_writing_expected_pct: 72.8,
+      ks2_maths_expected_pct: 75.4,
+      ks2_combined_expected_pct: 68.9,
+      ks2_reading_higher_pct: 21.3,
+      ks2_writing_higher_pct: 19.4,
+      ks2_maths_higher_pct: 23.7,
+      ks2_combined_higher_pct: 16.8
+    },
+    history: [
+      {
+        academic_year: "2023/24",
+        attainment8_average: 46.1,
+        progress8_average: 0.05,
+        progress8_disadvantaged: -0.19,
+        progress8_not_disadvantaged: 0.16,
+        progress8_disadvantaged_gap: -0.35,
+        engmath_5_plus_pct: 50.1,
+        engmath_4_plus_pct: 69.8,
+        ebacc_entry_pct: 35.0,
+        ebacc_5_plus_pct: 24.2,
+        ebacc_4_plus_pct: 30.1,
+        ks2_reading_expected_pct: 73.2,
+        ks2_writing_expected_pct: 71.9,
+        ks2_maths_expected_pct: 74.5,
+        ks2_combined_expected_pct: 67.8,
+        ks2_reading_higher_pct: 20.8,
+        ks2_writing_higher_pct: 18.7,
+        ks2_maths_higher_pct: 22.6,
+        ks2_combined_higher_pct: 15.9
+      },
+      {
+        academic_year: "2024/25",
+        attainment8_average: 47.2,
+        progress8_average: 0.11,
+        progress8_disadvantaged: -0.12,
+        progress8_not_disadvantaged: 0.21,
+        progress8_disadvantaged_gap: -0.33,
+        engmath_5_plus_pct: 52.3,
+        engmath_4_plus_pct: 71.4,
+        ebacc_entry_pct: 36.2,
+        ebacc_5_plus_pct: 25.5,
+        ebacc_4_plus_pct: 31.3,
+        ks2_reading_expected_pct: 74.1,
+        ks2_writing_expected_pct: 72.8,
+        ks2_maths_expected_pct: 75.4,
+        ks2_combined_expected_pct: 68.9,
+        ks2_reading_higher_pct: 21.3,
+        ks2_writing_higher_pct: 19.4,
+        ks2_maths_higher_pct: 23.7,
+        ks2_combined_higher_pct: 16.8
+      }
+    ]
   },
   ofsted_latest: {
     overall_effectiveness_code: "2",
     overall_effectiveness_label: "Good",
     inspection_start_date: "2025-10-10",
     publication_date: "2025-11-15",
+    latest_oeif_inspection_start_date: "2025-10-10",
+    latest_oeif_publication_date: "2025-11-15",
+    quality_of_education_code: "2",
+    quality_of_education_label: "Good",
+    behaviour_and_attitudes_code: "2",
+    behaviour_and_attitudes_label: "Good",
+    personal_development_code: "2",
+    personal_development_label: "Good",
+    leadership_and_management_code: "2",
+    leadership_and_management_label: "Good",
+    latest_ungraded_inspection_date: "2026-01-02",
+    latest_ungraded_publication_date: "2026-01-20",
+    most_recent_inspection_date: "2026-01-02",
+    days_since_most_recent_inspection: 61,
     is_graded: true,
     ungraded_outcome: null
   },
@@ -85,6 +167,8 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
   area_context: {
     deprivation: {
       lsoa_code: "E01004736",
+      imd_score: 22.4,
+      imd_rank: 10234,
       imd_decile: 3,
       idaci_score: 0.241,
       idaci_decile: 2,
@@ -111,6 +195,12 @@ const PROFILE_RESPONSE: SchoolProfileResponse = {
       reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: null
+    },
+    performance: {
+      status: "partial",
+      reason_code: "insufficient_years_published",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
     },
     ofsted_latest: {
       status: "available",
@@ -182,6 +272,20 @@ const UNGRADED_PROFILE: SchoolProfileResponse = {
     overall_effectiveness_label: null,
     inspection_start_date: "2025-06-01",
     publication_date: "2025-07-15",
+    latest_oeif_inspection_start_date: null,
+    latest_oeif_publication_date: null,
+    quality_of_education_code: null,
+    quality_of_education_label: null,
+    behaviour_and_attitudes_code: null,
+    behaviour_and_attitudes_label: null,
+    personal_development_code: null,
+    personal_development_label: null,
+    leadership_and_management_code: null,
+    leadership_and_management_label: null,
+    latest_ungraded_inspection_date: "2025-06-01",
+    latest_ungraded_publication_date: "2025-07-15",
+    most_recent_inspection_date: "2025-06-01",
+    days_since_most_recent_inspection: 30,
     is_graded: false,
     ungraded_outcome: "Effective safeguarding"
   }
@@ -196,6 +300,31 @@ const DIRECT_FSM_PROFILE: SchoolProfileResponse = {
       ...PROFILE_RESPONSE.demographics_latest!.coverage,
       fsm_supported: true
     }
+  }
+};
+
+const ETHNICITY_SUPPORTED_PROFILE: SchoolProfileResponse = {
+  ...PROFILE_RESPONSE,
+  demographics_latest: {
+    ...PROFILE_RESPONSE.demographics_latest!,
+    coverage: {
+      ...PROFILE_RESPONSE.demographics_latest!.coverage,
+      ethnicity_supported: true
+    },
+    ethnicity_breakdown: [
+      {
+        key: "white_british",
+        label: "White British",
+        percentage: 49.0,
+        count: 98
+      },
+      {
+        key: "indian",
+        label: "Indian",
+        percentage: 7.0,
+        count: 14
+      }
+    ]
   }
 };
 
@@ -230,6 +359,31 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getAllByRole("status", { name: "Loading content" })).toHaveLength(3);
   });
 
+  it("renders core profile before trends request resolves", async () => {
+    let resolveTrends: (value: SchoolTrendsResponse) => void = () => undefined;
+    const trendsPromise = new Promise<SchoolTrendsResponse>((resolve) => {
+      resolveTrends = resolve;
+    });
+    profileMock.mockResolvedValue(PROFILE_RESPONSE);
+    trendsMock.mockReturnValue(trendsPromise);
+
+    renderProfileAtUrn("100001");
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: "Camden Bridge Primary School" },
+        { timeout: 5000 }
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Something went wrong" })).not.toBeInTheDocument();
+
+    resolveTrends(TRENDS_RESPONSE);
+    await waitFor(() => {
+      expect(screen.getByLabelText("Disadvantaged trend")).toBeInTheDocument();
+    });
+  });
+
   it("renders school profile on success", async () => {
     profileMock.mockResolvedValue(PROFILE_RESPONSE);
     trendsMock.mockResolvedValue(TRENDS_RESPONSE);
@@ -249,6 +403,12 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
     expect(screen.getAllByText("17.2%").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Disadvantaged/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("School Performance")).toBeInTheDocument();
+    expect(screen.getByText("Attainment 8")).toBeInTheDocument();
+    expect(screen.getByText("47.2")).toBeInTheDocument();
+    expect(screen.getByText("Quality of education")).toBeInTheDocument();
+    expect(screen.getAllByText("Good").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Most recent 2 Jan 2026/)).toBeInTheDocument();
   });
 
   it("renders Ofsted ungraded state", async () => {
@@ -330,6 +490,10 @@ describe("SchoolProfileFeature", () => {
 
     await screen.findByText("Area Deprivation");
     expect(screen.getByText("IMD Decile")).toBeInTheDocument();
+    expect(screen.getByText("IMD Rank")).toBeInTheDocument();
+    expect(screen.getByText("IMD Score")).toBeInTheDocument();
+    expect(screen.getByText("10,234")).toBeInTheDocument();
+    expect(screen.getByText("22.400")).toBeInTheDocument();
     expect(screen.getByText("IDACI Score")).toBeInTheDocument();
     expect(screen.getByText("0.241")).toBeInTheDocument();
 
@@ -549,6 +713,21 @@ describe("SchoolProfileFeature", () => {
     await screen.findByLabelText("Free School Meals (direct) data is not available");
     expect(screen.getByLabelText("Free School Meals (direct) data is not available")).toBeInTheDocument();
     expect(screen.getByLabelText("Ethnicity breakdown data is not available")).toBeInTheDocument();
+    expect(screen.getByLabelText("Top non-English languages data is not available")).toBeInTheDocument();
+  });
+
+  it("renders ethnicity breakdown and hides ethnicity from coverage gaps when supported", async () => {
+    profileMock.mockResolvedValue(ETHNICITY_SUPPORTED_PROFILE);
+    trendsMock.mockResolvedValue(TRENDS_RESPONSE);
+
+    renderProfileAtUrn("100001");
+
+    await screen.findByText("Ethnicity breakdown");
+    expect(screen.getByText("White British")).toBeInTheDocument();
+    expect(screen.getByText("Indian")).toBeInTheDocument();
+
+    expect(screen.getByLabelText("Free School Meals (direct) data is not available")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Ethnicity breakdown data is not available")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Top non-English languages data is not available")).toBeInTheDocument();
   });
 

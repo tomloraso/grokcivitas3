@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Planned
+- Status: Complete
 - Last updated: 2026-03-04
 - Depends on:
   - `.planning/phases/phase-source-stabilization/S3-multi-source-normalization-and-gold-upsert.md`
@@ -120,6 +120,37 @@ Close the current `Ethnicity breakdown` coverage gap using already approved SPC 
 3. UI no longer shows `Coverage gaps: Ethnicity breakdown` for those schools.
 4. Backfill/lookback runs preserve idempotent behavior and do not regress existing demographics/trends metrics.
 5. `Top non-English languages` remains explicitly unsupported with unchanged reasoning.
+
+## Implementation tracking (2026-03-04)
+
+- [x] Added migration for `school_ethnicity_yearly` with typed school-year ethnicity columns.
+- [x] Extended SPC normalization contract and release-files pipeline stage/promote for ethnicity extraction and upsert.
+- [x] Updated demographics promote behavior so `has_ethnicity_data` reflects actual ethnicity row coverage.
+- [x] Extended profile repository/domain/application/API contracts to return structured ethnicity breakdown.
+- [x] Regenerated API contract artifacts:
+  - `apps/web/src/api/openapi.json`
+  - `apps/web/src/api/generated-types.ts`
+- [x] Updated school-profile web mapper and rendering to show ethnicity breakdown and suppress unsupported-gap badge when ethnicity rows exist.
+- [x] Passed repository gates:
+  - `make lint`
+  - `make test`
+
+## Runtime verification (2026-03-04)
+
+- [x] Ran migration head:
+  - `uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade head`
+- [x] Ran live demographics pipeline:
+  - `uv run --project apps/backend civitas pipeline run --source dfe_characteristics`
+  - Result: `succeeded (downloaded=586414, staged=146601, promoted=146580, rejected=64)`
+- [x] Verified SQL population and consistency:
+  - `school_demographics_yearly`: `146780` rows
+  - `school_ethnicity_yearly`: `141739` rows
+  - `has_ethnicity_data = TRUE`: `141739` rows
+  - `TRUE flag without ethnicity row`: `0`
+  - `FALSE flag with ethnicity row`: `0`
+- [x] Verified profile API contract against live DB:
+  - `GET /api/v1/schools/100000` returns `coverage.ethnicity_supported = true` and `ethnicity_breakdown` length `19`
+  - `GET /api/v1/schools/100303` returns `coverage.ethnicity_supported = false` and empty `ethnicity_breakdown`
 
 ## Risks and open questions
 

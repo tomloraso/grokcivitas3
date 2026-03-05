@@ -104,8 +104,10 @@ export function SchoolProfileFeature(): JSX.Element {
               {/* Demographics & Trends - unified section */}
               <DemographicsAndTrendsPanel
                 demographics={profile.demographics}
+                performance={profile.performance}
                 trends={profile.trends}
                 demographicsCompleteness={profile.completeness.demographics}
+                performanceCompleteness={profile.completeness.performance}
                 trendsCompleteness={profile.completeness.trends}
               />
             </div>

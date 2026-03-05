@@ -9,6 +9,7 @@ from uuid import UUID
 class PipelineSource(str, Enum):
     GIAS = "gias"
     DFE_CHARACTERISTICS = "dfe_characteristics"
+    DFE_PERFORMANCE = "dfe_performance"
     OFSTED_LATEST = "ofsted_latest"
     OFSTED_TIMELINE = "ofsted_timeline"
     ONS_IMD = "ons_imd"

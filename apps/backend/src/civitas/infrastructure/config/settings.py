@@ -21,6 +21,10 @@ DEFAULT_DEMOGRAPHICS_RELEASE_SLUGS = (
 )
 DEFAULT_DEMOGRAPHICS_LOOKBACK_YEARS = 6
 DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE = True
+DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID = "019afee4-e5d0-72f9-9a8f-d7a1a56eac1d"
+DEFAULT_DFE_PERFORMANCE_KS4_DATASET_ID = "19e39901-a96c-be76-b9c2-6af54ae076d2"
+DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS = 3
+DEFAULT_DFE_PERFORMANCE_PAGE_SIZE = 10_000
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_POLICE_CRIME_SOURCE_MODE = "archive"
 DEFAULT_POLICE_CRIME_RADIUS_METERS = 1609.344
@@ -39,6 +43,8 @@ DEFAULT_OFSTED_TIMELINE_SOURCE_INDEX_URL = (
 )
 DEFAULT_POSTCODES_IO_BASE_URL = "https://api.postcodes.io"
 DEFAULT_POSTCODE_CACHE_TTL_DAYS = 30
+DEFAULT_SCHOOL_PROFILE_CACHE_TTL_SECONDS = 300
+DEFAULT_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS = 2.0
 DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS = 720
 DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD = 0.05
 DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES = 2
@@ -59,6 +65,10 @@ class PipelineSettings(BaseModel):
     demographics_release_slugs: tuple[str, ...]
     demographics_lookback_years: PositiveInt
     demographics_source_strict_mode: bool
+    dfe_performance_ks2_dataset_id: str
+    dfe_performance_ks4_dataset_id: str
+    dfe_performance_lookback_years: PositiveInt
+    dfe_performance_page_size: PositiveInt
     imd_source_csv: str | None = None
     imd_release: str
     police_crime_source_archive_url: str | None = None
@@ -71,6 +81,7 @@ class PipelineSettings(BaseModel):
     ofsted_timeline_include_historical_baseline: bool = True
     max_reject_ratio_gias: float
     max_reject_ratio_dfe_characteristics: float
+    max_reject_ratio_dfe_performance: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
     max_reject_ratio_ons_imd: float
@@ -93,11 +104,14 @@ class HttpClientSettings(BaseModel):
 class SchoolSearchSettings(BaseModel):
     postcodes_io_base_url: str
     postcode_cache_ttl_days: PositiveInt
+    profile_cache_ttl_seconds: NonNegativeInt
+    profile_cache_invalidation_poll_seconds: PositiveFloat
 
 
 class DataQualitySettings(BaseModel):
     freshness_sla_hours_gias: PositiveInt
     freshness_sla_hours_dfe_characteristics: PositiveInt
+    freshness_sla_hours_dfe_performance: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
     freshness_sla_hours_ons_imd: PositiveInt
@@ -111,6 +125,7 @@ class DataQualitySettings(BaseModel):
         return {
             "gias": float(self.freshness_sla_hours_gias),
             "dfe_characteristics": float(self.freshness_sla_hours_dfe_characteristics),
+            "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
             "ofsted_latest": float(self.freshness_sla_hours_ofsted_latest),
             "ofsted_timeline": float(self.freshness_sla_hours_ofsted_timeline),
             "ons_imd": float(self.freshness_sla_hours_ons_imd),
@@ -170,6 +185,25 @@ class AppSettings(BaseSettings):
         default=DEFAULT_DEMOGRAPHICS_SOURCE_STRICT_MODE,
         validation_alias="CIVITAS_DEMOGRAPHICS_SOURCE_STRICT_MODE",
     )
+    dfe_performance_ks2_dataset_id: str = Field(
+        default=DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_PERFORMANCE_KS2_DATASET_ID",
+    )
+    dfe_performance_ks4_dataset_id: str = Field(
+        default=DEFAULT_DFE_PERFORMANCE_KS4_DATASET_ID,
+        min_length=1,
+        validation_alias="CIVITAS_DFE_PERFORMANCE_KS4_DATASET_ID",
+    )
+    dfe_performance_lookback_years: PositiveInt = Field(
+        default=DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS,
+        validation_alias="CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS",
+    )
+    dfe_performance_page_size: PositiveInt = Field(
+        default=DEFAULT_DFE_PERFORMANCE_PAGE_SIZE,
+        le=10_000,
+        validation_alias="CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
+    )
     imd_source_csv: str | None = Field(
         default=None,
         validation_alias="CIVITAS_IMD_SOURCE_CSV",
@@ -224,6 +258,12 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS",
+    )
+    pipeline_max_reject_ratio_dfe_performance: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
     )
     pipeline_max_reject_ratio_ofsted_latest: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -298,6 +338,14 @@ class AppSettings(BaseSettings):
         default=DEFAULT_POSTCODE_CACHE_TTL_DAYS,
         validation_alias="CIVITAS_POSTCODE_CACHE_TTL_DAYS",
     )
+    school_profile_cache_ttl_seconds: NonNegativeInt = Field(
+        default=DEFAULT_SCHOOL_PROFILE_CACHE_TTL_SECONDS,
+        validation_alias="CIVITAS_SCHOOL_PROFILE_CACHE_TTL_SECONDS",
+    )
+    school_profile_cache_invalidation_poll_seconds: PositiveFloat = Field(
+        default=DEFAULT_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS,
+        validation_alias="CIVITAS_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS",
+    )
     data_quality_freshness_sla_hours_gias: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS",
@@ -305,6 +353,10 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_dfe_characteristics: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS",
+    )
+    data_quality_freshness_sla_hours_dfe_performance: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
     )
     data_quality_freshness_sla_hours_ofsted_latest: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -355,6 +407,10 @@ class AppSettings(BaseSettings):
             demographics_release_slugs=_parse_csv_tokens(self.demographics_release_slugs),
             demographics_lookback_years=self.demographics_lookback_years,
             demographics_source_strict_mode=self.demographics_source_strict_mode,
+            dfe_performance_ks2_dataset_id=self.dfe_performance_ks2_dataset_id,
+            dfe_performance_ks4_dataset_id=self.dfe_performance_ks4_dataset_id,
+            dfe_performance_lookback_years=self.dfe_performance_lookback_years,
+            dfe_performance_page_size=self.dfe_performance_page_size,
             imd_source_csv=self.imd_source_csv,
             imd_release=self.imd_release,
             police_crime_source_archive_url=self.police_crime_source_archive_url,
@@ -371,6 +427,7 @@ class AppSettings(BaseSettings):
             max_reject_ratio_dfe_characteristics=(
                 self.pipeline_max_reject_ratio_dfe_characteristics
             ),
+            max_reject_ratio_dfe_performance=self.pipeline_max_reject_ratio_dfe_performance,
             max_reject_ratio_ofsted_latest=self.pipeline_max_reject_ratio_ofsted_latest,
             max_reject_ratio_ofsted_timeline=self.pipeline_max_reject_ratio_ofsted_timeline,
             max_reject_ratio_ons_imd=self.pipeline_max_reject_ratio_ons_imd,
@@ -399,6 +456,10 @@ class AppSettings(BaseSettings):
         return SchoolSearchSettings(
             postcodes_io_base_url=self.postcodes_io_base_url,
             postcode_cache_ttl_days=self.postcode_cache_ttl_days,
+            profile_cache_ttl_seconds=self.school_profile_cache_ttl_seconds,
+            profile_cache_invalidation_poll_seconds=(
+                self.school_profile_cache_invalidation_poll_seconds
+            ),
         )
 
     @property
@@ -407,6 +468,9 @@ class AppSettings(BaseSettings):
             freshness_sla_hours_gias=self.data_quality_freshness_sla_hours_gias,
             freshness_sla_hours_dfe_characteristics=(
                 self.data_quality_freshness_sla_hours_dfe_characteristics
+            ),
+            freshness_sla_hours_dfe_performance=(
+                self.data_quality_freshness_sla_hours_dfe_performance
             ),
             freshness_sla_hours_ofsted_latest=self.data_quality_freshness_sla_hours_ofsted_latest,
             freshness_sla_hours_ofsted_timeline=(
@@ -445,6 +509,8 @@ class AppSettings(BaseSettings):
         "demographics_source_mode",
         "demographics_spc_publication_slug",
         "demographics_sen_publication_slug",
+        "dfe_performance_ks2_dataset_id",
+        "dfe_performance_ks4_dataset_id",
         mode="before",
     )
     @classmethod

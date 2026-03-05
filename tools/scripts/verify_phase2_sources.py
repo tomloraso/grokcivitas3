@@ -65,6 +65,14 @@ REQUIRED_OFSTED_LATEST_HEADERS = [
     "Inspection start date",
     "Publication date",
     "Latest OEIF overall effectiveness",
+    "Inspection start date of latest OEIF graded inspection",
+    "Publication date of latest OEIF graded inspection",
+    "Latest OEIF quality of education",
+    "Latest OEIF behaviour and attitudes",
+    "Latest OEIF personal development",
+    "Latest OEIF effectiveness of leadership and management",
+    "Date of latest ungraded inspection",
+    "Ungraded inspection publication date",
     "Ungraded inspection overall outcome",
 ]
 

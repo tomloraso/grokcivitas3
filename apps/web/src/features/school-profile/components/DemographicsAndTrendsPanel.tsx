@@ -1,3 +1,4 @@
+import { EthnicityBreakdown } from "../../../components/data/EthnicityBreakdown";
 import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
@@ -8,6 +9,8 @@ import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type {
   DemographicMetricVM,
   DemographicsVM,
+  PerformanceVM,
+  PerformanceYearVM,
   SectionCompletenessVM,
   TrendSeriesVM,
   TrendsVM
@@ -19,8 +22,10 @@ import type {
 
 interface DemographicsAndTrendsPanelProps {
   demographics: DemographicsVM | null;
+  performance: PerformanceVM | null;
   trends: TrendsVM | null;
   demographicsCompleteness: SectionCompletenessVM;
+  performanceCompleteness: SectionCompletenessVM;
   trendsCompleteness: SectionCompletenessVM;
 }
 
@@ -43,10 +48,6 @@ function glossaryLabel(metricKey: string, fallbackLabel: string): React.ReactNod
   return key ? <GlossaryTerm term={key}>{fallbackLabel}</GlossaryTerm> : fallbackLabel;
 }
 
-/**
- * Ordered list of every metric we display. Each card is rendered
- * identically so the grid stays uniform.
- */
 const ALL_METRIC_KEYS = [
   "disadvantaged_pct",
   "sen_pct",
@@ -77,14 +78,114 @@ function toSparkData(series: TrendSeriesVM): number[] {
     .filter((value): value is number => value !== null);
 }
 
-/* ------------------------------------------------------------------ */
-/* Component                                                           */
-/* ------------------------------------------------------------------ */
+type PerformanceValueType = "score_1dp" | "score_2dp" | "pct";
+
+interface PerformanceMetricDefinition {
+  key: string;
+  label: string;
+  valueType: PerformanceValueType;
+  value: (year: PerformanceYearVM) => number | null;
+}
+
+const PERFORMANCE_METRICS: PerformanceMetricDefinition[] = [
+  {
+    key: "attainment8_average",
+    label: "Attainment 8",
+    valueType: "score_1dp",
+    value: (year) => year.attainment8Average
+  },
+  {
+    key: "progress8_average",
+    label: "Progress 8",
+    valueType: "score_2dp",
+    value: (year) => year.progress8Average
+  },
+  {
+    key: "progress8_disadvantaged_gap",
+    label: "Progress 8 disadvantaged gap",
+    valueType: "score_2dp",
+    value: (year) => year.progress8DisadvantagedGap
+  },
+  {
+    key: "engmath_5_plus_pct",
+    label: "Grade 5+ English & Maths",
+    valueType: "pct",
+    value: (year) => year.engmath5PlusPct
+  },
+  {
+    key: "engmath_4_plus_pct",
+    label: "Grade 4+ English & Maths",
+    valueType: "pct",
+    value: (year) => year.engmath4PlusPct
+  },
+  {
+    key: "ebacc_entry_pct",
+    label: "EBacc entry",
+    valueType: "pct",
+    value: (year) => year.ebaccEntryPct
+  },
+  {
+    key: "ebacc_5_plus_pct",
+    label: "EBacc grade 5+",
+    valueType: "pct",
+    value: (year) => year.ebacc5PlusPct
+  },
+  {
+    key: "ks2_reading_expected_pct",
+    label: "KS2 reading expected standard",
+    valueType: "pct",
+    value: (year) => year.ks2ReadingExpectedPct
+  },
+  {
+    key: "ks2_writing_expected_pct",
+    label: "KS2 writing expected standard",
+    valueType: "pct",
+    value: (year) => year.ks2WritingExpectedPct
+  },
+  {
+    key: "ks2_maths_expected_pct",
+    label: "KS2 maths expected standard",
+    valueType: "pct",
+    value: (year) => year.ks2MathsExpectedPct
+  },
+  {
+    key: "ks2_combined_expected_pct",
+    label: "KS2 combined expected standard",
+    valueType: "pct",
+    value: (year) => year.ks2CombinedExpectedPct
+  }
+];
+
+function formatPerformanceValue(value: number | null, valueType: PerformanceValueType): string | null {
+  if (value === null) {
+    return null;
+  }
+
+  if (valueType === "pct") {
+    return `${value.toFixed(1)}%`;
+  }
+  if (valueType === "score_1dp") {
+    return value.toFixed(1);
+  }
+  return value.toFixed(2);
+}
+
+function directionFromDelta(delta: number): "up" | "down" | "flat" {
+  if (delta > 0) {
+    return "up";
+  }
+  if (delta < 0) {
+    return "down";
+  }
+  return "flat";
+}
 
 export function DemographicsAndTrendsPanel({
   demographics,
+  performance,
   trends,
   demographicsCompleteness,
+  performanceCompleteness,
   trendsCompleteness
 }: DemographicsAndTrendsPanelProps): JSX.Element {
   const metricLookup = buildMetricLookup(demographics);
@@ -98,23 +199,25 @@ export function DemographicsAndTrendsPanel({
   );
   const trendYearRange =
     trends && trends.yearsAvailable.length > 1
-      ? `${trends.yearsAvailable[0]}\u2013${
-          trends.yearsAvailable[trends.yearsAvailable.length - 1]
-        }`
+      ? `${trends.yearsAvailable[0]}-${trends.yearsAvailable[trends.yearsAvailable.length - 1]}`
       : null;
+  const performanceYearRange =
+    performance && performance.history.length > 1
+      ? `${performance.history[0]?.academicYear ?? ""}-${
+          performance.history[performance.history.length - 1]?.academicYear ?? ""
+        }`
+      : performance?.latest?.academicYear ?? null;
+  const performanceLatest = performance?.latest ?? null;
 
-  /* Collect metrics that have a displayable value */
-  const visibleMetrics = ALL_METRIC_KEYS.map((key) => metricLookup.get(key))
-    .filter(
-      (m): m is DemographicMetricVM => m !== undefined && m.value !== null
-    );
+  const visibleMetrics = ALL_METRIC_KEYS.map((key) => metricLookup.get(key)).filter(
+    (m): m is DemographicMetricVM => m !== undefined && m.value !== null
+  );
 
   return (
     <section
       aria-labelledby="demographics-heading"
       className="panel-surface rounded-lg space-y-5 p-5 sm:p-6"
     >
-      {/* ---- Heading ---- */}
       <div className="flex items-baseline justify-between gap-3">
         <h2
           id="demographics-heading"
@@ -127,7 +230,7 @@ export function DemographicsAndTrendsPanel({
           className="text-xs text-secondary"
           style={{ opacity: "var(--text-opacity-muted)" }}
         >
-          {[demographics?.academicYear, trendYearRange].filter(Boolean).join(" · ")}
+          {[demographics?.academicYear, trendYearRange].filter(Boolean).join(" | ")}
         </span>
       </div>
 
@@ -142,7 +245,6 @@ export function DemographicsAndTrendsPanel({
         />
       ) : null}
 
-      {/* ---- Uniform metric cards ---- */}
       {visibleMetrics.length > 0 ? (
         <MetricGrid columns={3}>
           {visibleMetrics.map((metric) => {
@@ -180,6 +282,86 @@ export function DemographicsAndTrendsPanel({
       ) : (
         <MetricUnavailable metricLabel="Pupil demographics" />
       )}
+
+      {demographics && demographics.ethnicityBreakdown.length > 0 ? (
+        <EthnicityBreakdown groups={demographics.ethnicityBreakdown} />
+      ) : null}
+
+      <div className="space-y-4 border-t border-border-subtle/50 pt-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="text-base font-semibold text-primary">School Performance</h3>
+          <span
+            className="text-xs text-secondary"
+            style={{ opacity: "var(--text-opacity-muted)" }}
+          >
+            {performanceYearRange}
+          </span>
+        </div>
+
+        <SectionCompletenessNotice
+          sectionLabel="Performance"
+          completeness={performanceCompleteness}
+        />
+
+        {performance && performanceLatest ? (
+          <MetricGrid columns={3}>
+            {PERFORMANCE_METRICS.map((definition) => {
+              const latestValue = definition.value(performanceLatest);
+              if (latestValue === null) {
+                return null;
+              }
+
+              const historyValues = performance.history
+                .map((year) => definition.value(year))
+                .filter((value): value is number => value !== null);
+              const previousYear =
+                performance.history.length >= 2
+                  ? performance.history[performance.history.length - 2]
+                  : null;
+              const previousValue = previousYear ? definition.value(previousYear) : null;
+              const delta =
+                previousValue !== null ? Number((latestValue - previousValue).toFixed(2)) : null;
+
+              return (
+                <StatCard
+                  key={definition.key}
+                  label={definition.label}
+                  value={formatPerformanceValue(latestValue, definition.valueType) ?? "Not published"}
+                  footer={
+                    delta !== null ? (
+                      <div className="flex items-center justify-between gap-2">
+                        {historyValues.length > 1 ? (
+                          <Sparkline
+                            data={historyValues}
+                            width={92}
+                            height={30}
+                            aria-label={`${definition.label} trend`}
+                          />
+                        ) : null}
+                        {definition.valueType === "pct" ? (
+                          <TrendIndicator
+                            delta={delta}
+                            direction={directionFromDelta(delta)}
+                            unit="pp"
+                          />
+                        ) : (
+                          <TrendIndicator
+                            delta={delta}
+                            direction={directionFromDelta(delta)}
+                            asPercentage={false}
+                          />
+                        )}
+                      </div>
+                    ) : null
+                  }
+                />
+              );
+            }).filter((card): card is JSX.Element => card !== null)}
+          </MetricGrid>
+        ) : (
+          <MetricUnavailable metricLabel="School performance" />
+        )}
+      </div>
     </section>
   );
 }

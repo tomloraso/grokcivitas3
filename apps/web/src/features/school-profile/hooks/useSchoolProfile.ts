@@ -50,20 +50,25 @@ export function useSchoolProfile(urn: string | undefined) {
     dispatch({ type: "FETCH_START" });
 
     try {
-      const [profileRes, trendsRes] = await Promise.all([
-        getSchoolProfile(urn),
-        getSchoolTrends(urn).catch(() => {
-          // Trends are optional; keep profile content available when trends fail.
-          return null;
-        })
-      ]);
+      const profileRes = await getSchoolProfile(urn);
 
       if (requestId !== requestSeqRef.current) {
         return;
       }
 
-      const vm = mapProfileToVM(profileRes, trendsRes);
-      dispatch({ type: "FETCH_SUCCESS", profile: vm });
+      // Render core profile immediately; trends can hydrate after first paint.
+      dispatch({ type: "FETCH_SUCCESS", profile: mapProfileToVM(profileRes, null) });
+
+      void getSchoolTrends(urn)
+        .then((trendsRes) => {
+          if (requestId !== requestSeqRef.current) {
+            return;
+          }
+          dispatch({ type: "FETCH_SUCCESS", profile: mapProfileToVM(profileRes, trendsRes) });
+        })
+        .catch(() => {
+          // Trends are optional; keep core profile visible when trends fail.
+        });
     } catch (err: unknown) {
       if (requestId !== requestSeqRef.current) {
         return;

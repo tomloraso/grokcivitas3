@@ -33,13 +33,95 @@ const BASE_PROFILE: SchoolProfileResponse = {
       fsm_supported: false,
       ethnicity_supported: false,
       top_languages_supported: false
-    }
+    },
+    ethnicity_breakdown: []
+  },
+  performance: {
+    latest: {
+      academic_year: "2024/25",
+      attainment8_average: 47.2,
+      progress8_average: 0.11,
+      progress8_disadvantaged: -0.12,
+      progress8_not_disadvantaged: 0.21,
+      progress8_disadvantaged_gap: -0.33,
+      engmath_5_plus_pct: 52.3,
+      engmath_4_plus_pct: 71.4,
+      ebacc_entry_pct: 36.2,
+      ebacc_5_plus_pct: 25.5,
+      ebacc_4_plus_pct: 31.3,
+      ks2_reading_expected_pct: 74.1,
+      ks2_writing_expected_pct: 72.8,
+      ks2_maths_expected_pct: 75.4,
+      ks2_combined_expected_pct: 68.9,
+      ks2_reading_higher_pct: 21.3,
+      ks2_writing_higher_pct: 19.4,
+      ks2_maths_higher_pct: 23.7,
+      ks2_combined_higher_pct: 16.8
+    },
+    history: [
+      {
+        academic_year: "2023/24",
+        attainment8_average: 46.1,
+        progress8_average: 0.05,
+        progress8_disadvantaged: -0.19,
+        progress8_not_disadvantaged: 0.16,
+        progress8_disadvantaged_gap: -0.35,
+        engmath_5_plus_pct: 50.1,
+        engmath_4_plus_pct: 69.8,
+        ebacc_entry_pct: 35.0,
+        ebacc_5_plus_pct: 24.2,
+        ebacc_4_plus_pct: 30.1,
+        ks2_reading_expected_pct: 73.2,
+        ks2_writing_expected_pct: 71.9,
+        ks2_maths_expected_pct: 74.5,
+        ks2_combined_expected_pct: 67.8,
+        ks2_reading_higher_pct: 20.8,
+        ks2_writing_higher_pct: 18.7,
+        ks2_maths_higher_pct: 22.6,
+        ks2_combined_higher_pct: 15.9
+      },
+      {
+        academic_year: "2024/25",
+        attainment8_average: 47.2,
+        progress8_average: 0.11,
+        progress8_disadvantaged: -0.12,
+        progress8_not_disadvantaged: 0.21,
+        progress8_disadvantaged_gap: -0.33,
+        engmath_5_plus_pct: 52.3,
+        engmath_4_plus_pct: 71.4,
+        ebacc_entry_pct: 36.2,
+        ebacc_5_plus_pct: 25.5,
+        ebacc_4_plus_pct: 31.3,
+        ks2_reading_expected_pct: 74.1,
+        ks2_writing_expected_pct: 72.8,
+        ks2_maths_expected_pct: 75.4,
+        ks2_combined_expected_pct: 68.9,
+        ks2_reading_higher_pct: 21.3,
+        ks2_writing_higher_pct: 19.4,
+        ks2_maths_higher_pct: 23.7,
+        ks2_combined_higher_pct: 16.8
+      }
+    ]
   },
   ofsted_latest: {
     overall_effectiveness_code: "2",
     overall_effectiveness_label: "Good",
     inspection_start_date: "2025-10-10",
     publication_date: "2025-11-15",
+    latest_oeif_inspection_start_date: "2025-10-10",
+    latest_oeif_publication_date: "2025-11-15",
+    quality_of_education_code: "2",
+    quality_of_education_label: "Good",
+    behaviour_and_attitudes_code: "2",
+    behaviour_and_attitudes_label: "Good",
+    personal_development_code: "2",
+    personal_development_label: "Good",
+    leadership_and_management_code: "2",
+    leadership_and_management_label: "Good",
+    latest_ungraded_inspection_date: "2026-01-02",
+    latest_ungraded_publication_date: "2026-01-20",
+    most_recent_inspection_date: "2026-01-02",
+    days_since_most_recent_inspection: 61,
     is_graded: true,
     ungraded_outcome: null
   },
@@ -74,6 +156,8 @@ const BASE_PROFILE: SchoolProfileResponse = {
   area_context: {
     deprivation: {
       lsoa_code: "E01004736",
+      imd_score: 22.4,
+      imd_rank: 10234,
       imd_decile: 3,
       idaci_score: 0.241,
       idaci_decile: 2,
@@ -100,6 +184,12 @@ const BASE_PROFILE: SchoolProfileResponse = {
       reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: null
+    },
+    performance: {
+      status: "partial",
+      reason_code: "insufficient_years_published",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
     },
     ofsted_latest: {
       status: "available",
@@ -281,6 +371,52 @@ describe("mapProfileToVM", () => {
       ethnicitySupported: false,
       topLanguagesSupported: false
     });
+    expect(vm.demographics!.ethnicityBreakdown).toEqual([]);
+  });
+
+  it("maps ethnicity breakdown rows when payload is present", () => {
+    const withEthnicity: SchoolProfileResponse = {
+      ...BASE_PROFILE,
+      demographics_latest: {
+        ...BASE_PROFILE.demographics_latest!,
+        coverage: {
+          fsm_supported: false,
+          ethnicity_supported: true,
+          top_languages_supported: false
+        },
+        ethnicity_breakdown: [
+          {
+            key: "white_british",
+            label: "White British",
+            percentage: 49.0,
+            count: 98
+          },
+          {
+            key: "unclassified",
+            label: "Unclassified",
+            percentage: 4.0,
+            count: 8
+          }
+        ]
+      }
+    };
+    const vm = mapProfileToVM(withEthnicity, null);
+    expect(vm.demographics!.ethnicityBreakdown).toEqual([
+      {
+        key: "white_british",
+        label: "White British",
+        percentage: 49,
+        count: 98,
+        percentageLabel: "49.0%"
+      },
+      {
+        key: "unclassified",
+        label: "Unclassified",
+        percentage: 4,
+        count: 8,
+        percentageLabel: "4.0%"
+      }
+    ]);
   });
 
   it("maps Ofsted headline for graded inspection", () => {
@@ -290,6 +426,19 @@ describe("mapProfileToVM", () => {
     expect(vm.ofsted!.ratingLabel).toBe("Good");
     expect(vm.ofsted!.isGraded).toBe(true);
     expect(vm.ofsted!.inspectionDate).toMatch(/10.*Oct.*2025/);
+    expect(vm.ofsted!.qualityOfEducationLabel).toBe("Good");
+    expect(vm.ofsted!.behaviourAndAttitudesLabel).toBe("Good");
+    expect(vm.ofsted!.daysSinceMostRecentInspection).toBe(61);
+    expect(vm.ofsted!.mostRecentInspectionDate).toMatch(/2.*Jan.*2026/);
+  });
+
+  it("maps performance latest and history rows", () => {
+    const vm = mapProfileToVM(BASE_PROFILE, null);
+    expect(vm.performance).not.toBeNull();
+    expect(vm.performance!.latest?.attainment8Average).toBe(47.2);
+    expect(vm.performance!.latest?.engmath5PlusPct).toBe(52.3);
+    expect(vm.performance!.history).toHaveLength(2);
+    expect(vm.performance!.history[0]?.academicYear).toBe("2023/24");
   });
 
   it("maps ungraded Ofsted inspection", () => {
@@ -300,6 +449,20 @@ describe("mapProfileToVM", () => {
         overall_effectiveness_label: null,
         inspection_start_date: "2025-06-01",
         publication_date: "2025-07-15",
+        latest_oeif_inspection_start_date: null,
+        latest_oeif_publication_date: null,
+        quality_of_education_code: null,
+        quality_of_education_label: null,
+        behaviour_and_attitudes_code: null,
+        behaviour_and_attitudes_label: null,
+        personal_development_code: null,
+        personal_development_label: null,
+        leadership_and_management_code: null,
+        leadership_and_management_label: null,
+        latest_ungraded_inspection_date: "2025-06-01",
+        latest_ungraded_publication_date: "2025-07-15",
+        most_recent_inspection_date: "2025-06-01",
+        days_since_most_recent_inspection: 30,
         is_graded: false,
         ungraded_outcome: "Effective safeguarding"
       }
@@ -308,6 +471,7 @@ describe("mapProfileToVM", () => {
     expect(vm.ofsted!.isGraded).toBe(false);
     expect(vm.ofsted!.ungradedOutcome).toBe("Effective safeguarding");
     expect(vm.ofsted!.ratingCode).toBeNull();
+    expect(vm.ofsted!.daysSinceMostRecentInspection).toBe(30);
   });
 
   it("returns null demographics when not present", () => {
@@ -354,6 +518,8 @@ describe("mapProfileToVM", () => {
 
     expect(vm.areaContext.deprivation).toEqual({
       lsoaCode: "E01004736",
+      imdScore: 22.4,
+      imdRank: 10234,
       imdDecile: 3,
       idaciScore: 0.241,
       idaciDecile: 2,
@@ -387,6 +553,12 @@ describe("mapProfileToVM", () => {
         demographics: {
           status: "unavailable",
           reason_code: "source_file_missing_for_year",
+          last_updated_at: null,
+          years_available: null
+        },
+        performance: {
+          status: "unavailable",
+          reason_code: "source_missing",
           last_updated_at: null,
           years_available: null
         },
@@ -442,6 +614,8 @@ describe("mapProfileToVM", () => {
     expect(vm.completeness.demographics.status).toBe("partial");
     expect(vm.completeness.demographics.messageKey).toBe("partialMetricCoverage");
     expect(vm.completeness.demographics.lastUpdatedAt).toMatch(/31.*Jan.*2026/);
+    expect(vm.completeness.performance.status).toBe("partial");
+    expect(vm.completeness.performance.messageKey).toBe("insufficientYearsPublished");
 
     expect(vm.completeness.areaCrime.status).toBe("partial");
     expect(vm.completeness.areaCrime.messageKey).toBe("sourceCoverageGap");
@@ -481,6 +655,34 @@ describe("mapProfileToVM", () => {
     expect(labels).toContain("Top non-English languages");
   });
 
+  it("does not flag ethnicity as unsupported when ethnicity rows exist", () => {
+    const withEthnicityRows: SchoolProfileResponse = {
+      ...BASE_PROFILE,
+      demographics_latest: {
+        ...BASE_PROFILE.demographics_latest!,
+        coverage: {
+          fsm_supported: false,
+          ethnicity_supported: false,
+          top_languages_supported: false
+        },
+        ethnicity_breakdown: [
+          {
+            key: "white_british",
+            label: "White British",
+            percentage: 49.0,
+            count: 98
+          }
+        ]
+      }
+    };
+
+    const vm = mapProfileToVM(withEthnicityRows, null);
+    const labels = vm.unsupportedMetrics.map((m) => m.label);
+    expect(labels).toContain("Free School Meals (direct)");
+    expect(labels).not.toContain("Ethnicity breakdown");
+    expect(labels).toContain("Top non-English languages");
+  });
+
   it("returns empty unsupported list when demographics missing", () => {
     const noDemographics: SchoolProfileResponse = {
       ...BASE_PROFILE,
@@ -503,6 +705,7 @@ describe("mapProfileToVM", () => {
         lng: -0.1
       },
       demographics_latest: null,
+      performance: null,
       ofsted_latest: null,
       ofsted_timeline: {
         events: [],
@@ -526,6 +729,12 @@ describe("mapProfileToVM", () => {
         demographics: {
           status: "unavailable",
           reason_code: "source_file_missing_for_year",
+          last_updated_at: null,
+          years_available: null
+        },
+        performance: {
+          status: "unavailable",
+          reason_code: "source_missing",
           last_updated_at: null,
           years_available: null
         },

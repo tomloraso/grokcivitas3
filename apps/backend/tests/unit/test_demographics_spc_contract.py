@@ -5,6 +5,49 @@ import pytest
 from civitas.infrastructure.pipelines.contracts import demographics_spc
 
 
+def _ethnicity_columns() -> dict[str, str]:
+    return {
+        "number of pupils classified as white British ethnic origin": "98",
+        "% of pupils classified as white British ethnic origin": "49.0",
+        "number of pupils classified as Irish ethnic origin": "2",
+        "% of pupils classified as Irish ethnic origin": "1.0",
+        "number of pupils classified as traveller of Irish heritage ethnic origin": "1",
+        "% of pupils classified as traveller of Irish heritage ethnic origin": "0.5",
+        "number of pupils classified as any other white background ethnic origin": "5",
+        "% of pupils classified as any other white background ethnic origin": "2.5",
+        "number of pupils classified as Gypsy/Roma ethnic origin": "1",
+        "% of pupils classified as Gypsy/Roma ethnic origin": "0.5",
+        "number of pupils classified as white and black Caribbean ethnic origin": "4",
+        "% of pupils classified as white and black Caribbean ethnic origin": "2.0",
+        "number of pupils classified as white and black African ethnic origin": "2",
+        "% of pupils classified as white and black African ethnic origin": "1.0",
+        "number of pupils classified as white and Asian ethnic origin": "4",
+        "% of pupils classified as white and Asian ethnic origin": "2.0",
+        "number of pupils classified as any other mixed background ethnic origin": "3",
+        "% of pupils classified as any other mixed background ethnic origin": "1.5",
+        "number of pupils classified as Indian ethnic origin": "14",
+        "% of pupils classified as Indian ethnic origin": "7.0",
+        "number of pupils classified as Pakistani ethnic origin": "10",
+        "% of pupils classified as Pakistani ethnic origin": "5.0",
+        "number of pupils classified as Bangladeshi ethnic origin": "8",
+        "% of pupils classified as Bangladeshi ethnic origin": "4.0",
+        "number of pupils classified as any other Asian background ethnic origin": "6",
+        "% of pupils classified as any other Asian background ethnic origin": "3.0",
+        "number of pupils classified as Caribbean ethnic origin": "5",
+        "% of pupils classified as Caribbean ethnic origin": "2.5",
+        "number of pupils classified as African ethnic origin": "12",
+        "% of pupils classified as African ethnic origin": "6.0",
+        "number of pupils classified as any other black background ethnic origin": "3",
+        "% of pupils classified as any other black background ethnic origin": "1.5",
+        "number of pupils classified as Chinese ethnic origin": "4",
+        "% of pupils classified as Chinese ethnic origin": "2.0",
+        "number of pupils classified as any other ethnic group ethnic origin": "8",
+        "% of pupils classified as any other ethnic group ethnic origin": "4.0",
+        "number of pupils unclassified": "8",
+        "% of pupils unclassified": "4.0",
+    }
+
+
 def _row(**overrides: str) -> dict[str, str]:
     row = {
         "urn": "100001",
@@ -15,6 +58,7 @@ def _row(**overrides: str) -> dict[str, str]:
         "% of pupils whose first language is unclassified": "0.9",
         "time_period": "202425",
     }
+    row.update(_ethnicity_columns())
     row.update(overrides)
     return row
 
@@ -53,6 +97,11 @@ def test_normalize_row_accepts_compact_time_period() -> None:
     assert normalized["academic_year"] == "2024/25"
     assert normalized["fsm_pct"] == 17.9
     assert normalized["disadvantaged_pct"] == 18.4
+    assert normalized["has_ethnicity_data"] is True
+    assert normalized["ethnicity_percentages"]["white_british"] == 49.0
+    assert normalized["ethnicity_counts"]["white_british"] == 98
+    assert normalized["ethnicity_percentages"]["any_other_ethnic_group"] == 4.0
+    assert normalized["ethnicity_counts"]["any_other_ethnic_group"] == 8
 
 
 def test_normalize_row_derives_academic_year_from_release_slug_when_missing_time_period() -> None:
@@ -83,6 +132,19 @@ def test_normalize_row_rejects_invalid_percentage() -> None:
 
     assert normalized is None
     assert rejection == "invalid_first_language_unclassified_pct"
+
+
+def test_normalize_row_rejects_invalid_ethnicity_percentage() -> None:
+    column_map = demographics_spc.validate_headers(list(_row().keys()))
+
+    normalized, rejection = demographics_spc.normalize_row(
+        _row(**{"% of pupils classified as white British ethnic origin": "101"}),
+        column_map=column_map,
+        release_slug="2024-25",
+    )
+
+    assert normalized is None
+    assert rejection == "invalid_ethnicity_white_british_pct"
 
 
 def test_parse_release_slug_academic_year_rejects_invalid_slug() -> None:

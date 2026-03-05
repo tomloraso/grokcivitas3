@@ -6,9 +6,12 @@ import type { SchoolProfileResponse, SchoolTrendsResponse } from "../../../api/t
 import type {
   AreaContextVM,
   DemographicMetricVM,
+  DemographicsEthnicityGroupVM,
   DemographicsVM,
   OfstedVM,
   OfstedTimelineVM,
+  PerformanceVM,
+  PerformanceYearVM,
   ProfileCompletenessVM,
   SchoolIdentityVM,
   SchoolProfileVM,
@@ -213,6 +216,16 @@ function mapDemographics(profile: SchoolProfileResponse): DemographicsVM | null 
     metricKey: def.key
   }));
 
+  const ethnicityBreakdown: DemographicsEthnicityGroupVM[] = (d.ethnicity_breakdown ?? []).map(
+    (group) => ({
+      key: group.key,
+      label: group.label,
+      percentage: group.percentage,
+      count: group.count,
+      percentageLabel: fmtPct(group.percentage)
+    })
+  );
+
   return {
     academicYear: d.academic_year,
     metrics,
@@ -220,7 +233,8 @@ function mapDemographics(profile: SchoolProfileResponse): DemographicsVM | null 
       fsmSupported: d.coverage.fsm_supported,
       ethnicitySupported: d.coverage.ethnicity_supported,
       topLanguagesSupported: d.coverage.top_languages_supported
-    }
+    },
+    ethnicityBreakdown
   };
 }
 
@@ -235,6 +249,20 @@ function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
     ratingLabel: o.overall_effectiveness_label,
     inspectionDate: fmtDate(o.inspection_start_date),
     publicationDate: fmtDate(o.publication_date),
+    latestOeifInspectionDate: fmtDate(o.latest_oeif_inspection_start_date),
+    latestOeifPublicationDate: fmtDate(o.latest_oeif_publication_date),
+    latestUngradedInspectionDate: fmtDate(o.latest_ungraded_inspection_date),
+    latestUngradedPublicationDate: fmtDate(o.latest_ungraded_publication_date),
+    mostRecentInspectionDate: fmtDate(o.most_recent_inspection_date),
+    daysSinceMostRecentInspection: o.days_since_most_recent_inspection,
+    qualityOfEducationCode: o.quality_of_education_code,
+    qualityOfEducationLabel: o.quality_of_education_label,
+    behaviourAndAttitudesCode: o.behaviour_and_attitudes_code,
+    behaviourAndAttitudesLabel: o.behaviour_and_attitudes_label,
+    personalDevelopmentCode: o.personal_development_code,
+    personalDevelopmentLabel: o.personal_development_label,
+    leadershipAndManagementCode: o.leadership_and_management_code,
+    leadershipAndManagementLabel: o.leadership_and_management_label,
     isGraded: o.is_graded,
     ungradedOutcome: o.ungraded_outcome
   };
@@ -281,6 +309,43 @@ function mapOfstedTimeline(profile: SchoolProfileResponse): OfstedTimelineVM {
   };
 }
 
+type PerformanceYearContract = NonNullable<NonNullable<SchoolProfileResponse["performance"]>["latest"]>;
+
+function mapPerformanceYear(year: PerformanceYearContract): PerformanceYearVM {
+  return {
+    academicYear: year.academic_year,
+    attainment8Average: year.attainment8_average,
+    progress8Average: year.progress8_average,
+    progress8Disadvantaged: year.progress8_disadvantaged,
+    progress8NotDisadvantaged: year.progress8_not_disadvantaged,
+    progress8DisadvantagedGap: year.progress8_disadvantaged_gap,
+    engmath5PlusPct: year.engmath_5_plus_pct,
+    engmath4PlusPct: year.engmath_4_plus_pct,
+    ebaccEntryPct: year.ebacc_entry_pct,
+    ebacc5PlusPct: year.ebacc_5_plus_pct,
+    ebacc4PlusPct: year.ebacc_4_plus_pct,
+    ks2ReadingExpectedPct: year.ks2_reading_expected_pct,
+    ks2WritingExpectedPct: year.ks2_writing_expected_pct,
+    ks2MathsExpectedPct: year.ks2_maths_expected_pct,
+    ks2CombinedExpectedPct: year.ks2_combined_expected_pct,
+    ks2ReadingHigherPct: year.ks2_reading_higher_pct,
+    ks2WritingHigherPct: year.ks2_writing_higher_pct,
+    ks2MathsHigherPct: year.ks2_maths_higher_pct,
+    ks2CombinedHigherPct: year.ks2_combined_higher_pct
+  };
+}
+
+function mapPerformance(profile: SchoolProfileResponse): PerformanceVM | null {
+  if (!profile.performance) {
+    return null;
+  }
+
+  return {
+    latest: profile.performance.latest ? mapPerformanceYear(profile.performance.latest) : null,
+    history: (profile.performance.history ?? []).map((year) => mapPerformanceYear(year))
+  };
+}
+
 function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
   const area = profile.area_context;
 
@@ -300,6 +365,8 @@ function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
     deprivation: area.deprivation
       ? {
           lsoaCode: area.deprivation.lsoa_code,
+          imdScore: area.deprivation.imd_score,
+          imdRank: area.deprivation.imd_rank,
           imdDecile: area.deprivation.imd_decile,
           idaciScore: area.deprivation.idaci_score,
           idaciDecile: area.deprivation.idaci_decile,
@@ -381,6 +448,7 @@ function mapCompleteness(
 
   return {
     demographics: mapSectionCompleteness(profile.completeness.demographics),
+    performance: mapSectionCompleteness(profile.completeness.performance),
     trends: trendsCompleteness,
     ofstedLatest: mapSectionCompleteness(profile.completeness.ofsted_latest),
     ofstedTimeline: mapSectionCompleteness(profile.completeness.ofsted_timeline),
@@ -390,8 +458,9 @@ function mapCompleteness(
 }
 
 function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
-  const coverage = profile.demographics_latest?.coverage;
-  if (!coverage) {
+  const demographics = profile.demographics_latest;
+  const coverage = demographics?.coverage;
+  if (!coverage || !demographics) {
     return [];
   }
 
@@ -399,7 +468,7 @@ function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
   if (!coverage.fsm_supported) {
     unsupported.push({ label: "Free School Meals (direct)" });
   }
-  if (!coverage.ethnicity_supported) {
+  if (!coverage.ethnicity_supported && (demographics.ethnicity_breakdown ?? []).length === 0) {
     unsupported.push({ label: "Ethnicity breakdown" });
   }
   if (!coverage.top_languages_supported) {
@@ -415,6 +484,7 @@ export function mapProfileToVM(
   return {
     school: mapSchool(profile),
     demographics: mapDemographics(profile),
+    performance: mapPerformance(profile),
     ofsted: mapOfsted(profile),
     ofstedTimeline: mapOfstedTimeline(profile),
     areaContext: mapAreaContext(profile),

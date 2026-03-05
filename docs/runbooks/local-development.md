@@ -100,6 +100,7 @@ uv run --project apps/backend python tools/scripts/verify_source_contracts_runti
 uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source dfe_performance
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
@@ -152,6 +153,21 @@ Demographics source safety notes:
 - Keep `verify_phase_s_sources.py` in pre-run checks whenever release slugs or publication slugs change.
 - Do not re-enable legacy dataset-id/backfill controls for `dfe_characteristics`; release-files is the only supported source mode.
 - Promote writes per-row provenance (`source_dataset_id`, `source_dataset_version`) into `school_demographics_yearly`.
+- Ethnicity group rows are promoted into `school_ethnicity_yearly`; `school_demographics_yearly.has_ethnicity_data` reflects whether latest-year ethnicity rows exist for that school-year.
+
+For DfE school performance ingestion, these `.env` values configure KS2/KS4 data-set selection and paging:
+
+```bash
+# DfE statistics API data-set ids
+CIVITAS_DFE_PERFORMANCE_KS2_DATASET_ID=019afee4-e5d0-72f9-9a8f-d7a1a56eac1d
+CIVITAS_DFE_PERFORMANCE_KS4_DATASET_ID=19e39901-a96c-be76-b9c2-6af54ae076d2
+
+# Keep newest N academic years from staged payloads
+CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS=3
+
+# DfE API maximum supported value is 10000
+CIVITAS_DFE_PERFORMANCE_PAGE_SIZE=10000
+```
 
 For ONS IMD runs, these optional `.env` values control release selection and manual source override:
 
@@ -204,6 +220,12 @@ For postcode search API behavior, these optional `.env` values control resolver 
 ```bash
 CIVITAS_POSTCODES_IO_BASE_URL=https://api.postcodes.io
 CIVITAS_POSTCODE_CACHE_TTL_DAYS=30
+
+# Backend profile endpoint cache (seconds). Set 0 to disable.
+CIVITAS_SCHOOL_PROFILE_CACHE_TTL_SECONDS=300
+
+# How frequently API workers poll DB cache-version tokens for invalidation.
+CIVITAS_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS=2
 ```
 
 For pipeline run quality gates, these optional `.env` values set per-source maximum reject ratios
@@ -213,6 +235,7 @@ For pipeline run quality gates, these optional `.env` values set per-source maxi
 ```bash
 CIVITAS_PIPELINE_MAX_REJECT_RATIO_GIAS=1.0
 CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_CHARACTERISTICS=1.0
+CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE=1.0
 CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST=1.0
 CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE=1.0
 CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD=1.0
@@ -238,6 +261,7 @@ For H5 operational observability checks, these optional `.env` values tune stric
 # Per-source freshness SLA (hours).
 CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_GIAS=720
 CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_CHARACTERISTICS=720
+CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE=720
 CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST=720
 CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE=720
 CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD=720

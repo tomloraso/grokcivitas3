@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SchoolProfileSchoolResponse(BaseModel):
@@ -21,6 +21,13 @@ class SchoolProfileDemographicsCoverageResponse(BaseModel):
     top_languages_supported: bool
 
 
+class SchoolProfileDemographicsEthnicityGroupResponse(BaseModel):
+    key: str
+    label: str
+    percentage: float | None
+    count: int | None
+
+
 class SchoolProfileDemographicsLatestResponse(BaseModel):
     academic_year: str
     disadvantaged_pct: float | None
@@ -31,6 +38,9 @@ class SchoolProfileDemographicsLatestResponse(BaseModel):
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
     coverage: SchoolProfileDemographicsCoverageResponse
+    ethnicity_breakdown: list[SchoolProfileDemographicsEthnicityGroupResponse] = Field(
+        default_factory=list
+    )
 
 
 class SchoolProfileOfstedLatestResponse(BaseModel):
@@ -38,6 +48,20 @@ class SchoolProfileOfstedLatestResponse(BaseModel):
     overall_effectiveness_label: str | None
     inspection_start_date: date | None
     publication_date: date | None
+    latest_oeif_inspection_start_date: date | None
+    latest_oeif_publication_date: date | None
+    quality_of_education_code: str | None
+    quality_of_education_label: str | None
+    behaviour_and_attitudes_code: str | None
+    behaviour_and_attitudes_label: str | None
+    personal_development_code: str | None
+    personal_development_label: str | None
+    leadership_and_management_code: str | None
+    leadership_and_management_label: str | None
+    latest_ungraded_inspection_date: date | None
+    latest_ungraded_publication_date: date | None
+    most_recent_inspection_date: date | None
+    days_since_most_recent_inspection: int | None
     is_graded: bool
     ungraded_outcome: str | None
 
@@ -66,6 +90,8 @@ class SchoolProfileOfstedTimelineResponse(BaseModel):
 
 class SchoolProfileAreaDeprivationResponse(BaseModel):
     lsoa_code: str
+    imd_score: float
+    imd_rank: int
     imd_decile: int
     idaci_score: float
     idaci_decile: int
@@ -96,6 +122,33 @@ class SchoolProfileAreaContextResponse(BaseModel):
     coverage: SchoolProfileAreaContextCoverageResponse
 
 
+class SchoolProfilePerformanceYearResponse(BaseModel):
+    academic_year: str
+    attainment8_average: float | None
+    progress8_average: float | None
+    progress8_disadvantaged: float | None
+    progress8_not_disadvantaged: float | None
+    progress8_disadvantaged_gap: float | None
+    engmath_5_plus_pct: float | None
+    engmath_4_plus_pct: float | None
+    ebacc_entry_pct: float | None
+    ebacc_5_plus_pct: float | None
+    ebacc_4_plus_pct: float | None
+    ks2_reading_expected_pct: float | None
+    ks2_writing_expected_pct: float | None
+    ks2_maths_expected_pct: float | None
+    ks2_combined_expected_pct: float | None
+    ks2_reading_higher_pct: float | None
+    ks2_writing_higher_pct: float | None
+    ks2_maths_higher_pct: float | None
+    ks2_combined_higher_pct: float | None
+
+
+class SchoolProfilePerformanceResponse(BaseModel):
+    latest: SchoolProfilePerformanceYearResponse | None
+    history: list[SchoolProfilePerformanceYearResponse] = Field(default_factory=list)
+
+
 class SchoolProfileSectionCompletenessResponse(BaseModel):
     status: Literal["available", "partial", "unavailable"]
     reason_code: (
@@ -123,6 +176,7 @@ class SchoolProfileSectionCompletenessResponse(BaseModel):
 
 class SchoolProfileCompletenessResponse(BaseModel):
     demographics: SchoolProfileSectionCompletenessResponse
+    performance: SchoolProfileSectionCompletenessResponse
     ofsted_latest: SchoolProfileSectionCompletenessResponse
     ofsted_timeline: SchoolProfileSectionCompletenessResponse
     area_deprivation: SchoolProfileSectionCompletenessResponse
@@ -132,6 +186,7 @@ class SchoolProfileCompletenessResponse(BaseModel):
 class SchoolProfileResponse(BaseModel):
     school: SchoolProfileSchoolResponse
     demographics_latest: SchoolProfileDemographicsLatestResponse | None
+    performance: SchoolProfilePerformanceResponse | None
     ofsted_latest: SchoolProfileOfstedLatestResponse | None
     ofsted_timeline: SchoolProfileOfstedTimelineResponse
     area_context: SchoolProfileAreaContextResponse

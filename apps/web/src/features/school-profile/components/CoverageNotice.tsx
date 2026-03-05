@@ -13,6 +13,7 @@ interface CoverageNoticeProps {
 
 const SECTION_LABELS: { key: keyof ProfileCompletenessVM; label: string }[] = [
   { key: "demographics", label: "Demographics" },
+  { key: "performance", label: "Performance" },
   { key: "trends", label: "Trends" },
   { key: "ofstedLatest", label: "Ofsted" },
   { key: "ofstedTimeline", label: "Ofsted history" },

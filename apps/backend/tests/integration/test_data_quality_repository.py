@@ -873,7 +873,7 @@ def test_data_quality_repository_collects_snapshots_and_run_health(engine: Engin
 
     snapshots = repository.collect_snapshots(snapshot_date=snapshot_date, as_of=as_of)
 
-    assert len(snapshots) == 5
+    assert len(snapshots) >= 5
     demographics_snapshot = next(
         snapshot for snapshot in snapshots if snapshot.section == "demographics"
     )
@@ -914,7 +914,7 @@ def test_data_quality_repository_collects_snapshots_and_run_health(engine: Engin
     repository.upsert_snapshots(snapshots)
 
     persisted_today = repository.list_snapshots(snapshot_date=snapshot_date)
-    assert len(persisted_today) == 5
+    assert len(persisted_today) == len(snapshots)
 
     drifts = repository.list_coverage_drifts(snapshot_date=snapshot_date)
     demographics_drift = next(drift for drift in drifts if drift.section == "demographics")

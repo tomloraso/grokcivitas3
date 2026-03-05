@@ -63,10 +63,16 @@ Upserts are keyed by:
 
 - `schools`: `(urn)`
 - `school_demographics_yearly`: `(urn, academic_year)`
+- `school_ethnicity_yearly`: `(urn, academic_year)`
+- `school_performance_yearly`: `(urn, academic_year)`
 - `school_ofsted_latest`: `(urn)`
 - `ofsted_inspections`: `(inspection_number)`
 - `area_deprivation`: `(lsoa_code)`
 - `area_crime_context`: `(urn, month, crime_category, radius_meters)`
+
+Derived operational metadata:
+- `area_crime_global_metadata`: singleton row (`id=1`) refreshed by the Police crime promote step for fast profile reads.
+- `app_cache_versions`: cache invalidation tokens bumped after successful pipeline runs (for API cache coherence).
 
 ## Run Modes
 
@@ -84,6 +90,7 @@ flowchart TD
 Common commands:
 
 - `uv run --project apps/backend civitas pipeline run --source gias`
+- `uv run --project apps/backend civitas pipeline run --source dfe_performance`
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
 - `uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>`
@@ -97,6 +104,7 @@ From repo root:
 ```bash
 uv run --project apps/backend civitas pipeline run --source gias
 uv run --project apps/backend civitas pipeline run --source dfe_characteristics
+uv run --project apps/backend civitas pipeline run --source dfe_performance
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
@@ -116,4 +124,6 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `skipped_no_change` means Bronze checksums matched the last successful run for that source.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
 - `dfe_characteristics` now runs the Phase S release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
+- `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.
+- `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

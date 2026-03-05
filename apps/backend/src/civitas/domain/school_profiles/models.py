@@ -41,6 +41,14 @@ class SchoolDemographicsCoverage:
 
 
 @dataclass(frozen=True)
+class SchoolDemographicsEthnicityGroup:
+    key: str
+    label: str
+    percentage: float | None
+    count: int | None
+
+
+@dataclass(frozen=True)
 class SchoolDemographicsLatest:
     academic_year: str
     disadvantaged_pct: float | None
@@ -51,6 +59,7 @@ class SchoolDemographicsLatest:
     first_language_english_pct: float | None
     first_language_unclassified_pct: float | None
     coverage: SchoolDemographicsCoverage
+    ethnicity_breakdown: tuple[SchoolDemographicsEthnicityGroup, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -59,6 +68,20 @@ class SchoolOfstedLatest:
     overall_effectiveness_label: str | None
     inspection_start_date: date | None
     publication_date: date | None
+    latest_oeif_inspection_start_date: date | None
+    latest_oeif_publication_date: date | None
+    quality_of_education_code: str | None
+    quality_of_education_label: str | None
+    behaviour_and_attitudes_code: str | None
+    behaviour_and_attitudes_label: str | None
+    personal_development_code: str | None
+    personal_development_label: str | None
+    leadership_and_management_code: str | None
+    leadership_and_management_label: str | None
+    latest_ungraded_inspection_date: date | None
+    latest_ungraded_publication_date: date | None
+    most_recent_inspection_date: date | None
+    days_since_most_recent_inspection: int | None
     is_graded: bool
     ungraded_outcome: str | None
 
@@ -91,6 +114,8 @@ class SchoolOfstedTimeline:
 @dataclass(frozen=True)
 class SchoolAreaDeprivation:
     lsoa_code: str
+    imd_score: float
+    imd_rank: int
     imd_decile: int
     idaci_score: float
     idaci_decile: int
@@ -126,6 +151,35 @@ class SchoolAreaContext:
 
 
 @dataclass(frozen=True)
+class SchoolPerformanceYear:
+    academic_year: str
+    attainment8_average: float | None
+    progress8_average: float | None
+    progress8_disadvantaged: float | None
+    progress8_not_disadvantaged: float | None
+    progress8_disadvantaged_gap: float | None
+    engmath_5_plus_pct: float | None
+    engmath_4_plus_pct: float | None
+    ebacc_entry_pct: float | None
+    ebacc_5_plus_pct: float | None
+    ebacc_4_plus_pct: float | None
+    ks2_reading_expected_pct: float | None
+    ks2_writing_expected_pct: float | None
+    ks2_maths_expected_pct: float | None
+    ks2_combined_expected_pct: float | None
+    ks2_reading_higher_pct: float | None
+    ks2_writing_higher_pct: float | None
+    ks2_maths_higher_pct: float | None
+    ks2_combined_higher_pct: float | None
+
+
+@dataclass(frozen=True)
+class SchoolPerformance:
+    latest: SchoolPerformanceYear | None
+    history: tuple[SchoolPerformanceYear, ...]
+
+
+@dataclass(frozen=True)
 class SchoolProfileSectionCompleteness:
     status: SectionCompletenessStatus
     reason_code: SectionCompletenessReasonCode | None
@@ -136,6 +190,7 @@ class SchoolProfileSectionCompleteness:
 @dataclass(frozen=True)
 class SchoolProfileCompleteness:
     demographics: SchoolProfileSectionCompleteness
+    performance: SchoolProfileSectionCompleteness
     ofsted_latest: SchoolProfileSectionCompleteness
     ofsted_timeline: SchoolProfileSectionCompleteness
     area_deprivation: SchoolProfileSectionCompleteness
@@ -146,6 +201,7 @@ class SchoolProfileCompleteness:
 class SchoolProfile:
     school: SchoolProfileSchool
     demographics_latest: SchoolDemographicsLatest | None
+    performance: SchoolPerformance | None
     ofsted_latest: SchoolOfstedLatest | None
     ofsted_timeline: SchoolOfstedTimeline | None
     area_context: SchoolAreaContext | None

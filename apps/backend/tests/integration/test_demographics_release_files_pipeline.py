@@ -143,10 +143,65 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_ethnicity_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    white_british_pct double precision NULL,
+                    white_british_count integer NULL,
+                    irish_pct double precision NULL,
+                    irish_count integer NULL,
+                    traveller_of_irish_heritage_pct double precision NULL,
+                    traveller_of_irish_heritage_count integer NULL,
+                    any_other_white_background_pct double precision NULL,
+                    any_other_white_background_count integer NULL,
+                    gypsy_roma_pct double precision NULL,
+                    gypsy_roma_count integer NULL,
+                    white_and_black_caribbean_pct double precision NULL,
+                    white_and_black_caribbean_count integer NULL,
+                    white_and_black_african_pct double precision NULL,
+                    white_and_black_african_count integer NULL,
+                    white_and_asian_pct double precision NULL,
+                    white_and_asian_count integer NULL,
+                    any_other_mixed_background_pct double precision NULL,
+                    any_other_mixed_background_count integer NULL,
+                    indian_pct double precision NULL,
+                    indian_count integer NULL,
+                    pakistani_pct double precision NULL,
+                    pakistani_count integer NULL,
+                    bangladeshi_pct double precision NULL,
+                    bangladeshi_count integer NULL,
+                    any_other_asian_background_pct double precision NULL,
+                    any_other_asian_background_count integer NULL,
+                    caribbean_pct double precision NULL,
+                    caribbean_count integer NULL,
+                    african_pct double precision NULL,
+                    african_count integer NULL,
+                    any_other_black_background_pct double precision NULL,
+                    any_other_black_background_count integer NULL,
+                    chinese_pct double precision NULL,
+                    chinese_count integer NULL,
+                    any_other_ethnic_group_pct double precision NULL,
+                    any_other_ethnic_group_count integer NULL,
+                    unclassified_pct double precision NULL,
+                    unclassified_count integer NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
 
 
 def _cleanup(engine: Engine) -> None:
     with engine.begin() as connection:
+        connection.execute(
+            text("DELETE FROM school_ethnicity_yearly WHERE urn IN ('100001', '100002')")
+        )
         connection.execute(
             text("DELETE FROM school_demographics_yearly WHERE urn IN ('100001', '100002')")
         )
@@ -238,11 +293,49 @@ def _write_manifest_and_files(context: PipelineRunContext) -> None:
         "% of pupils known to be eligible for free school meals (Performance Tables),"
         "% of pupils whose first language is known or believed to be other than English,"
         "% of pupils whose first language is known or believed to be English,"
-        "% of pupils whose first language is unclassified\n"
-        "100001,202324,19.1,19.5,9.5,88.0,2.5\n"
-        "100001,202425,17.2,18.0,8.8,89.4,1.8\n"
-        "100002,202425,SUPP,SUPP,11.1,85.7,3.2\n"
-        ",202425,18.2,18.2,9.0,90.0,1.0\n",
+        "% of pupils whose first language is unclassified,"
+        "number of pupils classified as white British ethnic origin,"
+        "% of pupils classified as white British ethnic origin,"
+        "number of pupils classified as Irish ethnic origin,"
+        "% of pupils classified as Irish ethnic origin,"
+        "number of pupils classified as traveller of Irish heritage ethnic origin,"
+        "% of pupils classified as traveller of Irish heritage ethnic origin,"
+        "number of pupils classified as any other white background ethnic origin,"
+        "% of pupils classified as any other white background ethnic origin,"
+        "number of pupils classified as Gypsy/Roma ethnic origin,"
+        "% of pupils classified as Gypsy/Roma ethnic origin,"
+        "number of pupils classified as white and black Caribbean ethnic origin,"
+        "% of pupils classified as white and black Caribbean ethnic origin,"
+        "number of pupils classified as white and black African ethnic origin,"
+        "% of pupils classified as white and black African ethnic origin,"
+        "number of pupils classified as white and Asian ethnic origin,"
+        "% of pupils classified as white and Asian ethnic origin,"
+        "number of pupils classified as any other mixed background ethnic origin,"
+        "% of pupils classified as any other mixed background ethnic origin,"
+        "number of pupils classified as Indian ethnic origin,"
+        "% of pupils classified as Indian ethnic origin,"
+        "number of pupils classified as Pakistani ethnic origin,"
+        "% of pupils classified as Pakistani ethnic origin,"
+        "number of pupils classified as Bangladeshi ethnic origin,"
+        "% of pupils classified as Bangladeshi ethnic origin,"
+        "number of pupils classified as any other Asian background ethnic origin,"
+        "% of pupils classified as any other Asian background ethnic origin,"
+        "number of pupils classified as Caribbean ethnic origin,"
+        "% of pupils classified as Caribbean ethnic origin,"
+        "number of pupils classified as African ethnic origin,"
+        "% of pupils classified as African ethnic origin,"
+        "number of pupils classified as any other black background ethnic origin,"
+        "% of pupils classified as any other black background ethnic origin,"
+        "number of pupils classified as Chinese ethnic origin,"
+        "% of pupils classified as Chinese ethnic origin,"
+        "number of pupils classified as any other ethnic group ethnic origin,"
+        "% of pupils classified as any other ethnic group ethnic origin,"
+        "number of pupils unclassified,"
+        "% of pupils unclassified\n"
+        "100001,202324,19.1,19.5,9.5,88.0,2.5,101,50.5,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,9,4.5\n"
+        "100001,202425,17.2,18.0,8.8,89.4,1.8,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n"
+        "100002,202425,SUPP,SUPP,11.1,85.7,3.2,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP,SUPP\n"
+        ",202425,18.2,18.2,9.0,90.0,1.0,98,49.0,2,1.0,1,0.5,5,2.5,1,0.5,4,2.0,2,1.0,4,2.0,3,1.5,14,7.0,10,5.0,8,4.0,6,3.0,5,2.5,12,6.0,3,1.5,4,2.0,8,4.0,8,4.0\n",
         encoding="utf-8",
     )
 
@@ -332,7 +425,14 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         row_202425 = connection.execute(
             text(
                 """
-                SELECT fsm_pct, disadvantaged_pct, sen_pct, ehcp_pct, total_pupils, source_dataset_id
+                SELECT
+                    fsm_pct,
+                    disadvantaged_pct,
+                    sen_pct,
+                    ehcp_pct,
+                    total_pupils,
+                    source_dataset_id,
+                    has_ethnicity_data
                 FROM school_demographics_yearly
                 WHERE urn = '100001' AND academic_year = '2024/25'
                 """
@@ -345,11 +445,12 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         assert row_202425[4] == 250
         assert "spc:spc-rv-2024" in row_202425[5]
         assert "sen:sen-rv-2024" in row_202425[5]
+        assert row_202425[6] is True
 
         row_partial = connection.execute(
             text(
                 """
-                SELECT disadvantaged_pct, sen_pct
+                SELECT disadvantaged_pct, sen_pct, has_ethnicity_data
                 FROM school_demographics_yearly
                 WHERE urn = '100002' AND academic_year = '2024/25'
                 """
@@ -357,6 +458,32 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
         ).one()
         assert row_partial[0] is None
         assert row_partial[1] == pytest.approx(20.0)
+        assert row_partial[2] is False
+
+        ethnicity_count = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_ethnicity_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert ethnicity_count == 2
+
+        ethnicity_row = connection.execute(
+            text(
+                """
+                SELECT white_british_pct, white_british_count, unclassified_pct, unclassified_count
+                FROM school_ethnicity_yearly
+                WHERE urn = '100001' AND academic_year = '2024/25'
+                """
+            )
+        ).one()
+        assert ethnicity_row[0] == 49.0
+        assert ethnicity_row[1] == 98
+        assert ethnicity_row[2] == 4.0
+        assert ethnicity_row[3] == 8
 
     second_context = _context(bronze_root)
     _insert_run_row(engine, second_context)
@@ -377,3 +504,13 @@ def test_demographics_release_files_pipeline_stage_and_promote_are_idempotent(
             )
         ).scalar_one()
         assert total_rows == 3
+        ethnicity_rows = connection.execute(
+            text(
+                """
+                SELECT COUNT(*)
+                FROM school_ethnicity_yearly
+                WHERE urn IN ('100001', '100002')
+                """
+            )
+        ).scalar_one()
+        assert ethnicity_rows == 2
