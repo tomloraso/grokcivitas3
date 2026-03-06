@@ -157,6 +157,25 @@
   - `M6-benchmarks-and-trend-dashboard.md`
 - Dependencies: Phase 3 and Phase 4
 
+### Phase 6a - School profile parent-first UX overhaul
+
+- Status: In planning — implementation started locally, not yet committed
+- Goal: Redesign the school profile page around the parent user model — inline benchmark bars on every metric card, parent-language section headings, and removal of the duplicate standalone benchmark section.
+- Folder: `.planning/phases/phase-6a-profile-ux-overhaul/`
+- Detailed design:
+  - `README.md`
+  - `P1-design-tokens-benchmark-colours.md`
+  - `P2-stat-card-visual-redesign.md`
+  - `P3-benchmark-wiring-sections.md`
+  - `P4-section-narrative-copy.md`
+  - `P5-responsive-mobile-polish.md`
+  - `P6-design-system-documentation.md`
+- Full brief: `.planning/ux-overhaul/README.md`
+- Dependencies: Phase 5 (design token system + component primitives), Phase 6 (benchmark data live in API)
+- Coordination notes:
+  - No backend changes required — all benchmark data already returned by `GET /api/v1/schools/{urn}`.
+  - If StatCard benchmark pattern is approved, apply same pattern to Phase 8 (compare) web experience.
+
 ### Phase 7 - AI overview + school identity enrichment
 
 - Status: Implemented
@@ -224,6 +243,7 @@
 | 4 | Multi-year trend recovery and source stabilization | Implemented |
 | 5 | Search/profile UX uplift and theme parity | Partially implemented |
 | 6 | Expanded metrics coverage and dashboard benchmarks | Implemented |
+| 6a | School profile parent-first UX overhaul | In planning |
 | 7 | AI overview and richer school identity data | Implemented |
 | 8 | Compare up to four schools | Planned |
 | 9 | Auth, entitlements, and premium access | Planned |
