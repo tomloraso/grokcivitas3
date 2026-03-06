@@ -11,7 +11,7 @@
 
 This folder contains the implementation-ready design for Phase 0. The objective is a complete vertical slice:
 
-1. Run a real Bronze -> Staging -> Gold pipeline for GIAS.
+1. Run a real Bronze -> Silver -> Gold pipeline for GIAS.
 2. Expose search-by-postcode schools data through API contracts.
 3. Establish production-grade web foundations (theme tokens, primitives, quality rails).
 4. Deliver a web list + map experience against that API.

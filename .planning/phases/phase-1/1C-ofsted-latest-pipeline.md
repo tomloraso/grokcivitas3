@@ -176,7 +176,7 @@ Indexes:
 
 ## Acceptance Criteria
 
-1. `civitas pipeline run --source ofsted_latest` completes Bronze -> Staging -> Gold.
+1. `civitas pipeline run --source ofsted_latest` completes Bronze -> Silver -> Gold.
 2. `school_ofsted_latest` contains at most one current row per `urn`.
 3. Ofsted headline rating/date fields are populated from verified source columns.
 4. Pipeline reruns are idempotent and observable via run metadata/rejections.

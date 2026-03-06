@@ -1,263 +1,164 @@
 # Data Architecture
 
+## Document Control
+
+- Status: Current planning baseline
+- Last updated: 2026-03-06
+- Scope: Active Bronze -> Silver -> Gold model for Civitas school research
+
 ## Principles
 
-1. **Every byte traceable.** Any value in Gold (PostgreSQL) can be traced back through Staging to Bronze (raw source file).
-2. **Bronze is the reproducibility checkpoint.** Gold can be rebuilt entirely from raw files without re-downloading sources.
-3. **Bronze is immutable.** Raw files are never modified after download. Each download is timestamped.
-4. **One pipeline pattern per source.** Each data source follows the same Bronze -> Staging -> Gold path, implemented as a discrete pipeline module.
-5. **Schema changes are explicit.** Gold migrations are tracked via Alembic or equivalent.
+1. Every served value should be traceable back to a Bronze asset.
+2. Bronze is immutable and is the reproducibility checkpoint.
+3. Silver is the normalization and contract-enforcement layer.
+4. Gold is optimized for API and web query patterns, not generic data warehousing.
+5. Source-limited fields must be represented with explicit completeness semantics rather than silent omission.
+6. AI-generated summaries are derived artifacts with provenance, not source records.
 
----
+## Zone Definitions
 
-## Layer definitions
+### Bronze - Raw asset archive
 
-### Bronze - Raw archive
+- Location: `data/bronze/<source>/<run-date>/`
+- Content: original CSV, ZIP, JSON, metadata, manifests, and verification artifacts
+- Behavior: immutable, timestamped, and safe to re-read for reruns
 
-**Location:** `data/bronze/{source}/{yyyy-mm-dd}/`  
-**Format:** Original files exactly as downloaded (CSV, JSON, ZIP).  
-**Retention:** Indefinite (audit trail).  
-**Write pattern:** Download script saves file with timestamp. Never overwrites.
+### Silver - Run-scoped normalized staging
 
-Example structure:
-```
-data/bronze/
-  dfe-pupil-characteristics/
-    2025-06-15/
-      england_school_information.csv
-      ...
-  gias/
-    2026-01-20/
-      edubasealldata.csv
-  ofsted/
-    2026-01-20/
-      management_information_schools.csv
-  police-uk/
-    2026-01/
-      2026-01-avon-and-somerset-street.csv
-      ...
-  land-registry/
-    2026-01/
-      pp-monthly-update.csv
-  ons-imd/
-    2025-09-10/
-      imd2019lsoa.csv
-```
+- Location: `staging.<source>__<run_id>` tables in PostgreSQL
+- Responsibilities:
+  - type coercion
+  - contract normalization
+  - column renaming
+  - row rejection capture
+  - source-specific validation
+- Behavior: recreated per run and dropped after successful promote
 
-### Staging - Cleaned and validated (PostgreSQL)
+### Gold - Serving store
 
-**Location:** PostgreSQL staging schema (`staging.{source}_{run_date}`).  
-**Format:** PostgreSQL tables loaded via `COPY FROM` CSV.  
-**Lifecycle:** Created per pipeline run, dropped after successful Gold upsert.  
-**Write pattern:** Full load per source per pipeline run. Idempotent.
+- Engine: PostgreSQL + PostGIS
+- Responsibilities:
+  - denormalized serving tables for profile, trends, and search
+  - spatial and keyed indexes
+  - current and historical school facts
+  - area-context aggregates
+  - AI summary storage and provenance
 
-Staging responsibilities:
-- **Type casting** - string dates -> date types, numeric strings -> floats/ints.
-- **Column renaming** - source-specific column names -> canonical names.
-- **Deduplication** - remove exact duplicates within a source.
-- **Null handling** - source-specific sentinel values (for example: "SUPP", "x", "NE") -> explicit nulls.
-- **Validation** - reject rows missing required fields (for example: school URN). Log rejections.
+## Active Source Set
 
-Staging does NOT:
-- Join across sources.
-- Apply business logic or derived metrics.
-- Denormalize for serving.
+| Source key | Primary source | Current role |
+|---|---|---|
+| `gias` | GIAS bulk downloads | Canonical school identity and geography |
+| `dfe_characteristics` | DfE SPC + SEN school-level release files | Demographics, ethnicity, SEND, language coverage |
+| `dfe_attendance` | DfE attendance release files | Attendance and persistent absence |
+| `dfe_behaviour` | DfE suspensions and exclusions release files | Behaviour indicators |
+| `dfe_workforce` | DfE workforce release files | Workforce and leadership |
+| `dfe_performance` | DfE KS2 and KS4 statistics APIs | Performance indicators |
+| `ofsted_latest` | Ofsted latest inspection asset | Headline rating and sub-judgements |
+| `ofsted_timeline` | Ofsted inspection history assets | Full inspection timeline |
+| `ons_imd` | IMD release files | Deprivation context |
+| `police_crime_context` | Police UK archive files | Local crime aggregates |
+| `uk_house_prices` | Land Registry monthly files | House-price context |
+| `postcodes_io` | Postcodes.io API | User-postcode resolution and LSOA enrichment |
 
-### Gold - Serving store (PostgreSQL + PostGIS)
+## Gold Tables
 
-**Engine:** PostgreSQL 16+ with PostGIS extension.  
-**Write pattern:** Pipeline upserts from staging tables into Gold tables. Transactional so loads are atomic.
+### Core school serving tables
 
-Gold responsibilities:
-- **Cross-source joins** - link schools (GIAS) to metrics (DfE), inspections (Ofsted), and area context (crime, IMD).
-- **Enrichment** - postcode resolution to lat/lng (via Postcodes.io), distance calculations.
-- **Denormalization** - materialized views or denormalized tables optimized for API query patterns.
-- **Indexing** - PostGIS GIST spatial indexes, B-tree on URN/school ID, compound indexes on common filters.
-- **History** - typed yearly snapshots per school (domain-specific fact tables), enabling trend queries without EAV pivots.
+| Table | Purpose | Key |
+|---|---|---|
+| `schools` | Canonical school identity, location, and enriched GIAS fields | `urn` |
+| `postcode_cache` | Cached postcode resolution results | `postcode` |
+| `school_ofsted_latest` | Latest inspection headline and sub-judgements | `urn` |
+| `ofsted_inspections` | Full inspection history | `inspection_number` |
 
-**Advantages of staging-in-PostgreSQL over a separate format (for example, Parquet):**
-- One query language (SQL) for transform and serving.
-- `COPY FROM` CSV is fast for bulk ingestion.
-- Staging and Gold can share transaction boundaries.
-- No extra format/tooling dependency for MVP.
-- If needed later, Parquet can be introduced at a Bronze -> Staging boundary extension.
+### Yearly school fact tables
 
----
+| Table | Purpose | Key |
+|---|---|---|
+| `school_demographics_yearly` | Core yearly demographics and need fields | `(urn, academic_year)` |
+| `school_ethnicity_yearly` | Ethnicity breakdown by year | `(urn, academic_year, ethnicity_group)` |
+| `school_send_primary_need_yearly` | SEND primary-need breakdown by year | `(urn, academic_year, need_code)` |
+| `school_home_language_yearly` | School-level home-language coverage where published | `(urn, academic_year, language_code)` |
+| `school_attendance_yearly` | Attendance and absence metrics | `(urn, academic_year)` |
+| `school_behaviour_yearly` | Suspensions and exclusions metrics | `(urn, academic_year)` |
+| `school_workforce_yearly` | Workforce metrics | `(urn, academic_year)` |
+| `school_performance_yearly` | KS2 and KS4 performance indicators | `(urn, academic_year)` |
 
-## Source catalog
+### Snapshot and area-context tables
 
-### 1. GIAS (Get Information About Schools)
+| Table | Purpose | Key |
+|---|---|---|
+| `school_leadership_snapshot` | Latest leadership and staffing snapshot fields | `urn` |
+| `area_deprivation` | IMD and IDACI by LSOA | `lsoa_code` |
+| `area_crime_context` | Local crime aggregates by month and radius | `(urn, month, crime_category, radius_meters)` |
+| `area_house_price_context` | House-price aggregates and trends for local area context | `(area_code, month)` |
 
-**URL:** https://get-information-schools.service.gov.uk/Downloads  
-**Refresh:** Ongoing (GIAS updates as schools change)  
-**Ingestion cadence:** Weekly or on-demand  
-**Key fields:** URN, EstablishmentName, TypeOfEstablishment (name), PhaseOfEducation (name), EstablishmentStatus (name), Postcode, Easting, Northing, OpenDate, CloseDate, StatutoryLowAge, StatutoryHighAge, SchoolCapacity, NumberOfPupils  
-**Role in Gold:** Canonical school dimension table. Every other source joins to GIAS via URN.
-**Coordinate rule:** Convert Easting/Northing from EPSG:27700 (BNG) to EPSG:4326 for serving geometry.
+### AI and operational support tables
 
-### 2. DfE School Performance / Pupil Characteristics
+| Table | Purpose | Key |
+|---|---|---|
+| `school_ai_summaries` | Current stored overview summary per school | `urn` |
+| `school_ai_summary_history` | Archived summary versions | synthetic history key |
+| `pipeline_runs` | Pipeline execution history | `id` |
+| `pipeline_rejections` | Rejected-row diagnostics | `id` |
+| `app_cache_versions` | Cache invalidation tokens | `cache_key` |
 
-**URL:** https://explore-education-statistics.service.gov.uk/  
-**Refresh:** Annual (typically June)  
-**Ingestion cadence:** Annual after release  
-**Key fields:** URN, AcademicYear, FSMPercentage, FSM6Percentage, SENPercentage, EHCPPercentage, EthnicityBreakdown, TopLanguages  
-**Role in Gold:** Demographics and need metrics stored in typed yearly fact tables for trend queries.
+## Serving Patterns
 
-### 3. Ofsted Inspections
+### Search
 
-**URL:** https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes  
-**Refresh:** Monthly  
-**Ingestion cadence:** Monthly  
-**Key fields:** URN, InspectionDate, OverallEffectiveness, PreviousOverallEffectiveness, InspectionType  
-**Role in Gold:** Inspection history timeline. Latest rating as headline; full history for timeline view.
+- Search reads from `schools` with spatial filtering and joins lightweight headline fields.
+- User postcode resolution is cache-first through `postcode_cache` and Postcodes.io fallback.
 
-### 4. Police UK crime data
+### Profile
 
-**URL:** https://data.police.uk/docs/  
-**Refresh:** Monthly (with lag)  
-**Ingestion cadence:** Monthly  
-**Primary ingestion path:** Bulk monthly data files (preferred for reproducible full refreshes).  
-**Fallback path:** API for targeted refreshes/ad-hoc lookups only.  
-**Key fields:** Latitude, Longitude, Category, Month  
-**Role in Gold:** Area crime context aggregated within configurable radius of school location.
+- Profile responses assemble latest school facts from current-serving tables.
+- Completeness metadata is attached at the section level so the UI can explain gaps.
 
-### 5. Land Registry Price Paid
+### Trends and dashboard
 
-**URL:** https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads  
-**Refresh:** Monthly CSV  
-**Ingestion cadence:** Monthly  
-**Key fields:** Price, DateOfTransfer, Postcode, PropertyType  
-**Role in Gold:** Optional area context - median house price within school postcode district (aggregate only).  
-**MVP status:** Optional. Include if time allows; exclude without impact.
+- Trend endpoints read typed yearly fact tables directly.
+- Benchmark responses are derived alongside school series so frontend views stay contract-driven.
 
-### 6. Postcodes.io
+### AI overview
 
-**URL:** https://postcodes.io/  
-**Refresh:** Stable  
-**Ingestion cadence:** On-demand (lookup at search time + batch enrichment for school postcodes)  
-**Key fields:** postcode -> latitude, longitude, lsoa, admin_district  
-**Role in Gold:** Postcode resolution for user search and school LSOA enrichment for IMD joins.
-**Runtime rule:** API search uses cache-first postcode resolution (`postcode_cache`) with TTL refresh.
+- AI overview generation runs after data assembly, not inline with profile requests.
+- Stored summaries include prompt version, provider or model information, timestamps, and data version hashes.
 
-### 7. ONS Index of Multiple Deprivation (IMD)
+## Pipeline Module Layout
 
-**URL:** https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019  
-**Refresh:** Periodic  
-**Ingestion cadence:** On new release  
-**Key fields:** LSOA, IMDDecile, IncomeDecile, ChildPovertyIndex  
-**Role in Gold:** Area deprivation context joined via LSOA.
+Active source pipelines live under `apps/backend/src/civitas/infrastructure/pipelines/`.
 
----
+Current pipeline families include:
 
-## Gold schema - key tables (indicative)
+- `gias.py`
+- `demographics_release_files.py`
+- `dfe_attendance.py`
+- `dfe_behaviour.py`
+- `dfe_workforce.py`
+- `dfe_performance.py`
+- `ofsted_latest.py`
+- `ofsted_timeline.py`
+- `ons_imd.py`
+- `police_crime_context.py`
+- `uk_house_prices.py`
 
-```
-schools
-  urn (PK)
-  name, phase, type, status
-  postcode, lat, lng      -- geography(Point, 4326)
-  capacity, pupil_count
-  open_date, close_date
-  updated_at
+Each pipeline follows the same shape:
 
-school_demographics_yearly
-  urn (FK), academic_year
-  fsm_pct, fsm6_pct, sen_pct, ehcp_pct
-  ethnicity_breakdown_json, top_languages_json
-  (PK: urn + academic_year)
+1. Download or resolve source assets into Bronze.
+2. Normalize and validate rows into Silver staging.
+3. Promote into Gold with upsert semantics.
 
-school_ofsted_latest
-  urn (PK/FK)
-  inspection_date, overall_effectiveness
-  source_published_at
+## Data Quality Rules
 
-ofsted_inspections
-  urn (FK), inspection_date
-  overall_effectiveness, previous_effectiveness
-  inspection_type
+- Quality gates must fail the run when counters or reject ratios breach thresholds.
+- Source verification scripts are part of the contract surface for unstable or discovery-driven feeds.
+- Trend coverage and completeness behavior are product requirements, not just data-engineering concerns.
+- Reruns must remain idempotent at the Gold key level.
 
-area_crime_context
-  urn (FK), month
-  crime_category, incident_count
+## Open Questions
 
-area_deprivation
-  lsoa (PK)
-  imd_decile, income_decile, child_poverty_index
-
-postcode_cache
-  postcode (PK)
-  lat, lng, lsoa, admin_district
-  cached_at
-```
-
-**Indexes (minimum):**
-- `schools.location` - GIST spatial index for radius queries
-- `schools.urn` - B-tree (PK)
-- `school_demographics_yearly (urn, academic_year)` - compound index for trend queries
-- `school_ofsted_latest.urn` - B-tree (PK)
-- `ofsted_inspections (urn, inspection_date)` - compound index for timeline
-- `area_crime_context (urn, month)` - compound index
-- `postcode_cache.postcode` - B-tree (PK)
-
----
-
-## Pipeline design
-
-### Architecture
-
-Each data source is a pipeline module in `apps/backend/src/civitas/infrastructure/pipelines/`:
-
-```
-pipelines/
-  base.py              -- Abstract pipeline interface
-  gias.py              -- GIAS: download -> clean -> load
-  dfe_characteristics.py
-  ofsted.py
-  police_crime.py
-  land_registry.py
-  postcodes.py
-  ons_imd.py
-```
-
-Each module implements:
-1. **Download** - fetch source to Bronze, timestamped.
-2. **Stage** - load Bronze CSV into PostgreSQL staging table, clean/validate.
-3. **Promote** - upsert from staging into Gold production tables. Drop staging on success.
-
-### Orchestration (MVP)
-
-- CLI command: `civitas pipeline run --source gias` (or `--all`)
-- Sequential execution per source.
-- Logging: row counts, rejected rows, timing per stage.
-- No external orchestrator for MVP (no Airflow/Dagster). CLI + scheduler job is sufficient.
-- Future: add a lightweight orchestrator when dependency graphs/retries are needed.
-
-### Error handling
-
-- **Bronze:** download failure -> log and abort that source. No partial writes.
-- **Staging:** validation failures -> write error log with rejected rows; continue with valid rows.
-- **Gold:** promote failure -> transaction rollback. No partial serving state; staging preserved for debugging.
-
----
-
-## Data refresh cadence
-
-| Source | Refresh frequency | Pipeline trigger |
-|--------|-------------------|-----------------|
-| GIAS | Weekly | Scheduled job |
-| DfE characteristics | Annual | Manual after release |
-| Ofsted | Monthly | Scheduled job |
-| Police UK | Monthly | Scheduled job |
-| Land Registry | Monthly | Scheduled job |
-| Postcodes.io | On-demand | Called during enrichment |
-| ONS IMD | On new release | Manual |
-
----
-
-## Open questions
-
-1. **School workforce data** - DfE publishes teacher/staff data separately. Include in MVP or defer?
-2. **Historical backfill** - how many years of DfE data are available for download? Need to verify archive access.
-3. **Police API fallback limits** - if API fallback is used, what throttling strategy is required?
-4. **Land Registry** - include in MVP or defer to Phase 2?
-5. **Typed metrics JSON boundaries** - which non-core metrics stay in typed columns vs JSON blobs (ethnicity/language detail)?
+1. Whether additional benchmark materialization is needed once compare and premium workloads are live.
+2. Whether `school_ai_summaries` should remain profile-only or later expand to export or report use cases.
+3. Whether Phase 10 optimization work should introduce materialized views for compare-heavy workloads.

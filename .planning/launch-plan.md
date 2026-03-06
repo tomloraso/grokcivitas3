@@ -1,33 +1,71 @@
 # Launch Plan
 
-This outlines how we will launch Civitas publicly and build early momentum.
+## Document Control
 
-## Phase 0 – Soft Launch (internal + small beta)
-- Private beta for 50–100 parents/teachers via personal networks
-- Collect feedback and fix issues
+- Status: Planning baseline
+- Last updated: 2026-03-06
+- Scope: Launch sequencing aligned to current product completeness
 
-## Phase 1 – Public Launch
-- Target date: [insert realistic date]
-- Core message: “The truthful school research tool — raw UK government data, postcode search, maps, and honest insights. No marketing spin.”
-- Landing page with live postcode demo
+## Current Readiness Snapshot
 
-## Growth & Support Strategy
-- Reach out to key voices on X (Twitter) who care about honest education data and school choice:
-  - Rupert Lowe (Reform UK MP) – strong interest in education reform
-  - Restore Britain and aligned accounts
-  - Other MPs, education commentators, and parent groups focused on transparency and traditional values
-- Offer them early access and ask for honest feedback/shares
-- Prepare short threads and demo videos tailored for these audiences
+As of 2026-03-06, Civitas already supports the core research journey for search, school profile depth, multi-year trends, benchmark dashboards, and AI-generated school overviews. Two important MVP slices are still planned:
 
-## Marketing Channels
-- X (main platform) – targeted posts and threads
-- Parent forums, Mumsnet, local Facebook groups
-- Email list from beta users
-- Possible partnerships with education-focused organisations
+1. school comparison
+2. premium access and payments
 
-## Success Metrics for First 3 Months
-- 5,000+ postcode searches
-- Positive feedback from key accounts
-- Clear path to first premium conversions
+Launch planning should therefore be staged around product completeness rather than treated as a single public launch date.
 
-We will keep the launch focused on facts and utility. Political support will be welcomed if it helps spread the tool to parents who want honest data.
+## Launch Sequence
+
+### Stage 1 - Internal dogfood and data-confidence pass
+
+- Use the current implementation for internal and trusted-user validation.
+- Focus on data correctness, trend readability, completeness messaging, and operational repeatability.
+- Exit gate: pipeline, profile, trends, and dashboard behavior are stable on canonical data hydration.
+
+### Stage 2 - Research beta
+
+- Open access to a small group of target users after Phase 8 compare is complete.
+- Validate whether users can move from postcode search to shortlist to comparison without assistance.
+- Collect structured feedback on missing metrics, unclear terminology, and willingness to pay.
+
+### Stage 3 - Public free launch
+
+- Public launch should follow successful Phase 8 sign-off.
+- Position the product around honest, source-backed school research, not opinion or recommendations.
+- Public launch scope should emphasize search, profile depth, trends, benchmarks, and comparison.
+
+### Stage 4 - Premium launch
+
+- Premium launch should follow successful Phase 9 sign-off.
+- Position premium around deeper postcode-level research and access control clarity.
+- Conversion flow must be backed by proven entitlement enforcement and payment reconciliation.
+
+## Readiness Gates
+
+Before public launch:
+
+- `make lint` and `make test` are green in a stable repo state.
+- Canonical source hydration succeeds on the documented source set.
+- Search, profile, trends, dashboard, and compare journeys are demoable end to end.
+- Completeness and source-limited messaging are user-readable.
+
+Before premium launch:
+
+- Authentication and session flows are stable.
+- Payment and webhook flows are proven in staging.
+- Backend enforcement blocks premium-only data correctly.
+- Support and refund handling process is documented.
+
+## Early Success Measures
+
+- Search-to-profile conversion rate
+- Profile-to-compare usage rate
+- Compare completion rate
+- Premium conversion rate after launch
+- Data-refresh success rate and time-to-recover from failures
+
+## Open Decisions
+
+1. Whether there is one public launch or a soft public beta before premium goes live.
+2. Whether premium unlocks are postcode-only, account-wide for a period, or both.

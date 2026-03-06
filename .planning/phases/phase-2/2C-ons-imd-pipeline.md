@@ -192,7 +192,7 @@ Indexes:
 
 ## Acceptance Criteria
 
-1. `civitas pipeline run --source ons_imd` completes Bronze -> Staging -> Gold.
+1. `civitas pipeline run --source ons_imd` completes Bronze -> Silver -> Gold.
 2. `area_deprivation` contains validated IMD and IDACI context by LSOA code.
 3. Release fallback behavior is explicit and deterministic.
 4. Reruns are idempotent with preserved rejection logging.

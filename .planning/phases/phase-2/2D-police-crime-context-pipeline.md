@@ -208,7 +208,7 @@ Indexes:
 
 ## Acceptance Criteria
 
-1. `civitas pipeline run --source police_crime_context` completes Bronze -> Staging -> Gold.
+1. `civitas pipeline run --source police_crime_context` completes Bronze -> Silver -> Gold.
 2. `area_crime_context` contains month/category counts per school for configured radius.
 3. Pipeline handles large monthly archives predictably and reruns idempotently.
 4. API-fallback mode is explicit and rate-limit aware.

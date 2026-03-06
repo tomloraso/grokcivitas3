@@ -6,7 +6,7 @@ Read this guide before touching pipeline operations, data hydration, or sign-off
 
 1. `docs/runbooks/pipelines.md` (user-facing operating model and zone flow)
 2. `docs/runbooks/local-development.md` (canonical commands and env settings)
-3. `.planning/phases/phase-hardening/*` (hardening acceptance criteria and sign-off)
+3. `.planning/phases/phase-3-hardening/*` (hardening acceptance criteria and sign-off)
 
 ## Non-negotiable flow
 

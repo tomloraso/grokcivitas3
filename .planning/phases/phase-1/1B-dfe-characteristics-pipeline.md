@@ -79,7 +79,7 @@ Not currently supported from validated school-level source (2026-03-02 baseline)
 - school-level ethnicity breakdown
 - top non-English language breakdown
 
-Superseded note (2026-03-04, Phase S):
+Superseded note (2026-03-04, Phase 4 source stabilization):
 
 - direct FSM percentage is supported from SPC release files in the stabilized release-files pipeline path.
 
@@ -199,7 +199,7 @@ Indexes:
 
 ## Acceptance Criteria
 
-1. `civitas pipeline run --source dfe_characteristics` completes Bronze -> Staging -> Gold.
+1. `civitas pipeline run --source dfe_characteristics` completes Bronze -> Silver -> Gold.
 2. `school_demographics_yearly` is populated with typed yearly rows keyed by `(urn, academic_year)`.
 3. Unsupported metrics are explicit in schema and coverage flags, not implied.
 4. Pipeline reruns are idempotent and rejection logging is preserved.

@@ -1,52 +1,68 @@
-# Metrics
+# Metrics Catalog
 
-This document lists every metric Civitas will display. All metrics will show the latest value plus 3-year trends (where available) for context. This is the “No Bull” heart of the platform — raw facts, no spin.
+## Document Control
 
-## School Performance
-- Attainment 8 and Progress 8 (Source: Department for Education School Performance Tables) – 3-year trend
-- % of pupils achieving Grade 5+ in English & Maths GCSE (Source: DfE School Performance Tables) – 3-year trend
-- KS2 results (reading, writing, maths) (Source: DfE School Performance Tables) – 3-year trend
-- GCSE pass rates (English & Maths) (Source: DfE School Performance Tables) – 3-year trend
-- EBacc entry and achievement (Source: DfE School Performance Tables) – 3-year trend
+- Status: Current planning baseline
+- Last updated: 2026-03-06
+- Scope: Metrics exposed today or explicitly planned for the Civitas school-research product
 
-## Ofsted & Quality
-- Overall effectiveness rating + full history (Source: Ofsted official inspection data)
-- All sub-judgements (behaviour, leadership, quality of education) with dates (Source: Ofsted)
-- Time since last inspection (Source: Ofsted)
+## Status Meanings
 
-## Pupil Demographics & Support
-- Free School Meals (FSM) eligibility % and FSM6 (Source: DfE School Census via GIAS)
-- Ethnicity breakdown (all major groups) (Source: DfE School Census)
-- Special Educational Needs and Disabilities (SEND) – % with EHCP and SEN Support, primary need categories (Source: DfE School Census)
-- Gender breakdown (% male / % female) (Source: DfE School Census)
-- English as an Additional Language (EAL) % (Source: DfE School Census)
-- Pupil mobility / turnover (Source: DfE School Census)
+- `Implemented`: shipped end to end in pipeline, API, and UI.
+- `Partial`: implemented where publishable, but not all subfields or years are available.
+- `Source-limited`: explicit gap due to upstream school-level publication limits.
+- `Planned`: intended future metric group, not yet implemented.
 
-**Important note on transgender/non-binary data**:  
-This information is not published by the DfE or GIAS at individual school level for privacy reasons. We cannot display per-school transgender or non-binary pupil numbers.
+## Current Catalog
 
-## Attendance & Behaviour
-- Overall attendance rate (Source: DfE Pupil Attendance Statistics)
-- Persistent absence rate (Source: DfE Pupil Attendance Statistics) – 3-year trend
-- Suspensions and permanent exclusions (Source: DfE Exclusions Statistics) – 3-year trend
+| Metric group | Status | Source | Notes |
+|---|---|---|---|
+| Distance from searched postcode | Implemented | Postcodes.io + `schools` geography | Search result headline metric |
+| School identity, phase, type, status, age range | Implemented | GIAS | Search and profile baseline |
+| Latest Ofsted overall effectiveness | Implemented | Ofsted latest | Profile headline |
+| Ofsted sub-judgements | Implemented | Ofsted latest | Profile detail |
+| Full Ofsted history | Implemented | Ofsted timeline | Timeline card and trend context |
+| Time since last inspection | Implemented | Ofsted latest + timeline | Derived indicator |
+| FSM percentage | Implemented | DfE characteristics | Multi-year where available |
+| FSM6 percentage | Implemented | DfE characteristics | Multi-year where available |
+| SEN support and EHCP | Implemented | DfE characteristics | Multi-year where available |
+| SEND primary-need categories | Implemented | DfE characteristics | School-level breakdown |
+| Ethnicity breakdown | Implemented | DfE characteristics | School-level breakdown from approved release files |
+| EAL percentage | Implemented | DfE characteristics | Multi-year where available |
+| Gender breakdown | Partial | DfE characteristics | Available only where derivable from current school-level releases |
+| Home-language coverage | Partial | DfE characteristics | School-level language coverage exists, but detailed top-language breadth is source-limited |
+| Pupil mobility or turnover | Source-limited | Not published at required school level | Exposed as unavailable where relevant |
+| Overall attendance | Implemented | DfE attendance | Latest and multi-year coverage |
+| Persistent absence | Implemented | DfE attendance | Latest and multi-year coverage |
+| Suspensions | Implemented | DfE behaviour | Latest and multi-year coverage |
+| Permanent exclusions | Implemented | DfE behaviour | Latest and multi-year coverage |
+| KS2 performance | Implemented | DfE performance | Profile and dashboard coverage |
+| KS4 performance | Implemented | DfE performance | Profile and dashboard coverage |
+| Attainment 8 and Progress 8 | Implemented | DfE performance | Profile and dashboard coverage |
+| EBacc entry and achievement | Implemented | DfE performance | Profile and dashboard coverage |
+| Disadvantaged pupil performance gap | Implemented | DfE performance | Profile and dashboard coverage |
+| Pupil-teacher ratio | Implemented | DfE workforce | Latest and multi-year coverage |
+| Supply or agency staff share | Implemented | DfE workforce | Latest and multi-year coverage |
+| QTS coverage | Implemented | DfE workforce | Latest and multi-year coverage |
+| Workforce experience or qualification detail | Partial | DfE workforce | Depends on school-level publication coverage |
+| Teacher turnover | Partial | DfE workforce | Available where publishable and covered by active assets |
+| Leadership snapshot | Partial | GIAS + DfE workforce | Latest snapshot fields only |
+| IMD context | Implemented | ONS IMD | Decile, rank, score, IDACI |
+| Local crime context | Implemented | Police UK archive | Category counts and local summary |
+| House-price context | Implemented | Land Registry | Area trend and context summary |
+| Benchmarks for supported metrics | Implemented | Derived from Gold serving layer | Profile, trends, and dashboard responses |
+| Cross-domain trend dashboard | Implemented | Derived from Gold serving layer | Dashboard route payload |
+| Compare-ready aligned metric set | Planned | Existing Gold facts | Planned for Phase 8 |
+| Premium-only data boundary | Planned | Existing Gold facts + entitlements | Planned for Phase 9 |
+| Pupil premium impact | Planned | Additional source required | Not yet sourced |
 
-## Staffing & Context
-- Pupil-teacher ratio (Source: DfE School Workforce Census)
-- % of teachers who are supply / agency staff (Source: DfE School Workforce Census)
-- % of teachers with 3+ years teaching experience (Source: DfE School Workforce Census)
-- Teacher turnover rate (Source: DfE School Workforce Census)
-- % of teachers with qualified teacher status (QTS) (Source: DfE School Workforce Census)
-- Staff qualifications and leadership team details (where available) (Source: GIAS + School Workforce Census)
+## Product Rules
 
-## Area Context (postcode search)
-- Local crime rate (per 1,000 people) (Source: police.uk monthly data) – 3-year trend
-- IMD rank and domain scores (income, employment, education, crime, etc.) (Source: Ministry of Housing, Communities & Local Government – English Indices of Deprivation)
-- Average house prices within 5-mile / 1-hour radius (Source: HM Land Registry Price Paid Data / UK House Price Index) – 3-year trend
+- Metrics must remain source-backed and non-editorial.
+- Missing or partial coverage must be explained explicitly in API and UI metadata.
+- Frontend display types should be derived from backend contracts rather than hand-maintained wire models.
 
-## Additional Cool Metrics
-- Languages spoken at home (top 5) (Source: DfE School Census)
-- Pupil premium impact (Source: DfE)
-- Disadvantaged pupil Progress 8 gap (Source: DfE School Performance Tables)
-- Historical trends dashboard (visual graphs for all above)
+## Open Questions
 
-All metrics will be stored with source, date, and national/local benchmarks for easy comparison.
+1. Whether pupil premium impact remains worth sourcing for MVP-adjacent delivery.
+2. Which benchmark views should become first-class compare metrics in Phase 8.

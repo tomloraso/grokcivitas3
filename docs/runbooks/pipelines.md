@@ -133,7 +133,7 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `--force-refresh` clears the current source/day Bronze directory before download and bypasses the
   no-change short-circuit for that run.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
-- `dfe_characteristics` now runs the Phase S release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
+- `dfe_characteristics` now runs the Phase 4 release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
 - `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.
 - `dfe_attendance` promotes yearly school attendance and persistent-absence metrics into `school_attendance_yearly`.
 - `dfe_behaviour` promotes yearly school suspensions and exclusions metrics into `school_behaviour_yearly`.

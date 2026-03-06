@@ -185,7 +185,7 @@ Indexes:
 6. `apps/backend/tests/unit/test_ofsted_timeline_transforms.py` (new)
    - schema-version parsing and normalization coverage.
 7. `apps/backend/tests/integration/test_ofsted_timeline_pipeline.py` (new)
-   - Bronze -> Staging -> Gold idempotency and dedupe coverage.
+   - Bronze -> Silver -> Gold idempotency and dedupe coverage.
 
 ## Testing And Quality Gates
 
@@ -205,7 +205,7 @@ Indexes:
 
 ## Acceptance Criteria
 
-1. `civitas pipeline run --source ofsted_timeline` completes Bronze -> Staging -> Gold.
+1. `civitas pipeline run --source ofsted_timeline` completes Bronze -> Silver -> Gold.
 2. `ofsted_inspections` contains canonical timeline events with deterministic keys.
 3. Pipeline supports both verified schema variants without manual intervention.
 4. Reruns are idempotent and rejection logging is preserved.

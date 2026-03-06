@@ -1,55 +1,48 @@
 # AI Features
 
-This document defines AI-powered features in Civitas, focused on clear, decision-grade school intelligence grounded in published data.
+## Document Control
 
-## Core AI Features
+- Status: Current implemented baseline
+- Last updated: 2026-03-06
+- Related phase: `Phase 7 - AI overview + school identity enrichment`
 
-### 1. School Overview (Free tier)
-- A neutral, factual summary of the school.
-- 120-180 words.
-- Covers basic facts only: school type, size, location, pupil numbers, key characteristics, and recent published changes.
-- No opinions, no interpretation beyond provided context, no advice.
-- Shown to every user.
+## Current AI Scope
 
-### 2. Grok's Take (Premium tier)
-- Balanced AI analysis of the school's published metrics.
-- 150-220 words.
-- Covers available metrics such as Attainment 8/Progress 8, Ofsted history, FSM, ethnicity, SEND, gender, attendance, exclusions, crime, IMD, and other delivered metric domains.
-- Highlights strengths, concerns, and trend signals grounded in provided data context.
-- Must not provide recommendations, rankings, or suitability guidance.
-- Must not introduce facts that are not present in assembled Civitas context.
+Civitas currently supports one AI feature:
 
-## Generation Process
-- Both summaries are pre-generated (never generated live during profile requests).
-- Generation runs as a post-pipeline operation after Bronze -> Silver -> Gold refresh succeeds.
-- Summaries are stored in `school_ai_summaries` keyed by `(urn, summary_type)`.
-- User-facing requests read cached summary text for fast responses.
+- one pre-generated, factual school overview shown on school profile pages
 
-## Model Choice
-- Primary model: Grok 4.1 Fast Reasoning (configurable via settings).
-- Model choice is infrastructure configuration, not domain/application logic.
+This is intentionally narrow. Civitas does not currently expose a chat surface, multi-artifact generation, or request-time LLM inference to end users.
 
-## Refresh Strategy
-- Each summary stores a `data_version_hash` derived from the assembled context.
-- Hash changes mark summaries stale and eligible for regeneration.
-- Full refresh can be forced as an operational safety run.
-- Summary history retention is implemented in `AI-4` via `school_ai_summary_history`.
+## School Overview Rules
 
-## Entitlement And Access
-- Premium visibility is backend-enforced.
-- Client tier hints are not trusted as entitlement source.
+- Summary length targets roughly 120 to 180 words.
+- Content stays factual, neutral, and source-backed.
+- Summary may cover school type, age range, size, location context, pupil indicators, performance signals, and inspection signals where available.
+- Summary must not provide advice, rankings, suitability judgments, or subjective recommendations.
 
-## Implementation Notes
-- Prompt templates are version-controlled in backend code.
-- LLM access is port-based and swappable behind infrastructure adapters.
-- Prompt and model provenance are stored with each summary for auditability.
+## Generation Model
 
-## Legal And Disclaimer
-- A clear disclaimer must appear above each AI-generated summary.
-- Mandatory Grok's Take disclaimer:
-  "Grok's Take is AI-generated analysis based on public government data. It is not official advice. Parents should always read the latest Ofsted report and visit the school in person."
+- Summaries are pre-generated and stored, never generated during profile requests.
+- Generation typically runs after successful data refresh or via manual operational trigger.
+- Each stored summary records provenance fields such as `model_id`, `prompt_version`, `generated_at`, and `data_version_hash`.
+- Deterministic validation is required before persistence.
+- Previous versions are archived in summary history storage.
 
-## Future Enhancements
-- Premium custom angles (for example: focus on SEN).
-- AI-generated comparison insights between multiple schools.
-- Plain-English trend interpretation helpers.
+## Product Guardrails
+
+- Only one AI artifact is in scope today.
+- The AI layer augments source data; it does not replace raw tables, charts, or official inspection information.
+- The disclaimer shown to users must remain prominent and explicit.
+
+## Current Implementation Notes
+
+- LLM access is hidden behind backend ports and infrastructure adapters.
+- Batch-capable providers may be used for operational efficiency, but the product surface still models one overview artifact.
+- Summary generation is a post-pipeline concern and should not block profile reads.
+
+## Deferred Decisions
+
+1. Whether the overview remains free or becomes part of premium access later.
+2. Whether any second AI artifact is justified by a concrete user need after MVP.
+3. Whether future report-export work should reuse the same summary pipeline or remain fully separate.

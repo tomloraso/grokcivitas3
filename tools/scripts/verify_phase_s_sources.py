@@ -1,4 +1,4 @@
-"""Verify Phase S demographics sources and contracts.
+"""Verify Phase 4 demographics sources and contracts.
 
 Run from repo root:
   uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py
@@ -221,7 +221,7 @@ def write_source_catalog(
     outcome: VerificationOutcome,
 ) -> None:
     lines = [
-        "# Phase S Source Catalog",
+        "# Phase 4 Source Catalog",
         "",
         f"Generated from `tools/scripts/verify_phase_s_sources.py`.",
         "",
@@ -259,17 +259,17 @@ def main() -> int:
     )
 
     catalog_path = Path(
-        ".planning/phases/phase-source-stabilization/"
+        ".planning/phases/phase-4-source-stabilization/"
         "source-catalog-2026-03-04.md"
     )
     write_source_catalog(output_path=catalog_path, outcome=outcome)
 
     if outcome.ok:
-        print("PASS: Phase S source contracts verified")
+        print("PASS: Phase 4 source contracts verified")
         print(f"Catalog: {catalog_path}")
         return 0
 
-    print("FAIL: Phase S source contract verification failed")
+    print("FAIL: Phase 4 source contract verification failed")
     print(f"Catalog: {catalog_path}")
     for issue in outcome.issues:
         print(f"- {issue}")

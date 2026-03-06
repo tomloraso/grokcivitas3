@@ -1,60 +1,88 @@
-# Deployment Strategy (MVP Baseline)
+# Deployment Strategy
 
 ## Document Control
 
-- Status: Draft
-- Last updated: 2026-02-27
-- Scope: Planning baseline for production hosting assumptions
+- Status: Current MVP baseline
+- Last updated: 2026-03-06
+- Scope: Runtime assumptions for web, backend, pipelines, and AI summary generation
 
 ## Purpose
 
-Define minimum deployment assumptions early so architecture and pipeline decisions are grounded in a realistic runtime model.
+Define the minimum deployment assumptions that the current Civitas implementation and remaining MVP phases should target.
+
+## Runtime Components
+
+### Web app
+
+- React frontend served as a static web application or equivalent CDN-backed artifact.
+- Consumes backend OpenAPI-derived contracts only.
+
+### Backend API
+
+- FastAPI application serving search, profile, trends, dashboard, and AI overview reads.
+- Connects to PostgreSQL with PostGIS enabled.
+
+### Pipeline worker
+
+- Runs Bronze -> Silver -> Gold pipeline commands on a schedule or through operator-triggered jobs.
+- Must be deployable independently from the API.
+
+### AI summary execution
+
+- Runs post-pipeline or on-demand summary generation jobs.
+- May share the pipeline runtime or run as a separate worker depending on operational needs.
+- Must not run inline with profile requests.
+
+### Data and storage
+
+- Managed PostgreSQL with PostGIS for serving and staging tables.
+- Object storage for Bronze raw assets outside local development.
+- Managed secret storage for runtime credentials and provider keys.
 
 ## Environment Model
 
-1. **Local development**
-   - Docker Compose services for PostGIS and supporting dependencies.
-   - Bronze storage on local filesystem.
-2. **Staging**
-   - Cloud-managed Postgres with PostGIS enabled.
-   - Bronze storage in cloud object storage.
-   - API and pipeline worker deployed as separate services.
-3. **Production**
-   - Same topology as staging with production scale, backups, and alerting.
+### Local development
 
-## Locked Decisions
+- Docker Compose for PostgreSQL and supporting services.
+- Bronze root on local filesystem.
+- API, web, and pipelines run directly from the repo.
 
-1. **Serving database**
-   - Managed PostgreSQL with PostGIS extension in staging/production.
-2. **Bronze storage**
-   - Immutable raw files in object storage (local filesystem only for local dev).
-3. **Pipeline execution**
-   - CLI-triggered pipelines run from a scheduled job/worker service.
-   - No Airflow/Dagster requirement for MVP.
-4. **Migration execution**
-   - Alembic migrations run as part of deployment workflow before API rollout.
-5. **Secrets and config**
-   - Runtime config via environment variables.
-   - Secrets stored in managed secret store (provider-specific selection deferred).
+### Staging
+
+- Production-like topology with managed Postgres and object storage.
+- Web, API, pipeline worker, and AI job execution validated before promotion.
+- Used for provider integration tests and premium-access rehearsal.
+
+### Production
+
+- Same logical topology as staging.
+- Backups, observability, and rollback paths are mandatory.
+- API, web, and worker deployments remain independently releasable.
+
+## Deployment Workflow
+
+1. Apply database migrations before application rollout.
+2. Deploy backend API and web app independently.
+3. Keep pipeline worker deployment decoupled from the API so source refresh work is operationally isolated.
+4. Trigger AI summary refresh only after the underlying data refresh has succeeded.
 
 ## Operational Baseline
 
-1. **Backups**
-   - Daily database backups with restore validation in non-production.
-2. **Observability**
-   - Capture API health, pipeline run status, and ingestion failures.
-3. **Release safety**
-   - Deploy API and pipeline services independently.
-   - Keep rollback path for DB migrations and application revisions.
+- Daily database backups with restore rehearsal in non-production.
+- Centralized logging for API, pipelines, and AI generation runs.
+- Health checks for API availability and job-run visibility.
+- Alerting for pipeline freshness, coverage drift, and repeated hard failures.
 
 ## Deferred Decisions
 
-1. Cloud provider and exact managed service SKUs.
-2. Scheduler implementation details (managed cron/job runner vs container-native scheduler).
-3. IaC stack choice details beyond repo baseline (Bicep vs Terraform per environment).
+1. Final cloud provider and concrete managed service SKUs.
+2. Exact scheduler or job-runner product.
+3. Whether AI summary execution should use the same worker image as pipelines or split into a dedicated queue-backed service.
+4. Whether Phase 10 optimization work introduces read replicas, materialized views, or CDN caching beyond the current baseline.
 
 ## Related Documents
 
-- `.planning/overview.md`
-- `.planning/data-architecture.md`
-- `.planning/phased-delivery.md`
+- `overview.md`
+- `data-architecture.md`
+- `phased-delivery.md`
+- `ai-features.md`

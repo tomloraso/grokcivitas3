@@ -1,91 +1,127 @@
 # Civitas - System Overview
 
-## What we're building
+## Document Control
 
-A UK public-data research platform that consolidates fragmented government datasets into a fast, decision-grade web experience. MVP vertical: school research for ages 4-16. Designed to extend to other public datasets (crime, deprivation, house prices, health) without architectural rework.
+- Status: Current planning baseline
+- Last updated: 2026-03-06
+- Related documents:
+  - `project-brief.md`
+  - `data-architecture.md`
+  - `phased-delivery.md`
+  - `deployment-strategy.md`
 
-## Key product requirements driving architecture
+## What We Are Building
 
-1. **Fast user experience.** Typical page loads under ~2 seconds; key API endpoints should target low-latency responses.
-2. **Location-first navigation.** Postcode-to-radius search is the primary entry point.
-3. **Trend visibility.** 3-5 years of historical data with year-on-year deltas.
-4. **Extensible data model.** Adding a new dataset should not break existing experiences.
-5. **Reproducible data pipeline.** Re-run from source at any time; full lineage.
-6. **Freemium access control.** Backend-enforced entitlements, not UI-only gating.
+Civitas is a UK public-data research platform that consolidates fragmented government datasets into a fast, decision-grade web experience.
 
-## High-level architecture
+The current product surface is centered on school research:
 
+- postcode-first search
+- school profile pages
+- multi-year trends
+- benchmarked dashboard views
+- area context
+- one stored AI-generated factual school overview
+
+The next planned product slices are school comparison and premium access control.
+
+## Current Product State
+
+Implemented today:
+
+1. Search by postcode with linked list and map results.
+2. School profile pages with demographics, attendance, behaviour, workforce, performance, Ofsted, deprivation, crime, house-price context, and benchmarked trends.
+3. Bronze -> Silver -> Gold pipelines for the active source set with quality, completeness, and observability controls.
+4. Pre-generated AI school overview summaries with provenance and validation.
+
+Still planned:
+
+1. Compare up to four schools side by side.
+2. Authentication, entitlements, and payment-backed premium access.
+3. Post-MVP growth slices such as SEO pages, operational admin surfaces, report export, and deeper optimization work.
+
+## Architecture Shape
+
+```mermaid
+flowchart LR
+  subgraph Sources[Public Data Sources]
+    GIAS[GIAS]
+    DFE[DfE release files and APIs]
+    OFS[Ofsted assets]
+    AREA[ONS, Police UK, Land Registry, Postcodes.io]
+  end
+
+  subgraph Pipeline[Backend pipeline]
+    BRONZE[Bronze raw assets]
+    SILVER[Silver staging tables]
+    GOLD[Gold serving tables]
+    AIJOB[AI summary generation]
+  end
+
+  subgraph Backend[FastAPI backend]
+    API[API routes]
+    APP[Application use cases]
+    INFRA[Repositories, clients, pipelines]
+  end
+
+  subgraph Web[React web app]
+    SEARCH[Search journey]
+    PROFILE[Profile and dashboard journey]
+    COMPARE[Compare journey - planned]
+    PREMIUM[Premium journey - planned]
+  end
+
+  Sources --> BRONZE --> SILVER --> GOLD
+  GOLD --> AIJOB --> GOLD
+  GOLD --> API --> SEARCH
+  GOLD --> API --> PROFILE
+  GOLD --> API --> COMPARE
+  GOLD --> API --> PREMIUM
+  API --> APP --> INFRA --> GOLD
 ```
-+-----------------------------------------------------------+
-| Data Sources (gov.uk CSVs, APIs, ONS downloads)          |
-+-----------------------------+-----------------------------+
-                              | Scheduled ingestion
-                              v
-+-----------------------------------------------------------+
-| Pipeline (Python)                                         |
-| Bronze (raw files) -> Staging (Postgres) -> Gold         |
-+-----------------------------+-----------------------------+
-                              | Materialized, indexed
-                              v
-+-----------------------------------------------------------+
-| Backend API (FastAPI)                                     |
-| Layered: domain -> application -> infrastructure          |
-| Bootstrap composes concrete dependencies                  |
-| PostGIS spatial queries, structured endpoints             |
-+-----------------------------+-----------------------------+
-                              | OpenAPI contract
-                              v
-+-----------------------------------------------------------+
-| Web App (React / Vite / TypeScript)                      |
-| Mobile-first, map + list, dashboard-style presentation   |
-+-----------------------------------------------------------+
-```
 
-## Technology choices
+## Technology Choices
 
 | Component | Choice | Rationale |
-|-----------|--------|-----------|
-| Backend runtime | Python 3.11+ / FastAPI | Aligns with current repo constraints and data pipeline needs |
-| Backend architecture | Hexagonal layering (`domain`, `application`, `infrastructure`, `api`, `cli`, `bootstrap`) | Testable, clear dependency direction, explicit composition root |
-| Serving database | PostgreSQL + PostGIS | Spatial indexing for radius queries, relational joins for metric lookups, proven at this scale |
-| Pipeline staging | PostgreSQL staging tables | Clean, validate, type-cast within the same engine as serving; one query language end-to-end |
-| Raw archive | CSV/JSON files (Bronze layer) | Immutable audit trail of every source download |
-| Frontend | React + Vite + TypeScript | Fast builds, strong typing, ecosystem maturity |
-| API contract | Backend-generated OpenAPI | Single source of truth; frontend consumes typed client |
-| Package management | uv (Python) / npm (TypeScript) | Fast, deterministic dependency resolution |
-| Monorepo structure | Apps-first (`apps/backend`, `apps/web`) | Clean ownership boundaries, shared tooling at root |
+|---|---|---|
+| Backend runtime | Python 3.11+ and FastAPI | Fits the pipeline-heavy backend and keeps API contracts explicit |
+| Backend architecture | Hexagonal layering | Maintains strict inward dependencies and testability |
+| Serving database | PostgreSQL + PostGIS | Spatial search, relational joins, and straightforward historical fact storage |
+| Pipeline model | Bronze -> Silver -> Gold | Traceable, repeatable, and aligned with current runbooks |
+| Frontend | React + Vite + TypeScript | Typed, fast iteration, and contract-driven integration |
+| API contract | Backend-generated OpenAPI | Single source of truth for frontend wire types |
+| Package management | `uv` and `npm` | Deterministic tooling across the monorepo |
 
-## Data sources (MVP)
+## Current Backend Surface
 
-| Source | Format | Refresh cadence | Primary use |
-|--------|--------|-----------------|-------------|
-| DfE pupil characteristics | CSV | Annual (June) | Demographics, FSM, SEN, ethnicity |
-| GIAS bulk downloads | CSV | Ongoing | School identifiers, type, phase, geography |
-| Ofsted | API / CSV | Ongoing | Inspection ratings, dates, timeline |
-| Police UK data | Monthly bulk CSV (+ API fallback) | Monthly | Street-level crime context (1-mile radius) |
-| Land Registry Price Paid | CSV | Monthly | House price snapshot (optional MVP) |
-| Postcodes.io | REST API | Stable | Postcode -> lat/lng resolution |
-| ONS IMD / LSOA stats | CSV | Periodic | Deprivation deciles, child poverty |
+Primary backend feature areas:
 
-## Pipeline model
+- `schools`: search and identity
+- `school_profiles`: profile assembly for latest data
+- `school_trends`: multi-year series and dashboard responses
+- `school_summaries`: stored AI overview generation and retrieval
+- `operations`: pipeline health, data quality, and operational concerns
 
-- **Bronze:** Raw files exactly as downloaded (CSV, JSON). Immutable. Timestamped.
-- **Staging:** PostgreSQL staging tables. Cleaned, validated, type-cast. Per-source, per-run. Rejected rows logged.
-- **Gold:** PostgreSQL + PostGIS production tables. Enriched, joined, denormalized for API access. Indexed for spatial and point queries.
+## Current Frontend Surface
 
-Bronze is the reproducibility checkpoint. The full pipeline can be re-run from raw files at any time.
+Primary frontend feature areas:
 
-## Key architectural decisions
+- `schools-search`: postcode search, result cards, map, and search states
+- `school-profile`: profile header, domain cards, trend/dashboard presentation, and AI overview rendering
 
-1. **PostgreSQL as the sole serving store** - not Parquet, not a data lake query engine. Scale is modest (tens of thousands of schools, low millions of enrichment rows). PostGIS spatial indexes solve the radius query problem directly.
-2. **Pipeline runs are batch, not streaming** - source data updates daily to annually. No real-time ingestion needed.
-3. **Backend enforces all access control** - premium entitlements checked server-side, never client-only.
-4. **OpenAPI is the contract boundary** - frontend never depends on backend internals, only on generated/typed API clients.
-5. **Monorepo with strict layering** - backend enforces import boundaries; `api`/`cli` stay thin and `bootstrap` owns composition.
+Compare and premium flows are not yet implemented, so they remain planning-only phases.
 
-## What this document does NOT cover
+## Architectural Decisions That Still Matter
 
-- Detailed data schemas and pipeline design -> see `data-architecture.md`
-- Phase-by-phase delivery plan -> see `phased-delivery.md`
-- Frontend component architecture baseline for Phase 0 -> see `phases/phase-0/0D1-web-foundations.md`
-- Infrastructure / deployment topology -> see `deployment-strategy.md`
+1. Backend OpenAPI remains the contract boundary; the frontend does not reach into backend internals.
+2. Bronze assets remain the reproducibility checkpoint.
+3. Silver normalization is where source contracts and rejection handling are enforced.
+4. Gold tables are shaped for API access patterns rather than generic raw analysis.
+5. AI summary generation is asynchronous and post-pipeline, not request-time.
+
+## What This Document Does Not Cover
+
+- Detailed source inventory and cadences: `data-sources.md`
+- Gold tables and pipeline behavior: `data-architecture.md`
+- Phase-by-phase sequencing: `phased-delivery.md`
+- Hosting and runtime topology: `deployment-strategy.md`
