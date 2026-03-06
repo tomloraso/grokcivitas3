@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
 import pytest
 
@@ -28,6 +28,7 @@ from civitas.domain.school_profiles.models import (
     SchoolProfileSectionCompleteness,
     SchoolWorkforceLatest,
 )
+from civitas.domain.school_summaries.models import SchoolSummary
 from civitas.domain.schools.models import PostcodeCoordinates
 
 
@@ -67,6 +68,16 @@ class FakePostcodeContextResolver:
             admin_district="Westminster",
             lsoa_code="E01004736",
         )
+
+
+class FakeSummaryRepository:
+    def __init__(self, summaries: dict[str, SchoolSummary] | None = None) -> None:
+        self._summaries = summaries or {}
+        self.calls: list[tuple[str, str]] = []
+
+    def get_summary(self, urn: str, summary_kind: str) -> SchoolSummary | None:
+        self.calls.append((urn, summary_kind))
+        return self._summaries.get(summary_kind)
 
 
 def _profile(
@@ -188,6 +199,39 @@ def _profile(
             school_type="Community school",
             status="Open",
             postcode="SW1A 1AA",
+            website="https://example-school.test",
+            telephone="+442079460123",
+            head_title="Dr",
+            head_first_name="Ada",
+            head_last_name="Lovelace",
+            head_job_title="Headteacher",
+            address_street="1 Example Street",
+            address_locality="Westminster",
+            address_line3=None,
+            address_town="London",
+            address_county="Greater London",
+            statutory_low_age=4,
+            statutory_high_age=11,
+            gender="Mixed",
+            religious_character="None",
+            diocese=None,
+            admissions_policy="Not applicable",
+            sixth_form="Does not have a sixth form",
+            nursery_provision="No Nursery Classes",
+            boarders="No boarders",
+            fsm_pct_gias=12.4,
+            trust_name=None,
+            trust_flag="Not applicable",
+            federation_name=None,
+            federation_flag="Not applicable",
+            la_name="Westminster",
+            la_code="213",
+            urban_rural="Urban major conurbation",
+            number_of_boys=155,
+            number_of_girls=157,
+            lsoa_code="E01004736",
+            lsoa_name="Westminster 018A",
+            last_changed_date=date(2026, 1, 15),
             lat=51.5,
             lng=-0.14,
         ),
@@ -444,6 +488,16 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert repository.received_urns == ["123456"]
     assert result.school.urn == "123456"
     assert result.school.name == "Example School"
+    assert result.school.website == "https://example-school.test"
+    assert result.school.telephone == "+442079460123"
+    assert result.school.head_first_name == "Ada"
+    assert result.school.head_last_name == "Lovelace"
+    assert result.school.statutory_low_age == 4
+    assert result.school.statutory_high_age == 11
+    assert result.school.la_name == "Westminster"
+    assert result.school.lsoa_code == "E01004736"
+    assert result.overview_text is None
+    assert result.analyst_text is None
     assert result.demographics_latest is not None
     assert result.demographics_latest.academic_year == "2024/25"
     assert result.demographics_latest.coverage.ethnicity_supported is True
@@ -514,6 +568,44 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.completeness.ofsted_timeline.status == "unavailable"
     assert result.completeness.area_deprivation.reason_code == "not_joined_yet"
     assert result.completeness.area_house_prices.reason_code == "not_joined_yet"
+
+
+def test_get_school_profile_includes_overview_summary_when_available() -> None:
+    repository = FakeSchoolProfileRepository(profile=_profile())
+    summary_repository = FakeSummaryRepository(
+        summaries={
+            "overview": SchoolSummary(
+                urn="123456",
+                summary_kind="overview",
+                text="AI-generated overview text.",
+                data_version_hash="hash-123",
+                prompt_version="overview.v1",
+                model_id="grok-test",
+                generated_at=datetime(2026, 3, 5, 12, 0, tzinfo=timezone.utc),
+                generation_duration_ms=145,
+            ),
+            "analyst": SchoolSummary(
+                urn="123456",
+                summary_kind="analyst",
+                text="AI-generated analyst text.",
+                data_version_hash="hash-456",
+                prompt_version="analyst.v1",
+                model_id="grok-test",
+                generated_at=datetime(2026, 3, 5, 12, 5, tzinfo=timezone.utc),
+                generation_duration_ms=165,
+            ),
+        }
+    )
+    use_case = GetSchoolProfileUseCase(
+        school_profile_repository=repository,
+        summary_repository=summary_repository,
+    )
+
+    result = use_case.execute(urn="123456")
+
+    assert result.overview_text == "AI-generated overview text."
+    assert result.analyst_text == "AI-generated analyst text."
+    assert summary_repository.calls == [("123456", "overview"), ("123456", "analyst")]
 
 
 def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing() -> None:

@@ -36,6 +36,7 @@ from civitas.application.school_profiles.ports.postcode_context_resolver import 
 from civitas.application.school_profiles.ports.school_profile_repository import (
     SchoolProfileRepository,
 )
+from civitas.application.school_summaries.ports.summary_repository import SummaryRepository
 from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
@@ -49,10 +50,12 @@ class GetSchoolProfileUseCase:
         school_profile_repository: SchoolProfileRepository,
         postcode_context_resolver: PostcodeContextResolver | None = None,
         school_trends_repository: SchoolTrendsRepository | None = None,
+        summary_repository: SummaryRepository | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
         self._postcode_context_resolver = postcode_context_resolver
         self._school_trends_repository = school_trends_repository
+        self._summary_repository = summary_repository
 
     def execute(self, *, urn: str) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
@@ -442,6 +445,11 @@ class GetSchoolProfileUseCase:
             ),
         )
         benchmarks = self._build_profile_benchmarks(normalized_urn)
+        overview_summary = None
+        analyst_summary = None
+        if self._summary_repository is not None:
+            overview_summary = self._summary_repository.get_summary(normalized_urn, "overview")
+            analyst_summary = self._summary_repository.get_summary(normalized_urn, "analyst")
 
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
@@ -451,9 +459,44 @@ class GetSchoolProfileUseCase:
                 school_type=profile.school.school_type,
                 status=profile.school.status,
                 postcode=profile.school.postcode,
+                website=profile.school.website,
+                telephone=profile.school.telephone,
+                head_title=profile.school.head_title,
+                head_first_name=profile.school.head_first_name,
+                head_last_name=profile.school.head_last_name,
+                head_job_title=profile.school.head_job_title,
+                address_street=profile.school.address_street,
+                address_locality=profile.school.address_locality,
+                address_line3=profile.school.address_line3,
+                address_town=profile.school.address_town,
+                address_county=profile.school.address_county,
+                statutory_low_age=profile.school.statutory_low_age,
+                statutory_high_age=profile.school.statutory_high_age,
+                gender=profile.school.gender,
+                religious_character=profile.school.religious_character,
+                diocese=profile.school.diocese,
+                admissions_policy=profile.school.admissions_policy,
+                sixth_form=profile.school.sixth_form,
+                nursery_provision=profile.school.nursery_provision,
+                boarders=profile.school.boarders,
+                fsm_pct_gias=profile.school.fsm_pct_gias,
+                trust_name=profile.school.trust_name,
+                trust_flag=profile.school.trust_flag,
+                federation_name=profile.school.federation_name,
+                federation_flag=profile.school.federation_flag,
+                la_name=profile.school.la_name,
+                la_code=profile.school.la_code,
+                urban_rural=profile.school.urban_rural,
+                number_of_boys=profile.school.number_of_boys,
+                number_of_girls=profile.school.number_of_girls,
+                lsoa_code=profile.school.lsoa_code,
+                lsoa_name=profile.school.lsoa_name,
+                last_changed_date=profile.school.last_changed_date,
                 lat=profile.school.lat,
                 lng=profile.school.lng,
             ),
+            overview_text=overview_summary.text if overview_summary is not None else None,
+            analyst_text=analyst_summary.text if analyst_summary is not None else None,
             demographics_latest=demographics_latest,
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,

@@ -24,7 +24,7 @@ Each output is generated via its own dedicated prompt and API call.
 
 ## Non-Functional Requirements
 - Cost target: ≤ $0.000215 per school (see ai-cost-analysis.md).
-- Latency: Batch of 300 schools completes in < 15 minutes.
+- Completion expectation: xAI Batch API is asynchronous; Civitas must tolerate provider completion over an up-to-24-hour window.
 - Rate-limit safe (Batch API has no per-minute limits).
 - Zero manual intervention after data ingest.
 - Full observability (logs, metrics, cost tracking).
@@ -37,6 +37,13 @@ Each output is generated via its own dedicated prompt and API call.
 **Endpoint for batch:** `POST /v1/batches`
 
 ---
+
+### Execution Semantics
+
+- xAI batch jobs are asynchronous and should be treated as provider jobs, not request/response calls.
+- The Civitas integration must split work into submit and poll/finalize steps.
+- `pipeline run --all` may submit batches, but completion and persistence should happen in a later poll pass.
+- The xAI console wording around completion "in 24 hrs" should be treated as the batch completion window, not as a guarantee of minute-scale processing or a per-minute rate limit.
 
 ### Prompt 1 — School Overview (free "About the school" layer)
 

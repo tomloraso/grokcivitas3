@@ -61,17 +61,26 @@ describe("SchoolProfileFeature", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "School Overview" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Analyst View" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "School Details" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Attendance and Behaviour" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Workforce and Leadership" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Benchmark Comparison" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
 
+    expect(
+      screen.getByText(/This overview is AI-generated from public government data/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/This analyst view is AI-generated from public government data/i)).toBeInTheDocument();
+    expect(screen.getByText("Contact and Leadership")).toBeInTheDocument();
+    expect(screen.getByText("Camden Learning Trust")).toBeInTheDocument();
     expect(screen.getByText("FSM6")).toBeInTheDocument();
     expect(screen.getByText("SEND Primary Need")).toBeInTheDocument();
     expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
     expect(screen.getAllByText("Suspensions Rate").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
-    expect(screen.getByText("Headteacher")).toBeInTheDocument();
+    expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
     expect(screen.getByText("House Prices")).toBeInTheDocument();
     expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
   });

@@ -11,6 +11,39 @@ class SchoolProfileSchoolResponse(BaseModel):
     type: str | None
     status: str | None
     postcode: str | None
+    website: str | None
+    telephone: str | None
+    head_title: str | None
+    head_first_name: str | None
+    head_last_name: str | None
+    head_job_title: str | None
+    address_street: str | None
+    address_locality: str | None
+    address_line3: str | None
+    address_town: str | None
+    address_county: str | None
+    statutory_low_age: int | None
+    statutory_high_age: int | None
+    gender: str | None
+    religious_character: str | None
+    diocese: str | None
+    admissions_policy: str | None
+    sixth_form: str | None
+    nursery_provision: str | None
+    boarders: str | None
+    fsm_pct_gias: float | None
+    trust_name: str | None
+    trust_flag: str | None
+    federation_name: str | None
+    federation_flag: str | None
+    la_name: str | None
+    la_code: str | None
+    urban_rural: str | None
+    number_of_boys: int | None
+    number_of_girls: int | None
+    lsoa_code: str | None
+    lsoa_name: str | None
+    last_changed_date: date | None
     lat: float
     lng: float
 
@@ -322,6 +355,8 @@ class SchoolProfileCompletenessResponse(BaseModel):
 
 class SchoolProfileResponse(BaseModel):
     school: SchoolProfileSchoolResponse
+    overview_text: str | None
+    analyst_text: str | None
     demographics_latest: SchoolProfileDemographicsLatestResponse | None
     attendance_latest: SchoolProfileAttendanceLatestResponse | None
     behaviour_latest: SchoolProfileBehaviourLatestResponse | None

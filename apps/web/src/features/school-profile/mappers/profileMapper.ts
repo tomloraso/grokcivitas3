@@ -94,6 +94,10 @@ function fallback(value: string | null | undefined, placeholder: string): string
   return value?.trim() ? value : placeholder;
 }
 
+function toOptionalText(value: string | null | undefined): string | null {
+  return value?.trim() ? value.trim() : null;
+}
+
 function fmtDate(iso: string | null): string | null {
   if (!iso) {
     return null;
@@ -187,6 +191,30 @@ function mapSectionCompleteness(section: SectionCompletenessContract): SectionCo
 
 function mapSchool(profile: SchoolProfileResponse): SchoolIdentityVM {
   const school = profile.school;
+  const headName = [school.head_title, school.head_first_name, school.head_last_name]
+    .map((part) => part?.trim() ?? "")
+    .filter((part) => part.length > 0)
+    .join(" ");
+  const addressLines = [
+    school.address_street,
+    school.address_locality,
+    school.address_line3,
+    school.address_town,
+    school.address_county,
+    school.postcode
+  ]
+    .map((line) => line?.trim() ?? "")
+    .filter((line, index, values) => line.length > 0 && values.indexOf(line) === index);
+
+  let ageRangeLabel: string | null = null;
+  if (typeof school.statutory_low_age === "number" && typeof school.statutory_high_age === "number") {
+    ageRangeLabel = `Ages ${school.statutory_low_age}-${school.statutory_high_age}`;
+  } else if (typeof school.statutory_low_age === "number") {
+    ageRangeLabel = `Starts at age ${school.statutory_low_age}`;
+  } else if (typeof school.statutory_high_age === "number") {
+    ageRangeLabel = `Up to age ${school.statutory_high_age}`;
+  }
+
   return {
     urn: school.urn,
     name: school.name,
@@ -195,7 +223,33 @@ function mapSchool(profile: SchoolProfileResponse): SchoolIdentityVM {
     status: fallback(school.status, "Unknown"),
     postcode: fallback(school.postcode, "Unknown"),
     lat: school.lat,
-    lng: school.lng
+    lng: school.lng,
+    website: toOptionalText(school.website),
+    telephone: toOptionalText(school.telephone),
+    headName: headName.length > 0 ? headName : null,
+    headJobTitle: toOptionalText(school.head_job_title),
+    addressLines,
+    ageRangeLabel,
+    gender: toOptionalText(school.gender),
+    religiousCharacter: toOptionalText(school.religious_character),
+    diocese: toOptionalText(school.diocese),
+    admissionsPolicy: toOptionalText(school.admissions_policy),
+    sixthForm: toOptionalText(school.sixth_form),
+    nurseryProvision: toOptionalText(school.nursery_provision),
+    boarders: toOptionalText(school.boarders),
+    giasFsmPct: school.fsm_pct_gias ?? null,
+    trustName: toOptionalText(school.trust_name),
+    trustFlag: toOptionalText(school.trust_flag),
+    federationName: toOptionalText(school.federation_name),
+    federationFlag: toOptionalText(school.federation_flag),
+    localAuthorityName: toOptionalText(school.la_name),
+    localAuthorityCode: toOptionalText(school.la_code),
+    urbanRural: toOptionalText(school.urban_rural),
+    numberOfBoys: school.number_of_boys ?? null,
+    numberOfGirls: school.number_of_girls ?? null,
+    lsoaCode: toOptionalText(school.lsoa_code),
+    lsoaName: toOptionalText(school.lsoa_name),
+    lastChangedDate: fmtDate(school.last_changed_date)
   };
 }
 
@@ -755,6 +809,8 @@ export function mapProfileToVM(
 ): SchoolProfileVM {
   return {
     school: mapSchool(profile),
+    overviewText: toOptionalText(profile.overview_text),
+    analystText: toOptionalText(profile.analyst_text),
     demographics: mapDemographics(profile),
     attendance: mapAttendance(profile),
     behaviour: mapBehaviour(profile),

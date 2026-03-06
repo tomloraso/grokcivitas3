@@ -95,6 +95,21 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS pipeline_normalization_warnings (
+                    id bigserial PRIMARY KEY,
+                    run_id uuid NOT NULL REFERENCES pipeline_runs(run_id) ON DELETE CASCADE,
+                    source text NOT NULL,
+                    field_name text NOT NULL,
+                    reason_code text NOT NULL,
+                    warning_count integer NOT NULL,
+                    created_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS schools (
                     urn text PRIMARY KEY,
                     name text NOT NULL,
@@ -109,11 +124,80 @@ def _ensure_schema(engine: Engine) -> None:
                     pupil_count integer NULL,
                     open_date date NULL,
                     close_date date NULL,
+                    website text NULL,
+                    telephone text NULL,
+                    head_title text NULL,
+                    head_first_name text NULL,
+                    head_last_name text NULL,
+                    head_job_title text NULL,
+                    address_street text NULL,
+                    address_locality text NULL,
+                    address_line3 text NULL,
+                    address_town text NULL,
+                    address_county text NULL,
+                    statutory_low_age integer NULL,
+                    statutory_high_age integer NULL,
+                    gender text NULL,
+                    religious_character text NULL,
+                    diocese text NULL,
+                    admissions_policy text NULL,
+                    sixth_form text NULL,
+                    nursery_provision text NULL,
+                    boarders text NULL,
+                    fsm_pct_gias double precision NULL,
+                    trust_name text NULL,
+                    trust_flag text NULL,
+                    federation_name text NULL,
+                    federation_flag text NULL,
+                    la_name text NULL,
+                    la_code text NULL,
+                    urban_rural text NULL,
+                    number_of_boys integer NULL,
+                    number_of_girls integer NULL,
+                    lsoa_code text NULL,
+                    lsoa_name text NULL,
+                    last_changed_date date NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
             )
         )
+        for statement in (
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS website text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS telephone text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_title text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_first_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_last_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_job_title text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_street text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_locality text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_line3 text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_town text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_county text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_low_age integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_high_age integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS gender text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS religious_character text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS diocese text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS admissions_policy text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS sixth_form text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS nursery_provision text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS boarders text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS fsm_pct_gias double precision NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS trust_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS trust_flag text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS federation_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS federation_flag text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_code text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS urban_rural text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS number_of_boys integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS number_of_girls integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS lsoa_code text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS lsoa_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS last_changed_date date NULL",
+        ):
+            connection.execute(text(statement))
         connection.execute(
             text(
                 """
@@ -133,6 +217,9 @@ def _cleanup_schools(engine: Engine) -> None:
                 WHERE urn IN ('100001', '100002', '100004', '100005')
                 """
             )
+        )
+        connection.execute(
+            text("DELETE FROM pipeline_normalization_warnings WHERE source = 'gias'")
         )
 
 
@@ -247,6 +334,56 @@ def test_gias_pipeline_stage_and_promote_are_idempotent(engine: Engine, tmp_path
             "invalid_coordinate_range",
             "invalid_open_date",
         }
+        warning_counts = {
+            (row[0], row[1]): row[2]
+            for row in connection.execute(
+                text(
+                    """
+                    SELECT field_name, reason_code, warning_count
+                    FROM pipeline_normalization_warnings
+                    WHERE run_id = :run_id
+                    """
+                ),
+                {"run_id": str(first_context.run_id)},
+            )
+        }
+        assert warning_counts == {
+            ("SchoolWebsite", "invalid_website"): 1,
+            ("TelephoneNum", "invalid_telephone"): 1,
+            ("StatutoryHighAge", "age_out_of_range"): 1,
+            ("PercentageFSM", "percentage_out_of_range"): 1,
+            ("NumberOfBoys", "invalid_integer"): 1,
+            ("LastChangedDate", "invalid_date"): 1,
+        }
+        enriched_school = (
+            connection.execute(
+                text(
+                    """
+                SELECT
+                    website,
+                    telephone,
+                    statutory_low_age,
+                    statutory_high_age,
+                    fsm_pct_gias,
+                    la_name,
+                    lsoa_code,
+                    last_changed_date
+                FROM schools
+                WHERE urn = '100001'
+                """
+                )
+            )
+            .mappings()
+            .one()
+        )
+        assert enriched_school["website"] == "https://alphaprimary.example"
+        assert enriched_school["telephone"] == "+442079460123"
+        assert enriched_school["statutory_low_age"] == 4
+        assert enriched_school["statutory_high_age"] == 11
+        assert enriched_school["fsm_pct_gias"] == pytest.approx(12.4)
+        assert enriched_school["la_name"] == "Westminster"
+        assert enriched_school["lsoa_code"] == "E01004736"
+        assert str(enriched_school["last_changed_date"]) == "2026-01-15"
 
     second_context = _build_context(bronze_root)
     _insert_run_row(engine, second_context)

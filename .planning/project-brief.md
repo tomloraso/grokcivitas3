@@ -39,7 +39,7 @@ The first vertical is school research for ages 4-16. The platform is intentional
 3. School profile
    - User sees core identifiers, headline indicators, and multi-year trends.
    - User sees Ofsted history, deprivation, crime, and benchmark context where available.
-   - User may also see one pre-generated AI factual overview with explicit disclaimer and provenance.
+   - User may also see two pre-generated AI summaries with explicit disclaimer and provenance: a factual overview and an evidence-grounded analyst view.
 4. Compare schools
    - User compares up to four schools side by side using a consistent metric set.
 5. Paywall and purchase
@@ -74,11 +74,12 @@ Minimum indicator groups:
 - User-selectable dark and light display mode with persistent preference.
 - Backend-generated OpenAPI contracts as the source of truth for frontend integration.
 
-## AI Overview Guardrails
+## AI Summary Guardrails
 
-- At most one AI-generated school overview in MVP scope.
+- At most two AI-generated school summaries are in MVP scope: `overview` and `analyst`.
 - The overview must be pre-generated, factual, provenance-backed, and never advice-like.
-- The overview must display a clear disclaimer and must not replace primary source data.
+- The analyst summary may describe patterns or signals in the published evidence, but it must remain evidence-grounded and never advice-like.
+- Both summaries must display a clear disclaimer and must not replace primary source data.
 
 ## Security, Privacy, And Access
 

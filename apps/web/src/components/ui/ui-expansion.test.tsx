@@ -204,9 +204,11 @@ describe("Toast", () => {
 
     await act(async () => {
       await user.click(screen.getByRole("button", { name: "Show toast" }));
+      await new Promise((resolve) => window.setTimeout(resolve, 1100));
     });
-    await screen.findByText("Saved");
-    await screen.findByLabelText("Close notification");
+
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+    expect(screen.getByLabelText("Close notification")).toBeInTheDocument();
 
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();

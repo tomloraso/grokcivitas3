@@ -9,6 +9,32 @@ export interface SchoolIdentityVM {
   postcode: string;
   lat: number;
   lng: number;
+  website: string | null;
+  telephone: string | null;
+  headName: string | null;
+  headJobTitle: string | null;
+  addressLines: string[];
+  ageRangeLabel: string | null;
+  gender: string | null;
+  religiousCharacter: string | null;
+  diocese: string | null;
+  admissionsPolicy: string | null;
+  sixthForm: string | null;
+  nurseryProvision: string | null;
+  boarders: string | null;
+  giasFsmPct: number | null;
+  trustName: string | null;
+  trustFlag: string | null;
+  federationName: string | null;
+  federationFlag: string | null;
+  localAuthorityName: string | null;
+  localAuthorityCode: string | null;
+  urbanRural: string | null;
+  numberOfBoys: number | null;
+  numberOfGirls: number | null;
+  lsoaCode: string | null;
+  lsoaName: string | null;
+  lastChangedDate: string | null;
 }
 
 export interface DemographicMetricVM {
@@ -367,6 +393,8 @@ export interface UnsupportedMetricVM {
 
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
+  overviewText: string | null;
+  analystText: string | null;
   demographics: DemographicsVM | null;
   attendance: AttendanceLatestVM | null;
   behaviour: BehaviourLatestVM | null;

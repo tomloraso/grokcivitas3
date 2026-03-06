@@ -2351,6 +2351,28 @@
           "school": {
             "$ref": "#/components/schemas/SchoolProfileSchoolResponse"
           },
+          "overview_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overview Text"
+          },
+          "analyst_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analyst Text"
+          },
           "demographics_latest": {
             "anyOf": [
               {
@@ -2437,6 +2459,8 @@
         "type": "object",
         "required": [
           "school",
+          "overview_text",
+          "analyst_text",
           "demographics_latest",
           "attendance_latest",
           "behaviour_latest",
@@ -2504,6 +2528,370 @@
             ],
             "title": "Postcode"
           },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "telephone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telephone"
+          },
+          "head_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Title"
+          },
+          "head_first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head First Name"
+          },
+          "head_last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Last Name"
+          },
+          "head_job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Job Title"
+          },
+          "address_street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Street"
+          },
+          "address_locality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Locality"
+          },
+          "address_line3": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Line3"
+          },
+          "address_town": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address Town"
+          },
+          "address_county": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address County"
+          },
+          "statutory_low_age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statutory Low Age"
+          },
+          "statutory_high_age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statutory High Age"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
+          },
+          "religious_character": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Religious Character"
+          },
+          "diocese": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Diocese"
+          },
+          "admissions_policy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admissions Policy"
+          },
+          "sixth_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sixth Form"
+          },
+          "nursery_provision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nursery Provision"
+          },
+          "boarders": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Boarders"
+          },
+          "fsm_pct_gias": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsm Pct Gias"
+          },
+          "trust_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Name"
+          },
+          "trust_flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trust Flag"
+          },
+          "federation_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Federation Name"
+          },
+          "federation_flag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Federation Flag"
+          },
+          "la_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "La Name"
+          },
+          "la_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "La Code"
+          },
+          "urban_rural": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Urban Rural"
+          },
+          "number_of_boys": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Of Boys"
+          },
+          "number_of_girls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Of Girls"
+          },
+          "lsoa_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lsoa Code"
+          },
+          "lsoa_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lsoa Name"
+          },
+          "last_changed_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Changed Date"
+          },
           "lat": {
             "type": "number",
             "title": "Lat"
@@ -2521,6 +2909,39 @@
           "type",
           "status",
           "postcode",
+          "website",
+          "telephone",
+          "head_title",
+          "head_first_name",
+          "head_last_name",
+          "head_job_title",
+          "address_street",
+          "address_locality",
+          "address_line3",
+          "address_town",
+          "address_county",
+          "statutory_low_age",
+          "statutory_high_age",
+          "gender",
+          "religious_character",
+          "diocese",
+          "admissions_policy",
+          "sixth_form",
+          "nursery_provision",
+          "boarders",
+          "fsm_pct_gias",
+          "trust_name",
+          "trust_flag",
+          "federation_name",
+          "federation_flag",
+          "la_name",
+          "la_code",
+          "urban_rural",
+          "number_of_boys",
+          "number_of_girls",
+          "lsoa_code",
+          "lsoa_name",
+          "last_changed_date",
           "lat",
           "lng"
         ],

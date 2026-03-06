@@ -98,6 +98,8 @@ Common commands:
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
 - `uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>`
+- `uv run --project apps/backend civitas generate-summaries`
+- `uv run --project apps/backend civitas poll-summary-batches`
 - `uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py`
 - `uv run --project apps/backend python tools/scripts/check_demographics_trend_coverage.py --strict`
 
@@ -140,4 +142,6 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `dfe_workforce` promotes yearly workforce rows into `school_workforce_yearly` and latest leadership attributes into `school_leadership_snapshot`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
 - `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.
+- When `CIVITAS_AI_ENABLED=true`, `pipeline run --all` submits overview-generation batches after successful promote and exits without waiting for provider completion.
+- Final AI persistence happens through a separate `poll-summary-batches` pass; this should be run by an operator or external scheduler until all pending batch items are finalized.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

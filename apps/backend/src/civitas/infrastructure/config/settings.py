@@ -86,6 +86,14 @@ DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS = 720
 DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD = 0.05
 DEFAULT_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES = 2
 DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD = 0.7
+DEFAULT_AI_ENABLED = False
+DEFAULT_AI_PROVIDER = "grok"
+DEFAULT_AI_MODEL_ID = "grok-4-1-fast-reasoning"
+DEFAULT_AI_API_BASE_URL: str | None = None
+DEFAULT_AI_BATCH_SIZE = 10
+DEFAULT_AI_REQUEST_TIMEOUT_SECONDS = 30.0
+DEFAULT_AI_MAX_RETRIES = 2
+DEFAULT_AI_RETRY_BACKOFF_SECONDS = 0.5
 
 
 class DatabaseSettings(BaseModel):
@@ -194,6 +202,18 @@ class DataQualitySettings(BaseModel):
             "uk_house_prices": float(self.freshness_sla_hours_uk_house_prices),
             "police_crime_context": float(self.freshness_sla_hours_police_crime_context),
         }
+
+
+class AiSettings(BaseModel):
+    enabled: bool
+    provider: str
+    model_id: str
+    api_key: str
+    api_base_url: str
+    batch_size: PositiveInt
+    request_timeout_seconds: PositiveFloat
+    max_retries: NonNegativeInt
+    retry_backoff_seconds: PositiveFloat
 
 
 class AppSettings(BaseSettings):
@@ -556,6 +576,44 @@ class AppSettings(BaseSettings):
         le=1.0,
         validation_alias="CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD",
     )
+    ai_enabled: bool = Field(
+        default=DEFAULT_AI_ENABLED,
+        validation_alias="CIVITAS_AI_ENABLED",
+    )
+    ai_provider: str = Field(
+        default=DEFAULT_AI_PROVIDER,
+        min_length=1,
+        validation_alias="CIVITAS_AI_PROVIDER",
+    )
+    ai_model_id: str = Field(
+        default=DEFAULT_AI_MODEL_ID,
+        min_length=1,
+        validation_alias="CIVITAS_AI_MODEL_ID",
+    )
+    ai_api_key: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_AI_API_KEY",
+    )
+    ai_api_base_url: str | None = Field(
+        default=DEFAULT_AI_API_BASE_URL,
+        validation_alias="CIVITAS_AI_API_BASE_URL",
+    )
+    ai_batch_size: PositiveInt = Field(
+        default=DEFAULT_AI_BATCH_SIZE,
+        validation_alias="CIVITAS_AI_BATCH_SIZE",
+    )
+    ai_request_timeout_seconds: PositiveFloat = Field(
+        default=DEFAULT_AI_REQUEST_TIMEOUT_SECONDS,
+        validation_alias="CIVITAS_AI_REQUEST_TIMEOUT_SECONDS",
+    )
+    ai_max_retries: NonNegativeInt = Field(
+        default=DEFAULT_AI_MAX_RETRIES,
+        validation_alias="CIVITAS_AI_MAX_RETRIES",
+    )
+    ai_retry_backoff_seconds: PositiveFloat = Field(
+        default=DEFAULT_AI_RETRY_BACKOFF_SECONDS,
+        validation_alias="CIVITAS_AI_RETRY_BACKOFF_SECONDS",
+    )
 
     @property
     def database(self) -> DatabaseSettings:
@@ -675,6 +733,22 @@ class AppSettings(BaseSettings):
             sparse_trend_ratio_threshold=self.data_quality_sparse_trend_ratio_threshold,
         )
 
+    @property
+    def ai(self) -> AiSettings:
+        resolved_api_key = self.ai_api_key or ""
+        resolved_api_base_url = self.ai_api_base_url or ""
+        return AiSettings(
+            enabled=self.ai_enabled,
+            provider=self.ai_provider,
+            model_id=self.ai_model_id,
+            api_key=resolved_api_key,
+            api_base_url=resolved_api_base_url,
+            batch_size=self.ai_batch_size,
+            request_timeout_seconds=self.ai_request_timeout_seconds,
+            max_retries=self.ai_max_retries,
+            retry_backoff_seconds=self.ai_retry_backoff_seconds,
+        )
+
     @field_validator(
         "gias_source_csv",
         "gias_source_zip",
@@ -689,6 +763,8 @@ class AppSettings(BaseSettings):
         "ofsted_latest_source_csv",
         "ofsted_timeline_source_index_url",
         "ofsted_timeline_source_assets",
+        "ai_api_key",
+        "ai_api_base_url",
         mode="before",
     )
     @classmethod
@@ -698,6 +774,25 @@ class AppSettings(BaseSettings):
         if isinstance(value, str):
             stripped = value.strip()
             return stripped if stripped else None
+        return value
+
+    @field_validator("ai_provider", mode="before")
+    @classmethod
+    def _normalize_ai_provider(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized not in {"grok", "openai", "openai_compatible"}:
+                raise ValueError(
+                    "CIVITAS_AI_PROVIDER must be one of: grok, openai, openai_compatible"
+                )
+            return normalized
+        return value
+
+    @field_validator("ai_model_id", mode="before")
+    @classmethod
+    def _normalize_ai_model_id(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
         return value
 
     @field_validator(
@@ -750,7 +845,7 @@ class AppSettings(BaseSettings):
     @model_validator(mode="after")
     def _validate_bronze_root(self) -> AppSettings:
         if self.allow_noncanonical_bronze_root:
-            return self
+            return self._validate_ai_settings()
 
         configured_root = _normalize_config_path(self.bronze_root)
         canonical_root = _normalize_config_path(DEFAULT_BRONZE_ROOT)
@@ -758,6 +853,17 @@ class AppSettings(BaseSettings):
             raise ValueError(
                 "CIVITAS_BRONZE_ROOT must remain at data/bronze unless "
                 "CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT=true is set for an approved exception."
+            )
+        return self._validate_ai_settings()
+
+    def _validate_ai_settings(self) -> AppSettings:
+        if not self.ai_enabled:
+            return self
+        if self.ai_api_key is None:
+            raise ValueError("CIVITAS_AI_API_KEY must be set when CIVITAS_AI_ENABLED=true.")
+        if self.ai_provider == "openai_compatible" and self.ai_api_base_url is None:
+            raise ValueError(
+                "CIVITAS_AI_API_BASE_URL must be set when CIVITAS_AI_PROVIDER=openai_compatible."
             )
         return self
 

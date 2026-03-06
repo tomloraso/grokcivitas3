@@ -584,6 +584,10 @@ export interface components {
         /** SchoolProfileResponse */
         SchoolProfileResponse: {
             school: components["schemas"]["SchoolProfileSchoolResponse"];
+            /** Overview Text */
+            overview_text: string | null;
+            /** Analyst Text */
+            analyst_text: string | null;
             demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
             attendance_latest: components["schemas"]["SchoolProfileAttendanceLatestResponse"] | null;
             behaviour_latest: components["schemas"]["SchoolProfileBehaviourLatestResponse"] | null;
@@ -610,6 +614,72 @@ export interface components {
             status: string | null;
             /** Postcode */
             postcode: string | null;
+            /** Website */
+            website: string | null;
+            /** Telephone */
+            telephone: string | null;
+            /** Head Title */
+            head_title: string | null;
+            /** Head First Name */
+            head_first_name: string | null;
+            /** Head Last Name */
+            head_last_name: string | null;
+            /** Head Job Title */
+            head_job_title: string | null;
+            /** Address Street */
+            address_street: string | null;
+            /** Address Locality */
+            address_locality: string | null;
+            /** Address Line3 */
+            address_line3: string | null;
+            /** Address Town */
+            address_town: string | null;
+            /** Address County */
+            address_county: string | null;
+            /** Statutory Low Age */
+            statutory_low_age: number | null;
+            /** Statutory High Age */
+            statutory_high_age: number | null;
+            /** Gender */
+            gender: string | null;
+            /** Religious Character */
+            religious_character: string | null;
+            /** Diocese */
+            diocese: string | null;
+            /** Admissions Policy */
+            admissions_policy: string | null;
+            /** Sixth Form */
+            sixth_form: string | null;
+            /** Nursery Provision */
+            nursery_provision: string | null;
+            /** Boarders */
+            boarders: string | null;
+            /** Fsm Pct Gias */
+            fsm_pct_gias: number | null;
+            /** Trust Name */
+            trust_name: string | null;
+            /** Trust Flag */
+            trust_flag: string | null;
+            /** Federation Name */
+            federation_name: string | null;
+            /** Federation Flag */
+            federation_flag: string | null;
+            /** La Name */
+            la_name: string | null;
+            /** La Code */
+            la_code: string | null;
+            /** Urban Rural */
+            urban_rural: string | null;
+            /** Number Of Boys */
+            number_of_boys: number | null;
+            /** Number Of Girls */
+            number_of_girls: number | null;
+            /** Lsoa Code */
+            lsoa_code: string | null;
+            /** Lsoa Name */
+            lsoa_name: string | null;
+            /** Last Changed Date */
+            last_changed_date: string | null;
             /** Lat */
             lat: number;
             /** Lng */

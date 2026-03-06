@@ -7,6 +7,17 @@ from civitas.application.operations.use_cases import (
     RunDataQualitySloCheckUseCase,
 )
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.application.school_summaries.ports.summary_generator import SummaryGenerator
+from civitas.application.school_summaries.use_cases import (
+    GenerateSchoolAnalystSummariesUseCase,
+    GenerateSchoolOverviewsUseCase,
+    GetSchoolAnalystUseCase,
+    GetSchoolOverviewUseCase,
+    PollSchoolAnalystBatchesUseCase,
+    PollSchoolOverviewBatchesUseCase,
+    SubmitSchoolAnalystBatchesUseCase,
+    SubmitSchoolOverviewBatchesUseCase,
+)
 from civitas.application.school_trends.use_cases import (
     GetSchoolTrendDashboardUseCase,
     GetSchoolTrendsUseCase,
@@ -16,6 +27,7 @@ from civitas.application.schools.use_cases import (
     SearchSchoolsByPostcodeUseCase,
 )
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
+from civitas.infrastructure.ai.provider_factory import build_summary_generator
 from civitas.infrastructure.config.settings import AppSettings, get_settings
 from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
 from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
@@ -39,6 +51,12 @@ from civitas.infrastructure.persistence.postgres_school_search_repository import
 )
 from civitas.infrastructure.persistence.postgres_school_trends_repository import (
     PostgresSchoolTrendsRepository,
+)
+from civitas.infrastructure.persistence.postgres_summary_context_repository import (
+    PostgresSummaryContextRepository,
+)
+from civitas.infrastructure.persistence.postgres_summary_repository import (
+    PostgresSummaryRepository,
 )
 from civitas.infrastructure.pipelines import pipeline_registry
 from civitas.infrastructure.pipelines.base import (
@@ -96,6 +114,24 @@ def school_trends_repository() -> PostgresSchoolTrendsRepository:
 
 
 @lru_cache(maxsize=1)
+def summary_repository() -> PostgresSummaryRepository:
+    settings = app_settings()
+    return PostgresSummaryRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def summary_context_repository() -> PostgresSummaryContextRepository:
+    settings = app_settings()
+    return PostgresSummaryContextRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def summary_generator() -> SummaryGenerator:
+    settings = app_settings()
+    return build_summary_generator(settings)
+
+
+@lru_cache(maxsize=1)
 def postcode_cache_repository() -> PostgresPostcodeCacheRepository:
     settings = app_settings()
     return PostgresPostcodeCacheRepository(engine=db_engine(settings.database.url))
@@ -146,6 +182,7 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
         school_profile_repository=school_profile_repository(),
         postcode_context_resolver=postcode_resolver(),
         school_trends_repository=school_trends_repository(),
+        summary_repository=summary_repository(),
     )
 
 
@@ -158,6 +195,74 @@ def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
 def get_school_trend_dashboard_use_case() -> GetSchoolTrendDashboardUseCase:
     return GetSchoolTrendDashboardUseCase(
         school_trends_repository=school_trends_repository(),
+    )
+
+
+def get_school_overview_use_case() -> GetSchoolOverviewUseCase:
+    return GetSchoolOverviewUseCase(summary_repository=summary_repository())
+
+
+def get_school_analyst_use_case() -> GetSchoolAnalystUseCase:
+    return GetSchoolAnalystUseCase(summary_repository=summary_repository())
+
+
+def generate_school_overviews_use_case() -> GenerateSchoolOverviewsUseCase:
+    settings = app_settings()
+    return GenerateSchoolOverviewsUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
+    )
+
+
+def generate_school_analyst_summaries_use_case() -> GenerateSchoolAnalystSummariesUseCase:
+    settings = app_settings()
+    return GenerateSchoolAnalystSummariesUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
+    )
+
+
+def submit_school_overview_batches_use_case() -> SubmitSchoolOverviewBatchesUseCase:
+    settings = app_settings()
+    return SubmitSchoolOverviewBatchesUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
+    )
+
+
+def submit_school_analyst_batches_use_case() -> SubmitSchoolAnalystBatchesUseCase:
+    settings = app_settings()
+    return SubmitSchoolAnalystBatchesUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
+    )
+
+
+def poll_school_overview_batches_use_case() -> PollSchoolOverviewBatchesUseCase:
+    settings = app_settings()
+    return PollSchoolOverviewBatchesUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
+    )
+
+
+def poll_school_analyst_batches_use_case() -> PollSchoolAnalystBatchesUseCase:
+    settings = app_settings()
+    return PollSchoolAnalystBatchesUseCase(
+        context_repository=summary_context_repository(),
+        summary_generator=summary_generator(),
+        summary_repository=summary_repository(),
+        batch_size=settings.ai.batch_size,
     )
 
 

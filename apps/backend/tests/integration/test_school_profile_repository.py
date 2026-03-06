@@ -68,6 +68,39 @@ def _ensure_schema(engine: Engine) -> None:
                     type text NULL,
                     status text NULL,
                     postcode text NULL,
+                    website text NULL,
+                    telephone text NULL,
+                    head_title text NULL,
+                    head_first_name text NULL,
+                    head_last_name text NULL,
+                    head_job_title text NULL,
+                    address_street text NULL,
+                    address_locality text NULL,
+                    address_line3 text NULL,
+                    address_town text NULL,
+                    address_county text NULL,
+                    statutory_low_age integer NULL,
+                    statutory_high_age integer NULL,
+                    gender text NULL,
+                    religious_character text NULL,
+                    diocese text NULL,
+                    admissions_policy text NULL,
+                    sixth_form text NULL,
+                    nursery_provision text NULL,
+                    boarders text NULL,
+                    fsm_pct_gias double precision NULL,
+                    trust_name text NULL,
+                    trust_flag text NULL,
+                    federation_name text NULL,
+                    federation_flag text NULL,
+                    la_name text NULL,
+                    la_code text NULL,
+                    urban_rural text NULL,
+                    number_of_boys integer NULL,
+                    number_of_girls integer NULL,
+                    lsoa_code text NULL,
+                    lsoa_name text NULL,
+                    last_changed_date date NULL,
                     easting double precision NOT NULL,
                     northing double precision NOT NULL,
                     location geography(Point, 4326) NOT NULL,
@@ -80,6 +113,42 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        for statement in (
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS website text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS telephone text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_title text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_first_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_last_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_job_title text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_street text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_locality text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_line3 text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_town text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS address_county text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_low_age integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_high_age integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS gender text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS religious_character text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS diocese text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS admissions_policy text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS sixth_form text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS nursery_provision text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS boarders text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS fsm_pct_gias double precision NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS trust_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS trust_flag text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS federation_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS federation_flag text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_code text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS urban_rural text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS number_of_boys integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS number_of_girls integer NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS lsoa_code text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS lsoa_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS last_changed_date date NULL",
+        ):
+            connection.execute(text(statement))
         connection.execute(
             text(
                 """
@@ -743,6 +812,13 @@ def _seed_data(engine: Engine) -> None:
                 """
                 INSERT INTO schools (
                     urn, name, phase, type, status, postcode,
+                    website, telephone, head_title, head_first_name, head_last_name,
+                    head_job_title, address_street, address_locality, address_line3,
+                    address_town, address_county, statutory_low_age, statutory_high_age,
+                    gender, religious_character, diocese, admissions_policy, sixth_form,
+                    nursery_provision, boarders, fsm_pct_gias, trust_name, trust_flag,
+                    federation_name, federation_flag, la_name, la_code, urban_rural,
+                    number_of_boys, number_of_girls, lsoa_code, lsoa_name, last_changed_date,
                     easting, northing, location, capacity, pupil_count, open_date, close_date
                 ) VALUES (
                     '910001',
@@ -751,6 +827,39 @@ def _seed_data(engine: Engine) -> None:
                     'Community school',
                     'Open',
                     'SW1A 1AA',
+                    'https://profile-test-school.example',
+                    '+442079460123',
+                    'Dr',
+                    'Ada',
+                    'Lovelace',
+                    'Headteacher',
+                    '1 Profile Street',
+                    'Westminster',
+                    NULL,
+                    'London',
+                    'Greater London',
+                    4,
+                    11,
+                    'Mixed',
+                    'None',
+                    NULL,
+                    'Not applicable',
+                    'Does not have a sixth form',
+                    'No Nursery Classes',
+                    'No boarders',
+                    12.4,
+                    NULL,
+                    'Not applicable',
+                    NULL,
+                    'Not applicable',
+                    'Westminster',
+                    '213',
+                    'Urban major conurbation',
+                    155,
+                    145,
+                    'E01004736',
+                    'Westminster 018A',
+                    '2026-01-15',
                     0,
                     0,
                     ST_SetSRID(ST_MakePoint(-0.1416, 51.5010), 4326)::geography(Point, 4326),
@@ -758,21 +867,38 @@ def _seed_data(engine: Engine) -> None:
                     300,
                     '2005-09-01',
                     NULL
-                ),
-                (
+                )
+                ON CONFLICT (urn) DO NOTHING
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO schools (
+                    urn,
+                    name,
+                    phase,
+                    type,
+                    status,
+                    easting,
+                    northing,
+                    location,
+                    capacity,
+                    pupil_count,
+                    open_date
+                ) VALUES (
                     '910002',
                     'Profile Zero Crime School',
                     'Primary',
                     'Community school',
                     'Open',
-                    NULL,
                     0,
                     0,
                     ST_SetSRID(ST_MakePoint(-0.1600, 51.5000), 4326)::geography(Point, 4326),
                     200,
                     180,
-                    '2010-09-01',
-                    NULL
+                    '2010-09-01'
                 )
                 ON CONFLICT (urn) DO NOTHING
                 """
@@ -1533,6 +1659,15 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result is not None
     assert result.school.urn == "910001"
     assert result.school.name == "Profile Test School"
+    assert result.school.website == "https://profile-test-school.example"
+    assert result.school.telephone == "+442079460123"
+    assert result.school.head_first_name == "Ada"
+    assert result.school.head_last_name == "Lovelace"
+    assert result.school.statutory_low_age == 4
+    assert result.school.statutory_high_age == 11
+    assert result.school.la_name == "Westminster"
+    assert result.school.lsoa_code == "E01004736"
+    assert result.school.last_changed_date == date(2026, 1, 15)
     assert result.school.lat == pytest.approx(51.5010, abs=0.0005)
     assert result.school.lng == pytest.approx(-0.1416, abs=0.0005)
 

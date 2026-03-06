@@ -1,6 +1,7 @@
 import pytest
 from typer.testing import CliRunner
 
+from civitas.application.school_summaries.dto import SummaryGenerationResultDto
 from civitas.cli.main import app
 from civitas.infrastructure.pipelines.base import PipelineResult, PipelineRunStatus, PipelineSource
 
@@ -51,6 +52,16 @@ class FakePipelineRunner:
     def resume_run(self, run_id: str) -> tuple[PipelineSource, PipelineResult]:
         self.ran_run_id = run_id
         return PipelineSource.GIAS, self._result
+
+
+class FakeGenerateSchoolSummariesUseCase:
+    def __init__(self, result: SummaryGenerationResultDto) -> None:
+        self._result = result
+        self.calls: list[dict[str, object]] = []
+
+    def execute(self, **kwargs: object) -> SummaryGenerationResultDto:
+        self.calls.append(kwargs)
+        return self._result
 
 
 def _result(status: PipelineRunStatus, error_message: str | None = None) -> PipelineResult:
@@ -249,6 +260,10 @@ def test_pipeline_run_police_crime_context_source_success(
 def test_pipeline_run_all(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
     monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": False})()})(),
+    )
 
     runner = CliRunner()
     result = runner.invoke(app, ["pipeline", "run", "--all"])
@@ -286,6 +301,10 @@ def test_pipeline_run_source_force_refresh(monkeypatch: pytest.MonkeyPatch) -> N
 def test_pipeline_run_all_force_refresh(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
     monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": False})()})(),
+    )
 
     runner = CliRunner()
     result = runner.invoke(app, ["pipeline", "run", "--all", "--force-refresh"])
@@ -320,3 +339,106 @@ def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_run_id == run_id
     assert "gias: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_all_triggers_ai_generation_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    fake_overview = FakeGenerateSchoolSummariesUseCase(result=_summary_generation_result())
+    fake_analyst = FakeGenerateSchoolSummariesUseCase(result=_summary_generation_result())
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": True})()})(),
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_overview_batches_use_case",
+        lambda: fake_overview,
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_analyst_batches_use_case",
+        lambda: fake_analyst,
+    )
+
+    result = CliRunner().invoke(app, ["pipeline", "run", "--all"])
+
+    assert result.exit_code == 0
+    assert fake_overview.calls == [{"trigger": "pipeline"}]
+    assert fake_analyst.calls == [{"trigger": "pipeline"}]
+    assert "ai[overview]" in result.stdout
+    assert "ai[analyst]" in result.stdout
+
+
+def test_pipeline_run_source_does_not_trigger_ai_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    fake_overview = FakeGenerateSchoolSummariesUseCase(result=_summary_generation_result())
+    fake_analyst = FakeGenerateSchoolSummariesUseCase(result=_summary_generation_result())
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": True})()})(),
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_overview_batches_use_case",
+        lambda: fake_overview,
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_analyst_batches_use_case",
+        lambda: fake_analyst,
+    )
+
+    result = CliRunner().invoke(app, ["pipeline", "run", "--source", "gias"])
+
+    assert result.exit_code == 0
+    assert fake_overview.calls == []
+    assert fake_analyst.calls == []
+
+
+def test_pipeline_run_all_returns_nonzero_when_ai_generation_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    fake_overview = FakeGenerateSchoolSummariesUseCase(
+        result=_summary_generation_result(validation_failed_count=1, status="partial")
+    )
+    fake_analyst = FakeGenerateSchoolSummariesUseCase(result=_summary_generation_result())
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": True})()})(),
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_overview_batches_use_case",
+        lambda: fake_overview,
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_analyst_batches_use_case",
+        lambda: fake_analyst,
+    )
+
+    result = CliRunner().invoke(app, ["pipeline", "run", "--all"])
+
+    assert result.exit_code == 1
+    assert "validation_failed=1" in result.stdout
+
+
+def _summary_generation_result(
+    *,
+    validation_failed_count: int = 0,
+    status: str = "succeeded",
+) -> SummaryGenerationResultDto:
+    from uuid import UUID
+
+    return SummaryGenerationResultDto(
+        run_id=UUID("6f3f1a49-ecfb-4889-9efd-2913f6f821cc"),
+        requested_count=1,
+        pending_count=1 if validation_failed_count == 0 and status == "running" else 0,
+        succeeded_count=1 if validation_failed_count == 0 else 0,
+        generation_failed_count=0,
+        validation_failed_count=validation_failed_count,
+        skipped_current_count=0,
+        status=status,
+    )

@@ -12,4 +12,5 @@ Read these pages before changing structure:
 - `docs/architecture/boundaries.md`
 - `docs/architecture/backend-conventions.md`
 - `docs/architecture/frontend-conventions.md`
+- `docs/architecture/ai-extension-guide.md`
 - `docs/architecture/testing-strategy.md`

@@ -5,6 +5,8 @@ from fastapi import FastAPI
 REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
     {
         "school",
+        "overview_text",
+        "analyst_text",
         "demographics_latest",
         "attendance_latest",
         "behaviour_latest",

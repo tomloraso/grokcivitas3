@@ -7,6 +7,7 @@ import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { paths } from "../../shared/routing/paths";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
+import { SchoolAnalystSection } from "./components/SchoolAnalystSection";
 import { AttendanceBehaviourSection } from "./components/AttendanceBehaviourSection";
 import { BenchmarkComparisonSection } from "./components/BenchmarkComparisonSection";
 import { CoverageNotice } from "./components/CoverageNotice";
@@ -14,6 +15,8 @@ import { DemographicsAndTrendsPanel } from "./components/DemographicsAndTrendsPa
 import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
 import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
+import { SchoolDetailsSection } from "./components/SchoolDetailsSection";
+import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
@@ -91,6 +94,11 @@ export function SchoolProfileFeature(): JSX.Element {
               demographics={profile.demographics}
               areaContext={profile.areaContext}
             />
+
+            <SchoolOverviewSection overviewText={profile.overviewText} />
+            <SchoolAnalystSection analystText={profile.analystText} />
+
+            <SchoolDetailsSection school={profile.school} />
 
             <div className="space-y-10 sm:space-y-12">
               <OfstedProfileSection

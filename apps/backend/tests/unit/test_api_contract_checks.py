@@ -21,6 +21,8 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
     openapi_schema = _openapi_with_profile_properties(
         {
             "school": {},
+            "overview_text": {},
+            "analyst_text": {},
             "demographics_latest": {},
             "attendance_latest": {},
             "behaviour_latest": {},
@@ -42,6 +44,8 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
     openapi_schema = _openapi_with_profile_properties(
         {
             "school": {},
+            "overview_text": {},
+            "analyst_text": {},
             "demographics_latest": {},
             "ofsted_latest": {},
             "benchmarks": {},

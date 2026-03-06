@@ -1,4 +1,4 @@
-# Phase 7 / AI-4 Design - Overview Summary Hardening
+# Phase 7 / AI-4 Design - Summary Platform Hardening
 
 ## Document Control
 
@@ -10,24 +10,24 @@
 
 ## Objective
 
-Harden the overview-only AI path with summary history, post-pipeline execution, provider-native batch execution, and implementation guidance without preserving a generic multi-summary platform.
+Harden the explicit two-summary AI path with summary history, post-pipeline execution, provider-native batch execution, and implementation guidance without preserving a generic open-ended multi-summary platform.
 
 ## Tracking Update (2026-03-06)
 
-- `school_ai_summary_history` archives replaced overview rows.
-- `pipeline run --all` triggers overview generation after successful promote when AI is enabled.
-- The architecture guide now documents an overview-only path and explicitly avoids generic multi-summary abstractions until product needs justify them.
-- Grok overview generation can use the provider batch API for bulk runs while preserving overview-only application semantics.
+- `school_ai_summary_history` archives replaced rows for both `overview` and `analyst`.
+- `pipeline run --all` submits both summary kinds after successful promote when AI is enabled, without blocking on provider batch completion.
+- The architecture guide now documents an explicit `overview` plus `analyst` path and explicitly avoids generic multi-summary abstractions until product needs justify them.
+- Provider-native async batch execution is wired through submit/poll adapter flows while preserving summary-kind-aware application semantics.
 
 ## Scope
 
 - Summary history archival.
-- Overview generation run telemetry.
-- Post-pipeline AI execution.
-- Provider-native batch execution for bulk overview generation.
-- Overview-only architecture guidance.
+- Summary generation run telemetry keyed by `summary_kind`.
+- Post-pipeline AI submission plus explicit batch polling/finalization.
+- Provider-native batch execution for bulk overview and analyst generation.
+- Closed two-summary architecture guidance.
 
 ## Non-Goals
 
-- Additional AI summary types.
+- Additional AI summary types beyond `overview` and `analyst`.
 - Premium AI product design.

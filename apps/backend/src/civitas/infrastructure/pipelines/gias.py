@@ -3,27 +3,26 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import logging
 import shutil
 import tempfile
 import urllib.parse
 import urllib.request
 import zipfile
+from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Mapping, Sequence
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 
 from .base import PipelineRunContext, PipelineSource, StageResult, chunked
 from .contracts import gias as gias_contract
 
 REQUIRED_GIAS_HEADERS = gias_contract.REQUIRED_HEADERS
 
-NUMERIC_SENTINELS = {"", "SUPP", "NE", "N/A", "NA", "X"}
-EASTING_RANGE = (0.0, 700000.0)
-NORTHING_RANGE = (0.0, 1300000.0)
 BRONZE_FILE_NAME = "edubasealldata.csv"
 CSV_NAME_SUBSTRING = "edubasealldata"
 
@@ -34,6 +33,7 @@ CSV_NAME_SUBSTRING = "edubasealldata"
 # fixtures authored in plain ASCII are decoded correctly.
 GIAS_CSV_ENCODING = "cp1252"
 GIAS_NORMALIZATION_CONTRACT_VERSION = gias_contract.CONTRACT_VERSION
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -50,6 +50,39 @@ class GiasStagedRow:
     close_date: date | None
     pupil_count: int | None
     capacity: int | None
+    website: str | None
+    telephone: str | None
+    head_title: str | None
+    head_first_name: str | None
+    head_last_name: str | None
+    head_job_title: str | None
+    address_street: str | None
+    address_locality: str | None
+    address_line3: str | None
+    address_town: str | None
+    address_county: str | None
+    statutory_low_age: int | None
+    statutory_high_age: int | None
+    gender: str | None
+    religious_character: str | None
+    diocese: str | None
+    admissions_policy: str | None
+    sixth_form: str | None
+    nursery_provision: str | None
+    boarders: str | None
+    fsm_pct_gias: float | None
+    trust_name: str | None
+    trust_flag: str | None
+    federation_name: str | None
+    federation_flag: str | None
+    la_name: str | None
+    la_code: str | None
+    urban_rural: str | None
+    number_of_boys: int | None
+    number_of_girls: int | None
+    lsoa_code: str | None
+    lsoa_name: str | None
+    last_changed_date: date | None
 
 
 def normalize_gias_postcode(raw_postcode: str | None) -> str | None:
@@ -60,10 +93,12 @@ def validate_gias_headers(headers: Sequence[str]) -> None:
     gias_contract.validate_headers(headers)
 
 
-def normalize_gias_row(raw_row: Mapping[str, str]) -> tuple[GiasStagedRow | None, str | None]:
-    normalized_row, rejection = gias_contract.normalize_row(raw_row)
+def normalize_gias_row(
+    raw_row: Mapping[str, str],
+) -> tuple[GiasStagedRow | None, str | None, tuple[gias_contract.NormalizationWarning, ...]]:
+    normalized_row, rejection, warnings = gias_contract.normalize_row(raw_row)
     if normalized_row is None:
-        return None, rejection
+        return None, rejection, warnings
     return (
         GiasStagedRow(
             urn=normalized_row["urn"],
@@ -78,8 +113,42 @@ def normalize_gias_row(raw_row: Mapping[str, str]) -> tuple[GiasStagedRow | None
             close_date=normalized_row["close_date"],
             pupil_count=normalized_row["pupil_count"],
             capacity=normalized_row["capacity"],
+            website=normalized_row["website"],
+            telephone=normalized_row["telephone"],
+            head_title=normalized_row["head_title"],
+            head_first_name=normalized_row["head_first_name"],
+            head_last_name=normalized_row["head_last_name"],
+            head_job_title=normalized_row["head_job_title"],
+            address_street=normalized_row["address_street"],
+            address_locality=normalized_row["address_locality"],
+            address_line3=normalized_row["address_line3"],
+            address_town=normalized_row["address_town"],
+            address_county=normalized_row["address_county"],
+            statutory_low_age=normalized_row["statutory_low_age"],
+            statutory_high_age=normalized_row["statutory_high_age"],
+            gender=normalized_row["gender"],
+            religious_character=normalized_row["religious_character"],
+            diocese=normalized_row["diocese"],
+            admissions_policy=normalized_row["admissions_policy"],
+            sixth_form=normalized_row["sixth_form"],
+            nursery_provision=normalized_row["nursery_provision"],
+            boarders=normalized_row["boarders"],
+            fsm_pct_gias=normalized_row["fsm_pct_gias"],
+            trust_name=normalized_row["trust_name"],
+            trust_flag=normalized_row["trust_flag"],
+            federation_name=normalized_row["federation_name"],
+            federation_flag=normalized_row["federation_flag"],
+            la_name=normalized_row["la_name"],
+            la_code=normalized_row["la_code"],
+            urban_rural=normalized_row["urban_rural"],
+            number_of_boys=normalized_row["number_of_boys"],
+            number_of_girls=normalized_row["number_of_girls"],
+            lsoa_code=normalized_row["lsoa_code"],
+            lsoa_name=normalized_row["lsoa_name"],
+            last_changed_date=normalized_row["last_changed_date"],
         ),
         None,
+        warnings,
     )
 
 
@@ -125,6 +194,7 @@ class GiasPipeline:
 
         staged_rows: list[GiasStagedRow] = []
         rejected_rows: list[tuple[str, dict[str, str]]] = []
+        normalization_warnings: list[tuple[str, gias_contract.NormalizationWarning]] = []
         with source_csv.open("r", encoding=GIAS_CSV_ENCODING, newline="") as csv_file:
             reader = csv.DictReader(csv_file)
             if reader.fieldnames is None:
@@ -133,9 +203,11 @@ class GiasPipeline:
             validate_gias_headers(reader.fieldnames)
 
             for raw_row in reader:
-                normalized, rejection = normalize_gias_row(raw_row)
+                normalized, rejection, warnings = normalize_gias_row(raw_row)
                 if normalized is not None:
                     staged_rows.append(normalized)
+                    for warning in warnings:
+                        normalization_warnings.append((normalized.urn, warning))
                     continue
                 if rejection is not None:
                     rejected_rows.append((rejection, dict(raw_row)))
@@ -159,7 +231,40 @@ class GiasPipeline:
                         open_date date NULL,
                         close_date date NULL,
                         pupil_count integer NULL,
-                        capacity integer NULL
+                        capacity integer NULL,
+                        website text NULL,
+                        telephone text NULL,
+                        head_title text NULL,
+                        head_first_name text NULL,
+                        head_last_name text NULL,
+                        head_job_title text NULL,
+                        address_street text NULL,
+                        address_locality text NULL,
+                        address_line3 text NULL,
+                        address_town text NULL,
+                        address_county text NULL,
+                        statutory_low_age integer NULL,
+                        statutory_high_age integer NULL,
+                        gender text NULL,
+                        religious_character text NULL,
+                        diocese text NULL,
+                        admissions_policy text NULL,
+                        sixth_form text NULL,
+                        nursery_provision text NULL,
+                        boarders text NULL,
+                        fsm_pct_gias double precision NULL,
+                        trust_name text NULL,
+                        trust_flag text NULL,
+                        federation_name text NULL,
+                        federation_flag text NULL,
+                        la_name text NULL,
+                        la_code text NULL,
+                        urban_rural text NULL,
+                        number_of_boys integer NULL,
+                        number_of_girls integer NULL,
+                        lsoa_code text NULL,
+                        lsoa_name text NULL,
+                        last_changed_date date NULL
                     )
                     """
                 )
@@ -180,7 +285,40 @@ class GiasPipeline:
                         open_date,
                         close_date,
                         pupil_count,
-                        capacity
+                        capacity,
+                        website,
+                        telephone,
+                        head_title,
+                        head_first_name,
+                        head_last_name,
+                        head_job_title,
+                        address_street,
+                        address_locality,
+                        address_line3,
+                        address_town,
+                        address_county,
+                        statutory_low_age,
+                        statutory_high_age,
+                        gender,
+                        religious_character,
+                        diocese,
+                        admissions_policy,
+                        sixth_form,
+                        nursery_provision,
+                        boarders,
+                        fsm_pct_gias,
+                        trust_name,
+                        trust_flag,
+                        federation_name,
+                        federation_flag,
+                        la_name,
+                        la_code,
+                        urban_rural,
+                        number_of_boys,
+                        number_of_girls,
+                        lsoa_code,
+                        lsoa_name,
+                        last_changed_date
                     ) VALUES (
                         :urn,
                         :name,
@@ -193,7 +331,40 @@ class GiasPipeline:
                         :open_date,
                         :close_date,
                         :pupil_count,
-                        :capacity
+                        :capacity,
+                        :website,
+                        :telephone,
+                        :head_title,
+                        :head_first_name,
+                        :head_last_name,
+                        :head_job_title,
+                        :address_street,
+                        :address_locality,
+                        :address_line3,
+                        :address_town,
+                        :address_county,
+                        :statutory_low_age,
+                        :statutory_high_age,
+                        :gender,
+                        :religious_character,
+                        :diocese,
+                        :admissions_policy,
+                        :sixth_form,
+                        :nursery_provision,
+                        :boarders,
+                        :fsm_pct_gias,
+                        :trust_name,
+                        :trust_flag,
+                        :federation_name,
+                        :federation_flag,
+                        :la_name,
+                        :la_code,
+                        :urban_rural,
+                        :number_of_boys,
+                        :number_of_girls,
+                        :lsoa_code,
+                        :lsoa_name,
+                        :last_changed_date
                     )
                     """
                 )
@@ -214,6 +385,39 @@ class GiasPipeline:
                                 "close_date": row.close_date,
                                 "pupil_count": row.pupil_count,
                                 "capacity": row.capacity,
+                                "website": row.website,
+                                "telephone": row.telephone,
+                                "head_title": row.head_title,
+                                "head_first_name": row.head_first_name,
+                                "head_last_name": row.head_last_name,
+                                "head_job_title": row.head_job_title,
+                                "address_street": row.address_street,
+                                "address_locality": row.address_locality,
+                                "address_line3": row.address_line3,
+                                "address_town": row.address_town,
+                                "address_county": row.address_county,
+                                "statutory_low_age": row.statutory_low_age,
+                                "statutory_high_age": row.statutory_high_age,
+                                "gender": row.gender,
+                                "religious_character": row.religious_character,
+                                "diocese": row.diocese,
+                                "admissions_policy": row.admissions_policy,
+                                "sixth_form": row.sixth_form,
+                                "nursery_provision": row.nursery_provision,
+                                "boarders": row.boarders,
+                                "fsm_pct_gias": row.fsm_pct_gias,
+                                "trust_name": row.trust_name,
+                                "trust_flag": row.trust_flag,
+                                "federation_name": row.federation_name,
+                                "federation_flag": row.federation_flag,
+                                "la_name": row.la_name,
+                                "la_code": row.la_code,
+                                "urban_rural": row.urban_rural,
+                                "number_of_boys": row.number_of_boys,
+                                "number_of_girls": row.number_of_girls,
+                                "lsoa_code": row.lsoa_code,
+                                "lsoa_name": row.lsoa_name,
+                                "last_changed_date": row.last_changed_date,
                             }
                             for row in rows_chunk
                         ],
@@ -251,6 +455,58 @@ class GiasPipeline:
                         ],
                     )
 
+            if normalization_warnings:
+                for urn, warning in normalization_warnings:
+                    logger.info(
+                        "pipeline_normalization_warning",
+                        extra={
+                            "run_id": str(context.run_id),
+                            "source": context.source.value,
+                            "urn": urn,
+                            "field_name": warning["field_name"],
+                            "reason_code": warning["reason_code"],
+                            "raw_value": warning["raw_value"],
+                        },
+                    )
+
+                if _table_exists(connection, "pipeline_normalization_warnings"):
+                    warning_counts = Counter(
+                        (warning["field_name"], warning["reason_code"])
+                        for _, warning in normalization_warnings
+                    )
+                    warning_insert = text(
+                        """
+                        INSERT INTO pipeline_normalization_warnings (
+                            run_id,
+                            source,
+                            field_name,
+                            reason_code,
+                            warning_count
+                        ) VALUES (
+                            :run_id,
+                            :source,
+                            :field_name,
+                            :reason_code,
+                            :warning_count
+                        )
+                        """
+                    )
+                    connection.execute(
+                        warning_insert,
+                        [
+                            {
+                                "run_id": str(context.run_id),
+                                "source": context.source.value,
+                                "field_name": field_name,
+                                "reason_code": reason_code,
+                                "warning_count": warning_count,
+                            }
+                            for (field_name, reason_code), warning_count in sorted(
+                                warning_counts.items()
+                            )
+                        ],
+                    )
+
         return StageResult(
             staged_rows=len(staged_rows),
             rejected_rows=len(rejected_rows),
@@ -279,6 +535,39 @@ class GiasPipeline:
                                 pupil_count,
                                 open_date,
                                 close_date,
+                                website,
+                                telephone,
+                                head_title,
+                                head_first_name,
+                                head_last_name,
+                                head_job_title,
+                                address_street,
+                                address_locality,
+                                address_line3,
+                                address_town,
+                                address_county,
+                                statutory_low_age,
+                                statutory_high_age,
+                                gender,
+                                religious_character,
+                                diocese,
+                                admissions_policy,
+                                sixth_form,
+                                nursery_provision,
+                                boarders,
+                                fsm_pct_gias,
+                                trust_name,
+                                trust_flag,
+                                federation_name,
+                                federation_flag,
+                                la_name,
+                                la_code,
+                                urban_rural,
+                                number_of_boys,
+                                number_of_girls,
+                                lsoa_code,
+                                lsoa_name,
+                                last_changed_date,
                                 updated_at
                             )
                             SELECT
@@ -298,6 +587,39 @@ class GiasPipeline:
                                 pupil_count,
                                 open_date,
                                 close_date,
+                                website,
+                                telephone,
+                                head_title,
+                                head_first_name,
+                                head_last_name,
+                                head_job_title,
+                                address_street,
+                                address_locality,
+                                address_line3,
+                                address_town,
+                                address_county,
+                                statutory_low_age,
+                                statutory_high_age,
+                                gender,
+                                religious_character,
+                                diocese,
+                                admissions_policy,
+                                sixth_form,
+                                nursery_provision,
+                                boarders,
+                                fsm_pct_gias,
+                                trust_name,
+                                trust_flag,
+                                federation_name,
+                                federation_flag,
+                                la_name,
+                                la_code,
+                                urban_rural,
+                                number_of_boys,
+                                number_of_girls,
+                                lsoa_code,
+                                lsoa_name,
+                                last_changed_date,
                                 timezone('utc', now())
                             FROM staging.{staging_table_name}
                             ON CONFLICT (urn) DO UPDATE SET
@@ -313,6 +635,39 @@ class GiasPipeline:
                                 pupil_count = EXCLUDED.pupil_count,
                                 open_date = EXCLUDED.open_date,
                                 close_date = EXCLUDED.close_date,
+                                website = EXCLUDED.website,
+                                telephone = EXCLUDED.telephone,
+                                head_title = EXCLUDED.head_title,
+                                head_first_name = EXCLUDED.head_first_name,
+                                head_last_name = EXCLUDED.head_last_name,
+                                head_job_title = EXCLUDED.head_job_title,
+                                address_street = EXCLUDED.address_street,
+                                address_locality = EXCLUDED.address_locality,
+                                address_line3 = EXCLUDED.address_line3,
+                                address_town = EXCLUDED.address_town,
+                                address_county = EXCLUDED.address_county,
+                                statutory_low_age = EXCLUDED.statutory_low_age,
+                                statutory_high_age = EXCLUDED.statutory_high_age,
+                                gender = EXCLUDED.gender,
+                                religious_character = EXCLUDED.religious_character,
+                                diocese = EXCLUDED.diocese,
+                                admissions_policy = EXCLUDED.admissions_policy,
+                                sixth_form = EXCLUDED.sixth_form,
+                                nursery_provision = EXCLUDED.nursery_provision,
+                                boarders = EXCLUDED.boarders,
+                                fsm_pct_gias = EXCLUDED.fsm_pct_gias,
+                                trust_name = EXCLUDED.trust_name,
+                                trust_flag = EXCLUDED.trust_flag,
+                                federation_name = EXCLUDED.federation_name,
+                                federation_flag = EXCLUDED.federation_flag,
+                                la_name = EXCLUDED.la_name,
+                                la_code = EXCLUDED.la_code,
+                                urban_rural = EXCLUDED.urban_rural,
+                                number_of_boys = EXCLUDED.number_of_boys,
+                                number_of_girls = EXCLUDED.number_of_girls,
+                                lsoa_code = EXCLUDED.lsoa_code,
+                                lsoa_name = EXCLUDED.lsoa_name,
+                                last_changed_date = EXCLUDED.last_changed_date,
                                 updated_at = timezone('utc', now())
                             RETURNING 1
                         )
@@ -341,56 +696,6 @@ class GiasPipeline:
         }
         metadata_path.write_text(json.dumps(metadata, indent=2, sort_keys=True), encoding="utf-8")
         return row_count
-
-
-def _is_coordinate_in_range(easting: float, northing: float) -> bool:
-    return (
-        EASTING_RANGE[0] <= easting <= EASTING_RANGE[1]
-        and NORTHING_RANGE[0] <= northing <= NORTHING_RANGE[1]
-    )
-
-
-def _parse_optional_integer(raw_value: str | None) -> int | None:
-    if raw_value is None:
-        return None
-    value = raw_value.strip()
-    if not value or value.upper() in NUMERIC_SENTINELS:
-        return None
-    try:
-        return int(float(value))
-    except ValueError as exc:
-        raise ValueError("invalid integer value") from exc
-
-
-def _parse_optional_date(raw_value: str | None) -> date | None:
-    if raw_value is None:
-        return None
-    value = raw_value.strip()
-    if not value:
-        return None
-
-    supported_formats = (
-        "%d/%m/%Y",
-        "%d-%m-%Y",
-        "%Y-%m-%d",
-        "%d/%m/%Y %H:%M:%S",
-        "%d/%m/%Y %H:%M",
-        "%d-%m-%Y %H:%M:%S",
-        "%d-%m-%Y %H:%M",
-    )
-    for date_format in supported_formats:
-        try:
-            return datetime.strptime(value, date_format).date()
-        except ValueError:
-            continue
-    raise ValueError(f"unsupported date value '{value}'")
-
-
-def _strip_or_none(raw_value: str | None) -> str | None:
-    if raw_value is None:
-        return None
-    value = raw_value.strip()
-    return value or None
 
 
 def _count_csv_rows(csv_path: Path) -> int:
@@ -461,3 +766,12 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: file_handle.read(8192), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _table_exists(connection: Connection, table_name: str) -> bool:
+    return bool(
+        connection.execute(
+            text("SELECT to_regclass(:table_name) IS NOT NULL"),
+            {"table_name": table_name},
+        ).scalar_one()
+    )

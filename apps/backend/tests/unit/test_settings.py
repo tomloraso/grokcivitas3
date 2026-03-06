@@ -7,6 +7,13 @@ import pytest
 from pydantic import ValidationError
 
 from civitas.infrastructure.config.settings import (
+    DEFAULT_AI_BATCH_SIZE,
+    DEFAULT_AI_ENABLED,
+    DEFAULT_AI_MAX_RETRIES,
+    DEFAULT_AI_MODEL_ID,
+    DEFAULT_AI_PROVIDER,
+    DEFAULT_AI_REQUEST_TIMEOUT_SECONDS,
+    DEFAULT_AI_RETRY_BACKOFF_SECONDS,
     DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT,
     DEFAULT_BRONZE_ROOT,
     DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD,
@@ -132,6 +139,15 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD",
         "CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES",
         "CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD",
+        "CIVITAS_AI_ENABLED",
+        "CIVITAS_AI_PROVIDER",
+        "CIVITAS_AI_MODEL_ID",
+        "CIVITAS_AI_API_KEY",
+        "CIVITAS_AI_API_BASE_URL",
+        "CIVITAS_AI_BATCH_SIZE",
+        "CIVITAS_AI_REQUEST_TIMEOUT_SECONDS",
+        "CIVITAS_AI_MAX_RETRIES",
+        "CIVITAS_AI_RETRY_BACKOFF_SECONDS",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -273,6 +289,15 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         settings.data_quality.sparse_trend_ratio_threshold
         == DEFAULT_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD
     )
+    assert settings.ai.enabled is DEFAULT_AI_ENABLED
+    assert settings.ai.provider == DEFAULT_AI_PROVIDER
+    assert settings.ai.model_id == DEFAULT_AI_MODEL_ID
+    assert settings.ai.api_key == ""
+    assert settings.ai.api_base_url == ""
+    assert settings.ai.batch_size == DEFAULT_AI_BATCH_SIZE
+    assert settings.ai.request_timeout_seconds == DEFAULT_AI_REQUEST_TIMEOUT_SECONDS
+    assert settings.ai.max_retries == DEFAULT_AI_MAX_RETRIES
+    assert settings.ai.retry_backoff_seconds == DEFAULT_AI_RETRY_BACKOFF_SECONDS
 
 
 def test_app_settings_reads_environment_overrides(
@@ -363,6 +388,15 @@ def test_app_settings_reads_environment_overrides(
     monkeypatch.setenv("CIVITAS_POSTCODE_CACHE_TTL_DAYS", "45")
     monkeypatch.setenv("CIVITAS_SCHOOL_PROFILE_CACHE_TTL_SECONDS", "120")
     monkeypatch.setenv("CIVITAS_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS", "3")
+    monkeypatch.setenv("CIVITAS_AI_ENABLED", "true")
+    monkeypatch.setenv("CIVITAS_AI_PROVIDER", " openai_compatible ")
+    monkeypatch.setenv("CIVITAS_AI_MODEL_ID", " local-model ")
+    monkeypatch.setenv("CIVITAS_AI_API_KEY", " test-key ")
+    monkeypatch.setenv("CIVITAS_AI_API_BASE_URL", " https://llm.example.test/v1 ")
+    monkeypatch.setenv("CIVITAS_AI_BATCH_SIZE", "25")
+    monkeypatch.setenv("CIVITAS_AI_REQUEST_TIMEOUT_SECONDS", "45")
+    monkeypatch.setenv("CIVITAS_AI_MAX_RETRIES", "3")
+    monkeypatch.setenv("CIVITAS_AI_RETRY_BACKOFF_SECONDS", "0.75")
 
     settings = AppSettings(_env_file=None)
 
@@ -441,6 +475,15 @@ def test_app_settings_reads_environment_overrides(
     assert settings.school_search.postcode_cache_ttl_days == 45
     assert settings.school_search.profile_cache_ttl_seconds == 120
     assert settings.school_search.profile_cache_invalidation_poll_seconds == 3.0
+    assert settings.ai.enabled is True
+    assert settings.ai.provider == "openai_compatible"
+    assert settings.ai.model_id == "local-model"
+    assert settings.ai.api_key == "test-key"
+    assert settings.ai.api_base_url == "https://llm.example.test/v1"
+    assert settings.ai.batch_size == 25
+    assert settings.ai.request_timeout_seconds == 45.0
+    assert settings.ai.max_retries == 3
+    assert settings.ai.retry_backoff_seconds == 0.75
 
 
 def test_app_settings_rejects_noncanonical_bronze_root_without_override(
@@ -478,8 +521,19 @@ def test_app_settings_validation_errors_on_invalid_values(monkeypatch: pytest.Mo
     monkeypatch.setenv("CIVITAS_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD", "1.2")
     monkeypatch.setenv("CIVITAS_DATA_QUALITY_MAX_CONSECUTIVE_HARD_FAILURES", "0")
     monkeypatch.setenv("CIVITAS_DATA_QUALITY_SPARSE_TREND_RATIO_THRESHOLD", "-0.1")
+    monkeypatch.setenv("CIVITAS_AI_ENABLED", "true")
+    monkeypatch.setenv("CIVITAS_AI_PROVIDER", "unsupported")
+    monkeypatch.setenv("CIVITAS_AI_BATCH_SIZE", "0")
 
     with pytest.raises(ValidationError):
+        AppSettings(_env_file=None)
+
+
+def test_app_settings_requires_ai_key_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CIVITAS_AI_ENABLED", "true")
+    monkeypatch.delenv("CIVITAS_AI_API_KEY", raising=False)
+
+    with pytest.raises(ValidationError, match="CIVITAS_AI_API_KEY"):
         AppSettings(_env_file=None)
 
 

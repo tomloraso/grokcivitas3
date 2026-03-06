@@ -17,7 +17,6 @@ civitas/
 |  |- python/
 |  `- ts/
 |- docs/
-|- agents/
 |- .agents/
 |- data/
 `- tools/

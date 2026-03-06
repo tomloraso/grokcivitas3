@@ -78,8 +78,12 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
             dfe_rows[0],
             source_dataset_id="runtime-contract-check",
         )
-        _expect(rejection is None, f"DfE valid row rejected: {rejection}", issues=issues)
-        _expect(normalized is not None, "DfE valid row did not normalize", issues=issues)
+        _expect(
+            rejection is None, f"DfE valid row rejected: {rejection}", issues=issues
+        )
+        _expect(
+            normalized is not None, "DfE valid row did not normalize", issues=issues
+        )
 
         compact_variant = dict(dfe_rows[0])
         compact_variant["time_period"] = "202425"
@@ -93,7 +97,8 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
             issues=issues,
         )
         _expect(
-            compact_normalized is not None and compact_normalized["academic_year"] == "2024/25",
+            compact_normalized is not None
+            and compact_normalized["academic_year"] == "2024/25",
             "DfE compact year token did not canonicalize to 2024/25",
             issues=issues,
         )
@@ -109,9 +114,16 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
         issues.append(f"GIAS header contract failed: {exc}")
     _expect(bool(gias_rows), "GIAS fixture has no data rows", issues=issues)
     if gias_rows:
-        normalized, rejection = gias_contract.normalize_row(gias_rows[0])
-        _expect(rejection is None, f"GIAS valid row rejected: {rejection}", issues=issues)
-        _expect(normalized is not None, "GIAS valid row did not normalize", issues=issues)
+        normalized, rejection, warnings = gias_contract.normalize_row(gias_rows[0])
+        _expect(
+            rejection is None, f"GIAS valid row rejected: {rejection}", issues=issues
+        )
+        _expect(
+            normalized is not None, "GIAS valid row did not normalize", issues=issues
+        )
+        _expect(
+            not warnings, f"GIAS valid row emitted warnings: {warnings}", issues=issues
+        )
 
     # Ofsted latest
     ofsted_latest_headers, ofsted_latest_rows = _load_csv_rows(
@@ -121,7 +133,11 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
         ofsted_latest_contract.validate_headers(ofsted_latest_headers)
     except ValueError as exc:
         issues.append(f"Ofsted latest header contract failed: {exc}")
-    _expect(bool(ofsted_latest_rows), "Ofsted latest fixture has no data rows", issues=issues)
+    _expect(
+        bool(ofsted_latest_rows),
+        "Ofsted latest fixture has no data rows",
+        issues=issues,
+    )
     if ofsted_latest_rows:
         baseline = dict(ofsted_latest_rows[0])
         normalized, rejection = ofsted_latest_contract.normalize_row(
@@ -153,7 +169,8 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
             issues=issues,
         )
         _expect(
-            null_normalized is not None and null_normalized["overall_effectiveness_code"] is None,
+            null_normalized is not None
+            and null_normalized["overall_effectiveness_code"] is None,
             "Ofsted latest NULL effectiveness was not treated as missing",
             issues=issues,
         )
@@ -188,7 +205,11 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
         )
     except ValueError as exc:
         issues.append(f"Ofsted timeline YTD header contract failed: {exc}")
-    _expect(bool(ofsted_ytd_rows), "Ofsted timeline YTD fixture has no data rows", issues=issues)
+    _expect(
+        bool(ofsted_ytd_rows),
+        "Ofsted timeline YTD fixture has no data rows",
+        issues=issues,
+    )
     if ofsted_ytd_rows:
         baseline = dict(ofsted_ytd_rows[0])
         normalized, rejection = ofsted_timeline_contract.normalize_row(
@@ -222,7 +243,8 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
             issues=issues,
         )
         _expect(
-            null_normalized is not None and null_normalized["overall_effectiveness_code"] is None,
+            null_normalized is not None
+            and null_normalized["overall_effectiveness_code"] is None,
             "Ofsted timeline NULL effectiveness was not treated as missing",
             issues=issues,
         )
@@ -248,7 +270,9 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
         )
 
     ofsted_historical_headers, ofsted_historical_rows = _load_csv_rows(
-        FIXTURES_ROOT / "ofsted_timeline" / "all_inspections_historical_2015_2019_mixed.csv",
+        FIXTURES_ROOT
+        / "ofsted_timeline"
+        / "all_inspections_historical_2015_2019_mixed.csv",
         skip_rows=1,
     )
     try:
@@ -299,8 +323,16 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
             source_release=ons_imd_contract.IMD_RELEASE_IOD2025,
             source_file_url="fixture://ons-imd-2025",
         )
-        _expect(rejection is None, f"ONS IMD 2025 valid row rejected: {rejection}", issues=issues)
-        _expect(normalized is not None, "ONS IMD 2025 valid row did not normalize", issues=issues)
+        _expect(
+            rejection is None,
+            f"ONS IMD 2025 valid row rejected: {rejection}",
+            issues=issues,
+        )
+        _expect(
+            normalized is not None,
+            "ONS IMD 2025 valid row did not normalize",
+            issues=issues,
+        )
 
     ons_2019_sample_row = {
         "LSOA code (2011)": "E01000003",
@@ -348,8 +380,16 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
         source_release=ons_imd_contract.IMD_RELEASE_IOD2019,
         source_file_url="fixture://ons-imd-2019",
     )
-    _expect(rejection is None, f"ONS IMD 2019 valid row rejected: {rejection}", issues=issues)
-    _expect(normalized is not None, "ONS IMD 2019 valid row did not normalize", issues=issues)
+    _expect(
+        rejection is None,
+        f"ONS IMD 2019 valid row rejected: {rejection}",
+        issues=issues,
+    )
+    _expect(
+        normalized is not None,
+        "ONS IMD 2019 valid row did not normalize",
+        issues=issues,
+    )
 
     # Police
     police_headers, police_rows = _load_csv_rows(
@@ -362,8 +402,12 @@ def verify_source_contracts_runtime() -> VerificationOutcome:
     _expect(bool(police_rows), "Police fixture has no data rows", issues=issues)
     if police_rows:
         normalized, rejection = police_contract.normalize_row(police_rows[0])
-        _expect(rejection is None, f"Police valid row rejected: {rejection}", issues=issues)
-        _expect(normalized is not None, "Police valid row did not normalize", issues=issues)
+        _expect(
+            rejection is None, f"Police valid row rejected: {rejection}", issues=issues
+        )
+        _expect(
+            normalized is not None, "Police valid row did not normalize", issues=issues
+        )
 
     return VerificationOutcome(ok=not issues, issues=issues)
 

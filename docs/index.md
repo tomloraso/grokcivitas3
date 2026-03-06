@@ -11,7 +11,8 @@
 7. [Frontend Conventions](./architecture/frontend-conventions.md)
 8. [Web Foundations (Phase 0D1)](./architecture/web-foundations-phase0.md)
 9. [Testing Strategy](./architecture/testing-strategy.md)
-10. [ADR 0001: Architecture](./adr/0001-architecture.md)
-11. [Local Development Runbook](./runbooks/local-development.md)
-12. [Data Pipeline Runbook](./runbooks/pipelines.md)
+10. [AI Extension Guide](./architecture/ai-extension-guide.md)
+11. [ADR 0001: Architecture](./adr/0001-architecture.md)
+12. [Local Development Runbook](./runbooks/local-development.md)
+13. [Data Pipeline Runbook](./runbooks/pipelines.md)
 
