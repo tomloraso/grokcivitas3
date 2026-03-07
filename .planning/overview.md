@@ -23,7 +23,7 @@ The current product surface is centered on school research:
 - area context
 - one stored AI-generated factual school overview
 
-The next planned product slices are school comparison and premium access control.
+The next planned product slices are school comparison and feature-tier premium access control.
 
 ## Current Product State
 
@@ -37,7 +37,7 @@ Implemented today:
 Still planned:
 
 1. Compare up to four schools side by side.
-2. Authentication, entitlements, and payment-backed premium access.
+2. Authentication, account entitlements, and payment-backed feature-tier premium access.
 3. Post-MVP growth slices such as SEO pages, operational admin surfaces, report export, and deeper optimization work.
 
 ## Architecture Shape

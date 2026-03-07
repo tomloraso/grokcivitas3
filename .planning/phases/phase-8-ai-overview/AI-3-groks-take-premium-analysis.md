@@ -12,7 +12,7 @@
 
 ## Objective
 
-Introduce a premium-tier "Grok's Take" analysis (150-220 words) that provides honest, balanced AI commentary on every key metric for a school. This deliverable covers generation, storage, and operator QA workflows only. Public API/UI exposure is deferred until Phase 4 authentication and entitlement controls exist.
+Introduce a premium-tier "Grok's Take" analysis (150-220 words) that provides honest, balanced AI commentary on every key metric for a school. This deliverable covers generation, storage, and operator QA workflows only. Public API/UI exposure is deferred until Phase 10 authentication and feature-tier premium access controls exist.
 
 ## Scope
 
@@ -37,7 +37,7 @@ Introduce a premium-tier "Grok's Take" analysis (150-220 words) that provides ho
 1. **Same infrastructure, different prompt.** Reuses `SummaryGenerator` port, provider adapters, `PostgresSummaryRepository`, and batch generation patterns from `AI-2`. Only the prompt template and data assembly differ.
 2. **Full metric coverage.** The prompt receives every available metric (Attainment 8, Progress 8, Ofsted history, FSM, ethnicity, SEND, gender, attendance where available, exclusions, crime context, IMD, staffing where available).
 3. **No open-web or model-memory facts.** Premium text must be grounded only in assembled Civitas context. No notable alumni or other external-knowledge claims in `AI-3`.
-4. **Public exposure is blocked on Phase 4.** `groks_take` text is not added to public profile responses in `AI-3`. Phase 4 provides authenticated identity, backend entitlement checks, and any premium endpoint wiring.
+4. **Public exposure is blocked on Phase 10.** `groks_take` text is not added to public profile responses in `AI-3`. Phase 10 provides authenticated identity, backend premium capability checks, and any premium endpoint wiring.
 5. **Operator review path first.** `AI-3` adds CLI-supported preview/review access for generated premium summaries so prompt quality can be assessed before any user-facing rollout.
 6. **Word count 150-220.** Longer than overview to accommodate per-metric commentary.
 7. **The same validator/quarantine policy from `AI-2` applies.** Premium outputs must pass deterministic checks for word count, banned recommendations/suitability phrasing, prohibited comparative language, and non-context references before they are stored as ready for future exposure.
@@ -140,7 +140,7 @@ Prompt constraints:
 5. Extend provider adapters and use case.
 6. Reuse the shared validator/quarantine flow from `AI-2`.
 7. Extend CLI commands for batch generation and operator preview.
-8. Record Phase 4 handoff requirements for authenticated exposure.
+8. Record Phase 10 handoff requirements for authenticated exposure.
 9. Run `make lint` and `make test`.
 
 ## Required Commands
@@ -159,7 +159,7 @@ Prompt constraints:
 3. Premium output contains no recommendations, suitability advice, or non-context claims; invalid outputs are quarantined by the shared validator flow.
 4. CLI can generate premium analyses independently or alongside overviews.
 5. Operator preview tooling can retrieve generated premium analyses for QA.
-6. Public profile/API exposure of `groks_take` is explicitly deferred to Phase 4 and is not implemented in `AI-3`.
+6. Public profile/API exposure of `groks_take` is explicitly deferred to Phase 10 and is not implemented in `AI-3`.
 
 ## Legal And Disclaimer
 
@@ -167,12 +167,12 @@ Mandatory disclaimer above every Grok's Take:
 
 > "Grok's Take is AI-generated analysis based on public government data. It is not official advice. Parents should always read the latest Ofsted report and visit the school in person."
 
-## Phase 4 Handoff
+## Phase 10 Handoff
 
-When Phase 4 auth + premium access work starts, it will:
+When Phase 10 auth + premium access work starts, it will:
 
 1. Add authenticated identity to the API boundary.
-2. Add backend entitlement checks before exposing `groks_take`.
+2. Add backend premium capability checks before exposing `groks_take`.
 3. Introduce the premium UI card / upgrade CTA.
 4. Keep the existing disclaimer and validator requirements unchanged.
 
@@ -183,4 +183,4 @@ When Phase 4 auth + premium access work starts, it will:
 - Risk: Premium analysis appears biased toward or against certain school types.
   - Mitigation: Prompt enforces balanced tone with both strengths and concerns. Manual review of sample outputs before launch.
 - Risk: Premium work is mistaken for public launch readiness.
-  - Mitigation: `AI-3` limits scope to generation + operator QA. Public exposure is a separate Phase 4 handoff with auth and entitlements.
+  - Mitigation: `AI-3` limits scope to generation + operator QA. Public exposure is a separate Phase 10 handoff with auth and premium capability enforcement.

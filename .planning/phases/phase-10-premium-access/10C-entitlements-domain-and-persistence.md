@@ -1,8 +1,8 @@
-# 10C - Research-Area Entitlements And Persistence
+# 10C - Feature-Tier Entitlements And Persistence
 
 ## Goal
 
-Model premium access in the backend so unlock scope, entitlement status, expiry, and audit history are first-class concepts before payment integration is wired in.
+Model premium access in the backend so account-level premium products, capability grants, expiry, and audit history are first-class concepts before payment integration is wired in.
 
 This document is the core of the phase. If the entitlement model is vague, every later paywall and payment decision becomes brittle.
 
@@ -10,39 +10,29 @@ This document is the core of the phase. If the entitlement model is vague, every
 
 ### Domain Scope
 
-- research-area unlock scope
 - premium product definition
+- capability bundle definition
 - entitlement grant lifecycle
 - reusable access-evaluation rules
 - audit events needed for billing reconciliation and support
 
 ### Persistence Scope
 
-- tables for research areas, products, entitlements, and entitlement events
+- tables for premium products, product capabilities, entitlements, and entitlement events
 - query paths that work independently of web-session transport
 - deterministic expiry and revocation handling
 
-## Why The Unlock Scope Is A Research Area
+## Why The Unlock Scope Is Capability-Based
 
-The product language is postcode-level unlock, but backend enforcement must also work for:
+The premium model is now account-level. Users do not buy access to one postcode or one search area. They buy access to premium features on their account.
 
-- `GET /schools?postcode=...`
-- `GET /schools/{urn}`
-- `GET /schools/{urn}/trends`
-- compare payloads that include multiple URNs
+That means backend enforcement should answer questions like:
 
-A raw postcode string is not sufficient on profile or compare routes. The backend should therefore model a research area with:
+- does this user have access to premium profile section `X`?
+- does this user have access to premium compare feature `Y`?
+- does this user have access to premium AI artifact `Z`?
 
-- normalized postcode
-- configured radius
-- resolved latitude and longitude
-- optional descriptive label for UI
-
-Access evaluation can then answer:
-
-- does this search request match an active research-area entitlement?
-- does this school fall inside any active research area for this user?
-- do all schools in this compare set fall inside at least one active research area?
+The access model should therefore operate on named capabilities or access requirements, not geography-derived scope.
 
 ## Intended Backend Model
 
@@ -61,18 +51,18 @@ civitas/
     dto.py
     ports/
       entitlement_repository.py
-      research_area_repository.py
-      school_access_scope_repository.py
+      product_repository.py
+      access_policy_repository.py
 ```
 
 Recommended domain concepts:
 
-- `ResearchArea`
 - `PremiumProduct`
+- `CapabilityKey`
 - `EntitlementGrant`
 - `EntitlementStatus`
 - `AccessDecision`
-- `AccessReason`
+- `AccessRequirement`
 
 ### Access Rules
 
@@ -95,9 +85,9 @@ Minimum table set:
 
 | Table | Purpose |
 |---|---|
-| `research_areas` | Canonical postcode-plus-radius unlock scope |
-| `premium_products` | Internal SKU catalog with duration and rules |
-| `entitlements` | User-owned entitlement grants |
+| `premium_products` | Internal SKU catalog for plans or packages |
+| `product_capabilities` | Mapping from product to named feature capabilities |
+| `entitlements` | User-owned premium access grants |
 | `entitlement_events` | Append-only audit trail for grant, expiry, revoke, and reconcile events |
 
 Related tables from `10B`:
@@ -108,42 +98,48 @@ Related tables from `10B`:
 
 Recommended fields:
 
-- canonical postcode and display postcode
-- radius miles or meters
-- center latitude and longitude
+- internal product code and human-readable display name
+- billing interval or duration fields where applicable
+- capability key and optional access-scope or section key
 - `starts_at`, `ends_at`, `revoked_at`
-- internal product code and optional provider price mapping field
+- optional provider price mapping field
 - reason codes for revoke or expiry transitions
 
 ## Access-Evaluation Strategy
 
+The exact section-by-section rules come from `10G-premium-access-matrix.md`, but the technical model should work like this:
+
 ### Search
 
-- Normalize the incoming postcode and radius to a research-area lookup key.
-- If the user has an active entitlement for that exact scope, return the premium search response.
-- Otherwise return preview data plus paywall metadata.
+- Search remains free at the route level.
+- If any search enhancement is premium, evaluate the named capability for that enhancement and return access metadata accordingly.
 
 ### Profile And Trends
 
-- Resolve the school coordinates from the existing `schools` serving table.
-- Determine whether the school falls inside any active research area owned by the user.
-- Return full or preview sections based on that result.
+- Evaluate requested premium sections against named capabilities such as premium analysis, deeper benchmark layers, or advanced detail sections.
+- Return free baseline content plus locked metadata when the user lacks the required capability.
 
 ### Compare
 
-- Evaluate every selected school against the active research-area set.
-- If any selected school is outside entitlement coverage, return a partially locked compare response with explicit metadata instead of silent omissions.
+- Core compare can remain free while advanced compare features, richer metric packs, or premium analysis are capability-gated.
+- The response should express which compare features are locked rather than collapsing the entire route into a binary premium or free decision.
+
+### AI Artifacts
+
+- AI overview may stay free.
+- Premium AI artifacts such as analyst views or other future commentary should be gated by named capabilities rather than by route-wide checks.
 
 ## Guardrails
 
 - Expired entitlements must stop returning premium-only data immediately.
 - Entitlement queries must work without depending on redirect state or cached frontend assumptions.
-- The entitlement model must be reusable for future premium surfaces such as AI analyst views without redesigning the storage layer.
+- The entitlement model must support multiple premium features without forcing a new schema for every premium section.
 - Access evaluation belongs in backend domain or application code, not in API route handlers.
+- `10G-premium-access-matrix.md` must remain the product source of truth for which capabilities each surface requires.
 
 ## Acceptance Criteria
 
-- Backend has a stable research-area entitlement model and persistence contract.
+- Backend has a stable feature-tier entitlement model and persistence contract.
 - Unlock state can be queried independently of web-session concerns and independently of payment-provider payloads.
-- Profile, trends, and compare access can be evaluated without carrying the original search query through the UI.
+- Search, profile, trends, compare, and premium AI access can be evaluated through named access requirements instead of route-specific special cases.
 - The data model is sufficient for later payment reconciliation and basic support workflows.

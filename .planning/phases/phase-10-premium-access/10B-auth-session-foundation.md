@@ -19,7 +19,7 @@ Stage 10A is not complete until the backend can answer one question on every req
 
 - add auth-aware app-shell session loading
 - provide sign-in and sign-out entry points through Civitas routes only
-- expose session state to premium-entry flows without moving access logic into the UI
+- expose session state to upgrade and premium-feature flows without moving access logic into the UI
 
 ## Intended Technical Approach
 
@@ -136,7 +136,7 @@ Required fields:
 - No premium gating may depend on client-only state.
 - Anonymous users must retain access to the free research surface.
 - Session expiration and provider-error states must be explicit in API contracts and UI rendering.
-- Frontend request caching must be invalidated when session state changes.
+- Frontend request caching must be invalidated when session or account-access state changes.
 
 ## Acceptance Criteria
 

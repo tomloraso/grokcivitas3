@@ -4,35 +4,40 @@
 
 Freeze the commercial and provider assumptions that every later deliverable depends on:
 
-- what a user is buying
+- what premium is
 - how identity is established
 - how sessions are carried
 - how checkout is created
-- how payment confirmation becomes entitlement state
+- how payment confirmation becomes account-level premium access
 
-This gate exists so the implementation work does not drift into provider-specific logic inside domain, application, or web feature layers.
+This gate exists so implementation does not drift into provider-specific logic inside domain, application, or web feature layers.
 
 ## Product Decisions To Freeze
 
 ### Premium Unit
 
-- Launch SKU should be one time-boxed research-area unlock.
-- A research area is the normalized postcode plus configured search radius and resolved center point.
-- The launch plan should support one default duration and radius, both configurable in backend settings or product records.
-- Future SKU variation such as longer duration, wider radius, or lifetime access should be possible without redesigning the domain model.
+- Launch premium should be account-level, not postcode-level or geography-level.
+- The launch SKU may be one premium plan or a small number of premium plans, but each plan must resolve to a defined capability bundle.
+- The exact free versus premium split belongs in `10G-premium-access-matrix.md` and must be frozen before Stage 10B starts.
+- Packaging remains open, but the backend model should support time-bound access windows and future plan variation without redesign.
 
 ### Free Versus Premium Boundary
 
-- Search remains publicly accessible.
-- The free experience is a preview, not full local research access.
-- The preview limit should be backend-configurable rather than hard-coded in the web app.
-- Profile, trends, dashboard, and compare routes remain publicly reachable, but premium-only sections or records are omitted or marked locked when no entitlement exists.
+- Search, profile, trends, and compare remain available in the free product.
+- Premium should unlock higher-value sections, deeper analysis, richer compare behavior, premium AI artifacts, or other advanced workflow features.
+- Premium boundaries should be explained section-by-section, not inferred from whether a route is public or private.
+- The matrix must define whether premium affects:
+  - additional sections
+  - deeper history or benchmark views
+  - advanced compare features
+  - premium AI artifacts
+  - future export or saved-workflow features
 
 ### Identity And Checkout Preconditions
 
-- Checkout requires a signed-in user because entitlements are account-bound.
-- Anonymous users can browse and hit the paywall, but account creation or sign-in must happen before checkout session creation.
-- Redirect-only payment success is insufficient; only signed provider events or verified provider queries can activate access.
+- Checkout requires a signed-in user because premium is account-bound.
+- Anonymous users can browse and hit premium boundaries, but sign-in must happen before checkout session creation.
+- Redirect-only payment success is insufficient; only signed provider events or verified provider queries can activate premium access.
 
 ## Recommended Provider Pattern
 
@@ -53,7 +58,7 @@ Why this pattern:
 ### Payments
 
 - Use a hosted checkout provider with signed webhook support and stable session identifiers.
-- Civitas should own the internal product catalog and entitlement grants.
+- Civitas should own the internal product catalog, capability mapping, and entitlement grants.
 - Provider price IDs or product IDs should map to Civitas product codes in infrastructure configuration or persistence, not in UI code.
 
 Why this pattern:
@@ -111,10 +116,10 @@ Reasoning:
 ## Required Architecture Boundaries
 
 - Domain models must not import auth or payment SDKs.
-- Application use cases consume role-based ports such as `IdentityProvider`, `SessionRepository`, `CheckoutGateway`, and `PaymentEventStore`.
+- Application use cases consume role-based ports such as `IdentityProvider`, `SessionRepository`, `CheckoutGateway`, `PaymentEventStore`, and `AccessPolicyRepository`.
 - Infrastructure adapters own provider payload mapping, signature verification, retry semantics, and external customer or checkout identifiers.
 - API routes remain thin and translate use-case outputs into Civitas schemas.
-- The web app consumes Civitas API routes only for session, entitlement, and checkout initiation.
+- The web app consumes Civitas API routes only for session, account access, and checkout initiation.
 
 ## Reserved Backend Surface
 
@@ -124,7 +129,7 @@ These route families should be treated as the minimum contract surface for the p
 - `POST /api/v1/auth/start`
 - `GET /api/v1/auth/callback`
 - `POST /api/v1/auth/signout`
-- `GET /api/v1/me/research-areas`
+- `GET /api/v1/me/access`
 - `POST /api/v1/billing/checkout-sessions`
 - `POST /api/v1/billing/webhooks`
 
@@ -134,7 +139,7 @@ Exact path names may change, but the shape should remain:
 - sign-in bootstrap
 - callback completion
 - sign-out
-- account-owned unlock listing
+- account access or plan introspection
 - checkout creation
 - webhook ingestion
 
@@ -150,14 +155,14 @@ Exact path names may change, but the shape should remain:
 
 1. Chosen auth-provider pattern and callback flow
 2. Chosen payment-provider pattern and webhook flow
-3. Agreed internal names for research-area SKU and entitlement statuses
+3. Agreed internal premium product, capability, and entitlement names
 4. Reserved API route families
-5. Free-preview versus premium-unlocked boundary definition
+5. `10G-premium-access-matrix.md` frozen as the free-baseline versus premium-feature source of truth
 6. Documented fallback behavior for provider outage, expired session, and duplicate webhook delivery
 
 ## Acceptance Criteria
 
 - Product and provider choices are documented with enough specificity for implementation without reopening core flow questions.
-- The premium unit is explicitly defined as a research area with configurable duration and radius.
+- Premium is explicitly defined as account-level feature access rather than geography access.
 - Security-sensitive decisions for cookies, callbacks, and webhooks are defined.
 - The remaining Phase 10 documents can reference stable boundaries without ambiguity.

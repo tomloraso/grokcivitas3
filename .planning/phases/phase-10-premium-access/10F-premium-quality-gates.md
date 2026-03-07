@@ -2,7 +2,7 @@
 
 ## Goal
 
-Close both Phase 10 stages with evidence that identity, entitlement evaluation, payment fulfillment, and premium enforcement work together safely.
+Close both Phase 10 stages with evidence that identity, feature-tier entitlement evaluation, payment fulfillment, and premium enforcement work together safely.
 
 This phase changes authentication state, billing state, API contracts, and web rendering. Quality gates must therefore prove behavior across anonymous, authenticated, entitled, expired, and revoked states.
 
@@ -13,13 +13,14 @@ This phase changes authentication state, billing state, API contracts, and web r
 - unit tests for identity domain models and session lifecycle rules
 - application tests for sign-in callback, session lookup, and sign-out flows
 - integration tests for session cookie behavior and anonymous fallback
-- persistence tests for `users`, `auth_identities`, `app_sessions`, `research_areas`, and `entitlements`
+- persistence tests for `users`, `auth_identities`, `app_sessions`, `premium_products`, `product_capabilities`, and `entitlements`
+- access-evaluation tests proving named capabilities resolve into the expected access decisions
 
 ### Frontend
 
 - typed session client tests
 - app-shell tests for anonymous versus authenticated state
-- locked-state rendering tests for search or profile preview surfaces
+- locked-state rendering tests for free-baseline versus premium-only sections
 
 ### Architecture And Contracts
 
@@ -34,18 +35,18 @@ This phase changes authentication state, billing state, API contracts, and web r
 - unit and integration coverage for checkout creation and webhook verification
 - reconciliation tests covering duplicate, out-of-order, and replayed payment events
 - expiry and revocation tests proving access changes take effect immediately
-- access-evaluation tests for search, profile, trends, and compare resource scopes
+- access-evaluation tests for premium sections, compare features, and premium AI surfaces
 
 ### Frontend
 
 - checkout CTA and post-purchase refresh tests
 - cache-invalidation or access-aware-cache tests
-- locked-to-unlocked journey tests for search and profile surfaces
+- locked-to-unlocked journey tests for representative premium surfaces
 
 ### End-To-End
 
 - sign in
-- hit a premium paywall
+- hit a premium boundary
 - start checkout
 - simulate success and webhook completion
 - refresh into unlocked state
@@ -68,11 +69,12 @@ This phase changes authentication state, billing state, API contracts, and web r
 - verify signed webhook delivery and replay handling
 - verify refund or revoke path in a non-production payment environment
 - verify support recovery path for a checkout that succeeded at provider side but arrived late to the app
+- verify the premium access matrix behaves as documented for at least one free baseline surface, one locked premium section, and one unlocked premium flow
 
 ## Acceptance Evidence
 
-- premium-only data is blocked without entitlement
-- unlock state is granted, expired, and revoked correctly
+- premium-only data and features are blocked without entitlement
+- premium state is granted, expired, and revoked correctly
 - checkout and webhook flows are idempotent
 - web UI reflects the real backend session and entitlement state
 - no provider-specific payload types leak across architecture boundaries

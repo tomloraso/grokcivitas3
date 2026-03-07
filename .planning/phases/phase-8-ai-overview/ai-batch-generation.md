@@ -8,7 +8,7 @@
 ## Purpose
 This document is the **complete technical specification** for generating both:
 - School Overview (neutral, facts-only "About the school" paragraph — free tier)
-- Grok’s Take (analytical performance commentary using only metrics — paid premium unlock)
+- Grok’s Take (analytical performance commentary using only metrics — premium-tier feature)
 
 All generation happens via the **official xAI Batch API** using model `grok-4-1-fast-reasoning`.
 Each output is generated via its own dedicated prompt and API call.
@@ -66,7 +66,7 @@ Each output is generated via its own dedicated prompt and API call.
 
 ---
 
-### Prompt 2 — Grok’s Take (paid premium unlock)
+### Prompt 2 — Grok’s Take (premium-tier feature)
 
 ```json
 {

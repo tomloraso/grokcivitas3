@@ -2,16 +2,16 @@
 
 ## Goal
 
-Implement the payment flow that converts a signed-in user's purchase intent into a reconciled research-area entitlement.
+Implement the payment flow that converts a signed-in user's purchase intent into reconciled account-level premium access.
 
-Stage 10B starts here. Payment work should build on the identity and entitlement foundations from `10B` and `10C`, not bypass them.
+Stage 10B starts here. Payment work should build on the identity and feature-entitlement foundations from `10B` and `10C`, not bypass them.
 
 ## Scope
 
-- checkout-session creation for a chosen research area and product
+- checkout-session creation for a chosen premium product
 - success and cancellation redirects
 - signed webhook ingestion
-- idempotent fulfillment into entitlement state
+- idempotent fulfillment into premium entitlement state
 - audit-safe storage of commercial events and reconciliation results
 
 ## Intended Technical Approach
@@ -45,8 +45,8 @@ infrastructure/
 ### Checkout Flow
 
 1. User is authenticated.
-2. Web app sends a typed Civitas API request with product code, postcode, and selected radius.
-3. Backend normalizes the requested research area and validates whether the user already has active coverage.
+2. Web app sends a typed Civitas API request with a premium product code.
+3. Backend validates whether the user already has equivalent active coverage.
 4. Backend creates an internal pending checkout record before calling the external provider.
 5. Infrastructure adapter creates the provider checkout session and stores provider reference IDs.
 6. API returns a redirect URL or hosted checkout token to the web app.
@@ -57,7 +57,7 @@ infrastructure/
 2. API verifies the signature before any business processing.
 3. Infrastructure maps the provider payload to an internal payment-event DTO.
 4. Application reconciliation use case records the event idempotently.
-5. Successful payment events create or activate the entitlement grant.
+5. Successful payment events create or activate the premium entitlement grant.
 6. Refund, chargeback, or cancel-after-auth events update entitlement state according to product policy.
 
 ## Persistence Requirements
@@ -72,8 +72,9 @@ Minimum additional table set:
 
 Relationship to access model:
 
-- `checkout_sessions` reference `users`, `premium_products`, and `research_areas`
+- `checkout_sessions` reference `users` and `premium_products`
 - successful reconciliation writes to `entitlements`
+- product-to-capability mapping remains in `product_capabilities`
 - replayed or duplicate events must not create duplicate entitlements
 
 ## Idempotency And Retry Rules
@@ -81,7 +82,7 @@ Relationship to access model:
 - Webhook processing must be safe to retry.
 - Provider event IDs must be uniquely stored.
 - Fulfillment writes must run inside a transaction that updates both billing state and entitlement state together.
-- Redirect pages must never be the sole source of truth for access activation.
+- Redirect pages must never be the sole source of truth for premium activation.
 - Support tooling must be able to replay a stored event or retry reconciliation from persisted payloads.
 
 ## Failure And Recovery Cases
@@ -91,7 +92,7 @@ Relationship to access model:
 - webhook delivered before redirect
 - duplicate webhook delivery
 - temporary provider API outage during checkout creation
-- refund or dispute after entitlement activation
+- refund or dispute after premium activation
 
 The implementation plan must treat these as normal paths, not edge-case cleanup work.
 
@@ -104,7 +105,7 @@ The implementation plan must treat these as normal paths, not edge-case cleanup 
 
 ## Acceptance Criteria
 
-- Successful purchase results in an active entitlement for the expected research area.
-- Failed, canceled, duplicate, or replayed events do not create inconsistent unlock state.
-- Refund or revoke paths can remove access deterministically.
+- Successful purchase results in active premium access for the expected product.
+- Failed, canceled, duplicate, or replayed events do not create inconsistent premium state.
+- Refund or revoke paths can remove premium access deterministically.
 - Staging can verify end-to-end checkout, callback, and webhook behavior with realistic provider flows.

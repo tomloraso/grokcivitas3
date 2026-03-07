@@ -38,8 +38,8 @@ Launch planning should therefore be staged around product completeness rather th
 ### Stage 4 - Premium launch
 
 - Premium launch should follow successful Phase 10 sign-off.
-- Position premium around deeper postcode-level research and access control clarity.
-- Conversion flow must be backed by proven entitlement enforcement and payment reconciliation.
+- Position premium around richer data depth, premium analysis, and advanced research features while keeping the core product free.
+- Conversion flow must be backed by proven feature-tier entitlement enforcement and payment reconciliation.
 
 ## Readiness Gates
 
@@ -68,4 +68,5 @@ Before premium launch:
 ## Open Decisions
 
 1. Whether there is one public launch or a soft public beta before premium goes live.
-2. Whether premium unlocks are postcode-only, account-wide for a period, or both.
+2. Whether premium launch should ship only the initial analyst plus dashboard bundle, or include one compare enhancement if Phase 9 lands early.
+3. Final premium packaging model for launch.

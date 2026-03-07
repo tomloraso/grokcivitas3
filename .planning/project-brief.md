@@ -43,8 +43,8 @@ The first vertical is school research for ages 4-16. The platform is intentional
 4. Compare schools
    - User compares up to four schools side by side using a consistent metric set.
 5. Paywall and purchase
-   - Free users see headline data and limited ranking.
-   - Paid users unlock the full postcode dataset for a time-boxed period.
+   - Free users can complete the core research journey across search, profile, trends, and compare.
+   - Paid users unlock additional feature layers, deeper data views, and premium analysis on the same account.
 
 ## Schools Data Scope (v1)
 
@@ -79,12 +79,13 @@ Minimum indicator groups:
 - At most two AI-generated school summaries are in MVP scope: `overview` and `analyst`.
 - The overview must be pre-generated, factual, provenance-backed, and never advice-like.
 - The analyst summary may describe patterns or signals in the published evidence, but it must remain evidence-grounded and never advice-like.
+- The exact free versus premium placement of any second AI artifact is a product-tier decision, not a model-behavior decision.
 - Both summaries must display a clear disclaimer and must not replace primary source data.
 
 ## Security, Privacy, And Access
 
 - Email-based authentication for MVP.
-- Backend-enforced entitlements for premium access.
+- Backend-enforced feature-tier entitlements for premium access.
 - GDPR-conscious posture with minimal personal data and limited tracking.
 
 ## Non-Functional Targets
@@ -108,18 +109,19 @@ Minimum indicator groups:
 
 ## Business Model (Initial)
 
-- Free tier for headline insights.
-- Paid postcode-level unlock for deeper local research.
+- Free tier for core school research.
+- Paid account-level premium tier for deeper data, richer analysis, and advanced workflow features.
 
 ## Success Criteria (Initial)
 
 - Users can search by postcode and compare nearby schools in minutes.
 - Users can open school profiles and understand local context and multi-year trends.
-- Premium users can unlock full local data for postcode-level research.
+- Premium users can unlock richer analysis and advanced features without disrupting the free research experience.
 - Data refreshes are reliable, auditable, and trend history is maintained.
 
 ## Open Decisions
 
-- Final premium packaging: time-boxed unlock only, or time-boxed plus lifetime.
+- Final premium packaging: monthly, annual, one-time, or hybrid.
+- Whether premium launch should stay limited to analyst plus dashboard capabilities, or add one compare enhancement if Phase 9 lands early.
 - Exact metric thresholds for risk flags.
 - Which post-MVP expanders, such as report export or deeper house-price context, move up in priority after MVP.

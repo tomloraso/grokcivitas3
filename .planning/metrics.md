@@ -53,7 +53,7 @@
 | Benchmarks for supported metrics | Implemented | Derived from Gold serving layer | Profile, trends, and dashboard responses |
 | Cross-domain trend dashboard | Implemented | Derived from Gold serving layer | Dashboard route payload |
 | Compare-ready aligned metric set | Planned | Existing Gold facts | Planned for Phase 9 |
-| Premium-only data boundary | Planned | Existing Gold facts + entitlements | Planned for Phase 10 |
+| Premium-gated data and analysis layers | Planned | Existing Gold facts + feature-tier access policies | Planned for Phase 10 |
 | Pupil premium impact | Planned | Additional source required | Not yet sourced |
 
 ## Product Rules
@@ -66,3 +66,4 @@
 
 1. Whether pupil premium impact remains worth sourcing for MVP-adjacent delivery.
 2. Which benchmark views should become first-class compare metrics in Phase 9.
+3. Whether any compare-specific premium metric packs should join the initial Phase 10 premium bundle.
