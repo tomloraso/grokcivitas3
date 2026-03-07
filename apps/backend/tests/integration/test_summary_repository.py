@@ -292,6 +292,44 @@ def test_summary_repository_tracks_generation_runs(engine: Engine) -> None:
     assert items[1].failure_reason_codes == ("word_count_too_short",)
 
 
+def test_summary_repository_bulk_upserts_run_items(engine: Engine) -> None:
+    repository = PostgresSummaryRepository(engine=engine)
+    run = repository.create_run(trigger="manual", requested_count=2, summary_kind="overview")
+
+    repository.upsert_run_items(
+        [
+            SummaryGenerationRunItem(
+                run_id=run.id,
+                urn="920001",
+                status="submitted_batch",
+                attempt_count=1,
+                failure_reason_codes=(),
+                completed_at=None,
+                data_version_hash="hash-1",
+                provider_name="grok",
+                provider_batch_id="batch-1",
+                prompt_version="overview.v1",
+                submitted_at=datetime(2026, 3, 5, 12, 0, tzinfo=timezone.utc),
+            ),
+            SummaryGenerationRunItem(
+                run_id=run.id,
+                urn="920002",
+                status="generation_failed",
+                attempt_count=1,
+                failure_reason_codes=("provider_error",),
+                completed_at=datetime(2026, 3, 5, 12, 5, tzinfo=timezone.utc),
+                data_version_hash="hash-2",
+            ),
+        ]
+    )
+
+    items = sorted(repository.list_run_items(run.id), key=lambda item: item.urn)
+
+    assert [item.urn for item in items] == ["920001", "920002"]
+    assert items[0].provider_batch_id == "batch-1"
+    assert items[1].failure_reason_codes == ("provider_error",)
+
+
 def test_summary_repository_lists_pending_batch_items(engine: Engine) -> None:
     repository = PostgresSummaryRepository(engine=engine)
     run = repository.create_run(trigger="manual", requested_count=1, summary_kind="overview")

@@ -49,8 +49,9 @@ Persistent outputs use:
 Bulk summary generation may use provider-native batch execution, but the application layer treats it as a submit-and-finalize workflow rather than a blocking request.
 
 - The application layer orchestrates two product concepts only: `overview` and `analyst`.
-- `SubmitSchoolOverviewBatchesUseCase` and `SubmitSchoolAnalystBatchesUseCase` create provider batches and record `submitted_batch` run items with provider metadata.
-- Matching poll use cases validate completed results, persist successes, and only fall back to individual requests for missing or failed batch items.
+- `SubmitSchoolOverviewBatchesUseCase` and `SubmitSchoolAnalystBatchesUseCase` may reuse one provider batch across many local chunks, while still recording per-URN `submitted_batch` run items incrementally for resumability.
+- Matching poll use cases can persist partial provider results while a batch is still running, then finalize the run only after every requested item leaves `submitted_batch`.
+- Summary and run-item persistence on the async poll path is bulk-oriented so full-run finalize passes do not degrade into one transaction per URN.
 - Deterministic validation, corrective retry, persistence, and run telemetry stay unchanged after results are received.
 - The synchronous generate use cases remain the fallback path for non-batch providers and targeted retries.
 

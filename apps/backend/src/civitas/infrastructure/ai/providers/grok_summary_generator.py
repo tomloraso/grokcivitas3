@@ -116,6 +116,7 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
         contexts: Sequence[SummaryContext],
         *,
         summary_kind: SummaryKind,
+        provider_batch_id: str | None = None,
     ) -> SubmittedSummaryBatch:
         if not contexts:
             raise ValueError("At least one context is required to submit a Grok batch.")
@@ -125,7 +126,7 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
             summary_kind=summary_kind,
             model_id=self._model_id,
         )
-        batch_id = self._create_batch(summary_kind=summary_kind)
+        batch_id = provider_batch_id or self._create_batch(summary_kind=summary_kind)
         self._add_batch_requests(
             batch_id=batch_id,
             contexts=contexts,
@@ -149,14 +150,6 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
             batch_status_url(self._base_url, provider_batch_id)
         )
         status = _derive_polled_batch_status(status_payload)
-        if status in {"submitted", "running"}:
-            return PolledSummaryBatch(
-                provider=self.batch_provider_name(),
-                provider_batch_id=provider_batch_id,
-                status=status,
-                results=(),
-                error_code=None,
-            )
         if status in {"failed", "cancelled", "expired"}:
             return PolledSummaryBatch(
                 provider=self.batch_provider_name(),
@@ -166,16 +159,20 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
                 error_code=f"batch_{status}",
             )
 
-        return PolledSummaryBatch(
-            provider=self.batch_provider_name(),
-            provider_batch_id=provider_batch_id,
-            status="completed",
-            results=tuple(
+        results = ()
+        if status == "completed" or _extract_batch_success_count(status_payload) > 0:
+            results = tuple(
                 self._fetch_all_batch_results(
                     batch_id=provider_batch_id,
                     prompt_version=prompt_version,
                 )
-            ),
+            )
+
+        return PolledSummaryBatch(
+            provider=self.batch_provider_name(),
+            provider_batch_id=provider_batch_id,
+            status=status,
+            results=results,
             error_code=None,
         )
 
@@ -379,6 +376,8 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
                 return parsed
             except httpx.HTTPStatusError as exc:
                 last_error = exc
+                if _is_non_retryable_quota_error(exc.response):
+                    break
                 if (
                     exc.response.status_code in RETRYABLE_STATUS_CODES
                     and attempt < self._max_retries
@@ -393,7 +392,10 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
                     continue
                 break
 
-        raise RuntimeError("Grok batch API request failed.") from last_error
+        detail = _extract_response_error_message(last_error)
+        if detail is None:
+            raise RuntimeError("Grok batch API request failed.") from last_error
+        raise RuntimeError(f"Grok batch API request failed: {detail}") from last_error
 
 
 _TERMINAL_BATCH_STATUSES = {"completed", "succeeded", "failed", "cancelled", "expired"}
@@ -546,6 +548,10 @@ def _extract_batch_error_count(payload: Mapping[str, Any]) -> int:
     )
 
 
+def _extract_batch_success_count(payload: Mapping[str, Any]) -> int:
+    return _extract_state_count(payload, "num_success")
+
+
 def _extract_state_count(payload: Mapping[str, Any], key: str) -> int:
     state = payload.get("state")
     if isinstance(state, Mapping):
@@ -587,3 +593,42 @@ def _normalize_response_text(value: object) -> str | None:
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _is_non_retryable_quota_error(response: httpx.Response) -> bool:
+    if response.status_code != 429:
+        return False
+    detail = _extract_response_error_message(response)
+    if detail is None:
+        return False
+    normalized = detail.casefold()
+    return "used all available credits" in normalized or "monthly spending limit" in normalized
+
+
+def _extract_response_error_message(error: Exception | httpx.Response | None) -> str | None:
+    response: httpx.Response | None
+    if isinstance(error, httpx.Response):
+        response = error
+    elif isinstance(error, httpx.HTTPStatusError):
+        response = error.response
+    else:
+        response = None
+
+    if response is None:
+        return None
+
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = None
+
+    if isinstance(payload, Mapping):
+        for key in ("error", "message", "code"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+    body = response.text.strip()
+    if body:
+        return body
+    return f"HTTP {response.status_code}"

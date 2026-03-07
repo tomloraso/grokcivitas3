@@ -15,12 +15,26 @@ def test_school_analyst_prompt_renders_context_and_feedback() -> None:
         ),
     )
 
-    assert school_analyst.VERSION == "analyst.v4"
+    assert school_analyst.VERSION == "analyst.v6"
     assert school_analyst.TEMPERATURE == 0.2
     assert "You are Grok." in system_prompt
     assert "Performance trend summary" in user_prompt
     assert "URN:" not in user_prompt
     assert "Validation reason codes: word_count_too_short" in user_prompt
+
+
+def test_school_analyst_prompt_omits_unpublished_metrics() -> None:
+    system_prompt, user_prompt = school_analyst.render(
+        _context_with_missing_performance(),
+        feedback=None,
+    )
+
+    assert "Progress 8" not in user_prompt
+    assert "Attainment 8" not in user_prompt
+    assert "Ofsted overall effectiveness" not in user_prompt
+    assert "Inspection history" not in user_prompt
+    assert "Not published" not in user_prompt
+    assert "If Progress 8, Attainment 8, or Ofsted measures are not present" in system_prompt
 
 
 def _context() -> SchoolAnalystContext:
@@ -71,4 +85,25 @@ def _context() -> SchoolAnalystContext:
         imd_rank=4825,
         idaci_decile=2,
         total_incidents_12m=486,
+    )
+
+
+def _context_with_missing_performance() -> SchoolAnalystContext:
+    base = _context().__dict__.copy()
+    base.update(
+        {
+            "progress_8": None,
+            "attainment_8": None,
+            "overall_effectiveness": None,
+            "inspection_date": None,
+            "quality_of_education": None,
+            "behaviour_and_attitudes": None,
+            "personal_development": None,
+            "leadership_and_management": None,
+            "progress_8_trend": (),
+            "attainment_8_trend": (),
+        }
+    )
+    return SchoolAnalystContext(
+        **base,
     )

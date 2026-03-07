@@ -19,22 +19,26 @@ class FakeGetSchoolSummaryUseCase:
 
 
 class FakeGenerateSchoolSummariesUseCase:
-    def __init__(self, result: SummaryGenerationResultDto) -> None:
+    def __init__(self, result: SummaryGenerationResultDto | Exception) -> None:
         self.result = result
         self.calls: list[dict[str, object]] = []
 
     def execute(self, **kwargs: object) -> SummaryGenerationResultDto:
         self.calls.append(kwargs)
+        if isinstance(self.result, Exception):
+            raise self.result
         return self.result
 
 
 class FakePollSchoolSummaryBatchesUseCase:
-    def __init__(self, results: tuple[SummaryGenerationResultDto, ...]) -> None:
+    def __init__(self, results: tuple[SummaryGenerationResultDto, ...] | Exception) -> None:
         self.results = results
         self.calls: list[dict[str, object]] = []
 
     def execute(self, **kwargs: object) -> tuple[SummaryGenerationResultDto, ...]:
         self.calls.append(kwargs)
+        if isinstance(self.results, Exception):
+            raise self.results
         return self.results
 
 
@@ -192,3 +196,43 @@ def test_poll_summary_batches_prints_results(monkeypatch: pytest.MonkeyPatch) ->
     assert "pending=0" in result.stdout
     assert "overview: run_id=" in result.stdout
     assert "analyst: run_id=" in result.stdout
+
+
+def test_generate_summaries_prints_runtime_error_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_overview = FakeGenerateSchoolSummariesUseCase(
+        RuntimeError("Grok batch API request failed: credits exhausted.")
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.submit_school_overview_batches_use_case",
+        lambda: fake_overview,
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.app_settings",
+        lambda: type("Settings", (), {"ai": type("Ai", (), {"enabled": True})()})(),
+    )
+
+    result = CliRunner().invoke(app, ["generate-summaries", "--type", "overview"])
+
+    assert result.exit_code == 1
+    assert "credits exhausted" in result.stdout
+    assert "Traceback" not in result.stdout
+
+
+def test_poll_summary_batches_prints_runtime_error_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_overview = FakePollSchoolSummaryBatchesUseCase(
+        RuntimeError("Grok batch API request failed: credits exhausted.")
+    )
+    monkeypatch.setattr(
+        "civitas.cli.main.poll_school_overview_batches_use_case",
+        lambda: fake_overview,
+    )
+
+    result = CliRunner().invoke(app, ["poll-summary-batches", "--type", "overview"])
+
+    assert result.exit_code == 1
+    assert "credits exhausted" in result.stdout
+    assert "Traceback" not in result.stdout

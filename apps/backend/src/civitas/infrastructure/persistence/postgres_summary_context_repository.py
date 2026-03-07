@@ -130,7 +130,161 @@ def _overview_statement(
 def _analyst_statement(
     urns: Sequence[str] | None,
 ) -> tuple[TextClause, dict[str, object]]:
-    query = """
+    selected_schools_cte, params = _selected_schools_cte(urns)
+    query = f"""
+        WITH selected_schools AS (
+            {selected_schools_cte}
+        ),
+        demographics_latest AS (
+            SELECT DISTINCT ON (school_demographics_yearly.urn)
+                school_demographics_yearly.urn,
+                school_demographics_yearly.fsm_pct,
+                school_demographics_yearly.eal_pct,
+                school_demographics_yearly.sen_pct,
+                school_demographics_yearly.ehcp_pct
+            FROM school_demographics_yearly
+            INNER JOIN selected_schools
+                ON selected_schools.urn = school_demographics_yearly.urn
+            ORDER BY
+                school_demographics_yearly.urn,
+                substring(school_demographics_yearly.academic_year from 1 for 4)::integer DESC,
+                school_demographics_yearly.academic_year DESC
+        ),
+        demographics_trends AS (
+            SELECT
+                school_demographics_yearly.urn,
+                json_agg(
+                    json_build_object(
+                        'year',
+                        school_demographics_yearly.academic_year,
+                        'value',
+                        school_demographics_yearly.fsm_pct
+                    )
+                    ORDER BY
+                        substring(school_demographics_yearly.academic_year from 1 for 4)::integer DESC,
+                        school_demographics_yearly.academic_year DESC
+                ) FILTER (WHERE school_demographics_yearly.fsm_pct IS NOT NULL) AS fsm_pct_trend,
+                json_agg(
+                    json_build_object(
+                        'year',
+                        school_demographics_yearly.academic_year,
+                        'value',
+                        school_demographics_yearly.eal_pct
+                    )
+                    ORDER BY
+                        substring(school_demographics_yearly.academic_year from 1 for 4)::integer DESC,
+                        school_demographics_yearly.academic_year DESC
+                ) FILTER (WHERE school_demographics_yearly.eal_pct IS NOT NULL) AS eal_pct_trend,
+                json_agg(
+                    json_build_object(
+                        'year',
+                        school_demographics_yearly.academic_year,
+                        'value',
+                        school_demographics_yearly.sen_pct
+                    )
+                    ORDER BY
+                        substring(school_demographics_yearly.academic_year from 1 for 4)::integer DESC,
+                        school_demographics_yearly.academic_year DESC
+                ) FILTER (WHERE school_demographics_yearly.sen_pct IS NOT NULL) AS sen_pct_trend
+            FROM school_demographics_yearly
+            INNER JOIN selected_schools
+                ON selected_schools.urn = school_demographics_yearly.urn
+            GROUP BY school_demographics_yearly.urn
+        ),
+        performance_latest AS (
+            SELECT DISTINCT ON (school_performance_yearly.urn)
+                school_performance_yearly.urn,
+                school_performance_yearly.progress8_average,
+                school_performance_yearly.attainment8_average,
+                school_performance_yearly.ks2_reading_expected_pct,
+                school_performance_yearly.ks2_maths_expected_pct
+            FROM school_performance_yearly
+            INNER JOIN selected_schools
+                ON selected_schools.urn = school_performance_yearly.urn
+            ORDER BY
+                school_performance_yearly.urn,
+                substring(school_performance_yearly.academic_year from 1 for 4)::integer DESC,
+                school_performance_yearly.academic_year DESC
+        ),
+        performance_trends AS (
+            SELECT
+                school_performance_yearly.urn,
+                json_agg(
+                    json_build_object(
+                        'year',
+                        school_performance_yearly.academic_year,
+                        'value',
+                        school_performance_yearly.progress8_average
+                    )
+                    ORDER BY
+                        substring(school_performance_yearly.academic_year from 1 for 4)::integer DESC,
+                        school_performance_yearly.academic_year DESC
+                ) FILTER (WHERE school_performance_yearly.progress8_average IS NOT NULL)
+                    AS progress_8_trend,
+                json_agg(
+                    json_build_object(
+                        'year',
+                        school_performance_yearly.academic_year,
+                        'value',
+                        school_performance_yearly.attainment8_average
+                    )
+                    ORDER BY
+                        substring(school_performance_yearly.academic_year from 1 for 4)::integer DESC,
+                        school_performance_yearly.academic_year DESC
+                ) FILTER (WHERE school_performance_yearly.attainment8_average IS NOT NULL)
+                    AS attainment_8_trend
+            FROM school_performance_yearly
+            INNER JOIN selected_schools
+                ON selected_schools.urn = school_performance_yearly.urn
+            GROUP BY school_performance_yearly.urn
+        ),
+        inspection_history AS (
+            SELECT
+                ofsted_inspections.urn,
+                json_agg(
+                    json_build_object(
+                        'inspection_date',
+                        ofsted_inspections.inspection_start_date,
+                        'overall_effectiveness',
+                        ofsted_inspections.overall_effectiveness_label
+                    )
+                    ORDER BY ofsted_inspections.inspection_start_date DESC
+                ) FILTER (WHERE ofsted_inspections.inspection_start_date IS NOT NULL)
+                    AS inspection_history
+            FROM ofsted_inspections
+            INNER JOIN selected_schools
+                ON selected_schools.urn = ofsted_inspections.urn
+            GROUP BY ofsted_inspections.urn
+        ),
+        crime_category_totals AS (
+            SELECT
+                area_crime_context.urn,
+                area_crime_context.crime_category,
+                CAST(SUM(area_crime_context.incident_count) AS integer) AS total_incidents
+            FROM area_crime_context
+            INNER JOIN selected_schools
+                ON selected_schools.urn = area_crime_context.urn
+            GROUP BY area_crime_context.urn, area_crime_context.crime_category
+        ),
+        crime_context AS (
+            SELECT
+                crime_category_totals.urn,
+                CAST(COALESCE(SUM(crime_category_totals.total_incidents), 0) AS integer)
+                    AS total_incidents_12m,
+                json_agg(
+                    json_build_object(
+                        'category',
+                        crime_category_totals.crime_category,
+                        'incident_count',
+                        crime_category_totals.total_incidents
+                    )
+                    ORDER BY
+                        crime_category_totals.total_incidents DESC,
+                        crime_category_totals.crime_category ASC
+                ) AS top_crime_categories
+            FROM crime_category_totals
+            GROUP BY crime_category_totals.urn
+        )
         SELECT
             schools.urn,
             schools.name,
@@ -194,107 +348,28 @@ def _analyst_statement(
             inspection_history.inspection_history,
             crime_context.total_incidents_12m,
             crime_context.top_crime_categories
-        FROM schools
-        LEFT JOIN LATERAL (
-            SELECT
-                fsm_pct,
-                eal_pct,
-                sen_pct,
-                ehcp_pct
-            FROM school_demographics_yearly
-            WHERE school_demographics_yearly.urn = schools.urn
-            ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-            LIMIT 1
-        ) AS demographics_latest ON TRUE
-        LEFT JOIN LATERAL (
-            SELECT
-                json_agg(
-                    json_build_object('year', academic_year, 'value', fsm_pct)
-                    ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-                ) FILTER (WHERE fsm_pct IS NOT NULL) AS fsm_pct_trend,
-                json_agg(
-                    json_build_object('year', academic_year, 'value', eal_pct)
-                    ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-                ) FILTER (WHERE eal_pct IS NOT NULL) AS eal_pct_trend,
-                json_agg(
-                    json_build_object('year', academic_year, 'value', sen_pct)
-                    ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-                ) FILTER (WHERE sen_pct IS NOT NULL) AS sen_pct_trend
-            FROM school_demographics_yearly
-            WHERE school_demographics_yearly.urn = schools.urn
-        ) AS demographics_trends ON TRUE
-        LEFT JOIN LATERAL (
-            SELECT
-                progress8_average,
-                attainment8_average,
-                ks2_reading_expected_pct,
-                ks2_maths_expected_pct
-            FROM school_performance_yearly
-            WHERE school_performance_yearly.urn = schools.urn
-            ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-            LIMIT 1
-        ) AS performance_latest ON TRUE
-        LEFT JOIN LATERAL (
-            SELECT
-                json_agg(
-                    json_build_object('year', academic_year, 'value', progress8_average)
-                    ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-                ) FILTER (WHERE progress8_average IS NOT NULL) AS progress_8_trend,
-                json_agg(
-                    json_build_object('year', academic_year, 'value', attainment8_average)
-                    ORDER BY substring(academic_year from 1 for 4)::integer DESC, academic_year DESC
-                ) FILTER (WHERE attainment8_average IS NOT NULL) AS attainment_8_trend
-            FROM school_performance_yearly
-            WHERE school_performance_yearly.urn = schools.urn
-        ) AS performance_trends ON TRUE
+        FROM selected_schools AS schools
+        LEFT JOIN demographics_latest
+            ON demographics_latest.urn = schools.urn
+        LEFT JOIN demographics_trends
+            ON demographics_trends.urn = schools.urn
+        LEFT JOIN performance_latest
+            ON performance_latest.urn = schools.urn
+        LEFT JOIN performance_trends
+            ON performance_trends.urn = schools.urn
         LEFT JOIN school_ofsted_latest AS ofsted
             ON ofsted.urn = schools.urn
-        LEFT JOIN LATERAL (
-            SELECT
-                json_agg(
-                    json_build_object(
-                        'inspection_date',
-                        inspection_start_date,
-                        'overall_effectiveness',
-                        overall_effectiveness_label
-                    )
-                    ORDER BY inspection_start_date DESC
-                ) FILTER (WHERE inspection_start_date IS NOT NULL) AS inspection_history
-            FROM ofsted_inspections
-            WHERE ofsted_inspections.urn = schools.urn
-        ) AS inspection_history ON TRUE
+        LEFT JOIN inspection_history
+            ON inspection_history.urn = schools.urn
         LEFT JOIN area_deprivation AS deprivation
             ON deprivation.lsoa_code = schools.lsoa_code
-        LEFT JOIN LATERAL (
-            SELECT
-                CAST(COALESCE(SUM(area_crime_context.incident_count), 0) AS integer)
-                    AS total_incidents_12m,
-                (
-                    SELECT json_agg(
-                        json_build_object(
-                            'category',
-                            category_totals.crime_category,
-                            'incident_count',
-                            category_totals.total_incidents
-                        )
-                        ORDER BY
-                            category_totals.total_incidents DESC,
-                            category_totals.crime_category ASC
-                    )
-                    FROM (
-                        SELECT
-                            crime_category,
-                            CAST(SUM(incident_count) AS integer) AS total_incidents
-                        FROM area_crime_context
-                        WHERE area_crime_context.urn = schools.urn
-                        GROUP BY crime_category
-                    ) AS category_totals
-                ) AS top_crime_categories
-            FROM area_crime_context
-            WHERE area_crime_context.urn = schools.urn
-        ) AS crime_context ON TRUE
+        LEFT JOIN crime_context
+            ON crime_context.urn = schools.urn
+        ORDER BY schools.urn ASC
     """
-    return _statement_with_optional_urn_filter(query, urns)
+    if urns is None:
+        return text(query), params
+    return text(query).bindparams(bindparam("urns", expanding=True)), params
 
 
 def _statement_with_optional_urn_filter(
@@ -309,6 +384,42 @@ def _statement_with_optional_urn_filter(
         ),
         {"urns": list(urns)},
     )
+
+
+def _selected_schools_cte(urns: Sequence[str] | None) -> tuple[str, dict[str, object]]:
+    query = """
+        SELECT
+            schools.urn,
+            schools.name,
+            schools.phase,
+            schools.type,
+            schools.status,
+            schools.postcode,
+            schools.website,
+            schools.telephone,
+            schools.head_title,
+            schools.head_first_name,
+            schools.head_last_name,
+            schools.head_job_title,
+            schools.statutory_low_age,
+            schools.statutory_high_age,
+            schools.gender,
+            schools.religious_character,
+            schools.admissions_policy,
+            schools.sixth_form,
+            schools.trust_name,
+            schools.la_name,
+            schools.urban_rural,
+            schools.pupil_count,
+            schools.capacity,
+            schools.number_of_boys,
+            schools.number_of_girls,
+            schools.lsoa_code
+        FROM schools
+    """
+    if urns is None:
+        return query, {}
+    return query + " WHERE schools.urn IN :urns", {"urns": list(urns)}
 
 
 def _map_overview_context(row: RowMapping) -> SchoolOverviewContext:

@@ -654,20 +654,23 @@ def _submit_summary_batches(
     )
 
     async_generator = cast(AsyncBatchSummaryGenerator, base._summary_generator)
+    active_provider_batch_id, _ = _resolve_resumable_batch_metadata(existing_items)
     for chunk in _chunked(pending_contexts, base._batch_size):
         contexts_chunk = [context for context, _ in chunk]
         try:
             submitted_batch = async_generator.submit_batch(
                 contexts_chunk,
                 summary_kind=base._summary_kind,
+                provider_batch_id=active_provider_batch_id,
             )
         except Exception as exc:
             raise RuntimeError(
                 "Async batch submission failed; resume the run after the provider issue is resolved."
             ) from exc
 
-        for context, data_version_hash in chunk:
-            base._summary_repository.upsert_run_item(
+        active_provider_batch_id = submitted_batch.provider_batch_id
+        base._summary_repository.upsert_run_items(
+            [
                 SummaryGenerationRunItem(
                     run_id=run.id,
                     urn=context.urn,
@@ -681,7 +684,9 @@ def _submit_summary_batches(
                     prompt_version=submitted_batch.prompt_version,
                     submitted_at=submitted_batch.submitted_at,
                 )
-            )
+                for context, data_version_hash in chunk
+            ]
+        )
 
     return base._build_result_for_run(run)
 
@@ -728,18 +733,20 @@ def _poll_summary_batches(
             provider_batch_id=provider_batch_id,
             prompt_version=prompt_version,
         )
-        if polled_batch.status in {"submitted", "running"}:
+        if polled_batch.status in {"submitted", "running"} and not polled_batch.results:
             continue
 
         contexts = base._context_loader([item.urn for item in batch_items])
         contexts_by_urn = {context.urn: context for context in contexts}
-        if polled_batch.status == "completed":
-            _handle_completed_polled_batch(
+        if polled_batch.results:
+            _handle_polled_batch_results(
                 base=base,
                 batch_items=batch_items,
                 contexts_by_urn=contexts_by_urn,
                 polled_batch=polled_batch,
             )
+
+        if polled_batch.status in {"submitted", "running", "completed"}:
             continue
 
         failure_reason = polled_batch.error_code or f"batch_{polled_batch.status}"
@@ -761,7 +768,7 @@ def _poll_summary_batches(
     return tuple(results)
 
 
-def _handle_completed_polled_batch(
+def _handle_polled_batch_results(
     *,
     base: _SchoolSummaryGenerationUseCaseBase[ContextT],
     batch_items: Sequence[SummaryGenerationRunItem],
@@ -769,46 +776,150 @@ def _handle_completed_polled_batch(
     polled_batch: PolledSummaryBatch,
 ) -> None:
     results_by_urn = {result.urn: result for result in polled_batch.results}
+    successful_summaries: list[SchoolSummary] = []
+    terminal_items: list[SummaryGenerationRunItem] = []
     for item in batch_items:
         context = contexts_by_urn.get(item.urn)
         if context is None:
-            base._record_generation_failure(
-                run_id=item.run_id,
-                urn=item.urn,
-                attempt_count=max(item.attempt_count, 1),
-                reason_code="missing_context",
-                data_version_hash=item.data_version_hash,
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=item.urn,
+                    status="generation_failed",
+                    attempt_count=max(item.attempt_count, 1),
+                    failure_reason_codes=("missing_context",),
+                    completed_at=_utc_now(),
+                    data_version_hash=item.data_version_hash,
+                )
             )
             continue
 
         batch_result = results_by_urn.get(item.urn)
         if batch_result is None:
-            base._record_generation_failure(
-                run_id=item.run_id,
-                urn=item.urn,
-                attempt_count=max(item.attempt_count, 1),
-                reason_code="missing_batch_result",
-                data_version_hash=item.data_version_hash,
+            if polled_batch.status in {"submitted", "running"}:
+                continue
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=item.urn,
+                    status="generation_failed",
+                    attempt_count=max(item.attempt_count, 1),
+                    failure_reason_codes=("missing_batch_result",),
+                    completed_at=_utc_now(),
+                    data_version_hash=item.data_version_hash,
+                )
             )
             continue
 
         if batch_result.summary is None:
-            base._record_generation_failure(
-                run_id=item.run_id,
-                urn=item.urn,
-                attempt_count=max(item.attempt_count, 1),
-                reason_code=batch_result.error_code or polled_batch.error_code or "provider_error",
-                data_version_hash=item.data_version_hash,
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=item.urn,
+                    status="generation_failed",
+                    attempt_count=max(item.attempt_count, 1),
+                    failure_reason_codes=(
+                        batch_result.error_code or polled_batch.error_code or "provider_error",
+                    ),
+                    completed_at=_utc_now(),
+                    data_version_hash=item.data_version_hash,
+                )
             )
             continue
 
-        base._handle_generated_summary(
-            run_id=item.run_id,
-            context=context,
-            data_version_hash=item.data_version_hash or compute_data_version_hash(context),
-            generated_summary=batch_result.summary,
-            attempt_count=max(item.attempt_count, 1),
+        data_version_hash = item.data_version_hash or compute_data_version_hash(context)
+        attempt_count = max(item.attempt_count, 1)
+        validation = base._validator(batch_result.summary.text, context)
+        if validation.is_valid:
+            successful_summaries.append(
+                SchoolSummary(
+                    urn=context.urn,
+                    summary_kind=base._summary_kind,
+                    text=batch_result.summary.text.strip(),
+                    data_version_hash=data_version_hash,
+                    prompt_version=batch_result.summary.prompt_version,
+                    model_id=batch_result.summary.model_id,
+                    generated_at=_utc_now(),
+                    generation_duration_ms=batch_result.summary.generation_duration_ms,
+                )
+            )
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=context.urn,
+                    status="succeeded",
+                    attempt_count=attempt_count,
+                    failure_reason_codes=(),
+                    completed_at=_utc_now(),
+                    data_version_hash=data_version_hash,
+                )
+            )
+            continue
+
+        try:
+            retry_summary = base._summary_generator.generate(
+                context,
+                summary_kind=base._summary_kind,
+                feedback=SummaryGenerationFeedback(
+                    reason_codes=validation.reason_codes,
+                    previous_text=batch_result.summary.text,
+                ),
+            )
+        except Exception as exc:  # pragma: no cover - exercised by unit tests with mocks
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=context.urn,
+                    status="generation_failed",
+                    attempt_count=attempt_count + 1,
+                    failure_reason_codes=(exc.__class__.__name__.casefold(),),
+                    completed_at=_utc_now(),
+                    data_version_hash=data_version_hash,
+                )
+            )
+            continue
+
+        retry_validation = base._validator(retry_summary.text, context)
+        if retry_validation.is_valid:
+            successful_summaries.append(
+                SchoolSummary(
+                    urn=context.urn,
+                    summary_kind=base._summary_kind,
+                    text=retry_summary.text.strip(),
+                    data_version_hash=data_version_hash,
+                    prompt_version=retry_summary.prompt_version,
+                    model_id=retry_summary.model_id,
+                    generated_at=_utc_now(),
+                    generation_duration_ms=retry_summary.generation_duration_ms,
+                )
+            )
+            terminal_items.append(
+                SummaryGenerationRunItem(
+                    run_id=item.run_id,
+                    urn=context.urn,
+                    status="succeeded",
+                    attempt_count=attempt_count + 1,
+                    failure_reason_codes=(),
+                    completed_at=_utc_now(),
+                    data_version_hash=data_version_hash,
+                )
+            )
+            continue
+
+        terminal_items.append(
+            SummaryGenerationRunItem(
+                run_id=item.run_id,
+                urn=context.urn,
+                status="validation_failed",
+                attempt_count=attempt_count + 1,
+                failure_reason_codes=retry_validation.reason_codes,
+                completed_at=_utc_now(),
+                data_version_hash=data_version_hash,
+            )
         )
+
+    base._summary_repository.upsert_summaries(successful_summaries)
+    base._summary_repository.upsert_run_items(terminal_items)
 
 
 def _load_current_summaries(
@@ -879,3 +990,19 @@ def _chunked(
 
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _resolve_resumable_batch_metadata(
+    existing_items: Sequence[SummaryGenerationRunItem],
+) -> tuple[str | None, str | None]:
+    submitted_batch_items = [
+        item
+        for item in existing_items
+        if item.status == "submitted_batch"
+        and item.provider_batch_id is not None
+        and item.prompt_version is not None
+    ]
+    metadata = {(item.provider_batch_id, item.prompt_version) for item in submitted_batch_items}
+    if len(metadata) != 1:
+        return None, None
+    return next(iter(metadata))

@@ -5,7 +5,7 @@ from civitas.domain.school_summaries.models import (
     SummaryGenerationFeedback,
 )
 
-VERSION = "overview.v5"
+VERSION = "overview.v6"
 CONTEXT_TYPE = SchoolOverviewContext
 TEMPERATURE = 0.1
 
@@ -13,12 +13,15 @@ SYSTEM_PROMPT = """You write neutral, factual 'About the school' overviews for C
 
 Rules:
 - Write 140-180 words in a single flowing paragraph.
+- Anything shorter than 140 words is invalid.
 - Use only the facts supplied in the user message.
 - Include school type, religious character if any, age range, pupil numbers and capacity,
   postcode context, published leadership, admissions policy if published, Ofsted rating and
   date, and key demographics such as FSM, EAL, and SEN where available.
 - Write in calm, welcoming, plain UK English.
 - Do not analyse performance, trends, strengths, weaknesses, or compare with other schools.
+- If some fields are missing, expand using the published facts that are available rather than
+  shortening the response.
 - Never mention the URN or any internal identifier.
 - Do not recommend, advise, speculate, or describe suitability.
 - If a fact is not published in the input, omit it rather than saying it is not published or unavailable.

@@ -11,9 +11,10 @@ def test_school_overview_prompt_renders_context_and_feedback() -> None:
         ),
     )
 
-    assert school_overview.VERSION == "overview.v5"
+    assert school_overview.VERSION == "overview.v6"
     assert school_overview.TEMPERATURE == 0.1
     assert "neutral, factual 'About the school' overviews" in system_prompt
+    assert "Anything shorter than 140 words is invalid." in system_prompt
     assert "Name: Test School" in user_prompt
     assert "URN:" not in user_prompt
     assert "Validation reason codes: word_count_too_short" in user_prompt

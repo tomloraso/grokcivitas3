@@ -65,12 +65,16 @@ def generate_summaries(
 
     has_failed = False
     for kind in summary_kinds:
-        result = _submit_summary_use_case(kind).execute(
-            urns=urn,
-            trigger="manual",
-            force=force,
-            resume_run_id=resolved_run_id,
-        )
+        try:
+            result = _submit_summary_use_case(kind).execute(
+                urns=urn,
+                trigger="manual",
+                force=force,
+                resume_run_id=resolved_run_id,
+            )
+        except RuntimeError as exc:
+            typer.echo(str(exc))
+            raise typer.Exit(code=1) from None
         typer.echo(_format_summary_generation_result(kind, result))
         if result.generation_failed_count > 0 or result.validation_failed_count > 0:
             has_failed = True
@@ -97,7 +101,11 @@ def poll_summary_batches(
     had_pending = False
     has_failed = False
     for kind in summary_kinds:
-        results = _poll_summary_use_case(kind).execute(run_id=resolved_run_id)
+        try:
+            results = _poll_summary_use_case(kind).execute(run_id=resolved_run_id)
+        except RuntimeError as exc:
+            typer.echo(str(exc))
+            raise typer.Exit(code=1) from None
         if not results:
             typer.echo(f"{kind}: no pending async batch items found.")
             continue

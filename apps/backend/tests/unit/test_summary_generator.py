@@ -33,7 +33,7 @@ def test_openai_compatible_summary_generator_builds_overview_summary() -> None:
     result = generator.generate(_context(), summary_kind="overview")
 
     assert result.text == "Model text."
-    assert result.prompt_version == "overview.v5"
+    assert result.prompt_version == "overview.v6"
     assert result.model_id == "test-model"
 
 
@@ -83,7 +83,7 @@ def test_openai_compatible_summary_generator_builds_analyst_summary() -> None:
     result = generator.generate(_analyst_context(), summary_kind="analyst")
 
     assert result.text == "Analyst text."
-    assert result.prompt_version == "analyst.v4"
+    assert result.prompt_version == "analyst.v6"
     assert result.model_id == "test-model"
 
 
@@ -178,6 +178,86 @@ def test_grok_summary_generator_uses_batch_api_for_bulk_generation() -> None:
             "https://api.x.ai/v1/batches/batch-1/results?page_size=100&pagination_token=page-2",
         ),
     ]
+
+
+def test_grok_summary_generator_reuses_existing_provider_batch() -> None:
+    requests_seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests_seen.append((request.method, str(request.url)))
+        if request.method == "POST" and str(request.url).endswith("/v1/batches/batch-1/requests"):
+            return httpx.Response(
+                200, content=b"null", headers={"Content-Type": "application/json"}
+            )
+        raise AssertionError(f"Unexpected request: {request.method} {request.url}")
+
+    generator = GrokSummaryGenerator(
+        api_key="test-key",
+        model_id="test-model",
+        timeout_seconds=5,
+        max_retries=0,
+        retry_backoff_seconds=0.1,
+        batch_poll_interval_seconds=0,
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    submitted = generator.submit_batch(
+        [_context()],
+        summary_kind="overview",
+        provider_batch_id="batch-1",
+    )
+
+    assert submitted.provider_batch_id == "batch-1"
+    assert requests_seen == [("POST", "https://api.x.ai/v1/batches/batch-1/requests")]
+
+
+def test_grok_summary_generator_returns_partial_results_while_batch_running() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET" and str(request.url).endswith("/v1/batches/batch-1"):
+            return httpx.Response(
+                200,
+                json={
+                    "id": "batch-1",
+                    "state": {"num_pending": 1, "num_success": 1, "num_error": 0},
+                },
+            )
+        if request.method == "GET" and str(request.url).endswith(
+            "/v1/batches/batch-1/results?page_size=100"
+        ):
+            return httpx.Response(
+                200,
+                json={
+                    "results": [
+                        {
+                            "batch_request_id": "100001",
+                            "batch_result": {
+                                "response": {
+                                    "chat_get_completion": _payload("Batch text one."),
+                                }
+                            },
+                        }
+                    ]
+                },
+            )
+        raise AssertionError(f"Unexpected request: {request.method} {request.url}")
+
+    generator = GrokSummaryGenerator(
+        api_key="test-key",
+        model_id="test-model",
+        timeout_seconds=5,
+        max_retries=0,
+        retry_backoff_seconds=0.1,
+        batch_poll_interval_seconds=0,
+        http_client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+
+    polled = generator.poll_batch(provider_batch_id="batch-1", prompt_version="overview.v6")
+
+    assert polled.status == "running"
+    assert len(polled.results) == 1
+    assert polled.results[0].urn == "100001"
+    assert polled.results[0].summary is not None
+    assert polled.results[0].summary.text == "Batch text one."
 
 
 def _payload(text: str) -> Mapping[str, object]:

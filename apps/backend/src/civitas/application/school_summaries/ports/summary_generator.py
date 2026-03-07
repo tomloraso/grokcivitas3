@@ -43,6 +43,7 @@ class AsyncBatchSummaryGenerator(Protocol):
         contexts: Sequence[SummaryContext],
         *,
         summary_kind: SummaryKind,
+        provider_batch_id: str | None = None,
     ) -> SubmittedSummaryBatch: ...
 
     def poll_batch(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Sequence
 from datetime import datetime, timezone
 from typing import Any, cast
@@ -83,110 +84,63 @@ class PostgresSummaryRepository(SummaryRepository):
             return [_map_summary(row) for row in rows]
 
     def upsert_summary(self, summary: SchoolSummary) -> None:
+        self.upsert_summaries([summary])
+
+    def upsert_summaries(self, summaries: Sequence[SchoolSummary]) -> None:
+        if not summaries:
+            return
+
+        summaries_by_kind: dict[SummaryKind, list[SchoolSummary]] = defaultdict(list)
+        for summary in summaries:
+            summaries_by_kind[summary.summary_kind].append(summary)
+
         with self._engine.begin() as connection:
-            existing = (
-                connection.execute(
-                    text(
-                        """
-                        SELECT
-                            urn,
-                            summary_kind,
-                            text,
-                            data_version_hash,
-                            prompt_version,
-                            model_id,
-                            generated_at
-                        FROM school_ai_summaries
-                        WHERE urn = :urn
-                          AND summary_kind = :summary_kind
-                        """
-                    ),
-                    {"urn": summary.urn, "summary_kind": summary.summary_kind},
+            existing_rows: list[RowMapping] = []
+            for summary_kind, kind_summaries in summaries_by_kind.items():
+                urns = [summary.urn for summary in kind_summaries]
+                existing_rows.extend(
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                urn,
+                                summary_kind,
+                                text,
+                                data_version_hash,
+                                prompt_version,
+                                model_id,
+                                generated_at
+                            FROM school_ai_summaries
+                            WHERE summary_kind = :summary_kind
+                              AND urn IN :urns
+                            """
+                        ).bindparams(bindparam("urns", expanding=True)),
+                        {"summary_kind": summary_kind, "urns": urns},
+                    )
+                    .mappings()
+                    .all()
                 )
-                .mappings()
-                .first()
-            )
-            if existing is not None:
+
+            summaries_by_key = {
+                (summary.summary_kind, summary.urn): summary for summary in summaries
+            }
+            if existing_rows:
                 connection.execute(
-                    text(
-                        """
-                        INSERT INTO school_ai_summary_history (
-                            id,
-                            urn,
-                            summary_kind,
-                            text,
-                            data_version_hash,
-                            prompt_version,
-                            model_id,
-                            generated_at,
-                            superseded_at
-                        ) VALUES (
-                            :id,
-                            :urn,
-                            :summary_kind,
-                            :text,
-                            :data_version_hash,
-                            :prompt_version,
-                            :model_id,
-                            :generated_at,
-                            :superseded_at
+                    _INSERT_SUMMARY_HISTORY_STATEMENT,
+                    [
+                        _insert_summary_history_params(
+                            row=existing,
+                            superseded_at=summaries_by_key[
+                                (_to_summary_kind(existing["summary_kind"]), str(existing["urn"]))
+                            ].generated_at,
                         )
-                        """
-                    ),
-                    {
-                        "id": str(uuid4()),
-                        "urn": existing["urn"],
-                        "summary_kind": existing["summary_kind"],
-                        "text": existing["text"],
-                        "data_version_hash": existing["data_version_hash"],
-                        "prompt_version": existing["prompt_version"],
-                        "model_id": existing["model_id"],
-                        "generated_at": existing["generated_at"],
-                        "superseded_at": summary.generated_at,
-                    },
+                        for existing in existing_rows
+                    ],
                 )
 
             connection.execute(
-                text(
-                    """
-                    INSERT INTO school_ai_summaries (
-                        urn,
-                        summary_kind,
-                        text,
-                        data_version_hash,
-                        prompt_version,
-                        model_id,
-                        generated_at,
-                        generation_duration_ms
-                    ) VALUES (
-                        :urn,
-                        :summary_kind,
-                        :text,
-                        :data_version_hash,
-                        :prompt_version,
-                        :model_id,
-                        :generated_at,
-                        :generation_duration_ms
-                    )
-                    ON CONFLICT (urn, summary_kind) DO UPDATE SET
-                        text = EXCLUDED.text,
-                        data_version_hash = EXCLUDED.data_version_hash,
-                        prompt_version = EXCLUDED.prompt_version,
-                        model_id = EXCLUDED.model_id,
-                        generated_at = EXCLUDED.generated_at,
-                        generation_duration_ms = EXCLUDED.generation_duration_ms
-                    """
-                ),
-                {
-                    "urn": summary.urn,
-                    "summary_kind": summary.summary_kind,
-                    "text": summary.text,
-                    "data_version_hash": summary.data_version_hash,
-                    "prompt_version": summary.prompt_version,
-                    "model_id": summary.model_id,
-                    "generated_at": summary.generated_at,
-                    "generation_duration_ms": summary.generation_duration_ms,
-                },
+                _UPSERT_SUMMARY_STATEMENT,
+                [_upsert_summary_params(summary) for summary in summaries],
             )
 
     def create_run(
@@ -341,75 +295,16 @@ class PostgresSummaryRepository(SummaryRepository):
             return [_map_run_item(row) for row in rows]
 
     def upsert_run_item(self, item: SummaryGenerationRunItem) -> None:
+        self.upsert_run_items([item])
+
+    def upsert_run_items(self, items: Sequence[SummaryGenerationRunItem]) -> None:
+        if not items:
+            return
+
         with self._engine.begin() as connection:
             connection.execute(
-                text(
-                    """
-                    INSERT INTO ai_generation_run_items (
-                        run_id,
-                        urn,
-                        status,
-                        attempt_count,
-                        failure_reason_codes,
-                        completed_at,
-                        data_version_hash,
-                        provider_name,
-                        provider_batch_id,
-                        prompt_version,
-                        submitted_at
-                    ) VALUES (
-                        :run_id,
-                        :urn,
-                        :status,
-                        :attempt_count,
-                        :failure_reason_codes,
-                        :completed_at,
-                        :data_version_hash,
-                        :provider_name,
-                        :provider_batch_id,
-                        :prompt_version,
-                        :submitted_at
-                    )
-                    ON CONFLICT (run_id, urn) DO UPDATE SET
-                        status = EXCLUDED.status,
-                        attempt_count = EXCLUDED.attempt_count,
-                        failure_reason_codes = EXCLUDED.failure_reason_codes,
-                        completed_at = EXCLUDED.completed_at,
-                        data_version_hash = COALESCE(
-                            EXCLUDED.data_version_hash,
-                            ai_generation_run_items.data_version_hash
-                        ),
-                        provider_name = COALESCE(
-                            EXCLUDED.provider_name,
-                            ai_generation_run_items.provider_name
-                        ),
-                        provider_batch_id = COALESCE(
-                            EXCLUDED.provider_batch_id,
-                            ai_generation_run_items.provider_batch_id
-                        ),
-                        prompt_version = COALESCE(
-                            EXCLUDED.prompt_version,
-                            ai_generation_run_items.prompt_version
-                        ),
-                        submitted_at = COALESCE(
-                            EXCLUDED.submitted_at,
-                            ai_generation_run_items.submitted_at
-                        )
-                    """
-                ),
-                {
-                    "run_id": str(item.run_id),
-                    "urn": item.urn,
-                    "status": item.status,
-                    "attempt_count": item.attempt_count,
-                    "failure_reason_codes": list(item.failure_reason_codes),
-                    "completed_at": item.completed_at,
-                    "data_version_hash": item.data_version_hash,
-                    "provider_name": item.provider_name,
-                    "provider_batch_id": item.provider_batch_id,
-                    "prompt_version": item.prompt_version,
-                    "submitted_at": item.submitted_at,
-                },
+                _UPSERT_RUN_ITEM_STATEMENT,
+                [_upsert_run_item_params(item) for item in items],
             )
 
     def finalize_run(self, run_id: UUID, status: SummaryRunStatus) -> SummaryGenerationRun:
@@ -595,3 +490,165 @@ def _to_optional_datetime(value: object) -> datetime | None:
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+_UPSERT_SUMMARY_STATEMENT = text(
+    """
+    INSERT INTO school_ai_summaries (
+        urn,
+        summary_kind,
+        text,
+        data_version_hash,
+        prompt_version,
+        model_id,
+        generated_at,
+        generation_duration_ms
+    ) VALUES (
+        :urn,
+        :summary_kind,
+        :text,
+        :data_version_hash,
+        :prompt_version,
+        :model_id,
+        :generated_at,
+        :generation_duration_ms
+    )
+    ON CONFLICT (urn, summary_kind) DO UPDATE SET
+        text = EXCLUDED.text,
+        data_version_hash = EXCLUDED.data_version_hash,
+        prompt_version = EXCLUDED.prompt_version,
+        model_id = EXCLUDED.model_id,
+        generated_at = EXCLUDED.generated_at,
+        generation_duration_ms = EXCLUDED.generation_duration_ms
+    """
+)
+
+
+_INSERT_SUMMARY_HISTORY_STATEMENT = text(
+    """
+    INSERT INTO school_ai_summary_history (
+        id,
+        urn,
+        summary_kind,
+        text,
+        data_version_hash,
+        prompt_version,
+        model_id,
+        generated_at,
+        superseded_at
+    ) VALUES (
+        :id,
+        :urn,
+        :summary_kind,
+        :text,
+        :data_version_hash,
+        :prompt_version,
+        :model_id,
+        :generated_at,
+        :superseded_at
+    )
+    """
+)
+
+
+_UPSERT_RUN_ITEM_STATEMENT = text(
+    """
+    INSERT INTO ai_generation_run_items (
+        run_id,
+        urn,
+        status,
+        attempt_count,
+        failure_reason_codes,
+        completed_at,
+        data_version_hash,
+        provider_name,
+        provider_batch_id,
+        prompt_version,
+        submitted_at
+    ) VALUES (
+        :run_id,
+        :urn,
+        :status,
+        :attempt_count,
+        :failure_reason_codes,
+        :completed_at,
+        :data_version_hash,
+        :provider_name,
+        :provider_batch_id,
+        :prompt_version,
+        :submitted_at
+    )
+    ON CONFLICT (run_id, urn) DO UPDATE SET
+        status = EXCLUDED.status,
+        attempt_count = EXCLUDED.attempt_count,
+        failure_reason_codes = EXCLUDED.failure_reason_codes,
+        completed_at = EXCLUDED.completed_at,
+        data_version_hash = COALESCE(
+            EXCLUDED.data_version_hash,
+            ai_generation_run_items.data_version_hash
+        ),
+        provider_name = COALESCE(
+            EXCLUDED.provider_name,
+            ai_generation_run_items.provider_name
+        ),
+        provider_batch_id = COALESCE(
+            EXCLUDED.provider_batch_id,
+            ai_generation_run_items.provider_batch_id
+        ),
+        prompt_version = COALESCE(
+            EXCLUDED.prompt_version,
+            ai_generation_run_items.prompt_version
+        ),
+        submitted_at = COALESCE(
+            EXCLUDED.submitted_at,
+            ai_generation_run_items.submitted_at
+        )
+    """
+)
+
+
+def _upsert_run_item_params(item: SummaryGenerationRunItem) -> dict[str, object]:
+    return {
+        "run_id": str(item.run_id),
+        "urn": item.urn,
+        "status": item.status,
+        "attempt_count": item.attempt_count,
+        "failure_reason_codes": list(item.failure_reason_codes),
+        "completed_at": item.completed_at,
+        "data_version_hash": item.data_version_hash,
+        "provider_name": item.provider_name,
+        "provider_batch_id": item.provider_batch_id,
+        "prompt_version": item.prompt_version,
+        "submitted_at": item.submitted_at,
+    }
+
+
+def _upsert_summary_params(summary: SchoolSummary) -> dict[str, object]:
+    return {
+        "urn": summary.urn,
+        "summary_kind": summary.summary_kind,
+        "text": summary.text,
+        "data_version_hash": summary.data_version_hash,
+        "prompt_version": summary.prompt_version,
+        "model_id": summary.model_id,
+        "generated_at": summary.generated_at,
+        "generation_duration_ms": summary.generation_duration_ms,
+    }
+
+
+def _insert_summary_history_params(
+    *,
+    row: RowMapping,
+    superseded_at: datetime,
+) -> dict[str, object]:
+    return {
+        "id": str(uuid4()),
+        "urn": str(row["urn"]),
+        "summary_kind": str(row["summary_kind"]),
+        "text": str(row["text"]),
+        "data_version_hash": str(row["data_version_hash"]),
+        "prompt_version": str(row["prompt_version"]),
+        "model_id": str(row["model_id"]),
+        "generated_at": row["generated_at"],
+        "superseded_at": superseded_at,
+    }

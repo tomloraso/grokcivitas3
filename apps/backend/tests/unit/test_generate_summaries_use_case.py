@@ -90,7 +90,7 @@ class FakeBatchSummaryGenerator(FakeSummaryGenerator):
         self._async_submissions = list(async_submissions or [])
         self._polled_batches = list(polled_batches or [])
         self.batch_calls: list[tuple[str, tuple[str, ...]]] = []
-        self.submit_calls: list[tuple[str, tuple[str, ...]]] = []
+        self.submit_calls: list[tuple[str, tuple[str, ...], str | None]] = []
         self.poll_calls: list[tuple[str, str]] = []
 
     def generate_batch(
@@ -113,8 +113,11 @@ class FakeBatchSummaryGenerator(FakeSummaryGenerator):
         contexts: Sequence[SchoolOverviewContext | SchoolAnalystContext],
         *,
         summary_kind: str,
+        provider_batch_id: str | None = None,
     ) -> SubmittedSummaryBatch:
-        self.submit_calls.append((summary_kind, tuple(context.urn for context in contexts)))
+        self.submit_calls.append(
+            (summary_kind, tuple(context.urn for context in contexts), provider_batch_id)
+        )
         result = self._async_submissions.pop(0)
         if isinstance(result, Exception):
             raise result
@@ -163,6 +166,10 @@ class FakeSummaryRepository:
 
     def upsert_summary(self, summary: SchoolSummary) -> None:
         self.summaries[(summary.summary_kind, summary.urn)] = summary
+
+    def upsert_summaries(self, summaries: Sequence[SchoolSummary]) -> None:
+        for summary in summaries:
+            self.upsert_summary(summary)
 
     def create_run(
         self,
@@ -222,6 +229,10 @@ class FakeSummaryRepository:
             prompt_version=item.prompt_version or existing.prompt_version,
             submitted_at=item.submitted_at or existing.submitted_at,
         )
+
+    def upsert_run_items(self, items: Sequence[SummaryGenerationRunItem]) -> None:
+        for item in items:
+            self.upsert_run_item(item)
 
     def finalize_run(self, run_id: UUID, status: str) -> SummaryGenerationRun:
         items = self.list_run_items(run_id)
@@ -464,7 +475,7 @@ def test_submit_school_overview_batches_marks_chunk_as_pending() -> None:
 
     assert result.status == "running"
     assert result.pending_count == 2
-    assert generator.submit_calls == [("overview", ("100001", "100002"))]
+    assert generator.submit_calls == [("overview", ("100001", "100002"), None)]
     pending_items = repository.list_pending_batch_run_items("overview", result.run_id)
     assert [item.provider_batch_id for item in pending_items] == ["batch-1", "batch-1"]
 
@@ -489,7 +500,7 @@ def test_submit_school_overview_batches_fails_fast_when_async_submission_errors(
             batch_size=10,
         ).execute()
 
-    assert generator.submit_calls == [("overview", ("100001", "100002"))]
+    assert generator.submit_calls == [("overview", ("100001", "100002"), None)]
     assert generator.calls == []
     run = next(iter(repository.runs.values()))
     assert run.status == "running"
@@ -770,11 +781,110 @@ def test_submit_and_poll_school_analyst_batches_use_analyst_kind() -> None:
         batch_size=10,
     ).execute(run_id=submitted.run_id)
 
-    assert generator.submit_calls == [("analyst", ("100001",))]
+    assert generator.submit_calls == [("analyst", ("100001",), None)]
     assert generator.poll_calls == [("batch-analyst-1", "analyst.v1")]
     assert len(results) == 1
     assert results[0].succeeded_count == 1
     assert repository.get_summary("100001", "analyst") is not None
+
+
+def test_submit_school_overview_batches_reuses_provider_batch_across_chunks() -> None:
+    repository = FakeSummaryRepository()
+    generator = FakeBatchSummaryGenerator(
+        results=[],
+        batch_results=[],
+        async_submissions=[
+            SubmittedSummaryBatch(
+                provider="grok",
+                provider_batch_id="batch-1",
+                prompt_version="overview.v1",
+                request_count=1,
+                submitted_at=datetime(2026, 3, 6, 12, 0, tzinfo=timezone.utc),
+            ),
+            SubmittedSummaryBatch(
+                provider="grok",
+                provider_batch_id="batch-1",
+                prompt_version="overview.v1",
+                request_count=1,
+                submitted_at=datetime(2026, 3, 6, 12, 0, tzinfo=timezone.utc),
+            ),
+        ],
+    )
+    contexts = [_context(), _context(urn="100002", name="Second School")]
+
+    result = SubmitSchoolOverviewBatchesUseCase(
+        context_repository=FakeSummaryContextRepository(overview_contexts=contexts),
+        summary_generator=generator,
+        summary_repository=repository,
+        batch_size=1,
+    ).execute()
+
+    assert result.pending_count == 2
+    assert generator.submit_calls == [
+        ("overview", ("100001",), None),
+        ("overview", ("100002",), "batch-1"),
+    ]
+    pending_items = repository.list_pending_batch_run_items("overview", result.run_id)
+    assert {item.provider_batch_id for item in pending_items} == {"batch-1"}
+
+
+def test_poll_school_overview_batches_processes_partial_results_while_running() -> None:
+    repository = FakeSummaryRepository()
+    generator = FakeBatchSummaryGenerator(
+        results=[],
+        batch_results=[],
+        async_submissions=[
+            SubmittedSummaryBatch(
+                provider="grok",
+                provider_batch_id="batch-1",
+                prompt_version="overview.v1",
+                request_count=2,
+                submitted_at=datetime(2026, 3, 6, 12, 0, tzinfo=timezone.utc),
+            )
+        ],
+        polled_batches=[
+            PolledSummaryBatch(
+                provider="grok",
+                provider_batch_id="batch-1",
+                status="running",
+                results=(
+                    BatchGeneratedSummaryResult(
+                        urn="100001",
+                        summary=GeneratedSummary(
+                            text=_valid_text(),
+                            prompt_version="overview.v1",
+                            model_id="test-model",
+                            generation_duration_ms=None,
+                        ),
+                        error_code=None,
+                    ),
+                ),
+                error_code=None,
+            )
+        ],
+    )
+    contexts = [_context(), _context(urn="100002", name="Second School")]
+
+    submitted = SubmitSchoolOverviewBatchesUseCase(
+        context_repository=FakeSummaryContextRepository(overview_contexts=contexts),
+        summary_generator=generator,
+        summary_repository=repository,
+        batch_size=10,
+    ).execute()
+    results = PollSchoolOverviewBatchesUseCase(
+        context_repository=FakeSummaryContextRepository(overview_contexts=contexts),
+        summary_generator=generator,
+        summary_repository=repository,
+        batch_size=10,
+    ).execute(run_id=submitted.run_id)
+
+    assert len(results) == 1
+    assert results[0].status == "running"
+    assert results[0].pending_count == 1
+    assert results[0].succeeded_count == 1
+    assert repository.get_summary("100001", "overview") is not None
+    remaining = repository.list_pending_batch_run_items("overview", submitted.run_id)
+    assert [item.urn for item in remaining] == ["100002"]
 
 
 def _context(*, urn: str = "100001", name: str = "Test School") -> SchoolOverviewContext:
