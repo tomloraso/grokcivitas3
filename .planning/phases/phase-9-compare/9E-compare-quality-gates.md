@@ -1,8 +1,8 @@
-# 8E - Compare Quality Gates
+# 9E - Compare Quality Gates
 
 ## Goal
 
-Close Phase 8 with a single repo state that proves compare is stable across backend, web, and data-contract boundaries.
+Close Phase 9 with a single repo state that proves compare is stable across backend, web, and data-contract boundaries.
 
 ## Required Checks
 
@@ -22,4 +22,4 @@ Close Phase 8 with a single repo state that proves compare is stable across back
 
 ## Sign-Off Condition
 
-Phase 8 is complete only when backend, web, and generated-contract evidence all pass in one repository state.
+Phase 9 is complete only when backend, web, and generated-contract evidence all pass in one repository state.

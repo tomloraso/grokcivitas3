@@ -94,7 +94,7 @@ Phase 5 is split into eight substantial deliverables:
 
 - Phase 5 can run alongside backend expansion work, but frontend styling should stay aligned with Phase 2 profile sections.
 - Final trend-state UX should align with the completeness semantics established in Phase 4.
-- If theme preference is ever account-backed instead of local-only, that work belongs in Phase 9.
+- If theme preference is ever account-backed instead of local-only, that work belongs in Phase 10.
 
 ## Progress (2026-03-06)
 

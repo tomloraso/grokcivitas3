@@ -1,11 +1,11 @@
-# Phase 7 / AI-4 Design - Summary Platform Hardening
+# Phase 8 / AI-4 Design - Summary Platform Hardening
 
 ## Document Control
 
 - Status: Implemented
 - Last updated: 2026-03-06
 - Depends on:
-  - `.planning/phases/phase-7-ai-overview/AI-2-school-overview-summary.md`
+  - `.planning/phases/phase-8-ai-overview/AI-2-school-overview-summary.md`
   - `docs/architecture/backend-conventions.md`
 
 ## Objective

@@ -3,8 +3,8 @@
 ## Document Control
 
 - Status: Current implemented baseline
-- Last updated: 2026-03-06
-- Related phase: `Phase 7 - AI overview + school identity enrichment`
+- Last updated: 2026-03-07
+- Related phase: `Phase 8 - AI overview + school identity enrichment`
 
 ## Current AI Scope
 

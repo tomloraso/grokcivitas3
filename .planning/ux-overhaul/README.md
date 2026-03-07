@@ -282,7 +282,7 @@ Each phase is independently reversible:
 |------|--------|--------|
 | Restructure full page narrative (7-act model) | 🔜 Future | Requires more user testing first — get the card design right, then restructure |
 | Redesign ProfileHeader | 🔜 Future | Works well, lower priority |
-| WorkforceLeadershipSection benchmarks | 🔜 Phase 8 | Do after core sections proven |
+| WorkforceLeadershipSection benchmarks | 🔜 Phase 9 | Do after core sections proven |
 | NeighbourhoodSection redesign | 🔜 Future | Different data type, different treatment needed |
 | Three-line sparkline (school + local + national) | 🔜 Future | Requires Sparkline component extension — do after Phase 6 proven |
 | New page structure / tabs | 🔜 Future | After card design is proven at 6 weeks |
@@ -303,8 +303,8 @@ Each phase is independently reversible:
 ## Progress Log
 
 > **All code changes are local only — nothing below has been committed to the repository.**
-> The planning structure for this work is committed at `.planning/phases/phase-6a-profile-ux-overhaul/`
-> and referenced in `.planning/phased-delivery.md` as Phase 6a.
+> The planning structure for this work is committed at `.planning/phases/phase-7-profile-ux-overhaul/`
+> and referenced in `.planning/phased-delivery.md` as Phase 7.
 > Implementation will be committed once design is reviewed and approved.
 
 | Date | Deliverable | Local status | Committed to repo |

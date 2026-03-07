@@ -1,4 +1,4 @@
-# 8C - Compare Selection State And Entry Points
+# 9C - Compare Selection State And Entry Points
 
 ## Goal
 
@@ -21,7 +21,7 @@ Let users build a compare set naturally from the existing search and profile exp
 
 - Selection state belongs in the web app layer, not in ad-hoc component local state.
 - Feature modules should consume typed compare helpers, not raw storage or query parsing.
-- Persistence may start with local browser storage plus URL query params; account-backed persistence is deferred to Phase 9 or later.
+- Persistence may start with local browser storage plus URL query params; account-backed persistence is deferred to Phase 10 or later.
 
 ## UX Requirements
 

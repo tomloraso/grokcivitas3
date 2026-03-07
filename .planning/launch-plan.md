@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planning baseline
-- Last updated: 2026-03-06
+- Last updated: 2026-03-07
 - Scope: Launch sequencing aligned to current product completeness
 
 ## Current Readiness Snapshot
@@ -25,19 +25,19 @@ Launch planning should therefore be staged around product completeness rather th
 
 ### Stage 2 - Research beta
 
-- Open access to a small group of target users after Phase 8 compare is complete.
+- Open access to a small group of target users after Phase 9 compare is complete.
 - Validate whether users can move from postcode search to shortlist to comparison without assistance.
 - Collect structured feedback on missing metrics, unclear terminology, and willingness to pay.
 
 ### Stage 3 - Public free launch
 
-- Public launch should follow successful Phase 8 sign-off.
+- Public launch should follow successful Phase 9 sign-off.
 - Position the product around honest, source-backed school research, not opinion or recommendations.
 - Public launch scope should emphasize search, profile depth, trends, benchmarks, and comparison.
 
 ### Stage 4 - Premium launch
 
-- Premium launch should follow successful Phase 9 sign-off.
+- Premium launch should follow successful Phase 10 sign-off.
 - Position premium around deeper postcode-level research and access control clarity.
 - Conversion flow must be backed by proven entitlement enforcement and payment reconciliation.
 

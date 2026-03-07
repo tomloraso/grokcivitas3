@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning baseline
-- Last updated: 2026-03-06
+- Last updated: 2026-03-07
 - Scope: Metrics exposed today or explicitly planned for the Civitas school-research product
 
 ## Status Meanings
@@ -52,8 +52,8 @@
 | House-price context | Implemented | Land Registry | Area trend and context summary |
 | Benchmarks for supported metrics | Implemented | Derived from Gold serving layer | Profile, trends, and dashboard responses |
 | Cross-domain trend dashboard | Implemented | Derived from Gold serving layer | Dashboard route payload |
-| Compare-ready aligned metric set | Planned | Existing Gold facts | Planned for Phase 8 |
-| Premium-only data boundary | Planned | Existing Gold facts + entitlements | Planned for Phase 9 |
+| Compare-ready aligned metric set | Planned | Existing Gold facts | Planned for Phase 9 |
+| Premium-only data boundary | Planned | Existing Gold facts + entitlements | Planned for Phase 10 |
 | Pupil premium impact | Planned | Additional source required | Not yet sourced |
 
 ## Product Rules
@@ -65,4 +65,4 @@
 ## Open Questions
 
 1. Whether pupil premium impact remains worth sourcing for MVP-adjacent delivery.
-2. Which benchmark views should become first-class compare metrics in Phase 8.
+2. Which benchmark views should become first-class compare metrics in Phase 9.

@@ -1,11 +1,11 @@
-# Phase 7 / AI-2 Design - AI-Generated School Summaries
+# Phase 8 / AI-2 Design - AI-Generated School Summaries
 
 ## Document Control
 
 - Status: Implemented
 - Last updated: 2026-03-06
 - Depends on:
-  - `.planning/phases/phase-7-ai-overview/AI-1-gias-enrichment.md`
+  - `.planning/phases/phase-8-ai-overview/AI-1-gias-enrichment.md`
   - `.planning/ai-features.md`
   - `docs/architecture/backend-conventions.md`
 

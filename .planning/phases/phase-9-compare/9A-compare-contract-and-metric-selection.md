@@ -1,8 +1,8 @@
-# 8A - Compare Contract And Metric Selection
+# 9A - Compare Contract And Metric Selection
 
 ## Goal
 
-Define the exact compare payload shape and the metric set Phase 8 will support before backend and frontend implementation begins.
+Define the exact compare payload shape and the metric set Phase 9 will support before backend and frontend implementation begins.
 
 ## Scope
 

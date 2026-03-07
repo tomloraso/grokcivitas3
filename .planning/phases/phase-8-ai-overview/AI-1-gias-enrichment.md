@@ -1,11 +1,11 @@
-# Phase 7 / AI-1 Design - GIAS Pipeline Enrichment
+# Phase 8 / AI-1 Design - GIAS Pipeline Enrichment
 
 ## Document Control
 
 - Status: Implemented
 - Last updated: 2026-03-06
 - Depends on:
-  - `.planning/phases/phase-7-ai-overview/README.md`
+  - `.planning/phases/phase-8-ai-overview/README.md`
   - `apps/backend/src/civitas/infrastructure/pipelines/contracts/gias.py`
   - `apps/backend/src/civitas/infrastructure/pipelines/gias.py`
   - `apps/backend/src/civitas/domain/school_profiles/models.py`

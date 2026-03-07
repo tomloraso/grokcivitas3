@@ -161,4 +161,4 @@ Each pipeline follows the same shape:
 
 1. Whether additional benchmark materialization is needed once compare and premium workloads are live.
 2. Whether `school_ai_summaries` should remain profile-only or later expand to export or report use cases.
-3. Whether Phase 10 optimization work should introduce materialized views for compare-heavy workloads.
+3. Whether Phase 11 optimization work should introduce materialized views for compare-heavy workloads.

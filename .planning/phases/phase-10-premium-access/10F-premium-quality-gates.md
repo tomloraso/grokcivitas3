@@ -1,8 +1,8 @@
-# 9F - Premium Quality Gates
+# 10F - Premium Quality Gates
 
 ## Goal
 
-Close Phase 9 with evidence that auth, entitlements, and payment enforcement work together safely.
+Close Phase 10 with evidence that auth, entitlements, and payment enforcement work together safely.
 
 ## Required Checks
 
@@ -22,4 +22,4 @@ Close Phase 9 with evidence that auth, entitlements, and payment enforcement wor
 
 ## Sign-Off Condition
 
-Phase 9 is complete only when staging-validated auth and payment flows align with passing repository quality gates.
+Phase 10 is complete only when staging-validated auth and payment flows align with passing repository quality gates.

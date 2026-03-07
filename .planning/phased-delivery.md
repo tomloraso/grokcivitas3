@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning index
-- Last updated: 2026-03-06
+- Last updated: 2026-03-07
 - Scope: Full-stack delivery sequencing across backend, web, data pipelines, and AI summary generation
 
 ## How To Use This Document
@@ -31,10 +31,11 @@
 | Phase 4 | Phase S | `.planning/phases/phase-4-source-stabilization/` |
 | Phase 5 | Phase UX | `.planning/phases/phase-5-ux-uplift/` |
 | Phase 6 | Phase M | `.planning/phases/phase-6-metrics-parity/` |
-| Phase 7 | Phase AI | `.planning/phases/phase-7-ai-overview/` |
-| Phase 8 | Former Phase 3 | `.planning/phases/phase-8-compare/` |
-| Phase 9 | Former Phase 4 | `.planning/phases/phase-9-premium-access/` |
-| Phase 10 | Former Phase 5 | `.planning/phases/phase-10-post-mvp/` |
+| Phase 7 | Phase 6a | `.planning/phases/phase-7-profile-ux-overhaul/` |
+| Phase 8 | Phase AI | `.planning/phases/phase-8-ai-overview/` |
+| Phase 9 | Former Phase 3 | `.planning/phases/phase-9-compare/` |
+| Phase 10 | Former Phase 4 | `.planning/phases/phase-10-premium-access/` |
+| Phase 11 | Former Phase 5 | `.planning/phases/phase-11-post-mvp/` |
 
 ## Phase Sequence
 
@@ -157,11 +158,11 @@
   - `M6-benchmarks-and-trend-dashboard.md`
 - Dependencies: Phase 3 and Phase 4
 
-### Phase 6a - School profile parent-first UX overhaul
+### Phase 7 - School profile parent-first UX overhaul
 
 - Status: In planning — implementation started locally, not yet committed
 - Goal: Redesign the school profile page around the parent user model — inline benchmark bars on every metric card, parent-language section headings, and removal of the duplicate standalone benchmark section.
-- Folder: `.planning/phases/phase-6a-profile-ux-overhaul/`
+- Folder: `.planning/phases/phase-7-profile-ux-overhaul/`
 - Detailed design:
   - `README.md`
   - `P1-design-tokens-benchmark-colours.md`
@@ -174,13 +175,13 @@
 - Dependencies: Phase 5 (design token system + component primitives), Phase 6 (benchmark data live in API)
 - Coordination notes:
   - No backend changes required — all benchmark data already returned by `GET /api/v1/schools/{urn}`.
-  - If StatCard benchmark pattern is approved, apply same pattern to Phase 8 (compare) web experience.
+  - If StatCard benchmark pattern is approved, apply same pattern to Phase 9 (compare) web experience.
 
-### Phase 7 - AI overview + school identity enrichment
+### Phase 8 - AI overview + school identity enrichment
 
 - Status: Implemented
 - Goal: Enrich school identity data and add one stored, factual AI-generated school overview on profile pages.
-- Folder: `.planning/phases/phase-7-ai-overview/`
+- Folder: `.planning/phases/phase-8-ai-overview/`
 - Detailed design:
   - `README.md`
   - `AI-1-gias-enrichment.md`
@@ -188,49 +189,49 @@
   - `AI-4-extensible-ai-platform.md`
 - Dependencies: Phase 2, Phase 3, and Phase 4
 
-### Phase 8 - Compare experience
+### Phase 9 - Compare experience
 
 - Status: Planned
 - Goal: Deliver side-by-side comparison for up to four schools with stable metric alignment, benchmark context, and missing-data handling.
-- Folder: `.planning/phases/phase-8-compare/`
+- Folder: `.planning/phases/phase-9-compare/`
 - Detailed design:
   - `README.md`
-  - `8A-compare-contract-and-metric-selection.md`
-  - `8B-compare-api.md`
-  - `8C-compare-selection-state-and-entry-points.md`
-  - `8D-compare-web-experience.md`
-  - `8E-compare-quality-gates.md`
+  - `9A-compare-contract-and-metric-selection.md`
+  - `9B-compare-api.md`
+  - `9C-compare-selection-state-and-entry-points.md`
+  - `9D-compare-web-experience.md`
+  - `9E-compare-quality-gates.md`
 - Dependencies: Phase 1, Phase 2, Phase 4, and Phase 6
 
-### Phase 9 - Premium access + entitlements
+### Phase 10 - Premium access + entitlements
 
 - Status: Planned
 - Goal: Introduce authentication, postcode-level entitlements, payment flow, and backend-enforced premium access boundaries.
-- Folder: `.planning/phases/phase-9-premium-access/`
+- Folder: `.planning/phases/phase-10-premium-access/`
 - Detailed design:
   - `README.md`
-  - `9A-provider-boundary-gate.md`
-  - `9B-auth-session-foundation.md`
-  - `9C-entitlements-domain-and-persistence.md`
-  - `9D-payment-checkout-and-webhooks.md`
-  - `9E-premium-api-and-web-paywall.md`
-  - `9F-premium-quality-gates.md`
-- Dependencies: Phase 8
+  - `10A-provider-boundary-gate.md`
+  - `10B-auth-session-foundation.md`
+  - `10C-entitlements-domain-and-persistence.md`
+  - `10D-payment-checkout-and-webhooks.md`
+  - `10E-premium-api-and-web-paywall.md`
+  - `10F-premium-quality-gates.md`
+- Dependencies: Phase 9
 
-### Phase 10 - Post-MVP growth and operational expansion
+### Phase 11 - Post-MVP growth and operational expansion
 
 - Status: Planned
 - Goal: Package the next wave of growth, SEO, admin tooling, performance optimization, and export features into scoped follow-on slices.
-- Folder: `.planning/phases/phase-10-post-mvp/`
+- Folder: `.planning/phases/phase-11-post-mvp/`
 - Detailed design:
   - `README.md`
-  - `10A-seo-location-pages.md`
-  - `10B-admin-operations-dashboard.md`
-  - `10C-report-export.md`
-  - `10D-advanced-search-and-filters.md`
-  - `10E-performance-and-cache-optimization.md`
-  - `10F-post-mvp-prioritization-and-quality-gates.md`
-- Dependencies: Phase 8 and Phase 9 for MVP completion; individual slices may also depend on Phase 5 or Phase 7 where relevant
+  - `11A-seo-location-pages.md`
+  - `11B-admin-operations-dashboard.md`
+  - `11C-report-export.md`
+  - `11D-advanced-search-and-filters.md`
+  - `11E-performance-and-cache-optimization.md`
+  - `11F-post-mvp-prioritization-and-quality-gates.md`
+- Dependencies: Phase 9 and Phase 10 for MVP completion; individual slices may also depend on Phase 5 or Phase 8 where relevant
 
 ## Phase Summary
 
@@ -243,14 +244,14 @@
 | 4 | Multi-year trend recovery and source stabilization | Implemented |
 | 5 | Search/profile UX uplift and theme parity | Partially implemented |
 | 6 | Expanded metrics coverage and dashboard benchmarks | Implemented |
-| 6a | School profile parent-first UX overhaul | In planning |
-| 7 | AI overview and richer school identity data | Implemented |
-| 8 | Compare up to four schools | Planned |
-| 9 | Auth, entitlements, and premium access | Planned |
-| 10 | Growth, admin, SEO, exports, optimization | Planned |
+| 7 | School profile parent-first UX overhaul | In planning |
+| 8 | AI overview and richer school identity data | Implemented |
+| 9 | Compare up to four schools | Planned |
+| 10 | Auth, entitlements, and premium access | Planned |
+| 11 | Growth, admin, SEO, exports, optimization | Planned |
 
 ## Open Decisions
 
-1. Authentication provider for Phase 9.
-2. Payment provider and premium packaging details for Phase 9.
-3. Whether Phase 10 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
+1. Authentication provider for Phase 10.
+2. Payment provider and premium packaging details for Phase 10.
+3. Whether Phase 11 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.

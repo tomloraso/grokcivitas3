@@ -1,9 +1,9 @@
-# Phase 6a Design Index - School Profile Parent-First UX Overhaul
+# Phase 7 Design Index - School Profile Parent-First UX Overhaul
 
 ## Document Control
 
 - Status: In planning — implementation started locally, not yet committed
-- Last updated: 2026-03-06
+- Last updated: 2026-03-07
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
 - Detailed brief: `.planning/ux-overhaul/README.md`
@@ -20,7 +20,7 @@ This phase redesigns the school profile around that parent mental model.
 
 ## Scope
 
-This phase covers only the school profile route (`/schools/:urn`). If the design system changes land cleanly, the same patterns will be applied to the compare route (Phase 8) and any future routes.
+This phase covers only the school profile route (`/schools/:urn`). If the design system changes land cleanly, the same patterns will be applied to the compare route (Phase 9) and any future routes.
 
 ## What Is Not Changing
 

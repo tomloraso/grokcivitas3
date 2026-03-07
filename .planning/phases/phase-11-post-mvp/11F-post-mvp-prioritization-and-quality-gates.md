@@ -1,8 +1,8 @@
-# 10F - Post-MVP Prioritization And Quality Gates
+# 11F - Post-MVP Prioritization And Quality Gates
 
 ## Goal
 
-Define how Phase 10 slices are selected, sequenced, and signed off so the post-MVP roadmap does not become an unstructured backlog.
+Define how Phase 11 slices are selected, sequenced, and signed off so the post-MVP roadmap does not become an unstructured backlog.
 
 ## Required Inputs
 
@@ -19,5 +19,5 @@ Define how Phase 10 slices are selected, sequenced, and signed off so the post-M
 
 ## Acceptance Criteria
 
-- Phase 10 work is broken into explicit slices rather than vague backlog themes.
+- Phase 11 work is broken into explicit slices rather than vague backlog themes.
 - Every selected slice has a clear sign-off path before implementation starts.

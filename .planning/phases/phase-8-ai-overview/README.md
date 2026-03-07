@@ -1,9 +1,9 @@
-# Phase 7 Design Index - AI Overview And School Identity Enrichment
+# Phase 8 Design Index - AI Overview And School Identity Enrichment
 
 ## Document Control
 
 - Status: Implemented
-- Last updated: 2026-03-06
+- Last updated: 2026-03-07
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Reference: `.planning/ai-features.md`
@@ -13,7 +13,7 @@
 
 This folder contains implementation-ready planning for enriching school profile data and introducing two pre-generated AI school summaries: a factual overview and an analyst view.
 
-Phase 7 targets:
+Phase 8 targets:
 
 1. Widening the GIAS pipeline to extract additional school identity and contact fields.
 2. AI-generated school summaries using a port-based LLM integration that follows existing hexagonal architecture.
@@ -33,7 +33,7 @@ Phase 7 targets:
 
 ## Delivery Model
 
-Phase 7 is split into three deliverables:
+Phase 8 is split into three deliverables:
 
 1. `AI-1-gias-enrichment.md`
 2. `AI-2-school-overview-summary.md`

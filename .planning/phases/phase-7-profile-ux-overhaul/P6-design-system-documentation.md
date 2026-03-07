@@ -6,7 +6,7 @@ Not started
 
 ## Goal
 
-Document the `StatCard` with benchmark patterns so the same approach can be applied to the compare route (Phase 8) and any future routes without redesigning from scratch.
+Document the `StatCard` with benchmark patterns so the same approach can be applied to the compare route (Phase 9) and any future routes without redesigning from scratch.
 
 ## Deliverable
 
@@ -25,5 +25,5 @@ Document the `StatCard` with benchmark patterns so the same approach can be appl
 ## Acceptance Criteria
 
 - [ ] `design-system.md` written and committed to `.planning/ux-overhaul/`.
-- [ ] `phased-delivery.md` references this deliverable under Phase 6a.
-- [ ] Phase 8 (compare) team can implement `StatCard` with benchmark bars without re-reading this phase's implementation files.
+- [ ] `phased-delivery.md` references this deliverable under Phase 7.
+- [ ] Phase 9 (compare) team can implement `StatCard` with benchmark bars without re-reading this phase's implementation files.
