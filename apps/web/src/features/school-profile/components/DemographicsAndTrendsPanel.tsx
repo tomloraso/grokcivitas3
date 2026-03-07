@@ -42,6 +42,7 @@ function renderTrendFooter(metric: DemographicMetricVM, series: TrendSeriesVM | 
   }
 
   const sparkData = toSparkData(series);
+  const period = sparkData.length > 1 ? `${sparkData.length}yr` : undefined;
   return (
     <div className="flex items-center justify-between gap-2">
       {sparkData.length > 1 ? (
@@ -55,7 +56,8 @@ function renderTrendFooter(metric: DemographicMetricVM, series: TrendSeriesVM | 
       <TrendIndicator
         delta={series.latestDelta}
         direction={series.latestDirection ?? undefined}
-        unit="pp"
+        unit="%"
+        period={period}
       />
     </div>
   );
@@ -174,6 +176,7 @@ export function DemographicsAndTrendsPanel({
               <StatCard
                 key={metricKey}
                 label={metric.label}
+                description={catalog.description}
                 value={metric.value}
                 footer={renderTrendFooter(metric, trendLookup.get(metricKey))}
               />
@@ -188,9 +191,9 @@ export function DemographicsAndTrendsPanel({
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RankedListCard
-          title="SEND Primary Need"
+          title="Special Educational Needs"
           items={demographics?.sendPrimaryNeeds ?? []}
-          emptyLabel="SEND primary need breakdown"
+          emptyLabel="Special educational needs breakdown"
         />
         <RankedListCard
           title="Top Home Languages"

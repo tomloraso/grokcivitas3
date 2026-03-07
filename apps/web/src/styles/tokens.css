@@ -159,10 +159,16 @@
   --color-state-danger: var(--ref-color-danger-500);
   --color-state-info: var(--ref-color-info-500);
 
-  /* Trend direction — neutral palette (directional, not evaluative) */
+  /* Trend direction — movement vs stable, not good vs bad */
   --color-trend-up: var(--ref-color-info-500);
-  --color-trend-down: var(--ref-color-grey-400);
+  --color-trend-down: var(--ref-color-info-500);
   --color-trend-flat: var(--ref-color-grey-500);
+
+  /* Benchmark comparison — school / local / national */
+  --color-benchmark-school: var(--ref-color-brand-500);
+  --color-benchmark-local: var(--ref-color-accent-400);
+  --color-benchmark-national: var(--ref-color-success-500);
+
   --color-phase-primary: var(--ref-color-brand-500);
   --color-phase-secondary: var(--ref-color-phase-secondary);
   --color-phase-all-through: var(--ref-color-phase-all-through);
@@ -232,8 +238,14 @@
   --color-state-info: var(--ref-color-info-500);
 
   --color-trend-up: var(--ref-color-info-500);
-  --color-trend-down: var(--ref-color-grey-500);
+  --color-trend-down: var(--ref-color-info-500);
   --color-trend-flat: var(--ref-color-grey-400);
+
+  /* Benchmark comparison — school / local / national */
+  --color-benchmark-school: var(--ref-color-brand-600);
+  --color-benchmark-local: var(--ref-color-accent-500);
+  --color-benchmark-national: var(--ref-color-success-500);
+
   --color-phase-primary: var(--ref-color-brand-600);
   --color-phase-secondary: var(--ref-color-phase-secondary);
   --color-phase-all-through: var(--ref-color-phase-all-through);

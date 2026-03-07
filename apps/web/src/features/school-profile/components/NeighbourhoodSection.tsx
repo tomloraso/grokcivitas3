@@ -65,12 +65,23 @@ function DeprivationGauge({ decile }: { decile: number }): JSX.Element {
   );
 }
 
-function formatDomainValue(value: number | null): string {
-  if (value === null) {
-    return "n/a";
-  }
-  return `${value}`;
+function deprivationSentence(decile: number): string {
+  const bottomPct = decile * 10;
+  if (decile <= 2) return `This area is in the most deprived ${bottomPct}% of areas in England.`;
+  if (decile <= 5) return `This area is in the bottom ${bottomPct}% of areas in England for deprivation.`;
+  if (decile >= 9) return `This area is among the least deprived in England (top ${100 - (decile - 1) * 10}%).`;
+  return `This area is in the least deprived ${100 - (decile - 1) * 10}% of areas in England.`;
 }
+
+function domainDotClass(decile: number | null): string {
+  if (decile === null) return "bg-border-subtle";
+  if (decile <= 2) return "bg-danger";
+  if (decile <= 4) return "bg-warning";
+  if (decile <= 6) return "bg-amber-400";
+  if (decile <= 8) return "bg-emerald-400";
+  return "bg-success";
+}
+
 
 export function NeighbourhoodSection({
   areaContext,
@@ -128,47 +139,43 @@ export function NeighbourhoodSection({
           {deprivation ? (
             <>
               <DeprivationGauge decile={deprivation.imdDecile} />
-              <div className="space-y-1 text-sm text-secondary">
-                <p>
-                  <GlossaryTerm term="imd">IMD Decile</GlossaryTerm>{" "}
-                  <span className="font-semibold text-primary">{deprivation.imdDecile}</span>
-                </p>
-                <p>
-                  <GlossaryTerm term="idaci">IDACI Decile</GlossaryTerm>{" "}
-                  <span className="font-semibold text-primary">{deprivation.idaciDecile}</span>
-                </p>
-                <p>
-                  Population{" "}
-                  <span className="font-semibold text-primary">
-                    {deprivation.populationTotal?.toLocaleString("en-GB") ?? "n/a"}
-                  </span>
-                </p>
-                <p>
-                  LAD{" "}
-                  <span className="font-semibold text-primary">
-                    {deprivation.localAuthorityDistrictName ?? "Unknown"}
-                  </span>
-                </p>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {deprivation.domains.map((domain) => (
-                  <div
-                    key={domain.key}
-                    className="rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
-                  >
-                    <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-disabled">
-                      {domain.label}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-primary">
-                      Decile {formatDomainValue(domain.decile)}
-                    </p>
-                    <p className="text-xs text-secondary">
-                      Score {formatDomainValue(domain.score)}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-sm text-secondary">
+                {deprivationSentence(deprivation.imdDecile)}
+              </p>
+
+              {deprivation.localAuthorityDistrictName ? (
+                <p className="text-xs text-secondary">
+                  District:{" "}
+                  <span className="font-medium text-primary">
+                    {deprivation.localAuthorityDistrictName}
+                  </span>
+                </p>
+              ) : null}
+
+              {deprivation.domains.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {deprivation.domains.map((domain) => (
+                    <div
+                      key={domain.key}
+                      className="flex items-start gap-2 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
+                    >
+                      <span
+                        className={`mt-1 h-2 w-2 shrink-0 rounded-full ${domainDotClass(domain.decile)}`}
+                        aria-hidden
+                      />
+                      <div>
+                        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-disabled">
+                          {domain.label}
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-primary">
+                          {domain.decile !== null ? `Decile ${domain.decile} / 10` : "n/a"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               <p className="text-xs text-disabled">
                 Source: {deprivation.sourceRelease} ·{" "}
@@ -295,9 +302,14 @@ export function NeighbourhoodSection({
 
               {housePriceSparkline.length > 1 ? (
                 <div className="space-y-2 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-3">
-                  <p className="text-xs font-medium uppercase tracking-[0.06em] text-disabled">
-                    Price Trend
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-medium uppercase tracking-[0.06em] text-disabled">
+                      Price Trend
+                    </p>
+                    <p className="text-[10px] text-disabled">
+                      {housePrices.trend[0].month.slice(-4)} – {housePrices.trend[housePrices.trend.length - 1].month.slice(-4)}
+                    </p>
+                  </div>
                   <Sparkline
                     data={housePriceSparkline}
                     width={220}

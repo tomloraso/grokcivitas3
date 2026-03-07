@@ -24,6 +24,9 @@ const config: Config = {
         "trend-up": "var(--color-trend-up)",
         "trend-down": "var(--color-trend-down)",
         "trend-flat": "var(--color-trend-flat)",
+        "benchmark-school": "var(--color-benchmark-school)",
+        "benchmark-local": "var(--color-benchmark-local)",
+        "benchmark-national": "var(--color-benchmark-national)",
         "map-label": "var(--map-label-secondary)",
         "map-label-muted": "var(--map-label-muted)",
         "map-water": "var(--map-surface-water)"

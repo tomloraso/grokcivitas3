@@ -2,10 +2,12 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
+import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
 import {
   ATTENDANCE_METRIC_KEYS,
   BEHAVIOUR_METRIC_KEYS,
+  formatMetricDelta,
   formatMetricValue,
   getMetricCatalogEntry
 } from "../metricCatalog";
@@ -13,6 +15,8 @@ import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type {
   AttendanceLatestVM,
   BehaviourLatestVM,
+  BenchmarkDashboardVM,
+  BenchmarkMetricVM,
   SectionCompletenessVM,
   TrendSeriesVM,
   TrendsVM
@@ -24,6 +28,31 @@ interface AttendanceBehaviourSectionProps {
   trends: TrendsVM | null;
   attendanceCompleteness: SectionCompletenessVM;
   behaviourCompleteness: SectionCompletenessVM;
+  benchmarkDashboard: BenchmarkDashboardVM | null;
+}
+
+function barDecimals(unit: BenchmarkMetricVM["unit"]): number {
+  if (unit === "count" || unit === "currency") return 0;
+  if (unit === "ratio") return 1;
+  return 2;
+}
+
+function toBenchmarkSlot(metric: BenchmarkMetricVM): BenchmarkSlot {
+  return {
+    localLabel: metric.localAreaLabel,
+    schoolRaw: metric.schoolValue,
+    localRaw: metric.localValue,
+    nationalRaw: metric.nationalValue,
+    isPercent: metric.unit === "percent",
+    displayDecimals: barDecimals(metric.unit),
+    schoolValueFormatted: formatMetricValue(metric.schoolValue, metric.unit),
+    localValueFormatted: formatMetricValue(metric.localValue, metric.unit),
+    nationalValueFormatted: formatMetricValue(metric.nationalValue, metric.unit),
+    schoolVsLocalDelta: metric.schoolVsLocalDelta,
+    schoolVsNationalDelta: metric.schoolVsNationalDelta,
+    schoolVsLocalDeltaFormatted: formatMetricDelta(metric.schoolVsLocalDelta, metric.unit),
+    schoolVsNationalDeltaFormatted: formatMetricDelta(metric.schoolVsNationalDelta, metric.unit),
+  };
 }
 
 function renderTrendFooter(series: TrendSeriesVM | undefined) {
@@ -35,6 +64,7 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
     .map((point) => point.value)
     .filter((value): value is number => value !== null);
   const isPercent = series.unit === "percent";
+  const period = sparkData.length > 1 ? `${sparkData.length}yr` : undefined;
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -49,8 +79,9 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
       <TrendIndicator
         delta={isPercent ? series.latestDelta : Number(series.latestDelta.toFixed(2))}
         direction={series.latestDirection ?? undefined}
-        unit="pp"
+        unit="%"
         asPercentage={isPercent}
+        period={period}
       />
     </div>
   );
@@ -59,11 +90,15 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
 function AttendanceMetricCard({
   metricKey,
   value,
-  series
+  series,
+  benchmark,
+  variant = "default"
 }: {
   metricKey: string;
   value: number | null;
   series: TrendSeriesVM | undefined;
+  benchmark: BenchmarkSlot | undefined;
+  variant?: "hero" | "default";
 }): JSX.Element {
   const catalog = getMetricCatalogEntry(metricKey);
   if (!catalog) {
@@ -77,8 +112,11 @@ function AttendanceMetricCard({
   return (
     <StatCard
       label={catalog.label}
+      description={catalog.description}
       value={formatMetricValue(value, catalog.unit, catalog.decimals) ?? "n/a"}
       footer={renderTrendFooter(series)}
+      benchmark={benchmark}
+      variant={variant}
     />
   );
 }
@@ -88,10 +126,15 @@ export function AttendanceBehaviourSection({
   behaviour,
   trends,
   attendanceCompleteness,
-  behaviourCompleteness
+  behaviourCompleteness,
+  benchmarkDashboard
 }: AttendanceBehaviourSectionProps): JSX.Element {
   const trendLookup = new Map(
     trends?.series.map((series) => [series.metricKey, series] as const) ?? []
+  );
+
+  const benchmarkLookup = new Map<string, BenchmarkMetricVM>(
+    benchmarkDashboard?.sections.flatMap((s) => s.metrics.map((m) => [m.metricKey, m] as const)) ?? []
   );
 
   const attendanceYear = attendance?.academicYear ?? null;
@@ -99,19 +142,19 @@ export function AttendanceBehaviourSection({
 
   return (
     <section
-      aria-labelledby="attendance-behaviour-heading"
+      aria-labelledby="day-to-day-heading"
       className="panel-surface rounded-lg space-y-6 p-5 sm:p-6"
     >
       <div className="space-y-1">
         <h2
-          id="attendance-behaviour-heading"
+          id="day-to-day-heading"
           className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl"
         >
           <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
-          Attendance and Behaviour
+          Day-to-Day at School
         </h2>
         <p className="text-sm text-secondary">
-          Latest published attendance, persistent absence, suspensions and exclusions.
+          How regularly pupils come to school, and how the school manages behaviour.
         </p>
       </div>
 
@@ -135,12 +178,16 @@ export function AttendanceBehaviourSection({
                   ? attendance?.overallAbsencePct ?? null
                   : attendance?.persistentAbsencePct ?? null;
 
+            const bm = benchmarkLookup.get(metricKey);
+
             return (
               <AttendanceMetricCard
                 key={metricKey}
                 metricKey={metricKey}
                 value={value}
                 series={trendLookup.get(metricKey)}
+                benchmark={bm ? toBenchmarkSlot(bm) : undefined}
+                variant={metricKey === "overall_attendance_pct" ? "hero" : "default"}
               />
             );
           })}
@@ -169,12 +216,15 @@ export function AttendanceBehaviourSection({
                     ? behaviour?.permanentExclusionsCount ?? null
                     : behaviour?.permanentExclusionsRate ?? null;
 
+            const bm = benchmarkLookup.get(metricKey);
+
             return (
               <AttendanceMetricCard
                 key={metricKey}
                 metricKey={metricKey}
                 value={value}
                 series={trendLookup.get(metricKey)}
+                benchmark={bm ? toBenchmarkSlot(bm) : undefined}
               />
             );
           })}

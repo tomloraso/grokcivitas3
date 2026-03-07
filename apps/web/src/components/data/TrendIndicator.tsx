@@ -17,6 +17,8 @@ interface TrendIndicatorProps extends HTMLAttributes<HTMLSpanElement> {
   asPercentage?: boolean;
   /** Size of the icon in pixels (default: 14) */
   iconSize?: number;
+  /** Time span label appended to the delta, e.g. "3yr" → "+2.1% · 3yr" */
+  period?: string;
 }
 
 function resolveDirection(delta: number, explicit?: TrendDirection): TrendDirection {
@@ -41,6 +43,7 @@ export function TrendIndicator({
   unit = "%",
   asPercentage,
   iconSize = 14,
+  period,
   className,
   ...props
 }: TrendIndicatorProps): JSX.Element {
@@ -51,15 +54,16 @@ export function TrendIndicator({
     asPercentage === false
       ? `${prefix}${delta}`
       : `${prefix}${delta.toFixed(1)}${unit}`;
+  const display = period ? `${formatted} · ${period}` : formatted;
 
   return (
     <span
       className={cn("inline-flex items-center gap-1 text-xs font-medium", colorClass, className)}
-      aria-label={`${label}: ${formatted}`}
+      aria-label={`${label}: ${display}`}
       {...props}
     >
       <Icon size={iconSize} aria-hidden />
-      <span>{formatted}</span>
+      <span>{display}</span>
     </span>
   );
 }

@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: In planning — implementation started locally, not yet committed
+- Status: Completed — committed 2026-03-07
 - Last updated: 2026-03-07
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
@@ -51,10 +51,10 @@ SchoolProfileFeature
 
 | ID | File | Status |
 |----|------|--------|
-| P1 | `P1-design-tokens-benchmark-colours.md` | Not started |
-| P2 | `P2-stat-card-visual-redesign.md` | Not started |
-| P3 | `P3-benchmark-wiring-sections.md` | Not started |
-| P4 | `P4-section-narrative-copy.md` | Not started |
+| P1 | `P1-design-tokens-benchmark-colours.md` | Completed |
+| P2 | `P2-stat-card-visual-redesign.md` | Completed |
+| P3 | `P3-benchmark-wiring-sections.md` | Completed |
+| P4 | `P4-section-narrative-copy.md` | Completed |
 | P5 | `P5-responsive-mobile-polish.md` | Not started |
 | P6 | `P6-design-system-documentation.md` | Not started |
 
@@ -82,6 +82,38 @@ SchoolProfileFeature
 - No horizontal overflow at 375px (iPhone SE).
 - No TypeScript errors; lint passes.
 - Rollback available per deliverable via `git checkout -- <file>`.
+
+## Tracking Log
+
+- 2026-03-07 (implementation checkpoint — P1–P4 complete):
+  - Completed P1 design token foundation:
+    - added `--color-benchmark-school/local/national` tokens to both light and dark theme blocks in `tokens.css`,
+    - added `bg-benchmark-school/local/national` Tailwind colour aliases in `tailwind.config.ts`,
+    - revised `--color-trend-down` to match `--color-trend-up` (neutral blue) — trend direction is movement, not evaluative.
+  - Completed P2 StatCard visual redesign:
+    - added `BenchmarkSlot` interface (exported) with `displayDecimals` field for precision-matched bar widths,
+    - added `BenchmarkBlock` internal component — proportional bars on sm+, compact text rows on mobile,
+    - added `description` prop with ⓘ toggle (not in original spec — emerged from UX review),
+    - "This school" row included in benchmark block; "Compared with" heading removed (cleaner),
+    - added `period` prop to `TrendIndicator` for trend duration labels (e.g. "+2.1% · 3yr").
+  - Completed P3 benchmark wiring:
+    - `AcademicPerformanceSection`, `AttendanceBehaviourSection`, `WorkforceLeadershipSection` each accept `benchmarkDashboard` prop,
+    - `toBenchmarkSlot()` helper in each section; `displayDecimals` set per unit type via `barDecimals()`,
+    - `BenchmarkComparisonSection` deleted (not retained — data is now fully inline with no value in a standalone section),
+    - `SchoolProfileFeature` passes `benchmarkDashboard` to all sections; standalone section import removed,
+    - `SchoolDetailsSection` also removed from profile render — data not yet complete in current dataset.
+  - Completed P4 section narrative copy (extended scope):
+    - Section headings: "Results & Progress", "Day-to-Day at School", "Teachers & Staff",
+    - Section descriptions rewritten for parents, not analysts,
+    - Aria heading IDs updated to match new headings,
+    - Full metric label rename pass in `metricCatalog.ts` — EAL, SEN, EHCP, EBacc, KS2, FSM6, supply staff all renamed to plain English,
+    - Plain-English `description` added to every metric catalog entry — surfaced via ⓘ toggle on StatCard,
+    - `DemographicsAndTrendsPanel` wired with `description` from catalog.
+  - Neighbourhood section enhancements (beyond original P4 scope):
+    - Area Deprivation card: replaced raw decile stats with plain-English sentence (e.g. "This area is in the bottom 30% of areas in England for deprivation."),
+    - Domain tiles redesigned: colour-coded dot + "Decile X / 10" label instead of raw numbers,
+    - House Prices sparkline: year range label added (e.g. "2020 – 2024"),
+    - District name surfaced as "District: [name]" below the deprivation sentence.
 
 ## Change Management
 

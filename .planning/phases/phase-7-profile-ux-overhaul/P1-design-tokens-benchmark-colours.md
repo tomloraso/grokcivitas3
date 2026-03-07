@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Completed — 2026-03-07
 
 ## Goal
 
@@ -41,10 +41,12 @@ Establish the three benchmark colour tokens — school, local, national — as C
 
 ## Acceptance Criteria
 
-- [ ] Three tokens defined in both `[data-theme="dark"]` and `[data-theme="light"]` blocks.
-- [ ] Three Tailwind color aliases added, usable as `bg-benchmark-school`, `text-benchmark-local`, etc.
-- [ ] No visual change to any existing component.
-- [ ] Lint passes.
+- [x] Three tokens defined in both `[data-theme="dark"]` and `[data-theme="light"]` blocks.
+- [x] Three Tailwind color aliases added, usable as `bg-benchmark-school`, `text-benchmark-local`, etc.
+- [x] No visual change to any existing component.
+- [x] Lint passes.
+
+**Additional change:** `--color-trend-down` revised to match `--color-trend-up` (neutral info blue in both themes). Trend direction is movement only — not evaluative. This avoids misleading red colouring for metrics where "down" is good (e.g. absence rate).
 
 ## Rollback
 

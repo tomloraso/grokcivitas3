@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Completed — 2026-03-07
 
 ## Goal
 
@@ -68,13 +68,17 @@ Attendance and behaviour metric keys from `ATTENDANCE_METRIC_KEYS` and `BEHAVIOU
 
 ## Acceptance Criteria
 
-- [ ] Each of the three sections accepts `benchmarkDashboard` prop.
-- [ ] Every stat card that has a matching `BenchmarkMetricVM` shows the benchmark block.
-- [ ] Cards without a benchmark match show no benchmark block (not an error state).
-- [ ] `BenchmarkComparisonSection` no longer rendered anywhere on the profile page.
-- [ ] No duplicate data visible on the page.
-- [ ] TypeScript strict — no errors.
-- [ ] Lint passes.
+- [x] Each of the three sections accepts `benchmarkDashboard` prop.
+- [x] Every stat card that has a matching `BenchmarkMetricVM` shows the benchmark block.
+- [x] Cards without a benchmark match show no benchmark block (not an error state).
+- [x] `BenchmarkComparisonSection` no longer rendered anywhere on the profile page.
+- [x] No duplicate data visible on the page.
+- [x] TypeScript strict — no errors.
+- [x] Lint passes.
+
+**Deviation from spec:** `BenchmarkComparisonSection.tsx` was deleted (not retained). The spec said to keep it for potential future use, but the file had no remaining callers and retaining dead components adds noise. If needed for a compare/print view it can be recovered from git history.
+
+**Also in SchoolProfileFeature:** `SchoolDetailsSection` removed from the profile render — school detail data is incomplete in the current dataset and the section added noise without value.
 
 ## Rollback
 

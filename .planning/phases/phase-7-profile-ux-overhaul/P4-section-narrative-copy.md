@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Completed — 2026-03-07 (extended scope)
 
 ## Goal
 
@@ -40,11 +40,36 @@ The subsection labels within each section (e.g. "Attendance", "Behaviour", "Work
 
 ## Acceptance Criteria
 
-- [ ] Three section headings updated to parent-language copy.
-- [ ] Two section descriptions rewritten.
-- [ ] Aria heading IDs and labelledby attributes kept in sync.
-- [ ] No accessibility regression (heading hierarchy unchanged).
-- [ ] Lint passes.
+- [x] Three section headings updated to parent-language copy.
+- [x] Two section descriptions rewritten.
+- [x] Aria heading IDs and labelledby attributes kept in sync.
+- [x] No accessibility regression (heading hierarchy unchanged).
+- [x] Lint passes.
+
+**Extended scope (beyond original P4):**
+
+Metric label renames in `metricCatalog.ts`:
+- `FSM6` → `Ever Eligible for Free Meals`
+- `SEN Support` → `Additional Needs Support`
+- `EHCP` → `Education Health & Care Plan`
+- `EAL` → `English as Additional Language`
+- `First Language Unclassified` → `Language Unrecorded`
+- `Supply Staff %` → `Supply Staff`
+- `Teachers 3+ Years Experience` → `Experienced Teachers`
+- `Qualified Teacher Status` → `Qualified Teachers`
+- `Level 6+ Qualifications` → `Degree-Level Staff`
+- `Suspensions Rate` / `Permanent Exclusions Rate` → singular forms
+- All `KS2 ...` → `Year 6 ...`
+- EBacc terminology clarified: "EBacc Entered", "EBacc Strong Pass", "EBacc Standard Pass"
+- `Progress 8 Disadvantaged Gap` → `Disadvantage Progress Gap`
+
+Plain-English `description` field added to every `MetricCatalogEntry` — surfaced on StatCard via ⓘ toggle.
+
+Neighbourhood section (NeighbourhoodSection.tsx):
+- Area Deprivation: replaced IMD decile number with plain-English sentence contextualising the area's position nationally (e.g. "This area is in the bottom 30% of areas in England for deprivation").
+- District name shown as "District: [name]".
+- Domain tiles: colour-coded dot (danger/warning/amber/emerald/success) + "Decile X / 10".
+- House Prices sparkline: year range label derived from first/last trend point (e.g. "2020 – 2024").
 
 ## Rollback
 

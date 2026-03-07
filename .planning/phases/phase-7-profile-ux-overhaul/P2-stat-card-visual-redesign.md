@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Completed — 2026-03-07
 
 ## Goal
 
@@ -88,13 +88,19 @@ interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
 
 ## Acceptance Criteria
 
-- [ ] Renders identically when only `label` + `value` passed (no regression).
-- [ ] `benchmark` prop renders bars on sm+ and text rows on mobile.
-- [ ] Bar widths are mathematically proportional to the scale rule.
-- [ ] Benchmark block absent when `benchmark` prop is undefined.
-- [ ] No horizontal overflow at 375px.
-- [ ] TypeScript strict — no errors.
-- [ ] Lint passes.
+- [x] Renders identically when only `label` + `value` passed (no regression).
+- [x] `benchmark` prop renders bars on sm+ and text rows on mobile.
+- [x] Bar widths are mathematically proportional to the scale rule.
+- [x] Benchmark block absent when `benchmark` prop is undefined.
+- [x] No horizontal overflow at 375px.
+- [x] TypeScript strict — no errors.
+- [x] Lint passes.
+
+**Deviations from spec:**
+- "Compared with" heading removed — cleaner without it; bars are self-explanatory.
+- `BenchmarkSlot` extended with `displayDecimals: number` and `schoolValueFormatted` — raw values are rounded to display precision before bar scale computation, fixing a precision mismatch bug where bars showed different widths for values that displayed identically (e.g. permanent exclusion rate = 1.00 for all three but bars differed).
+- `description?: string` prop added to `StatCardProps` — plain-English metric explanation shown via ⓘ toggle button. Not in original spec; emerged from UX review session.
+- `period` prop added to `TrendIndicator` — appends time span to delta label (e.g. "+2.1% · 3yr"). Required to make sparklines meaningful without axis labels.
 
 ## Rollback
 

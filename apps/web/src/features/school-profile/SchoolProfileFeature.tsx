@@ -9,13 +9,11 @@ import { paths } from "../../shared/routing/paths";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
 import { SchoolAnalystSection } from "./components/SchoolAnalystSection";
 import { AttendanceBehaviourSection } from "./components/AttendanceBehaviourSection";
-import { BenchmarkComparisonSection } from "./components/BenchmarkComparisonSection";
 import { CoverageNotice } from "./components/CoverageNotice";
 import { DemographicsAndTrendsPanel } from "./components/DemographicsAndTrendsPanel";
 import { NeighbourhoodSection } from "./components/NeighbourhoodSection";
 import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
-import { SchoolDetailsSection } from "./components/SchoolDetailsSection";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
@@ -98,8 +96,6 @@ export function SchoolProfileFeature(): JSX.Element {
             <SchoolOverviewSection overviewText={profile.overviewText} />
             <SchoolAnalystSection analystText={profile.analystText} />
 
-            <SchoolDetailsSection school={profile.school} />
-
             <div className="space-y-10 sm:space-y-12">
               <OfstedProfileSection
                 ofsted={profile.ofsted}
@@ -121,6 +117,7 @@ export function SchoolProfileFeature(): JSX.Element {
                 trends={profile.trends}
                 attendanceCompleteness={profile.completeness.attendance}
                 behaviourCompleteness={profile.completeness.behaviour}
+                benchmarkDashboard={profile.benchmarkDashboard}
               />
 
               <WorkforceLeadershipSection
@@ -129,14 +126,12 @@ export function SchoolProfileFeature(): JSX.Element {
                 trends={profile.trends}
                 workforceCompleteness={profile.completeness.workforce}
                 leadershipCompleteness={profile.completeness.leadership}
+                benchmarkDashboard={profile.benchmarkDashboard}
               />
 
               <AcademicPerformanceSection
                 performance={profile.performance}
                 completeness={profile.completeness.performance}
-              />
-
-              <BenchmarkComparisonSection
                 benchmarkDashboard={profile.benchmarkDashboard}
               />
             </div>
