@@ -27,6 +27,10 @@ class CachedPostcodeResolver(PostcodeResolver):
         if cached is not None and cached.lsoa_code is not None:
             return cached
 
+        stale = self._cache_repository.get_any(postcode=postcode)
+        if stale is not None and stale.lsoa_code is not None:
+            return stale
+
         resolved = self._postcodes_io_client.lookup(postcode)
         self._cache_repository.upsert(coordinates=resolved)
         return resolved

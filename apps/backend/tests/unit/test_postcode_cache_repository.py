@@ -64,6 +64,11 @@ def test_postcode_cache_repository_returns_hit_only_when_fresh() -> None:
     )
     assert stale_miss is None
 
+    stale_hit = repository.get_any(postcode="SW1A 1AA")
+    assert stale_hit is not None
+    assert stale_hit.postcode == "SW1A 1AA"
+    assert stale_hit.lsoa_code == "E01004736"
+
     engine.dispose()
 
 

@@ -159,7 +159,7 @@ class GrokSummaryGenerator(OpenAICompatibleSummaryGenerator):
                 error_code=f"batch_{status}",
             )
 
-        results = ()
+        results: tuple[BatchGeneratedSummaryResult, ...] = ()
         if status == "completed" or _extract_batch_success_count(status_payload) > 0:
             results = tuple(
                 self._fetch_all_batch_results(

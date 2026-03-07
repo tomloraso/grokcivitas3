@@ -1,67 +1,70 @@
 # Known Issues
 
-Living document. Remove an entry when the fix is committed and verified in production.
+Living document. Remove an entry only after the fix is committed and verified in production.
 
 ---
 
-## BUG-001 — School profile endpoint times out (benchmark query full-table scan)
+## BUG-001 - School profile endpoint times out (benchmark query ignores persisted benchmark cache)
 
-**Status:** Fix implemented locally, not yet committed
+**Status:** Confirmed defect. Fixed locally and verified by automated tests. Pending commit and production verification.
 **Severity:** Critical
-**File:** `apps/backend/src/civitas/infrastructure/persistence/postgres_school_trends_repository.py`
-**Function:** `get_metric_benchmark_series`
+**Files:**
+- `apps/backend/src/civitas/infrastructure/persistence/postgres_school_trends_repository.py`
+- `apps/backend/tests/integration/test_school_trends_repository.py`
+
+### Validation
+Confirmed. `PostgresSchoolTrendsRepository.get_metric_benchmark_series()` always recomputed benchmark aggregates from source tables, even when `metric_benchmarks_yearly` already held the required national and local benchmark rows for the requested school context.
 
 ### Root cause
-The function builds a `school_geo` CTE that scans **all 50,531 schools** on every request, doing a LATERAL join against `postcode_cache` using the unindexed expression `replace(upper(postcode), ' ', '')`. With PostgreSQL's default `work_mem = 4MB`, sort/hash operations spill to disk (`BufFileRead` wait event), causing 8–21 minute query runtimes. Multiple concurrent requests exhaust the connection pool (`QueuePool limit of size 5 overflow 10`).
+The repository persisted benchmark snapshots but had no cache-read path. Every request executed the full aggregation query, including the wide `school_geo` CTE and downstream benchmark aggregations, then wrote the results back into `metric_benchmarks_yearly`. The cache table was acting as write-only storage.
 
-The `metric_benchmarks_yearly` table already holds 318 pre-computed benchmark rows that go unused on every subsequent request — the full computation runs unconditionally.
+### Fix implemented
+- Added a cache-first query path that resolves the target school's local benchmark context and joins the school's metric rows against persisted `metric_benchmarks_yearly` rows.
+- Kept the full aggregation query only as a cache-miss fallback.
+- Added `SET LOCAL work_mem = '64MB'` for the PostgreSQL fallback path to reduce disk spill risk when the expensive computation is genuinely needed.
+- Added an integration test that seeds cached benchmark rows and verifies they are reused instead of recomputed.
 
-### Fix
-Cache-first path: query `metric_benchmarks_yearly` for the target school only. Fall back to the full computation only on cache miss, prefixed with `SET LOCAL work_mem = '64MB'` to prevent disk spill.
-
-```python
-benchmark_rows = _get_metric_benchmark_rows_from_cache(connection, urn)
-if not benchmark_rows:
-    connection.execute(text("SET LOCAL work_mem = '64MB'"))
-    benchmark_rows = _compute_metric_benchmark_rows(connection, urn)
-    _persist_metric_benchmark_rows(connection, [dict(row) for row in benchmark_rows])
-```
-
-The fast-path query scopes to a single school (`WHERE schools.urn = :urn`) and joins against the pre-computed cache. Verified at ~88ms in psql.
+### Verification
+- `uv run --project apps/backend pytest apps/backend/tests/integration/test_school_trends_repository.py -q`
+- `uv run --project apps/backend pytest`
 
 ---
 
-## BUG-002 — Postcode resolver blocks on external HTTP for up to 30 seconds per request
+## BUG-002 - Postcode resolver blocks on external HTTP after cache TTL expiry
 
-**Status:** Fix implemented locally, not yet committed
+**Status:** Confirmed defect. Fixed locally and verified by automated tests. Pending commit and production verification.
 **Severity:** High
-**Linked to:** BUG-001 (pool exhaustion caused postcode cache to go stale, triggering this path)
 **Files:**
 - `apps/backend/src/civitas/infrastructure/http/postcode_resolver.py`
 - `apps/backend/src/civitas/infrastructure/persistence/postgres_postcode_cache_repository.py`
+- `apps/backend/tests/unit/test_cached_postcode_resolver.py`
+- `apps/backend/tests/unit/test_postcode_cache_repository.py`
+
+### Validation
+Confirmed. `CachedPostcodeResolver.resolve()` only used `get_fresh()` and immediately fell back to the live Postcodes.io HTTP client on TTL expiry, even when an older cached postcode record with a valid `lsoa_code` was already present.
 
 ### Root cause
-`CachedPostcodeResolver.resolve()` falls through to `PostcodesIoClient.lookup()` when the 30-day cache TTL expires. The HTTP client is configured with `timeout=10s`, `max_retries=2`, `backoff=0.5s` — worst case ~31.5 seconds of blocking per request. This runs on every profile load where `has_deprivation = False`. School postcodes essentially never change, so hitting a live API on TTL expiry is unnecessary.
+The resolver treated cache freshness as a hard requirement for lookup reuse. That makes sense for volatile data, but school postcode geography is effectively static for this use case. Once the TTL elapsed, profile hydration could block on retries to an external API instead of using already-known coordinates.
 
-### Fix
-Stale-while-revalidate: check for any cached entry (regardless of age) before making the HTTP call. Only call the live API for postcodes completely absent from the cache.
+### Fix implemented
+- Added `PostgresPostcodeCacheRepository.get_any(postcode)` to return cached coordinates regardless of age.
+- Updated `CachedPostcodeResolver.resolve()` to use a stale-while-revalidate strategy:
+  - return fresh cached data when available
+  - otherwise return stale cached data when it still has an `lsoa_code`
+  - call the external API only when the cache is missing or incomplete
+- Added unit coverage for stale-cache reuse and repository stale reads.
 
-Add `get_any(postcode)` to `PostgresPostcodeCacheRepository` — same as `get_fresh` but without the `AND cached_at >= :fresh_after` filter.
+### Verification
+- `uv run --project apps/backend pytest apps/backend/tests/unit/test_cached_postcode_resolver.py apps/backend/tests/unit/test_postcode_cache_repository.py -q`
+- `uv run --project apps/backend pytest`
 
-Update `CachedPostcodeResolver.resolve()`:
+---
 
-```python
-def resolve(self, postcode: str) -> PostcodeCoordinates:
-    cached = self._cache_repository.get_fresh(postcode=postcode, ttl=self._cache_ttl)
-    if cached is not None and cached.lsoa_code is not None:
-        return cached
+## Tracker Notes
 
-    # Stale-while-revalidate: return stale data to avoid blocking on external HTTP.
-    stale = self._cache_repository.get_any(postcode=postcode)
-    if stale is not None and stale.lsoa_code is not None:
-        return stale
-
-    resolved = self._postcodes_io_client.lookup(postcode)
-    self._cache_repository.upsert(coordinates=resolved)
-    return resolved
-```
+- `make lint` still fails in the current branch because unrelated files already need formatting:
+  - `apps/backend/src/civitas/infrastructure/ai/prompt_templates/school_analyst.py`
+  - `apps/backend/tests/unit/test_school_analyst_prompt.py`
+- `uv run --project apps/backend mypy apps/backend/src` still has one unrelated pre-existing error in `apps/backend/src/civitas/infrastructure/ai/providers/grok_summary_generator.py`.
+- `cd apps/web && npm run lint` and `cd apps/web && npm run typecheck` passed.
+- `cd apps/web && npm run test` still has unrelated pre-existing failures in `apps/web/src/features/school-profile/school-profile.test.tsx`.

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import text
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, RowMapping
 from sqlalchemy.exc import IntegrityError
 
 from civitas.domain.schools.models import PostcodeCoordinates
@@ -49,19 +49,32 @@ class PostgresPostcodeCacheRepository:
                 .first()
             )
 
-        if row is None:
-            return None
+        return _to_postcode_coordinates(row)
 
-        return PostcodeCoordinates(
-            postcode=str(row["postcode"]),
-            lat=float(row["lat"]),
-            lng=float(row["lng"]),
-            lsoa=str(row["lsoa"]) if row["lsoa"] is not None else None,
-            admin_district=(
-                str(row["admin_district"]) if row["admin_district"] is not None else None
-            ),
-            lsoa_code=str(row["lsoa_code"]) if row["lsoa_code"] is not None else None,
-        )
+    def get_any(self, *, postcode: str) -> PostcodeCoordinates | None:
+        with self._engine.connect() as connection:
+            row = (
+                connection.execute(
+                    text(
+                        """
+                    SELECT
+                        postcode,
+                        lat,
+                        lng,
+                        lsoa_code,
+                        lsoa,
+                        admin_district
+                    FROM postcode_cache
+                    WHERE postcode = :postcode
+                    """
+                    ),
+                    {"postcode": postcode},
+                )
+                .mappings()
+                .first()
+            )
+
+        return _to_postcode_coordinates(row)
 
     def upsert(
         self, *, coordinates: PostcodeCoordinates, cached_at: datetime | None = None
@@ -139,3 +152,17 @@ class PostgresPostcodeCacheRepository:
                     ),
                     params,
                 )
+
+
+def _to_postcode_coordinates(row: RowMapping | None) -> PostcodeCoordinates | None:
+    if row is None:
+        return None
+
+    return PostcodeCoordinates(
+        postcode=str(row["postcode"]),
+        lat=float(str(row["lat"])),
+        lng=float(str(row["lng"])),
+        lsoa=str(row["lsoa"]) if row["lsoa"] is not None else None,
+        admin_district=str(row["admin_district"]) if row["admin_district"] is not None else None,
+        lsoa_code=str(row["lsoa_code"]) if row["lsoa_code"] is not None else None,
+    )

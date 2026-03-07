@@ -858,6 +858,44 @@ def test_school_trends_repository_returns_metric_benchmarks_and_persists_snapsho
     assert scopes == {"national", "phase"}
 
 
+def test_school_trends_repository_reuses_cached_metric_benchmarks(engine: Engine) -> None:
+    repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO metric_benchmarks_yearly (
+                    metric_key,
+                    academic_year,
+                    benchmark_scope,
+                    benchmark_area,
+                    benchmark_label,
+                    benchmark_value
+                ) VALUES
+                ('fsm_pct', '2024/25', 'national', 'england', 'England', 42.0),
+                ('fsm_pct', '2024/25', 'phase', 'Secondary', 'Secondary', 24.0)
+                ON CONFLICT (metric_key, academic_year, benchmark_scope, benchmark_area)
+                DO UPDATE SET
+                    benchmark_label = EXCLUDED.benchmark_label,
+                    benchmark_value = EXCLUDED.benchmark_value
+                """
+            )
+        )
+
+    benchmarks = repository.get_metric_benchmark_series("920001")
+
+    assert benchmarks is not None
+    by_metric_year = {(row.metric_key, row.academic_year): row for row in benchmarks.rows}
+    fsm_2024 = by_metric_year[("fsm_pct", "2024/25")]
+    assert fsm_2024.school_value == pytest.approx(16.9)
+    assert fsm_2024.national_value == pytest.approx(42.0)
+    assert fsm_2024.local_value == pytest.approx(24.0)
+    assert fsm_2024.local_scope == "phase"
+    assert fsm_2024.local_area_code == "Secondary"
+    assert fsm_2024.local_area_label == "Secondary"
+
+
 def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     engine: Engine,
 ) -> None:
