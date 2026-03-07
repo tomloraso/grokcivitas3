@@ -203,11 +203,14 @@
   - `9E-compare-quality-gates.md`
 - Dependencies: Phase 1, Phase 2, Phase 4, and Phase 6
 
-### Phase 10 - Premium access + entitlements
+### Phase 10 - Premium access program
 
-- Status: Planned
-- Goal: Introduce authentication, postcode-level entitlements, payment flow, and backend-enforced premium access boundaries.
+- Status: Planned, but must be delivered as two gated stages
+- Goal: Introduce authenticated user context, research-area entitlements, payment flow, and backend-enforced premium access boundaries without moving product rules into the frontend.
 - Folder: `.planning/phases/phase-10-premium-access/`
+- Delivery stages:
+  - Stage 10A: identity, app-session, research-area, and entitlement foundation
+  - Stage 10B: checkout, webhook fulfillment, premium API contracts, and paywall UX
 - Detailed design:
   - `README.md`
   - `10A-provider-boundary-gate.md`
@@ -217,6 +220,10 @@
   - `10E-premium-api-and-web-paywall.md`
   - `10F-premium-quality-gates.md`
 - Dependencies: Phase 9
+- Coordination notes:
+  - Treat premium access internally as a research area keyed by normalized postcode plus radius, even though the user-facing product language stays postcode-level.
+  - Existing web caching for profile and trends responses must become access-aware before premium rollout.
+  - Stage 10A can be feature-flagged and validated before Stage 10B goes live, but Phase 10 is not complete until both gates pass.
 
 ### Phase 11 - Post-MVP growth and operational expansion
 
@@ -247,11 +254,12 @@
 | 7 | School profile parent-first UX overhaul | In planning |
 | 8 | AI overview and richer school identity data | Implemented |
 | 9 | Compare up to four schools | Planned |
-| 10 | Auth, entitlements, and premium access | Planned |
+| 10 | Identity, entitlements, payments, and premium enforcement | Planned (two gated stages) |
 | 11 | Growth, admin, SEO, exports, optimization | Planned |
 
 ## Open Decisions
 
-1. Authentication provider for Phase 10.
-2. Payment provider and premium packaging details for Phase 10.
-3. Whether Phase 11 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
+1. Final auth-provider choice within the managed email-based pattern defined for Phase 10.
+2. Final payment-provider choice and launch SKU details for the research-area unlock model.
+3. Whether Stage 10A should ship dark before Stage 10B, or remain internal-only until the full premium flow is ready.
+4. Whether Phase 11 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.

@@ -1,24 +1,110 @@
-# 9D - Payment Checkout And Webhooks
+# 10D - Payment Checkout, Fulfillment, And Webhooks
 
 ## Goal
 
-Implement the payment flow that creates, confirms, and reconciles premium unlocks.
+Implement the payment flow that converts a signed-in user's purchase intent into a reconciled research-area entitlement.
+
+Stage 10B starts here. Payment work should build on the identity and entitlement foundations from `10B` and `10C`, not bypass them.
 
 ## Scope
 
-- checkout session creation
-- payment success and cancellation handling
-- webhook verification
-- idempotent entitlement fulfillment
+- checkout-session creation for a chosen research area and product
+- success and cancellation redirects
+- signed webhook ingestion
+- idempotent fulfillment into entitlement state
+- audit-safe storage of commercial events and reconciliation results
 
-## Operational Rules
+## Intended Technical Approach
+
+### Backend Feature Layout
+
+```text
+civitas/
+  domain/billing/
+    models.py
+    services.py
+  application/billing/
+    use_cases.py
+    dto.py
+    ports/
+      checkout_gateway.py
+      billing_repository.py
+      payment_event_repository.py
+```
+
+Infrastructure adapters should live under:
+
+```text
+infrastructure/
+  payments/
+    <provider>_checkout_gateway.py
+  persistence/
+    postgres_billing_repository.py
+```
+
+### Checkout Flow
+
+1. User is authenticated.
+2. Web app sends a typed Civitas API request with product code, postcode, and selected radius.
+3. Backend normalizes the requested research area and validates whether the user already has active coverage.
+4. Backend creates an internal pending checkout record before calling the external provider.
+5. Infrastructure adapter creates the provider checkout session and stores provider reference IDs.
+6. API returns a redirect URL or hosted checkout token to the web app.
+
+### Fulfillment Flow
+
+1. Provider sends signed webhook events.
+2. API verifies the signature before any business processing.
+3. Infrastructure maps the provider payload to an internal payment-event DTO.
+4. Application reconciliation use case records the event idempotently.
+5. Successful payment events create or activate the entitlement grant.
+6. Refund, chargeback, or cancel-after-auth events update entitlement state according to product policy.
+
+## Persistence Requirements
+
+Minimum additional table set:
+
+| Table | Purpose |
+|---|---|
+| `payment_customers` | Optional mapping between Civitas user and provider customer record |
+| `checkout_sessions` | Internal checkout intents and provider references |
+| `payment_events` | Append-only provider event log with unique provider event IDs |
+
+Relationship to access model:
+
+- `checkout_sessions` reference `users`, `premium_products`, and `research_areas`
+- successful reconciliation writes to `entitlements`
+- replayed or duplicate events must not create duplicate entitlements
+
+## Idempotency And Retry Rules
 
 - Webhook processing must be safe to retry.
-- Payment success should not rely solely on frontend redirect state.
-- Provider event payloads must be mapped into internal application contracts in infrastructure code.
+- Provider event IDs must be uniquely stored.
+- Fulfillment writes must run inside a transaction that updates both billing state and entitlement state together.
+- Redirect pages must never be the sole source of truth for access activation.
+- Support tooling must be able to replay a stored event or retry reconciliation from persisted payloads.
+
+## Failure And Recovery Cases
+
+- checkout created but provider redirect abandoned
+- success redirect received before webhook delivery
+- webhook delivered before redirect
+- duplicate webhook delivery
+- temporary provider API outage during checkout creation
+- refund or dispute after entitlement activation
+
+The implementation plan must treat these as normal paths, not edge-case cleanup work.
+
+## Guardrails
+
+- Provider payload shapes stay in infrastructure code.
+- Billing use cases consume internal DTOs and repositories only.
+- The web app should show "processing payment" states, but unlock should only occur after backend reconciliation.
+- Product catalog mapping must not live in frontend constants.
 
 ## Acceptance Criteria
 
-- Successful purchase results in an active entitlement.
-- Failed, canceled, or duplicated events do not create inconsistent unlock state.
-- Staging can verify end-to-end payment and webhook behavior with realistic provider flows.
+- Successful purchase results in an active entitlement for the expected research area.
+- Failed, canceled, duplicate, or replayed events do not create inconsistent unlock state.
+- Refund or revoke paths can remove access deterministically.
+- Staging can verify end-to-end checkout, callback, and webhook behavior with realistic provider flows.
