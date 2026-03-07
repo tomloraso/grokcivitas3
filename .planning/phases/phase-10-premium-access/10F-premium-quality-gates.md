@@ -21,6 +21,7 @@ This phase changes authentication state, billing state, API contracts, and web r
 - typed session client tests
 - app-shell tests for anonymous versus authenticated state
 - locked-state rendering tests for free-baseline versus premium-only sections
+- rendering tests that distinguish `locked` premium sections from genuinely `unavailable` or unpublished content
 
 ### Architecture And Contracts
 
@@ -42,6 +43,7 @@ This phase changes authentication state, billing state, API contracts, and web r
 - checkout CTA and post-purchase refresh tests
 - cache-invalidation or access-aware-cache tests
 - locked-to-unlocked journey tests for representative premium surfaces
+- profile tests proving the free benchmark snapshot path still works without the premium dashboard route
 
 ### End-To-End
 
@@ -70,6 +72,7 @@ This phase changes authentication state, billing state, API contracts, and web r
 - verify refund or revoke path in a non-production payment environment
 - verify support recovery path for a checkout that succeeded at provider side but arrived late to the app
 - verify the premium access matrix behaves as documented for at least one free baseline surface, one locked premium section, and one unlocked premium flow
+- verify the locked analyst state and unpublished-analyst state render as different contract and UI outcomes
 
 ## Acceptance Evidence
 

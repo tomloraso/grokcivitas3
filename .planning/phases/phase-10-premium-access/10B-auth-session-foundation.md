@@ -92,6 +92,28 @@ The API response contract should expose Civitas session state only:
 
 Do not expose provider token formats or raw provider user payloads through OpenAPI.
 
+### Concrete Callback And Session Flow
+
+1. `POST /api/v1/auth/start`
+   - accepts a Civitas-owned `return_to` target or equivalent safe post-auth destination
+   - creates a signed and time-limited auth state payload, or stores a short-lived auth-attempt record if the chosen provider flow requires server-side nonce persistence
+   - returns a provider redirect URL or completes an immediate redirect response
+2. `GET /api/v1/auth/callback`
+   - validates the returned auth state before exchanging any provider code or token
+   - upserts `UserAccount` and `AuthIdentity`
+   - creates a fresh `AppSession`
+   - sets the Civitas session cookie
+   - redirects the browser to the original safe `return_to` route
+3. `GET /api/v1/session`
+   - resolves the current Civitas session from the session cookie only
+   - returns anonymous state when the cookie is missing, expired, revoked, or invalid
+4. `POST /api/v1/auth/signout`
+   - revokes the current session server-side
+   - clears the cookie
+   - returns anonymous session state or an empty success response
+
+The backend callback endpoint, not the frontend, completes provider verification and issues the app session. This keeps the provider boundary inside infrastructure plus the API entrypoint.
+
 ### Web
 
 Add a dedicated feature boundary:
@@ -115,6 +137,7 @@ The web app should call typed Civitas API functions only. It should not import p
 - Do not store auth tokens in `localStorage` or URL state after callback completion.
 - Expired or revoked sessions must resolve cleanly to anonymous state.
 - Session resolution should be cheap enough to run during initial app-shell load.
+- Prefer a same-site web plus API deployment model. If production or staging uses separate subdomains, define cookie domain, allowed origins, and `credentials: include` behavior up front instead of treating it as a late deployment concern.
 
 ## Persistence Requirements
 
@@ -137,6 +160,8 @@ Required fields:
 - Anonymous users must retain access to the free research surface.
 - Session expiration and provider-error states must be explicit in API contracts and UI rendering.
 - Frontend request caching must be invalidated when session or account-access state changes.
+- Backend feature use cases that need user context should accept the internal Civitas user ID or session principal produced by this slice, never raw provider subject IDs.
+- The root web shell should load session state once through typed Civitas API calls and fan that state out to premium-aware features from a dedicated `features/auth` boundary.
 
 ## Acceptance Criteria
 

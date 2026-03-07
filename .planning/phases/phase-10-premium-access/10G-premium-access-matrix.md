@@ -45,6 +45,20 @@ Rationale:
 - Both use data and infrastructure Civitas already has or already plans to expose cleanly.
 - This keeps Phase 10 focused on identity, billing, access, and two concrete premium surfaces instead of trying to monetize every route at once.
 
+## Launch Surface Clarifications
+
+### Benchmark Dashboard Scope
+
+- The free profile experience keeps the latest benchmark snapshot and inline benchmark cues already rendered inside metric cards.
+- `premium_benchmark_dashboard` is the dedicated benchmark drill-down surface: multi-year benchmark series, section-level drill-down, and any route or page that depends on `GET /api/v1/schools/{urn}/trends/dashboard` or an equivalent follow-on benchmark route.
+- The free profile route must not depend on the premium benchmark dashboard endpoint to render its baseline content. If the profile page currently preloads the dashboard route, that fetch behavior should change during Phase 10.
+
+### Premium Section State Rules
+
+- Premium-sensitive sections must distinguish `locked` from `unavailable`, `not_published`, or `unsupported`.
+- A free user hitting a premium boundary should see a teaser or upgrade prompt, not the same state used when no premium artifact exists yet.
+- This rule applies immediately to the profile analyst section and to the premium benchmark dashboard route.
+
 ## Product Access Matrix
 
 | Surface | Section or feature | Free tier | Premium tier | Launch classification | Capability key | Phase dependency | Notes |
@@ -87,6 +101,7 @@ Rationale:
 - AI school overview
 - Inline trend cues and inline benchmark cues already present in the profile
 - Baseline compare flow for up to four schools
+- Latest benchmark snapshot data embedded in the main profile payload
 
 ### Freeze As Premium In Phase 10
 
@@ -107,7 +122,7 @@ Rationale:
 | Capability key | Covered surfaces | Backend decision input | API contract behavior | Web behavior | Cache implications | Notes |
 |---|---|---|---|---|---|---|
 | `premium_school_analyst` | Profile analyst section | user session + requested section capability | `GET /api/v1/schools/{urn}` returns free baseline plus locked analyst metadata when absent; full analyst payload when present | Render locked teaser or upgrade CTA in the analyst slot | Profile cache must vary by access state or be invalidated on upgrade and sign-out | First premium launch capability. |
-| `premium_benchmark_dashboard` | Dedicated dashboard drill-down from profile or trends surfaces | user session + dashboard capability | `GET /api/v1/schools/{urn}/trends/dashboard` or equivalent returns locked metadata when absent; full dashboard when present | Free users see upgrade prompt instead of full dashboard view | Dashboard and related profile drill-down caches must vary by access state | Second premium launch capability. |
+| `premium_benchmark_dashboard` | Dedicated dashboard drill-down from profile or trends surfaces | user session + dashboard capability | `GET /api/v1/schools/{urn}/trends/dashboard` or equivalent returns locked metadata when absent; full dashboard when present | Free users see upgrade prompt instead of full dashboard view | Dashboard and related profile drill-down caches must vary by access state | Second premium launch capability; free inline benchmark cues remain in the main profile payload. |
 | `premium_compare_plus` | Future advanced compare features | user session + compare-plus capability | Compare contract extends with locked premium feature metadata until enabled | Hide or lock only the premium compare additions, not the base compare table | Compare cache must vary by access state once introduced | Deferred until concrete compare-plus scope exists. |
 | `premium_compare_analyst` | Future AI compare commentary | user session + compare-analyst capability | Separate premium compare analysis payload or premium section inside compare response | Locked premium insight panel | Compare commentary cache must vary by access state | Not part of Phase 10 launch. |
 | `premium_advanced_search` | Future advanced search tools | user session + advanced-search capability | Search response or search-settings endpoints expose locked premium controls | Upgrade CTA around advanced controls, not around the whole search route | Search state caches must separate premium control state from free results | Phase 11 candidate. |
@@ -120,7 +135,9 @@ Rationale:
 2. `10D` should sell one launch premium product that grants both launch capabilities by default.
 3. `10E` should treat locked premium sections as first-class response states rather than generic HTTP authorization failures on public read routes.
 4. The free profile response must remain complete enough that Civitas is still useful without premium.
-5. Any new premium candidate after this document must update this file before implementation starts.
+5. Premium-sensitive contracts must distinguish `locked` from `unavailable` or `not_published`.
+6. The free profile route must not require the premium benchmark dashboard endpoint for its baseline render path.
+7. Any new premium candidate after this document must update this file before implementation starts.
 
 ## Open Questions
 

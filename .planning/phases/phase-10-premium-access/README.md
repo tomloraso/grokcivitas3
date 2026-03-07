@@ -25,6 +25,9 @@ The original Phase 10 plan treated premium as a postcode-area unlock. That model
 - Premium unlocks additional sections, deeper analysis, premium AI artifacts, and other advanced workflow features defined in `10G-premium-access-matrix.md`.
 - The exact free versus premium split is a prerequisite planning artifact for Stage 10B and should not be inferred ad hoc during implementation.
 - Access decisions remain backend-owned. The frontend renders the result and sends user intent.
+- The launch premium bundle remains limited to the two capabilities frozen in `10G`; do not expand Stage 10 scope by implicitly monetizing other surfaces.
+- The premium benchmark surface is the dedicated drill-down dashboard, not the inline benchmark cues already embedded in the free profile experience.
+- Premium-sensitive contracts must distinguish `locked` from `unavailable` or `not_published`; missing JSON alone is not an acceptable paywall signal.
 
 ## Delivery Stages
 
@@ -65,24 +68,28 @@ Stage 10B exit outcome:
 - Keep provider SDKs in infrastructure adapters only.
 - Use backend-owned app sessions so the web app never needs to hold provider tokens.
 - Evaluate premium access through a reusable access service that accepts user context plus requested capability or surface requirement.
+- Keep the MVP surface-to-capability policy in backend code derived from `10G`; do not introduce an admin-managed or provider-managed rules engine for the first launch.
 
 ### Data And Persistence
 
 - Introduce first-class tables for users, auth identities, sessions, premium products, product capabilities, entitlement grants, checkout sessions, and payment events.
 - Keep payment events append-only and idempotent so webhook retries are safe.
 - Entitlement expiry and revocation must take effect immediately in access evaluation.
+- Persist commercial product data separately from access policy mapping so later plan or pricing changes do not require redesign of profile or trends contracts.
 
 ### API
 
 - Extend OpenAPI contracts with session, access, plan, and paywall metadata.
 - Keep public read routes as typed Civitas API endpoints; do not expose provider payload shapes beyond infrastructure.
 - Prefer `200` responses with access metadata and locked sections for public read journeys rather than using `403` as the primary paywall transport.
+- For premium-sensitive sections, return explicit section-state wrappers such as `available`, `locked`, or `unavailable` rather than nullable premium fields with ambiguous meaning.
 
 ### Web
 
 - Add dedicated `auth` and `premium-access` feature ownership inside `apps/web/src/features`.
 - The app shell reads typed session state from Civitas API endpoints only.
 - Existing cached profile and trends requests must become access-aware so free responses are not reused after upgrade and premium responses are not reused after sign-out.
+- The profile page should stop depending on the premium dashboard route for its free baseline render path; free inline benchmark cues stay available from the main profile payload.
 
 ## Key Domain Concepts
 

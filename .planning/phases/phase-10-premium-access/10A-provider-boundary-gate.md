@@ -116,7 +116,8 @@ Reasoning:
 ## Required Architecture Boundaries
 
 - Domain models must not import auth or payment SDKs.
-- Application use cases consume role-based ports such as `IdentityProvider`, `SessionRepository`, `CheckoutGateway`, `PaymentEventStore`, and `AccessPolicyRepository`.
+- Application use cases consume role-based ports such as `IdentityProvider`, `SessionRepository`, `CheckoutGateway`, `PaymentEventStore`, `EntitlementRepository`, and `ProductRepository`.
+- The launch access-policy mapping should live in backend code derived from `10G-premium-access-matrix.md`, not in provider configuration or frontend constants.
 - Infrastructure adapters own provider payload mapping, signature verification, retry semantics, and external customer or checkout identifiers.
 - API routes remain thin and translate use-case outputs into Civitas schemas.
 - The web app consumes Civitas API routes only for session, account access, and checkout initiation.
