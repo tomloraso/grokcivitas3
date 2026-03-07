@@ -63,6 +63,37 @@ Phase 0D1 currently keeps shared primitives under `src/components/*` with local 
 3. Keep feature-specific presentation and styles inside the owning feature.
 4. Avoid repeating magic spacing/color values across unrelated components.
 
+## Metric Display Pattern (StatCard / BenchmarkSlot)
+
+`StatCard` (`src/components/data/StatCard.tsx`) is the canonical component for displaying a single school metric. All new metric cards must use it.
+
+**Key props:**
+- `value` / `label` / `unit` — the metric's current value and display metadata
+- `trend` — sparkline data points; drives the `TrendIndicator` below the value
+- `benchmark?: BenchmarkSlot` — when provided, renders an inline `BenchmarkBlock` with proportional bar chart (sm+) or compact text rows (mobile)
+- `description?: string` — plain-English explanation surfaced via an ⓘ toggle; pull from `metricCatalog.ts`
+
+**`BenchmarkSlot` interface** (exported from StatCard):
+- `schoolRaw / localRaw / nationalRaw` — raw numeric values for proportional bar widths
+- `displayDecimals` — round raw values to this precision before computing bar widths (prevents mismatched bars from sub-display-precision differences)
+- `isPercent` — when true, fixes the bar scale to 0–100 rather than dynamic max
+- `localLabel` — local area name shown in the benchmark block (e.g. "Camden")
+- `*ValueFormatted` / `*DeltaFormatted` — pre-formatted strings for display
+
+**Building a benchmark lookup in a section component:**
+```ts
+const benchmarkLookup = new Map<string, BenchmarkMetricVM>(
+  benchmarkDashboard?.sections.flatMap((s) => s.metrics.map((m) => [m.metricKey, m] as const)) ?? []
+);
+// at card-build time:
+const bm = benchmarkLookup.get(metricKey);
+<StatCard ... benchmark={bm ? toBenchmarkSlot(bm) : undefined} />
+```
+
+Established in Phase 7 (P2–P3). If the StatCard benchmark pattern is approved for Phase 9 (compare), apply the same `BenchmarkSlot` interface — do not invent a parallel pattern.
+
+**Metric catalog:** `src/features/school-profile/metricCatalog.ts` is the single source for metric labels and `description` strings. Update it rather than hardcoding strings in section components.
+
 ## Testing Expectations
 
 1. Unit test pure feature helpers/mappers.

@@ -160,7 +160,7 @@
 
 ### Phase 7 - School profile parent-first UX overhaul
 
-- Status: In planning — implementation started locally, not yet committed
+- Status: Completed — committed 2026-03-07 (P1–P4); P5 responsive polish and P6 design system docs deferred
 - Goal: Redesign the school profile page around the parent user model — inline benchmark bars on every metric card, parent-language section headings, and removal of the duplicate standalone benchmark section.
 - Folder: `.planning/phases/phase-7-profile-ux-overhaul/`
 - Detailed design:
@@ -251,7 +251,7 @@
 | 4 | Multi-year trend recovery and source stabilization | Implemented |
 | 5 | Search/profile UX uplift and theme parity | Partially implemented |
 | 6 | Expanded metrics coverage and dashboard benchmarks | Implemented |
-| 7 | School profile parent-first UX overhaul | In planning |
+| 7 | School profile parent-first UX overhaul | Completed (P1–P4) |
 | 8 | AI overview and richer school identity data | Implemented |
 | 9 | Compare up to four schools | Planned |
 | 10 | Identity, entitlements, payments, and premium enforcement | Planned (two gated stages) |
