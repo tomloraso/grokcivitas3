@@ -586,40 +586,53 @@ def _get_metric_benchmark_rows_from_cache(
                                 yearly_prices.area_house_price_annual_change_pct::double precision
                             )
                     ) AS metric(metric_key, metric_value)
+                ),
+                cache_rows AS (
+                    SELECT
+                        school_metric_rows.metric_key,
+                        school_metric_rows.academic_year,
+                        school_metric_rows.school_value,
+                        national_benchmarks.metric_key AS national_metric_key,
+                        national_benchmarks.benchmark_value AS national_value,
+                        local_benchmarks.metric_key AS local_metric_key,
+                        local_benchmarks.benchmark_value AS local_value,
+                        local_context.local_scope,
+                        local_context.local_area_code,
+                        local_context.local_area_label
+                    FROM school_metric_rows
+                    INNER JOIN local_context
+                        ON TRUE
+                    LEFT JOIN metric_benchmarks_yearly AS national_benchmarks
+                        ON national_benchmarks.metric_key = school_metric_rows.metric_key
+                       AND national_benchmarks.academic_year = school_metric_rows.academic_year
+                       AND national_benchmarks.benchmark_scope = 'national'
+                       AND national_benchmarks.benchmark_area = 'england'
+                    LEFT JOIN metric_benchmarks_yearly AS local_benchmarks
+                        ON local_benchmarks.metric_key = school_metric_rows.metric_key
+                       AND local_benchmarks.academic_year = school_metric_rows.academic_year
+                       AND local_benchmarks.benchmark_scope = local_context.local_scope
+                       AND local_benchmarks.benchmark_area = local_context.local_area_code
+                ),
+                missing_benchmark_rows AS (
+                    SELECT 1
+                    FROM cache_rows
+                    WHERE national_metric_key IS NULL
+                       OR local_metric_key IS NULL
+                    LIMIT 1
                 )
                 SELECT
-                    school_metric_rows.metric_key,
-                    school_metric_rows.academic_year,
-                    school_metric_rows.school_value,
-                    national_benchmarks.benchmark_value AS national_value,
-                    local_benchmarks.benchmark_value AS local_value,
-                    local_context.local_scope,
-                    local_context.local_area_code,
-                    local_context.local_area_label
-                FROM school_metric_rows
-                INNER JOIN local_context
-                    ON TRUE
-                LEFT JOIN metric_benchmarks_yearly AS national_benchmarks
-                    ON national_benchmarks.metric_key = school_metric_rows.metric_key
-                   AND national_benchmarks.academic_year = school_metric_rows.academic_year
-                   AND national_benchmarks.benchmark_scope = 'national'
-                   AND national_benchmarks.benchmark_area = 'england'
-                LEFT JOIN metric_benchmarks_yearly AS local_benchmarks
-                    ON local_benchmarks.metric_key = school_metric_rows.metric_key
-                   AND local_benchmarks.academic_year = school_metric_rows.academic_year
-                   AND local_benchmarks.benchmark_scope = local_context.local_scope
-                   AND local_benchmarks.benchmark_area = local_context.local_area_code
-                WHERE EXISTS (
+                    cache_rows.metric_key,
+                    cache_rows.academic_year,
+                    cache_rows.school_value,
+                    cache_rows.national_value,
+                    cache_rows.local_value,
+                    cache_rows.local_scope,
+                    cache_rows.local_area_code,
+                    cache_rows.local_area_label
+                FROM cache_rows
+                WHERE NOT EXISTS (
                     SELECT 1
-                    FROM metric_benchmarks_yearly AS national_cache
-                    WHERE national_cache.benchmark_scope = 'national'
-                      AND national_cache.benchmark_area = 'england'
-                )
-                  AND EXISTS (
-                    SELECT 1
-                    FROM metric_benchmarks_yearly AS local_cache
-                    WHERE local_cache.benchmark_scope = local_context.local_scope
-                      AND local_cache.benchmark_area = local_context.local_area_code
+                    FROM missing_benchmark_rows
                 )
                 """
             ),
@@ -995,23 +1008,22 @@ def _persist_metric_benchmark_rows(
             continue
 
         national_value = _to_optional_float(row.get("national_value"))
-        if national_value is not None:
-            upsert_rows.append(
-                {
-                    "metric_key": metric_key,
-                    "academic_year": academic_year,
-                    "benchmark_scope": "national",
-                    "benchmark_area": "england",
-                    "benchmark_label": "England",
-                    "benchmark_value": national_value,
-                }
-            )
+        upsert_rows.append(
+            {
+                "metric_key": metric_key,
+                "academic_year": academic_year,
+                "benchmark_scope": "national",
+                "benchmark_area": "england",
+                "benchmark_label": "England",
+                "benchmark_value": national_value,
+            }
+        )
 
         local_value = _to_optional_float(row.get("local_value"))
         local_scope = _to_benchmark_scope(row.get("local_scope"))
         local_area_code = _to_optional_str(row.get("local_area_code"))
         local_area_label = _to_optional_str(row.get("local_area_label"))
-        if local_value is not None and local_area_code is not None and local_area_label is not None:
+        if local_area_code is not None and local_area_label is not None:
             upsert_rows.append(
                 {
                     "metric_key": metric_key,

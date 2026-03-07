@@ -857,9 +857,32 @@ def test_school_trends_repository_returns_metric_benchmarks_and_persists_snapsho
     scopes = {str(row["benchmark_scope"]) for row in persisted_rows}
     assert scopes == {"national", "phase"}
 
+    with engine.connect() as connection:
+        null_rows = (
+            connection.execute(
+                text(
+                    """
+                SELECT benchmark_scope, benchmark_area, benchmark_value
+                FROM metric_benchmarks_yearly
+                WHERE metric_key = 'progress8_disadvantaged' AND academic_year = '2024/25'
+                ORDER BY benchmark_scope, benchmark_area
+                """
+                )
+            )
+            .mappings()
+            .all()
+        )
+
+    assert len(null_rows) == 2
+    assert {str(row["benchmark_scope"]) for row in null_rows} == {"national", "phase"}
+    assert all(row["benchmark_value"] is None for row in null_rows)
+
 
 def test_school_trends_repository_reuses_cached_metric_benchmarks(engine: Engine) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    seeded = repository.get_metric_benchmark_series("920001")
+    assert seeded is not None
 
     with engine.begin() as connection:
         connection.execute(
@@ -894,6 +917,71 @@ def test_school_trends_repository_reuses_cached_metric_benchmarks(engine: Engine
     assert fsm_2024.local_scope == "phase"
     assert fsm_2024.local_area_code == "Secondary"
     assert fsm_2024.local_area_label == "Secondary"
+
+    progress8_disadvantaged_2024 = by_metric_year[("progress8_disadvantaged", "2024/25")]
+    assert progress8_disadvantaged_2024.national_value is None
+    assert progress8_disadvantaged_2024.local_value is None
+
+
+def test_school_trends_repository_recomputes_when_cached_snapshot_is_partial(
+    engine: Engine,
+) -> None:
+    repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    baseline = repository.get_metric_benchmark_series("920001")
+    assert baseline is not None
+    baseline_by_metric_year = {
+        (row.metric_key, row.academic_year): (row.national_value, row.local_value)
+        for row in baseline.rows
+    }
+
+    with engine.begin() as connection:
+        connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+        connection.execute(
+            text(
+                """
+                INSERT INTO metric_benchmarks_yearly (
+                    metric_key,
+                    academic_year,
+                    benchmark_scope,
+                    benchmark_area,
+                    benchmark_label,
+                    benchmark_value
+                ) VALUES
+                ('fsm_pct', '2024/25', 'national', 'england', 'England', 42.0),
+                ('fsm_pct', '2024/25', 'phase', 'Secondary', 'Secondary', 24.0)
+                ON CONFLICT (metric_key, academic_year, benchmark_scope, benchmark_area)
+                DO UPDATE SET
+                    benchmark_label = EXCLUDED.benchmark_label,
+                    benchmark_value = EXCLUDED.benchmark_value
+                """
+            )
+        )
+
+    benchmarks = repository.get_metric_benchmark_series("920001")
+
+    assert benchmarks is not None
+    by_metric_year = {(row.metric_key, row.academic_year): row for row in benchmarks.rows}
+
+    fsm_2024 = by_metric_year[("fsm_pct", "2024/25")]
+    assert (
+        fsm_2024.national_value,
+        fsm_2024.local_value,
+    ) == baseline_by_metric_year[("fsm_pct", "2024/25")]
+    assert (fsm_2024.national_value, fsm_2024.local_value) != (42.0, 24.0)
+
+    attendance_2024 = by_metric_year[("overall_attendance_pct", "2024/25")]
+    assert (
+        attendance_2024.national_value,
+        attendance_2024.local_value,
+    ) == baseline_by_metric_year[("overall_attendance_pct", "2024/25")]
+
+    with engine.connect() as connection:
+        benchmark_count = connection.execute(
+            text("SELECT count(*) FROM metric_benchmarks_yearly")
+        ).scalar_one()
+
+    assert benchmark_count > 2
 
 
 def test_school_trends_repository_returns_empty_rows_for_school_without_history(
