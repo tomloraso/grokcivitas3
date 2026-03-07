@@ -6,7 +6,7 @@ Living document. Remove an entry only after the fix is committed and verified in
 
 ## BUG-001 - School profile endpoint times out (benchmark query ignores persisted benchmark cache)
 
-**Status:** Confirmed defect. Fixed locally and verified by automated tests. Pending commit and production verification.
+**Status:** FIXED
 **Severity:** Critical
 **Files:**
 - `apps/backend/src/civitas/infrastructure/persistence/postgres_school_trends_repository.py`
@@ -32,7 +32,7 @@ The repository persisted benchmark snapshots but had no cache-read path. Every r
 
 ## BUG-002 - Postcode resolver blocks on external HTTP after cache TTL expiry
 
-**Status:** Confirmed defect. Fixed locally and verified by automated tests. Pending commit and production verification.
+**Status:** FIXED
 **Severity:** High
 **Files:**
 - `apps/backend/src/civitas/infrastructure/http/postcode_resolver.py`
