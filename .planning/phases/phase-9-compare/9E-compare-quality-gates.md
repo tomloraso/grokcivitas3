@@ -7,7 +7,7 @@ Close Phase 9 with a single repo state that proves compare is stable across back
 ## Required Checks
 
 - backend unit and integration tests for compare feature
-- API contract export and frontend type generation
+- API contract export and frontend type generation (`cd apps/web && npm run generate:types`)
 - frontend lint, typecheck, unit tests, and build
 - compare end-to-end journey coverage
 - repository `make lint`
