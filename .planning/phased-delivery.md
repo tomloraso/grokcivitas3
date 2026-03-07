@@ -176,6 +176,8 @@
 - Coordination notes:
   - No backend changes required — all benchmark data already returned by `GET /api/v1/schools/{urn}`.
   - If StatCard benchmark pattern is approved, apply same pattern to Phase 9 (compare) web experience.
+  - P5 and P6 are intentionally deferred — do not close Phase 7 until responsive audit and design system docs are complete.
+  - The parent-first UX direction established here (plain-English labels, inline benchmarks, non-evaluative trend colours) is the target standard for all future page overhauls: map page, compare page, Pro/premium pages, and any future routes. Apply the same principles when those pages are redesigned.
 
 ### Phase 8 - AI overview + school identity enrichment
 
