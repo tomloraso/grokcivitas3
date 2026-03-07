@@ -209,6 +209,65 @@
         }
       }
     },
+    "/api/v1/schools/compare": {
+      "get": {
+        "tags": [
+          "tasks",
+          "schools"
+        ],
+        "summary": "Get School Compare",
+        "operationId": "get_school_compare_api_v1_schools_compare_get",
+        "parameters": [
+          {
+            "name": "urns",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Urns"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolCompareResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid compare request parameters."
+          },
+          "404": {
+            "description": "One or more school URNs were not found."
+          },
+          "503": {
+            "description": "School compare datastore unavailable."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/schools/{urn}": {
       "get": {
         "tags": [
@@ -371,6 +430,388 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "SchoolCompareBenchmarkResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "school_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Value"
+          },
+          "national_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "National Value"
+          },
+          "local_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Local Value"
+          },
+          "school_vs_national_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs National Delta"
+          },
+          "school_vs_local_delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Vs Local Delta"
+          },
+          "local_scope": {
+            "type": "string",
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
+            "title": "Local Scope"
+          },
+          "local_area_code": {
+            "type": "string",
+            "title": "Local Area Code"
+          },
+          "local_area_label": {
+            "type": "string",
+            "title": "Local Area Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "school_value",
+          "national_value",
+          "local_value",
+          "school_vs_national_delta",
+          "school_vs_local_delta",
+          "local_scope",
+          "local_area_code",
+          "local_area_label"
+        ],
+        "title": "SchoolCompareBenchmarkResponse"
+      },
+      "SchoolCompareCellResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "value_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Text"
+          },
+          "value_numeric": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Numeric"
+          },
+          "year_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Label"
+          },
+          "snapshot_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Date"
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unsupported",
+              "unavailable",
+              "suppressed"
+            ],
+            "title": "Availability"
+          },
+          "completeness_status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
+            "title": "Completeness Status"
+          },
+          "completeness_reason_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "source_missing",
+                  "insufficient_years_published",
+                  "source_not_in_catalog",
+                  "source_file_missing_for_year",
+                  "source_schema_incompatible_for_year",
+                  "partial_metric_coverage",
+                  "source_not_provided",
+                  "rejected_by_validation",
+                  "not_joined_yet",
+                  "pipeline_failed_recently",
+                  "not_applicable",
+                  "source_coverage_gap",
+                  "stale_after_school_refresh",
+                  "no_incidents_in_radius"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completeness Reason Code"
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolCompareBenchmarkResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "value_text",
+          "value_numeric",
+          "year_label",
+          "snapshot_date",
+          "availability",
+          "completeness_status",
+          "completeness_reason_code",
+          "benchmark"
+        ],
+        "title": "SchoolCompareCellResponse"
+      },
+      "SchoolCompareResponse": {
+        "properties": {
+          "schools": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolCompareSchoolResponse"
+            },
+            "type": "array",
+            "title": "Schools"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolCompareSectionResponse"
+            },
+            "type": "array",
+            "title": "Sections"
+          }
+        },
+        "type": "object",
+        "required": [
+          "schools",
+          "sections"
+        ],
+        "title": "SchoolCompareResponse"
+      },
+      "SchoolCompareRowResponse": {
+        "properties": {
+          "metric_key": {
+            "type": "string",
+            "title": "Metric Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "text",
+              "date",
+              "days",
+              "years",
+              "percent",
+              "count",
+              "rate",
+              "ratio",
+              "score",
+              "currency",
+              "decile"
+            ],
+            "title": "Unit"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolCompareCellResponse"
+            },
+            "type": "array",
+            "title": "Cells"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "label",
+          "unit",
+          "cells"
+        ],
+        "title": "SchoolCompareRowResponse"
+      },
+      "SchoolCompareSchoolResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "age_range_label": {
+            "type": "string",
+            "title": "Age Range Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "name",
+          "postcode",
+          "phase",
+          "type",
+          "age_range_label"
+        ],
+        "title": "SchoolCompareSchoolResponse"
+      },
+      "SchoolCompareSectionResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "inspection",
+              "demographics",
+              "attendance",
+              "behaviour",
+              "workforce",
+              "performance",
+              "area"
+            ],
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolCompareRowResponse"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "rows"
+        ],
+        "title": "SchoolCompareSectionResponse"
       },
       "SchoolNameSearchResponse": {
         "properties": {

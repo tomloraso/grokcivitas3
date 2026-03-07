@@ -57,6 +57,19 @@ export type SchoolProfileAreaContext =
 export type SchoolProfileAreaHousePrices =
   components["schemas"]["SchoolProfileAreaHousePricesResponse"];
 
+export type SchoolCompareResponse = components["schemas"]["SchoolCompareResponse"];
+
+export type SchoolCompareSchool = components["schemas"]["SchoolCompareSchoolResponse"];
+
+export type SchoolCompareSection = components["schemas"]["SchoolCompareSectionResponse"];
+
+export type SchoolCompareRow = components["schemas"]["SchoolCompareRowResponse"];
+
+export type SchoolCompareCell = components["schemas"]["SchoolCompareCellResponse"];
+
+export type SchoolCompareBenchmark =
+  components["schemas"]["SchoolCompareBenchmarkResponse"];
+
 export type SchoolTrendsResponse = components["schemas"]["SchoolTrendsResponse"];
 
 export type SchoolTrendsSeries = components["schemas"]["SchoolTrendsSeriesResponse"];

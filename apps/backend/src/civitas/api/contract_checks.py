@@ -20,31 +20,91 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "completeness",
     }
 )
+REQUIRED_SCHOOL_COMPARE_PROPERTIES = frozenset({"schools", "sections"})
+REQUIRED_SCHOOL_COMPARE_SECTION_PROPERTIES = frozenset({"key", "label", "rows"})
+REQUIRED_SCHOOL_COMPARE_ROW_PROPERTIES = frozenset({"metric_key", "label", "unit", "cells"})
 
 
 def validate_app_contracts(app: FastAPI) -> None:
-    validate_school_profile_response_contract(app.openapi())
+    openapi_schema = app.openapi()
+    validate_school_profile_response_contract(openapi_schema)
+    validate_school_compare_response_contract(openapi_schema)
 
 
 def validate_school_profile_response_contract(openapi_schema: Mapping[str, object]) -> None:
-    schema = _school_profile_response_schema(openapi_schema)
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolProfileResponse",
+        required_properties=REQUIRED_SCHOOL_PROFILE_PROPERTIES,
+        validate_required_list=False,
+    )
+
+
+def validate_school_compare_response_contract(openapi_schema: Mapping[str, object]) -> None:
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolCompareResponse",
+        required_properties=REQUIRED_SCHOOL_COMPARE_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolCompareSectionResponse",
+        required_properties=REQUIRED_SCHOOL_COMPARE_SECTION_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolCompareRowResponse",
+        required_properties=REQUIRED_SCHOOL_COMPARE_ROW_PROPERTIES,
+        validate_required_list=True,
+    )
+
+
+def _validate_required_properties(
+    openapi_schema: Mapping[str, object],
+    *,
+    schema_name: str,
+    required_properties: frozenset[str],
+    validate_required_list: bool,
+) -> None:
+    schema = _schema_by_name(openapi_schema, schema_name)
     properties = schema.get("properties")
     if not isinstance(properties, Mapping):
         raise RuntimeError(
-            "API contract check failed: SchoolProfileResponse properties are missing.",
+            f"API contract check failed: {schema_name} properties are missing.",
         )
 
     property_names = {str(name) for name in properties}
-    missing = sorted(REQUIRED_SCHOOL_PROFILE_PROPERTIES - property_names)
+    missing = sorted(required_properties - property_names)
     if missing:
         missing_text = ", ".join(missing)
         raise RuntimeError(
-            "API contract check failed: SchoolProfileResponse missing required properties: "
+            f"API contract check failed: {schema_name} missing required properties: "
             f"{missing_text}.",
         )
 
+    if validate_required_list:
+        required = schema.get("required")
+        if not isinstance(required, list):
+            raise RuntimeError(
+                f"API contract check failed: {schema_name} required properties are missing.",
+            )
 
-def _school_profile_response_schema(openapi_schema: Mapping[str, object]) -> Mapping[str, object]:
+        required_names = {str(name) for name in required}
+        missing_required = sorted(required_properties - required_names)
+        if missing_required:
+            missing_required_text = ", ".join(missing_required)
+            raise RuntimeError(
+                f"API contract check failed: {schema_name} required list is missing properties: "
+                f"{missing_required_text}.",
+            )
+
+
+def _schema_by_name(
+    openapi_schema: Mapping[str, object],
+    schema_name: str,
+) -> Mapping[str, object]:
     components = openapi_schema.get("components")
     if not isinstance(components, Mapping):
         raise RuntimeError("API contract check failed: OpenAPI components are missing.")
@@ -53,10 +113,10 @@ def _school_profile_response_schema(openapi_schema: Mapping[str, object]) -> Map
     if not isinstance(schemas, Mapping):
         raise RuntimeError("API contract check failed: OpenAPI schemas are missing.")
 
-    school_profile_schema = schemas.get("SchoolProfileResponse")
-    if not isinstance(school_profile_schema, Mapping):
+    schema = schemas.get(schema_name)
+    if not isinstance(schema, Mapping):
         raise RuntimeError(
-            "API contract check failed: SchoolProfileResponse schema is missing.",
+            f"API contract check failed: {schema_name} schema is missing.",
         )
 
-    return school_profile_schema
+    return schema

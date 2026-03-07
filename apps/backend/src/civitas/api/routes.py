@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from civitas.api.dependencies import (
     get_create_task_use_case,
     get_list_tasks_use_case,
+    get_school_compare_use_case,
     get_school_profile_use_case,
     get_school_trend_dashboard_use_case,
     get_school_trends_use_case,
     get_search_schools_by_name_use_case,
     get_search_schools_by_postcode_use_case,
 )
+from civitas.api.schemas.school_compare import SchoolCompareResponse
 from civitas.api.schemas.school_profiles import (
     SchoolProfileAreaContextCoverageResponse,
     SchoolProfileAreaContextResponse,
@@ -63,6 +65,13 @@ from civitas.api.schemas.schools import (
     SchoolsSearchResponse,
 )
 from civitas.api.schemas.tasks import TaskCreateRequest, TaskResponse
+from civitas.api.school_compare_presenter import to_school_compare_response
+from civitas.application.school_compare.errors import (
+    InvalidSchoolCompareParametersError,
+    SchoolCompareDataUnavailableError,
+    SchoolCompareNotFoundError,
+)
+from civitas.application.school_compare.use_cases import GetSchoolCompareUseCase
 from civitas.application.school_profiles.errors import (
     SchoolProfileDataUnavailableError,
     SchoolProfileNotFoundError,
@@ -195,6 +204,32 @@ def search_schools_by_name(
             for school in result.schools
         ],
     )
+
+
+@router.get(
+    "/schools/compare",
+    response_model=SchoolCompareResponse,
+    tags=["schools"],
+    responses={
+        400: {"description": "Invalid compare request parameters."},
+        404: {"description": "One or more school URNs were not found."},
+        503: {"description": "School compare datastore unavailable."},
+    },
+)
+def get_school_compare(
+    urns: str | None = Query(default=None),
+    use_case: GetSchoolCompareUseCase = Depends(get_school_compare_use_case),
+) -> SchoolCompareResponse:
+    try:
+        result = use_case.execute(urns=urns or "")
+    except InvalidSchoolCompareParametersError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except SchoolCompareNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except SchoolCompareDataUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return to_school_compare_response(result)
 
 
 @router.get(

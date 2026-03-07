@@ -193,7 +193,7 @@
 
 ### Phase 9 - Compare experience
 
-- Status: Planned
+- Status: Completed - quality gates passed 2026-03-07
 - Goal: Deliver side-by-side comparison for up to four schools with stable metric alignment, benchmark context, and missing-data handling.
 - Folder: `.planning/phases/phase-9-compare/`
 - Detailed design:
@@ -256,7 +256,7 @@
 | 6 | Expanded metrics coverage and dashboard benchmarks | Implemented |
 | 7 | School profile parent-first UX overhaul | Completed (P1–P4) |
 | 8 | AI overview and richer school identity data | Implemented |
-| 9 | Compare up to four schools | Planned |
+| 9 | Compare up to four schools | Completed |
 | 10 | Identity, feature entitlements, payments, and premium enforcement | Planned (two gated stages) |
 | 11 | Growth, admin, SEO, exports, optimization | Planned |
 

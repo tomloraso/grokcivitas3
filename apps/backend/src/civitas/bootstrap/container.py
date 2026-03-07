@@ -6,6 +6,7 @@ from civitas.application.operations.use_cases import (
     GenerateDataQualitySnapshotsUseCase,
     RunDataQualitySloCheckUseCase,
 )
+from civitas.application.school_compare.use_cases import GetSchoolCompareUseCase
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.school_summaries.ports.summary_generator import SummaryGenerator
 from civitas.application.school_summaries.use_cases import (
@@ -183,6 +184,13 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
         postcode_context_resolver=postcode_resolver(),
         school_trends_repository=school_trends_repository(),
         summary_repository=summary_repository(),
+    )
+
+
+def get_school_compare_use_case() -> GetSchoolCompareUseCase:
+    return GetSchoolCompareUseCase(
+        school_profile_repository=school_profile_repository(),
+        school_trends_repository=school_trends_repository(),
     )
 
 

@@ -6,6 +6,7 @@ import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
 import { SkipToContent } from "./SkipToContent";
 import { Breadcrumbs } from "./Breadcrumbs";
+import { CompareSelectionProvider } from "../../shared/context/CompareSelectionContext";
 import { SearchContextProvider } from "../../shared/context/SearchContext";
 import { renderWithProviders } from "../../test/render";
 import { runA11yAudit } from "../../test/accessibility";
@@ -139,6 +140,38 @@ describe("SiteHeader - search context", () => {
     );
 
     expect(screen.queryByLabelText(/Searching/)).not.toBeInTheDocument();
+  });
+
+  it("uses the explicit compare URL state on the compare route", () => {
+    renderWithProviders(
+      <CompareSelectionProvider
+        initialItems={[
+          {
+            urn: "100001",
+            name: "Primary Example",
+            phase: "Primary",
+            type: "Community school",
+            postcode: "SW1A 1AA",
+            source: "search"
+          },
+          {
+            urn: "200002",
+            name: "Secondary Example",
+            phase: "Secondary",
+            type: "Academy sponsor led",
+            postcode: "SW1A 2BB",
+            source: "search"
+          }
+        ]}
+      >
+        <SiteHeader />
+      </CompareSelectionProvider>,
+      { initialEntries: ["/compare?urns="] }
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Compare 0/4 selected" })
+    ).toBeDisabled();
   });
 });
 

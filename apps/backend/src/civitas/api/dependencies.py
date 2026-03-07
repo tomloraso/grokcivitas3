@@ -1,3 +1,4 @@
+from civitas.application.school_compare.use_cases import GetSchoolCompareUseCase
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.application.school_trends.use_cases import (
     GetSchoolTrendDashboardUseCase,
@@ -13,6 +14,9 @@ from civitas.bootstrap.container import (
     list_tasks_use_case,
     search_schools_by_name_use_case,
     search_schools_by_postcode_use_case,
+)
+from civitas.bootstrap.container import (
+    get_school_compare_use_case as build_school_compare_use_case,
 )
 from civitas.bootstrap.container import (
     get_school_profile_use_case as build_school_profile_use_case,
@@ -43,6 +47,10 @@ def get_search_schools_by_name_use_case() -> SearchSchoolsByNameUseCase:
 
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return build_school_profile_use_case()
+
+
+def get_school_compare_use_case() -> GetSchoolCompareUseCase:
+    return build_school_compare_use_case()
 
 
 def get_school_trends_use_case() -> GetSchoolTrendsUseCase:

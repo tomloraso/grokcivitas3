@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Planned
+- Status: Completed - quality gates passed 2026-03-07
 - Last updated: 2026-03-07
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
@@ -38,3 +38,12 @@ Phase 9 is split into five deliverables:
 - Metrics align deterministically even when year coverage differs between schools.
 - Missing or unavailable values are explained consistently instead of silently omitted.
 - Repository lint, tests, and critical frontend journeys pass.
+
+## Tracking Log
+
+- 2026-03-07:
+  - 9A completed: compare metric set, ordering, and completeness semantics frozen.
+  - 9B completed: backend compare API, presenter, OpenAPI export, and frontend generated types aligned.
+  - 9C completed: compare selection context, storage, routing helpers, and search/profile entry points shipped.
+  - 9D completed: dedicated `/compare` route, responsive compare UI, compare-to-profile return affordance, and explicit empty/underfilled/loading/error/ready states shipped.
+  - 9E completed: compare mapper/component tests, compare end-to-end coverage, `frontend build`, `make lint`, and `make test` passed in one repository state.

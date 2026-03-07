@@ -5,6 +5,8 @@ import { PageContainer } from "../../components/layout/PageContainer";
 import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
+import { useToast } from "../../components/ui/ToastContext";
+import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { paths } from "../../shared/routing/paths";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
 import { SchoolAnalystSection } from "./components/SchoolAnalystSection";
@@ -21,10 +23,16 @@ import { useSchoolProfile } from "./hooks/useSchoolProfile";
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
   const location = useLocation();
-  const fromSearch = (
-    location.state as { fromSearch?: { postcode: string; radius: number } } | null
-  )?.fromSearch;
+  const routeState = location.state as {
+    fromSearch?: { postcode: string; radius: number };
+    fromCompare?: { href: string };
+  } | null;
+  const fromSearch = routeState?.fromSearch;
+  const fromCompare = routeState?.fromCompare;
+  const { toast } = useToast();
+  const { addSchool, hasSchool, items, removeSchool } = useCompareSelection();
   const { status, profile, errorMessage, retry } = useSchoolProfile(urn);
+  const selected = profile ? hasSchool(profile.school.urn) : false;
 
   return (
     <PageContainer>
@@ -80,6 +88,7 @@ export function SchoolProfileFeature(): JSX.Element {
                     }
                   ]
                 : []),
+              ...(fromCompare ? [{ label: "Compare", href: fromCompare.href }] : []),
               { label: profile.school.name }
             ]}
           />
@@ -91,6 +100,43 @@ export function SchoolProfileFeature(): JSX.Element {
               ofstedCompleteness={profile.completeness.ofstedLatest}
               demographics={profile.demographics}
               areaContext={profile.areaContext}
+              actions={
+                <>
+                  <Button
+                    type="button"
+                    variant={selected ? "ghost" : "secondary"}
+                    onClick={() => {
+                      if (selected) {
+                        removeSchool(profile.school.urn);
+                        return;
+                      }
+
+                      const result = addSchool({
+                        urn: profile.school.urn,
+                        name: profile.school.name,
+                        phase: profile.school.phase,
+                        type: profile.school.type,
+                        postcode: profile.school.postcode,
+                        source: "profile",
+                      });
+                      if (result === "limit") {
+                        toast({
+                          title: "Compare limit reached",
+                          description: "You can compare up to four schools at a time.",
+                          variant: "warning",
+                        });
+                      }
+                    }}
+                  >
+                    {selected ? "Remove from compare" : "Add to compare"}
+                  </Button>
+                  {items.length >= 2 ? (
+                    <Button asChild variant="secondary">
+                      <Link to={paths.compare(items.map((item) => item.urn))}>Open compare</Link>
+                    </Button>
+                  ) : null}
+                </>
+              }
             />
 
             <SchoolOverviewSection overviewText={profile.overviewText} />

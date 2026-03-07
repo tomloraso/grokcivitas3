@@ -8,7 +8,11 @@ import {
   getSchoolTrendDashboard,
   getSchoolTrends
 } from "../../api/client";
+import { ThemeProvider } from "../../app/providers/ThemeProvider";
+import { ToastProvider } from "../../components/ui/Toast";
 import { TooltipProvider } from "../../components/ui/Tooltip";
+import { CompareSelectionProvider } from "../../shared/context/CompareSelectionContext";
+import { SearchContextProvider } from "../../shared/context/SearchContext";
 import { runA11yAudit } from "../../test/accessibility";
 import { DASHBOARD_RESPONSE, PROFILE_RESPONSE, TRENDS_RESPONSE } from "./testData";
 import { SchoolProfileFeature } from "./SchoolProfileFeature";
@@ -39,9 +43,17 @@ function renderProfileAtUrn(urn: string) {
   );
 
   return render(
-    <TooltipProvider>
-      <RouterProvider router={router} />
-    </TooltipProvider>
+    <ThemeProvider>
+      <SearchContextProvider>
+        <CompareSelectionProvider>
+          <TooltipProvider>
+            <ToastProvider>
+              <RouterProvider router={router} />
+            </ToastProvider>
+          </TooltipProvider>
+        </CompareSelectionProvider>
+      </SearchContextProvider>
+    </ThemeProvider>
   );
 }
 

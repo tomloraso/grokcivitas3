@@ -12,6 +12,11 @@ const SchoolProfileFeature = lazy(async () => {
   return { default: module.SchoolProfileFeature };
 });
 
+const SchoolCompareFeature = lazy(async () => {
+  const module = await import("../features/school-compare/SchoolCompareFeature");
+  return { default: module.SchoolCompareFeature };
+});
+
 const routes: RouteObject[] = [
   {
     element: <RootLayout />,
@@ -19,6 +24,24 @@ const routes: RouteObject[] = [
       {
         index: true,
         element: <SchoolsSearchFeature />
+      },
+      {
+        path: "compare",
+        element: (
+          <Suspense
+            fallback={
+              <PageContainer>
+                <div className="space-y-6">
+                  <LoadingSkeleton lines={4} />
+                  <LoadingSkeleton lines={6} />
+                  <LoadingSkeleton lines={8} />
+                </div>
+              </PageContainer>
+            }
+          >
+            <SchoolCompareFeature />
+          </Suspense>
+        )
       },
       {
         path: "schools/:urn",

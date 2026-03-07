@@ -73,6 +73,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/schools/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Compare */
+        get: operations["get_school_compare_api_v1_schools_compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/schools/{urn}": {
         parameters: {
             query?: never;
@@ -132,6 +149,104 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** SchoolCompareBenchmarkResponse */
+        SchoolCompareBenchmarkResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
+        };
+        /** SchoolCompareCellResponse */
+        SchoolCompareCellResponse: {
+            /** Urn */
+            urn: string;
+            /** Value Text */
+            value_text: string | null;
+            /** Value Numeric */
+            value_numeric: number | null;
+            /** Year Label */
+            year_label: string | null;
+            /** Snapshot Date */
+            snapshot_date: string | null;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "available" | "unsupported" | "unavailable" | "suppressed";
+            /**
+             * Completeness Status
+             * @enum {string}
+             */
+            completeness_status: "available" | "partial" | "unavailable";
+            /** Completeness Reason Code */
+            completeness_reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            benchmark: components["schemas"]["SchoolCompareBenchmarkResponse"] | null;
+        };
+        /** SchoolCompareResponse */
+        SchoolCompareResponse: {
+            /** Schools */
+            schools: components["schemas"]["SchoolCompareSchoolResponse"][];
+            /** Sections */
+            sections: components["schemas"]["SchoolCompareSectionResponse"][];
+        };
+        /** SchoolCompareRowResponse */
+        SchoolCompareRowResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Label */
+            label: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "text" | "date" | "days" | "years" | "percent" | "count" | "rate" | "ratio" | "score" | "currency" | "decile";
+            /** Cells */
+            cells: components["schemas"]["SchoolCompareCellResponse"][];
+        };
+        /** SchoolCompareSchoolResponse */
+        SchoolCompareSchoolResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Postcode */
+            postcode: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Type */
+            type: string | null;
+            /** Age Range Label */
+            age_range_label: string;
+        };
+        /** SchoolCompareSectionResponse */
+        SchoolCompareSectionResponse: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            /** Label */
+            label: string;
+            /** Rows */
+            rows: components["schemas"]["SchoolCompareRowResponse"][];
         };
         /** SchoolNameSearchResponse */
         SchoolNameSearchResponse: {
@@ -1173,6 +1288,58 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    get_school_compare_api_v1_schools_compare_get: {
+        parameters: {
+            query?: {
+                urns?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolCompareResponse"];
+                };
+            };
+            /** @description Invalid compare request parameters. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description One or more school URNs were not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School compare datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

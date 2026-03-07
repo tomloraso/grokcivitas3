@@ -1,4 +1,5 @@
 import { MapPin, GraduationCap, Building2, FileCheck } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
 import { Badge } from "../../../components/ui/Badge";
@@ -16,6 +17,7 @@ interface ProfileHeaderProps {
   ofstedCompleteness: SectionCompletenessVM;
   demographics: DemographicsVM | null;
   areaContext: AreaContextVM;
+  actions?: ReactNode;
 }
 
 /* ------------------------------------------------------------------ */
@@ -228,6 +230,7 @@ export function ProfileHeader({
   ofstedCompleteness,
   demographics,
   areaContext,
+  actions,
 }: ProfileHeaderProps): JSX.Element {
   const isUngraded = ofsted ? !ofsted.isGraded : false;
   const fsmDirect = demographics?.metrics.find((m) => m.metricKey === "fsm_pct");
@@ -294,6 +297,8 @@ export function ProfileHeader({
             Status: {school.status}
           </p>
         ) : null}
+
+        {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
       </div>
 
       {/* ── Signal strip ─────────────────────────────── */}

@@ -1,7 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 
+import { Button } from "../../components/ui/Button";
 import { cn } from "../../shared/utils/cn";
+import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { useSearchContext } from "../../shared/context/SearchContext";
+import { readCompareUrlState } from "../../shared/routing/compareUrns";
 import { paths } from "../../shared/routing/paths";
 import { useTheme } from "../../app/providers/useTheme";
 import { ThemeModeToggle } from "./ThemeModeToggle";
@@ -9,8 +12,19 @@ import { ThemeModeToggle } from "./ThemeModeToggle";
 export function SiteHeader(): JSX.Element {
   const location = useLocation();
   const isMapPage = location.pathname === paths.home;
+  const isComparePage = location.pathname === "/compare";
   const { search } = useSearchContext();
+  const { items } = useCompareSelection();
   const { mode, cycleMode } = useTheme();
+  const compareRouteState = readCompareUrlState(new URLSearchParams(location.search));
+  const selectionUrns = items.map((item) => item.urn);
+  const compareUrns =
+    isComparePage && compareRouteState.hasExplicitUrns
+      ? compareRouteState.urns
+      : selectionUrns;
+  const compareCount = compareUrns.length;
+  const compareHref = paths.compare(compareUrns);
+  const compareLabel = `Compare ${compareCount}/4`;
 
   return (
     <header
@@ -44,6 +58,24 @@ export function SiteHeader(): JSX.Element {
               <span>{search.count} {search.count === 1 ? "result" : "results"}</span>
             </div>
           ) : null}
+
+          {compareCount >= 2 ? (
+            <Button asChild variant="secondary" size="sm">
+              <Link to={compareHref} aria-label={`${compareLabel} selected`}>
+                {compareLabel}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled
+              aria-label={`${compareLabel} selected`}
+            >
+              {compareLabel}
+            </Button>
+          )}
 
           <ThemeModeToggle mode={mode} onCycle={cycleMode} />
         </div>

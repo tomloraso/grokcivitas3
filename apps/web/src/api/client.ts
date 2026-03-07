@@ -1,6 +1,7 @@
 import type {
   CreateTaskRequest,
   HealthResponse,
+  SchoolCompareResponse,
   SchoolNameSearchResponse,
   SchoolProfileResponse,
   SchoolTrendDashboardResponse,
@@ -13,6 +14,7 @@ import type {
 const SCHOOL_ENDPOINT_CACHE_TTL_MS = 5 * 60 * 1000;
 const SCHOOL_ENDPOINT_CACHE_LIMIT = 200;
 const SCHOOL_PROFILE_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+$/;
+const SCHOOL_COMPARE_PATH_RE = /^\/api\/v1\/schools\/compare\?urns=[^?#]+$/;
 const SCHOOL_TRENDS_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends$/;
 const SCHOOL_TRENDS_DASHBOARD_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends\/dashboard$/;
 
@@ -44,6 +46,7 @@ function cacheTtlForRequest(url: string, init?: RequestInit): number | null {
   }
 
   if (
+    SCHOOL_COMPARE_PATH_RE.test(url) ||
     SCHOOL_PROFILE_PATH_RE.test(url) ||
     SCHOOL_TRENDS_PATH_RE.test(url) ||
     SCHOOL_TRENDS_DASHBOARD_PATH_RE.test(url)
@@ -110,7 +113,17 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     });
 
     if (!response.ok) {
-      throw new ApiClientError(response.status);
+      let message: string | undefined;
+      try {
+        const payload = (await response.json()) as { detail?: unknown };
+        if (typeof payload.detail === "string") {
+          message = payload.detail;
+        }
+      } catch {
+        // Keep the default status-only message when the error body is empty or invalid.
+      }
+
+      throw new ApiClientError(response.status, message);
     }
 
     return (await response.json()) as T;
@@ -178,6 +191,11 @@ export async function searchSchoolsByName(name: string): Promise<SchoolNameSearc
 
 export async function getSchoolProfile(urn: string): Promise<SchoolProfileResponse> {
   return request<SchoolProfileResponse>(`/api/v1/schools/${encodeURIComponent(urn)}`);
+}
+
+export async function getSchoolCompare(urns: string[]): Promise<SchoolCompareResponse> {
+  const params = new URLSearchParams({ urns: urns.join(",") });
+  return request<SchoolCompareResponse>(`/api/v1/schools/compare?${params.toString()}`);
 }
 
 export async function getSchoolTrends(urn: string): Promise<SchoolTrendsResponse> {

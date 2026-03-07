@@ -3,6 +3,7 @@ import type {
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse
 } from "../../../api/types";
+import { mapCompletenessReasonToMessageKey } from "../../../shared/completeness";
 import {
   DEMOGRAPHICS_METRIC_KEYS,
   formatMetricKeyFallback,
@@ -31,7 +32,6 @@ import type {
   ProfileCompletenessVM,
   SchoolIdentityVM,
   SchoolProfileVM,
-  SectionCompletenessMessageKey,
   SectionCompletenessReasonCode,
   SectionCompletenessVM,
   TrendPointVM,
@@ -50,23 +50,6 @@ const DEPRIVATION_DOMAIN_LABELS: Record<string, string> = {
   crime: "Crime",
   barriers: "Barriers",
   living_environment: "Living Environment"
-};
-
-const REASON_MESSAGE_KEYS: Record<SectionCompletenessReasonCode, SectionCompletenessMessageKey> = {
-  source_missing: "missing",
-  insufficient_years_published: "insufficientYearsPublished",
-  source_not_in_catalog: "sourceNotInCatalog",
-  source_file_missing_for_year: "sourceFileMissingForYear",
-  source_schema_incompatible_for_year: "sourceSchemaIncompatibleForYear",
-  partial_metric_coverage: "partialMetricCoverage",
-  source_not_provided: "notProvided",
-  rejected_by_validation: "validationRejected",
-  not_joined_yet: "notJoinedYet",
-  pipeline_failed_recently: "pipelineFailedRecently",
-  not_applicable: "notApplicable",
-  source_coverage_gap: "sourceCoverageGap",
-  stale_after_school_refresh: "staleAfterSchoolRefresh",
-  no_incidents_in_radius: "noIncidentsInRadius"
 };
 
 interface SectionCompletenessContract {
@@ -168,15 +151,6 @@ function dateKey(iso: string): number {
 function academicYearKey(academicYear: string): number {
   const match = /^(\d{4})/.exec(academicYear);
   return match ? Number(match[1]) : -1;
-}
-
-function mapCompletenessReasonToMessageKey(
-  reasonCode: SectionCompletenessReasonCode | null
-): SectionCompletenessMessageKey | null {
-  if (!reasonCode) {
-    return null;
-  }
-  return REASON_MESSAGE_KEYS[reasonCode];
 }
 
 function mapSectionCompleteness(section: SectionCompletenessContract): SectionCompletenessVM {

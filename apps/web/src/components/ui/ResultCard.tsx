@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { cn } from "../../shared/utils/cn";
 import { Card } from "./Card";
@@ -24,6 +25,7 @@ interface ResultCardProps {
   onHover?: (id: string | null) => void;
   /** Callback fired when the user shows intent to open this school (hover/focus/tap). */
   onNavigateIntent?: (id: string) => void;
+  actions?: ReactNode;
 }
 
 export function ResultCard({
@@ -40,6 +42,7 @@ export function ResultCard({
   isActive,
   onHover,
   onNavigateIntent,
+  actions,
 }: ResultCardProps): JSX.Element {
   const interactionHandlers = id
     ? {
@@ -87,24 +90,44 @@ export function ResultCard({
 
   if (href) {
     return (
-      <Link
-        to={href}
-        state={linkState}
-        className={cn("group block result-card-enter", className)}
-        aria-label={`View profile for ${name}`}
+      <Card
+        className={cn(
+          "space-y-3 result-card-enter transition-all duration-fast hover:border-brand/30 hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]",
+          activeRing,
+          className
+        )}
         style={style}
         {...interactionHandlers}
       >
-        <Card className={cn("space-y-3 transition-all duration-fast group-hover:scale-[1.01] group-hover:border-brand/30 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.12)]", activeRing)}>
+        <Link
+          to={href}
+          state={linkState}
+          className="group block"
+          aria-label={`View profile for ${name}`}
+        >
           {content}
-        </Card>
-      </Link>
+        </Link>
+        {actions ? (
+          <div className="flex items-center justify-between gap-3 border-t border-border-subtle/70 pt-3">
+            {actions}
+          </div>
+        ) : null}
+      </Card>
     );
   }
 
   return (
-    <Card className={cn("space-y-3 result-card-enter", activeRing, className)} style={style} {...interactionHandlers}>
+    <Card
+      className={cn("space-y-3 result-card-enter", activeRing, className)}
+      style={style}
+      {...interactionHandlers}
+    >
       {content}
+      {actions ? (
+        <div className="flex items-center justify-between gap-3 border-t border-border-subtle/70 pt-3">
+          {actions}
+        </div>
+      ) : null}
     </Card>
   );
 }
