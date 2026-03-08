@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning baseline for Phase 10
-- Last updated: 2026-03-07
+- Last updated: 2026-03-08
 - Phase owner: Product + Engineering
 - Depends on:
   - `.planning/project-brief.md`
@@ -23,6 +23,23 @@ Phase 10 should not decide premium behavior ad hoc in API handlers, React compon
 3. Source-backed raw facts that define Civitas' core utility should remain broadly free unless a later product decision explicitly changes the brief.
 4. Premium gating should prefer section-level or capability-level boundaries over whole-route lockouts.
 5. Premium decisions remain backend-owned and contract-driven.
+6. Premium boundaries should drive engagement before conversion. The free product must be genuinely useful so users trust the product before being asked to pay.
+7. Locked premium sections should make the value behind the boundary visible, not hide it. Prefer teaser or partial-preview treatment over empty states or removed sections.
+8. Premium as an experience should feel ambient and tasteful, not promotional. Subtle design cues over badges, banners, or celebratory unlock animations.
+
+## Current Implementation Baseline
+
+- The current school profile contract exposes `overview_text` and `analyst_text` as plain nullable strings end to end. That means the analyst surface currently conflates `not published` with `not allowed yet`.
+- The current benchmark dashboard route returns either the full dashboard payload or a hard failure. It has no `locked` or teaser response mode yet.
+- The current web profile flow background-loads the dashboard after the core profile renders and folds it into the same `benchmarkDashboard` view model consumed by free profile sections. That coupling must be removed before the dashboard can become premium.
+- The current app-shell session model carries authentication only. It does not yet expose premium status, capability keys, or an access epoch for cache invalidation.
+
+## Premium Branding Rules
+
+- The paid tier is called `Premium`. All user-facing copy, route names, and CTA labels must use `Premium`.
+- `Pro` is reserved for a future B2B tier. Do not use `Pro` in Phase 10 copy, code identifiers, or design assets.
+- The header account indicator for a premium user should read `Premium` in brand purple using the display typeface at small scale. It is status, not advertising.
+- Do not introduce gold, gradient, or badge-style premium indicators. The design language remains the same navy-and-purple palette used across the free product.
 
 ## Access Vocabulary
 
@@ -44,6 +61,7 @@ Rationale:
 - Both can be explained simply in paywall copy.
 - Both use data and infrastructure Civitas already has or already plans to expose cleanly.
 - This keeps Phase 10 focused on identity, billing, access, and two concrete premium surfaces instead of trying to monetize every route at once.
+- This is strong enough for an initial paid test, but still a thin consumer subscription bundle. Package and merchandise it as deeper school insight, not as access to a "dashboard".
 
 ## Launch Surface Clarifications
 
@@ -52,12 +70,96 @@ Rationale:
 - The free profile experience keeps the latest benchmark snapshot and inline benchmark cues already rendered inside metric cards.
 - `premium_benchmark_dashboard` is the dedicated benchmark drill-down surface: multi-year benchmark series, section-level drill-down, and any route or page that depends on `GET /api/v1/schools/{urn}/trends/dashboard` or an equivalent follow-on benchmark route.
 - The free profile route must not depend on the premium benchmark dashboard endpoint to render its baseline content. If the profile page currently preloads the dashboard route, that fetch behavior should change during Phase 10.
+- Current implementation note: the web profile currently background-loads the dashboard and merges it into the same benchmark view model used by free metric cards. Phase 10 must split free inline benchmark mapping from premium dashboard mapping before the paywall ships.
 
 ### Premium Section State Rules
 
 - Premium-sensitive sections must distinguish `locked` from `unavailable`, `not_published`, or `unsupported`.
 - A free user hitting a premium boundary should see a teaser or upgrade prompt, not the same state used when no premium artifact exists yet.
 - This rule applies immediately to the profile analyst section and to the premium benchmark dashboard route.
+
+### Premium Display Treatment Rules
+
+Locked premium sections must use teaser or partial-preview treatment rather than hiding content or showing empty upgrade prompts. The goal is to prove value exists behind the boundary so the user can see the premium content is real, school-specific, and worth paying for without making the experience feel manipulative.
+
+**Preview mechanics:**
+
+- Narrative premium text may use a progressive CSS gradient mask: content transitions from fully clear to fully blurred over approximately 60px, then remains fully blurred for the rest of the section.
+- Structured benchmark previews should show a partial real preview with a fade or lock boundary, not a fully blurred fake chart. Avoid showing blurred values the backend did not actually send.
+- The preview treatment is a frontend-only presentation concern. The backend does not send the full premium payload to unauthorized viewers. Instead the backend sends `teaser_text` or `teaser_payload` alongside `state: locked` for preview-eligible sections.
+- The CTA overlays the locked region inline, not as a modal or banner. It is a refined card with a contextual one-liner and a single button.
+
+**Per-section teaser depth:**
+
+| Section | Teaser content returned by backend | Display treatment | CTA copy pattern |
+|---|---|---|---|
+| AI school analyst summary | First 2-3 sentences of the analyst text | Clear teaser text, then progressive blur over remaining placeholder content, inline CTA overlay | "Get the full analyst view for [School Name]" |
+| Benchmark dashboard drill-down | Dashboard layout structure plus limited real preview content such as metric group headings, column labels, and up to 1-2 latest-year sample rows | Visible layout and sample rows, then a fade or lock boundary with inline CTA overlay. Do not render fully blurred fake charts or hidden values. | "See how [School Name] compares across all benchmarks" |
+| Deferred premium features not yet implemented | None | `hidden` — do not tease content that does not exist yet | Not applicable |
+
+**What must never be blurred or hidden:**
+
+- Section titles and headers — always visible so the user knows the section exists.
+- Completeness notices — never hide data limitations behind premium.
+- Free baseline content in the same route — blur applies only to the premium portion, not surrounding free sections.
+- The existence of premium sections — the section container renders even for free users.
+- Fabricated values, bars, or deltas — never render blurred numbers or chart states the backend did not actually send.
+
+### Premium Ambient Styling Rules
+
+When a signed-in user holds active premium access, the product should communicate that status through ambient quality cues, not badges or promotional elements.
+
+**Header:**
+
+- Display the word `Premium` near the account email in brand purple, Space Grotesk display typeface, small scale. This is the only explicit premium label in the UI.
+
+**Premium-unlocked sections (analyst, dashboard):**
+
+- Add a thin 2px left border or top accent line in brand purple on the section card. This signals premium content without altering the design language.
+- The section renders at full content density. The additional visual presence of more content is itself the premium signal.
+- Do not add per-section `Premium` badges, lock/unlock icons, or celebratory transitions.
+
+**What to avoid:**
+
+- No gold or separate premium color palette. The existing brand purple serves as the sole premium accent.
+- No confetti, glow, gradient, or unlock animations.
+- No layout divergence between free and premium profile pages. The page structure is identical; premium sections simply have content instead of blur.
+
+**Upgrade moment:**
+
+- After checkout reconciliation, show one explicit confirmation moment: route or scroll the user to the unlocked section and briefly highlight it once.
+- After that one-time reveal, return to the ambient premium styling rules above. The steady-state experience stays quiet.
+
+### Engagement-First Conversion Model
+
+The premium boundary should sit at the transition from consuming facts to understanding what they mean. Civitas's genuine USP is interpretation, not data availability.
+
+Expected user research loop before conversion:
+
+1. Search — instant, free, satisfying.
+2. First profile — rich and genuinely useful across all free sections.
+3. AI overview — free text confirms the tool understands schools, not just data.
+4. Analyst section — first 2-3 lines visible and school-specific, then blur. First premium signal.
+5. Data sections — Ofsted, demographics, attendance, workforce, performance, neighbourhood all render fully. Trust deepens.
+6. Inline benchmark cues — school vs. local vs. national bars visible in free metric cards.
+7. Benchmark dashboard drill-down — richer framework and sample content visible, then locked. Second premium signal.
+8. Compare — works fully for up to 4 schools. Core workflow completes without paying.
+9. Returns to another school — hits analyst blur again. Pattern reinforces.
+
+For the benchmark dashboard specifically, the preview should use visible sample content followed by a lock boundary. Do not interpret this loop as a license to blur fabricated charts.
+
+Conversion typically happens at touchpoint 9 or 10, not at the first boundary. The product must prove trustworthiness before asking for money.
+
+Premium copy must position paid access as deeper interpretation of already-public evidence, not as hidden truth or advice. Civitas must never imply that parents are missing undisclosed facts or that premium is required to research responsibly.
+
+CTA copy must be contextual and school-specific, not generic platform-upgrade language. Examples:
+
+- "Get the full analyst view for [School Name]"
+- "See how [School Name] compares across all benchmarks"
+
+Avoid: "Unlock Premium", "Upgrade Now", "Go Premium" or similar generic SaaS phrasing.
+
+Keep CTA generation template-based. The only dynamic inputs should be school name and section type.
 
 ## Product Access Matrix
 
@@ -121,8 +223,8 @@ Rationale:
 
 | Capability key | Covered surfaces | Backend decision input | API contract behavior | Web behavior | Cache implications | Notes |
 |---|---|---|---|---|---|---|
-| `premium_school_analyst` | Profile analyst section | user session + requested section capability | `GET /api/v1/schools/{urn}` returns free baseline plus locked analyst metadata when absent; full analyst payload when present | Render locked teaser or upgrade CTA in the analyst slot | Profile cache must vary by access state or be invalidated on upgrade and sign-out | First premium launch capability. |
-| `premium_benchmark_dashboard` | Dedicated dashboard drill-down from profile or trends surfaces | user session + dashboard capability | `GET /api/v1/schools/{urn}/trends/dashboard` or equivalent returns locked metadata when absent; full dashboard when present | Free users see upgrade prompt instead of full dashboard view | Dashboard and related profile drill-down caches must vary by access state | Second premium launch capability; free inline benchmark cues remain in the main profile payload. |
+| `premium_school_analyst` | Profile analyst section | user session + requested section capability | `GET /api/v1/schools/{urn}` returns free baseline plus locked analyst section with `teaser_text` (first 2-3 sentences) when absent; full analyst payload when present | Clear teaser text then progressive blur, inline contextual CTA overlay | Profile cache must vary by access state or be invalidated on upgrade and sign-out | First premium launch capability. The first contract migration should replace the current raw `analyst_text` field; keep the free overview field unchanged unless a shared wrapper materially reduces complexity. |
+| `premium_benchmark_dashboard` | Dedicated dashboard drill-down from profile or trends surfaces | user session + dashboard capability | `GET /api/v1/schools/{urn}/trends/dashboard` or equivalent returns locked metadata with `teaser_payload` (layout structure plus limited real preview content) when absent; full dashboard when present | Partial real preview with fade or lock boundary, inline contextual CTA overlay | Dashboard and related profile drill-down caches must vary by access state | Second premium launch capability; free inline benchmark cues remain in the main profile payload. The current web benchmark view model must split into free inline snapshot mapping and premium drill-down mapping. |
 | `premium_compare_plus` | Future advanced compare features | user session + compare-plus capability | Compare contract extends with locked premium feature metadata until enabled | Hide or lock only the premium compare additions, not the base compare table | Compare cache must vary by access state once introduced | Deferred until concrete compare-plus scope exists. |
 | `premium_compare_analyst` | Future AI compare commentary | user session + compare-analyst capability | Separate premium compare analysis payload or premium section inside compare response | Locked premium insight panel | Compare commentary cache must vary by access state | Not part of Phase 10 launch. |
 | `premium_advanced_search` | Future advanced search tools | user session + advanced-search capability | Search response or search-settings endpoints expose locked premium controls | Upgrade CTA around advanced controls, not around the whole search route | Search state caches must separate premium control state from free results | Phase 11 candidate. |
@@ -138,9 +240,26 @@ Rationale:
 5. Premium-sensitive contracts must distinguish `locked` from `unavailable` or `not_published`.
 6. The free profile route must not require the premium benchmark dashboard endpoint for its baseline render path.
 7. Any new premium candidate after this document must update this file before implementation starts.
+8. Locked premium responses must include a `teaser_text` or `teaser_payload` field so the frontend can render the approved preview treatment. The backend must never send the full premium payload to unauthorized viewers.
+9. CTA copy in locked sections must be contextual and school-specific. The backend should include the school name in locked-section metadata so the frontend can render copy like "Get the full analyst view for [School Name]" without deriving it from route params.
+10. All user-facing premium copy must use `Premium`, never `Pro`. `Pro` is reserved for a future B2B tier.
+11. The premium ambient styling on unlocked sections (thin brand-purple accent border) is a frontend-only concern and does not require backend contract changes. It is driven by the session or access context already available from the auth feature.
+12. Phase 10 must split the current web benchmark view-model path: free inline benchmark cues come from the main profile payload, while premium dashboard preview and full drill-down come from the premium-aware dashboard response.
+13. The initial contract migration should change the analyst payload first; do not refactor the free overview field unless that reduces total implementation complexity.
+14. Premium copy and preview treatment must not imply hidden facts or recommendations. Paid access is deeper interpretation of public evidence, not privileged truth.
 
 ## Open Questions
 
 1. Whether the Phase 10 launch bundle should include only the two recommended launch capabilities, or also one compare-plus enhancement if Phase 9 lands early.
 2. Whether the dedicated benchmark dashboard should remain one bundled premium capability or later split into profile-dashboard and compare-dashboard capabilities.
 3. Whether the AI school analyst launches as the only premium AI artifact at first, or whether a future AI-plus bundle is desirable after launch learning.
+
+## Resolved Decisions
+
+1. **Teaser or partial preview over hide** (2026-03-08): Locked premium sections must prove value with teaser content. Narrative text may use progressive blur; structured benchmark previews should show partial real samples with a fade or lock boundary rather than fully blurred charts.
+2. **Premium branding, not Pro** (2026-03-08): The paid tier is `Premium`. `Pro` is reserved for future B2B. All user-facing copy, code identifiers, and design assets must use `Premium`.
+3. **Ambient premium styling** (2026-03-08): Premium status is communicated through a quiet header label and thin accent borders on unlocked sections. No badges, gold palettes, gradients, confetti, or unlock animations.
+4. **Contextual CTAs** (2026-03-08): Upgrade prompts must be school-specific and action-oriented, not generic platform-upgrade language.
+5. **Cache epoch strategy** (2026-03-08): The recommended default for access-aware caching is a session or access epoch included in cache keys for premium-sensitive GET routes. This is documented in `10E`.
+6. **Minimal summary contract migration** (2026-03-08): The first premium contract migration should replace the current raw analyst field with a typed premium-aware section wrapper. The free overview field stays unchanged unless a shared wrapper materially simplifies implementation.
+7. **Benchmark view-model split** (2026-03-08): The current web benchmark dashboard view model is too coupled to free profile cards. Phase 10 must separate free inline benchmark mapping from premium dashboard drill-down mapping before paywall UI lands.
