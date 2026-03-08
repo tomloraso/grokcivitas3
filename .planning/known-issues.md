@@ -60,6 +60,49 @@ The resolver treated cache freshness as a hard requirement for lookup reuse. Tha
 
 ---
 
+## BUG-003 - Compare test: underfilled state not reached after school removal
+
+**Status:** OPEN
+**Severity:** Low (test-only — UI behaviour correct in browser)
+**Introduced:** commit `9cd9525` (feat: add school compare flow)
+**Detected:** 2026-03-08, quality-gate run following phase 7 UX overhaul commit
+**Reported to:** Liam Kerrigan (colleague — authored the compare flow)
+**Files:**
+- `apps/web/src/features/school-compare/school-compare.test.tsx` (line 132)
+- `apps/web/src/features/school-compare/SchoolCompareFeature.tsx`
+
+### Failure
+
+```
+✗ SchoolCompareFeature > renders the compare matrix and falls back to underfilled after removing a school
+→ Unable to find role="heading" and name "Add one more school to compare"
+```
+
+### Sequence
+
+1. Test renders compare page with 2 schools (URNs `100001`, `200002`).
+2. Full compare matrix loads; Demographics heading confirmed present.
+3. Test clicks "Remove Primary Example from compare".
+4. `handleRemoveSchool` calls `navigate(paths.compare(["200002"]))`.
+5. Test expects heading "Add one more school to compare" (rendered when `effectiveUrns.length === 1`).
+6. Heading not found — `effectiveUrns` still reflects 2 schools; navigation does not update URL params in the test memory router as expected.
+
+### Root cause (hypothesis)
+
+`effectiveUrns` is derived via `useMemo` from `urlUrns` (parsed from `location.search`). After `handleRemoveSchool` calls `navigate()`, the MemoryRouter in the test environment may not flush the URL update synchronously before the assertion. The component still reads the old 2-school URL and renders the full matrix instead of the underfilled panel.
+
+### Resolution
+
+Assign to Liam (owns the compare feature). Likely fix: wrap the post-click assertion in `await screen.findByRole(...)` with a longer timeout, or ensure the test's MemoryRouter initial entry and navigation are configured to flush synchronously. No production behaviour is affected — manual testing confirms the underfilled panel renders correctly in the browser.
+
+### Verification (once fixed)
+
+```bash
+cd apps/web && npm run test -- src/features/school-compare/school-compare.test.tsx
+```
+
+---
+
 ## Tracker Notes
 
 - `make lint` still fails in the current branch because unrelated files already need formatting:
@@ -67,4 +110,4 @@ The resolver treated cache freshness as a hard requirement for lookup reuse. Tha
   - `apps/backend/tests/unit/test_school_analyst_prompt.py`
 - `uv run --project apps/backend mypy apps/backend/src` still has one unrelated pre-existing error in `apps/backend/src/civitas/infrastructure/ai/providers/grok_summary_generator.py`.
 - `cd apps/web && npm run lint` and `cd apps/web && npm run typecheck` passed.
-- `cd apps/web && npm run test` still has unrelated pre-existing failures in `apps/web/src/features/school-profile/school-profile.test.tsx`.
+- `cd apps/web && npm run test`: 1 pre-existing failure — BUG-003 (compare feature, introduced `9cd9525`, not related to phase 7 work). School-profile test suite fully passing as of `747e4f7`.
