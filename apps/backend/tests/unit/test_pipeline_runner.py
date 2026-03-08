@@ -177,6 +177,57 @@ def test_pipeline_runner_executes_steps_and_logs_success(tmp_path: Path) -> None
     assert store.finished[0][1].status == PipelineRunStatus.SUCCEEDED
 
 
+def test_pipeline_runner_runs_success_callback_after_promote(tmp_path: Path) -> None:
+    pipeline = StubPipeline(
+        downloaded_rows=12,
+        staged_rows=10,
+        rejected_rows=2,
+        promoted_rows=10,
+        bronze_checksum="abc123",
+    )
+    store = RecordingRunStore()
+    callback_contexts: list[PipelineRunContext] = []
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: pipeline},
+        run_store=store,
+        bronze_root=tmp_path,
+        quality_config_by_source=_quality(),
+        success_callback=lambda context: callback_contexts.append(context),
+    )
+
+    result = runner.run_source(PipelineSource.GIAS)
+
+    assert result.status == PipelineRunStatus.SUCCEEDED
+    assert pipeline.calls == ["download", "stage", "promote"]
+    assert [context.run_id for context in callback_contexts] == [store.started[0].run_id]
+
+
+def test_pipeline_runner_fails_when_success_callback_raises(tmp_path: Path) -> None:
+    pipeline = StubPipeline(
+        downloaded_rows=12,
+        staged_rows=10,
+        rejected_rows=2,
+        promoted_rows=10,
+        bronze_checksum="abc123",
+    )
+    store = RecordingRunStore()
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: pipeline},
+        run_store=store,
+        bronze_root=tmp_path,
+        quality_config_by_source=_quality(),
+        success_callback=lambda context: (_ for _ in ()).throw(RuntimeError("callback failed")),
+    )
+
+    result = runner.run_source(PipelineSource.GIAS)
+
+    assert result.status == PipelineRunStatus.FAILED
+    assert result.error_message == "callback failed"
+    assert pipeline.calls == ["download", "stage", "promote"]
+    assert len(store.finished) == 1
+    assert store.finished[0][1].status == PipelineRunStatus.FAILED
+
+
 def test_pipeline_runner_fails_when_source_is_unavailable(tmp_path: Path) -> None:
     pipeline = StubPipeline(downloaded_rows=0, staged_rows=10, promoted_rows=10)
     store = RecordingRunStore()

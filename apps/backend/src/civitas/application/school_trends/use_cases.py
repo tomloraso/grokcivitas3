@@ -18,6 +18,9 @@ from civitas.application.school_trends.dto import (
     TrendDirection,
 )
 from civitas.application.school_trends.errors import SchoolTrendsNotFoundError
+from civitas.application.school_trends.ports.school_benchmark_materializer import (
+    SchoolBenchmarkMaterializer,
+)
 from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
@@ -446,6 +449,21 @@ class GetSchoolTrendDashboardUseCase:
                 for section in DASHBOARD_SECTION_ORDER
             ),
             completeness=trends.completeness,
+        )
+
+
+class MaterializeSchoolBenchmarksUseCase:
+    def __init__(self, school_benchmark_materializer: SchoolBenchmarkMaterializer) -> None:
+        self._school_benchmark_materializer = school_benchmark_materializer
+
+    def execute(self, *, urns: Sequence[str] | None = None) -> int:
+        normalized_urns = tuple(
+            dict.fromkeys(urn.strip() for urn in (urns or ()) if urn is not None and urn.strip())
+        )
+        if len(normalized_urns) == 0:
+            return self._school_benchmark_materializer.materialize_all_metric_benchmarks()
+        return self._school_benchmark_materializer.materialize_metric_benchmarks_for_urns(
+            normalized_urns
         )
 
 

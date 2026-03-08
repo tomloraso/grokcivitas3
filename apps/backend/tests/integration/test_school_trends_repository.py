@@ -817,10 +817,13 @@ def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
     assert workforce.latest_updated_at is not None
 
 
-def test_school_trends_repository_returns_metric_benchmarks_and_persists_snapshot(
+def test_school_trends_repository_returns_partial_metric_benchmarks_without_persisting_on_miss(
     engine: Engine,
 ) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    with engine.begin() as connection:
+        connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
 
     benchmarks = repository.get_metric_benchmark_series("920001")
     assert benchmarks is not None
@@ -829,62 +832,25 @@ def test_school_trends_repository_returns_metric_benchmarks_and_persists_snapsho
     by_metric_year = {(row.metric_key, row.academic_year): row for row in benchmarks.rows}
     fsm_2024 = by_metric_year[("fsm_pct", "2024/25")]
     assert fsm_2024.school_value == pytest.approx(16.9)
-    assert fsm_2024.national_value is not None
-    assert 0.0 <= fsm_2024.national_value <= 100.0
-    assert fsm_2024.local_value is not None
-    assert 0.0 <= fsm_2024.local_value <= 100.0
+    assert fsm_2024.national_value is None
+    assert fsm_2024.local_value is None
     assert fsm_2024.local_scope == "phase"
     assert fsm_2024.local_area_code == "Secondary"
     assert fsm_2024.local_area_label == "Secondary"
 
     with engine.connect() as connection:
-        persisted_rows = (
-            connection.execute(
-                text(
-                    """
-                SELECT benchmark_scope, benchmark_area, benchmark_value
-                FROM metric_benchmarks_yearly
-                WHERE metric_key = 'fsm_pct' AND academic_year = '2024/25'
-                ORDER BY benchmark_scope, benchmark_area
-                """
-                )
-            )
-            .mappings()
-            .all()
-        )
+        benchmark_count = connection.execute(
+            text("SELECT count(*) FROM metric_benchmarks_yearly")
+        ).scalar_one()
 
-    assert len(persisted_rows) == 2
-    scopes = {str(row["benchmark_scope"]) for row in persisted_rows}
-    assert scopes == {"national", "phase"}
-
-    with engine.connect() as connection:
-        null_rows = (
-            connection.execute(
-                text(
-                    """
-                SELECT benchmark_scope, benchmark_area, benchmark_value
-                FROM metric_benchmarks_yearly
-                WHERE metric_key = 'progress8_disadvantaged' AND academic_year = '2024/25'
-                ORDER BY benchmark_scope, benchmark_area
-                """
-                )
-            )
-            .mappings()
-            .all()
-        )
-
-    assert len(null_rows) == 2
-    assert {str(row["benchmark_scope"]) for row in null_rows} == {"national", "phase"}
-    assert all(row["benchmark_value"] is None for row in null_rows)
+    assert benchmark_count == 0
 
 
 def test_school_trends_repository_reuses_cached_metric_benchmarks(engine: Engine) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
 
-    seeded = repository.get_metric_benchmark_series("920001")
-    assert seeded is not None
-
     with engine.begin() as connection:
+        connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
         connection.execute(
             text(
                 """
@@ -928,13 +894,6 @@ def test_school_trends_repository_recomputes_when_cached_snapshot_is_partial(
 ) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
 
-    baseline = repository.get_metric_benchmark_series("920001")
-    assert baseline is not None
-    baseline_by_metric_year = {
-        (row.metric_key, row.academic_year): (row.national_value, row.local_value)
-        for row in baseline.rows
-    }
-
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
         connection.execute(
@@ -964,24 +923,71 @@ def test_school_trends_repository_recomputes_when_cached_snapshot_is_partial(
     by_metric_year = {(row.metric_key, row.academic_year): row for row in benchmarks.rows}
 
     fsm_2024 = by_metric_year[("fsm_pct", "2024/25")]
-    assert (
-        fsm_2024.national_value,
-        fsm_2024.local_value,
-    ) == baseline_by_metric_year[("fsm_pct", "2024/25")]
-    assert (fsm_2024.national_value, fsm_2024.local_value) != (42.0, 24.0)
+    assert fsm_2024.national_value == pytest.approx(42.0)
+    assert fsm_2024.local_value == pytest.approx(24.0)
 
     attendance_2024 = by_metric_year[("overall_attendance_pct", "2024/25")]
-    assert (
-        attendance_2024.national_value,
-        attendance_2024.local_value,
-    ) == baseline_by_metric_year[("overall_attendance_pct", "2024/25")]
+    assert attendance_2024.national_value is None
+    assert attendance_2024.local_value is None
 
     with engine.connect() as connection:
         benchmark_count = connection.execute(
             text("SELECT count(*) FROM metric_benchmarks_yearly")
         ).scalar_one()
 
-    assert benchmark_count > 2
+    assert benchmark_count == 2
+
+
+def test_school_trends_repository_materializes_metric_benchmarks_for_requested_urns(
+    engine: Engine,
+) -> None:
+    repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    with engine.begin() as connection:
+        connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+
+    inserted_rows = repository.materialize_metric_benchmarks_for_urns(("920001",))
+
+    assert inserted_rows > 0
+
+    benchmarks = repository.get_metric_benchmark_series("920001")
+    assert benchmarks is not None
+
+    by_metric_year = {(row.metric_key, row.academic_year): row for row in benchmarks.rows}
+    fsm_2024 = by_metric_year[("fsm_pct", "2024/25")]
+    assert fsm_2024.national_value is not None
+    assert 0.0 <= fsm_2024.national_value <= 100.0
+    assert fsm_2024.local_value is not None
+    assert 0.0 <= fsm_2024.local_value <= 100.0
+
+
+def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Engine) -> None:
+    repository = PostgresSchoolTrendsRepository(engine=engine)
+
+    with engine.begin() as connection:
+        connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+
+    inserted_rows = repository.materialize_all_metric_benchmarks()
+
+    assert inserted_rows > 0
+
+    with engine.connect() as connection:
+        scopes = {
+            tuple(row)
+            for row in connection.execute(
+                text(
+                    """
+                    SELECT benchmark_scope, benchmark_area
+                    FROM metric_benchmarks_yearly
+                    WHERE metric_key = 'fsm_pct' AND academic_year = '2024/25'
+                    ORDER BY benchmark_scope, benchmark_area
+                    """
+                )
+            ).all()
+        }
+
+    assert ("national", "england") in scopes
+    assert ("phase", "Secondary") in scopes
 
 
 def test_school_trends_repository_returns_empty_rows_for_school_without_history(

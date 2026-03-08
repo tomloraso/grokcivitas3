@@ -98,6 +98,8 @@ Common commands:
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
 - `uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>`
+- `uv run --project apps/backend civitas pipeline materialize-benchmarks --all`
+- `uv run --project apps/backend civitas pipeline materialize-benchmarks --urn 105448 --urn 106015`
 - `uv run --project apps/backend civitas generate-summaries`
 - `uv run --project apps/backend civitas poll-summary-batches`
 - `uv run --project apps/backend python tools/scripts/verify_phase_s_sources.py`
@@ -134,6 +136,8 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `skipped_no_change` means Bronze checksums matched the last successful run for that source.
 - `--force-refresh` clears the current source/day Bronze directory before download and bypasses the
   no-change short-circuit for that run.
+- School profile, trends, and compare requests now treat `metric_benchmarks_yearly` as a read-only
+  cache. Requests do not rebuild benchmark snapshots inline on a cache miss.
 - `failed_quality_gate` means a hard gate failed (`downloaded_rows`, `staged_rows`, `promoted_rows`, or reject-ratio threshold).
 - `dfe_characteristics` now runs the Phase 4 release-files pipeline (SPC + SEN discovery); there is no separate backfill command.
 - `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.
@@ -142,6 +146,11 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `dfe_workforce` promotes yearly workforce rows into `school_workforce_yearly` and latest leadership attributes into `school_leadership_snapshot`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
 - `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.
+- Successful runs of `gias`, `dfe_characteristics`, `dfe_attendance`, `dfe_behaviour`,
+  `dfe_workforce`, `dfe_performance`, `ons_imd`, `uk_house_prices`, and
+  `police_crime_context` rebuild `metric_benchmarks_yearly` after promote.
+- Use `civitas pipeline materialize-benchmarks --all` after restoring a database snapshot or when
+  benchmark cache rows need a manual full rebuild. Use `--urn` to reseed specific schools only.
 - When `CIVITAS_AI_ENABLED=true`, `pipeline run --all` submits overview-generation batches after successful promote and exits without waiting for provider completion.
 - Final AI persistence happens through a separate `poll-summary-batches` pass; this should be run by an operator or external scheduler until all pending batch items are finalized.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

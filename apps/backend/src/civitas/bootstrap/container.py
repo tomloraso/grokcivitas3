@@ -22,6 +22,7 @@ from civitas.application.school_summaries.use_cases import (
 from civitas.application.school_trends.use_cases import (
     GetSchoolTrendDashboardUseCase,
     GetSchoolTrendsUseCase,
+    MaterializeSchoolBenchmarksUseCase,
 )
 from civitas.application.schools.use_cases import (
     SearchSchoolsByNameUseCase,
@@ -63,9 +64,24 @@ from civitas.infrastructure.pipelines import pipeline_registry
 from civitas.infrastructure.pipelines.base import (
     PipelineQualityConfig,
     PipelineRetryPolicy,
+    PipelineRunContext,
     PipelineSource,
 )
 from civitas.infrastructure.pipelines.runner import PipelineRunner, SqlPipelineRunStore
+
+_BENCHMARK_AFFECTING_PIPELINE_SOURCES = frozenset(
+    {
+        PipelineSource.GIAS,
+        PipelineSource.DFE_CHARACTERISTICS,
+        PipelineSource.DFE_ATTENDANCE,
+        PipelineSource.DFE_BEHAVIOUR,
+        PipelineSource.DFE_WORKFORCE,
+        PipelineSource.DFE_PERFORMANCE,
+        PipelineSource.ONS_IMD,
+        PipelineSource.UK_HOUSE_PRICES,
+        PipelineSource.POLICE_CRIME_CONTEXT,
+    }
+)
 
 
 @lru_cache(maxsize=1)
@@ -206,6 +222,12 @@ def get_school_trend_dashboard_use_case() -> GetSchoolTrendDashboardUseCase:
     )
 
 
+def materialize_school_benchmarks_use_case() -> MaterializeSchoolBenchmarksUseCase:
+    return MaterializeSchoolBenchmarksUseCase(
+        school_benchmark_materializer=school_trends_repository(),
+    )
+
+
 def get_school_overview_use_case() -> GetSchoolOverviewUseCase:
     return GetSchoolOverviewUseCase(summary_repository=summary_repository())
 
@@ -300,6 +322,12 @@ def data_quality_slo_check_use_case() -> RunDataQualitySloCheckUseCase:
     )
 
 
+def _materialize_benchmarks_after_pipeline_success(context: PipelineRunContext) -> None:
+    if context.source not in _BENCHMARK_AFFECTING_PIPELINE_SOURCES:
+        return
+    materialize_school_benchmarks_use_case().execute()
+
+
 @lru_cache(maxsize=1)
 def pipeline_runner() -> PipelineRunner:
     settings = app_settings()
@@ -349,6 +377,7 @@ def pipeline_runner() -> PipelineRunner:
             max_retries=settings.pipeline.max_retries,
             backoff_seconds=settings.pipeline.retry_backoff_seconds,
         ),
+        success_callback=_materialize_benchmarks_after_pipeline_success,
         stage_chunk_size=settings.pipeline.stage_chunk_size,
         promote_chunk_size=settings.pipeline.promote_chunk_size,
         http_timeout_seconds=settings.pipeline.http_timeout_seconds,

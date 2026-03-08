@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 
@@ -22,6 +23,8 @@ from civitas.domain.school_trends.models import (
     SchoolWorkforceSeries,
     SchoolWorkforceYearlyRow,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
@@ -248,23 +251,26 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         try:
-            with self._engine.begin() as connection:
+            with self._engine.connect() as connection:
                 if not _school_exists(connection, urn):
                     return None
 
                 benchmark_rows = _get_metric_benchmark_rows_from_cache(connection, urn)
-                if len(benchmark_rows) == 0:
-                    if connection.dialect.name == "postgresql":
-                        connection.execute(text("SET LOCAL work_mem = '64MB'"))
-                    benchmark_rows = _compute_metric_benchmark_rows(connection, urn)
-                    _persist_metric_benchmark_rows(
-                        connection,
-                        [dict(benchmark_row) for benchmark_row in benchmark_rows],
-                    )
         except SQLAlchemyError as exc:
             raise SchoolTrendsDataUnavailableError(
                 "School trends datastore is unavailable."
             ) from exc
+
+        if len(benchmark_rows) == 0:
+            logger.warning(
+                "Metric benchmark cache miss for urn=%s; returning empty benchmark series.",
+                urn,
+            )
+        elif _metric_benchmark_rows_are_partial(benchmark_rows):
+            logger.warning(
+                "Metric benchmark cache incomplete for urn=%s; returning partial benchmark data.",
+                urn,
+            )
 
         return SchoolMetricBenchmarkSeries(
             urn=urn,
@@ -283,6 +289,43 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             ),
             latest_updated_at=None,
         )
+
+    def materialize_all_metric_benchmarks(self) -> int:
+        try:
+            with self._engine.begin() as connection:
+                if connection.dialect.name == "postgresql":
+                    connection.execute(text("SET LOCAL work_mem = '64MB'"))
+                return _rebuild_metric_benchmark_rows(connection)
+        except SQLAlchemyError as exc:
+            raise SchoolTrendsDataUnavailableError(
+                "School trends datastore is unavailable."
+            ) from exc
+
+    def materialize_metric_benchmarks_for_urns(self, urns: Sequence[str]) -> int:
+        normalized_urns = tuple(
+            dict.fromkeys(urn.strip() for urn in urns if urn is not None and urn.strip())
+        )
+        if len(normalized_urns) == 0:
+            return self.materialize_all_metric_benchmarks()
+
+        try:
+            with self._engine.begin() as connection:
+                if connection.dialect.name == "postgresql":
+                    connection.execute(text("SET LOCAL work_mem = '64MB'"))
+                persisted_rows = 0
+                for urn in normalized_urns:
+                    if not _school_exists(connection, urn):
+                        continue
+                    benchmark_rows = _compute_metric_benchmark_rows(connection, urn)
+                    persisted_rows += _persist_metric_benchmark_rows(
+                        connection,
+                        [dict(benchmark_row) for benchmark_row in benchmark_rows],
+                    )
+                return persisted_rows
+        except SQLAlchemyError as exc:
+            raise SchoolTrendsDataUnavailableError(
+                "School trends datastore is unavailable."
+            ) from exc
 
 
 def _school_exists(connection: Connection, urn: str) -> bool:
@@ -624,16 +667,14 @@ def _get_metric_benchmark_rows_from_cache(
                     cache_rows.metric_key,
                     cache_rows.academic_year,
                     cache_rows.school_value,
+                    cache_rows.national_metric_key,
                     cache_rows.national_value,
+                    cache_rows.local_metric_key,
                     cache_rows.local_value,
                     cache_rows.local_scope,
                     cache_rows.local_area_code,
                     cache_rows.local_area_label
                 FROM cache_rows
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM missing_benchmark_rows
-                )
                 """
             ),
             {"urn": urn},
@@ -642,6 +683,14 @@ def _get_metric_benchmark_rows_from_cache(
         .all()
     )
     return tuple(dict(row) for row in rows)
+
+
+def _metric_benchmark_rows_are_partial(rows: Sequence[Mapping[str, object]]) -> bool:
+    return any(
+        _to_optional_str(row.get("national_metric_key")) is None
+        or _to_optional_str(row.get("local_metric_key")) is None
+        for row in rows
+    )
 
 
 def _compute_metric_benchmark_rows(
@@ -996,9 +1045,9 @@ def _compute_metric_benchmark_rows(
 def _persist_metric_benchmark_rows(
     connection: Connection,
     rows: Sequence[Mapping[str, object]],
-) -> None:
+) -> int:
     if len(rows) == 0 or not _table_exists(connection, "metric_benchmarks_yearly"):
-        return
+        return 0
 
     upsert_rows: list[dict[str, object]] = []
     for row in rows:
@@ -1036,7 +1085,7 @@ def _persist_metric_benchmark_rows(
             )
 
     if len(upsert_rows) == 0:
-        return
+        return 0
 
     if connection.dialect.name == "postgresql":
         connection.execute(
@@ -1068,7 +1117,7 @@ def _persist_metric_benchmark_rows(
             ),
             upsert_rows,
         )
-        return
+        return len(upsert_rows)
 
     connection.execute(
         text(
@@ -1098,6 +1147,391 @@ def _persist_metric_benchmark_rows(
             """
         ),
         upsert_rows,
+    )
+    return len(upsert_rows)
+
+
+def _rebuild_metric_benchmark_rows(connection: Connection) -> int:
+    if not _table_exists(connection, "metric_benchmarks_yearly"):
+        return 0
+
+    connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+    updated_at_expression = (
+        "timezone('utc', now())" if connection.dialect.name == "postgresql" else "CURRENT_TIMESTAMP"
+    )
+    connection.execute(
+        text(
+            f"""
+            WITH school_geo AS (
+                SELECT
+                    schools.urn,
+                    schools.phase,
+                    deprivation.local_authority_district_code AS lad_code,
+                    deprivation.local_authority_district_name AS lad_name,
+                    deprivation.population_total AS population_total
+                FROM schools
+                LEFT JOIN LATERAL (
+                    SELECT cache.lsoa_code
+                    FROM postcode_cache AS cache
+                    WHERE replace(upper(cache.postcode), ' ', '') =
+                          replace(upper(schools.postcode), ' ', '')
+                    ORDER BY cache.cached_at DESC
+                    LIMIT 1
+                ) AS cache ON TRUE
+                LEFT JOIN area_deprivation AS deprivation
+                    ON deprivation.lsoa_code = cache.lsoa_code
+            ),
+            area_crime_yearly AS (
+                SELECT
+                    context.urn,
+                    extract(year from context.month)::int::text AS academic_year,
+                    (
+                        sum(context.incident_count)::double precision /
+                        NULLIF(max(geo.population_total), 0)::double precision
+                    ) * 1000.0 AS area_crime_incidents_per_1000
+                FROM area_crime_context AS context
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = context.urn
+                GROUP BY
+                    context.urn,
+                    extract(year from context.month)::int
+            ),
+            area_house_price_yearly AS (
+                SELECT
+                    geo.urn,
+                    extract(year from prices.month)::int::text AS academic_year,
+                    avg(prices.average_price)::double precision AS area_house_price_average,
+                    avg(prices.annual_change_pct)::double precision AS area_house_price_annual_change_pct
+                FROM school_geo AS geo
+                INNER JOIN area_house_price_context AS prices
+                    ON prices.area_code = geo.lad_code
+                GROUP BY
+                    geo.urn,
+                    extract(year from prices.month)::int
+            ),
+            metric_rows AS (
+                SELECT
+                    demographics.urn,
+                    demographics.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_demographics_yearly AS demographics
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = demographics.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        ('disadvantaged_pct', demographics.disadvantaged_pct::double precision),
+                        ('fsm_pct', demographics.fsm_pct::double precision),
+                        ('fsm6_pct', demographics.fsm6_pct::double precision),
+                        ('sen_pct', demographics.sen_pct::double precision),
+                        ('ehcp_pct', demographics.ehcp_pct::double precision),
+                        ('eal_pct', demographics.eal_pct::double precision),
+                        (
+                            'first_language_english_pct',
+                            demographics.first_language_english_pct::double precision
+                        ),
+                        (
+                            'first_language_unclassified_pct',
+                            demographics.first_language_unclassified_pct::double precision
+                        ),
+                        ('male_pct', demographics.male_pct::double precision),
+                        ('female_pct', demographics.female_pct::double precision),
+                        ('pupil_mobility_pct', demographics.pupil_mobility_pct::double precision)
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    attendance.urn,
+                    attendance.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_attendance_yearly AS attendance
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = attendance.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        ('overall_attendance_pct', attendance.overall_attendance_pct::double precision),
+                        ('overall_absence_pct', attendance.overall_absence_pct::double precision),
+                        ('persistent_absence_pct', attendance.persistent_absence_pct::double precision)
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    behaviour.urn,
+                    behaviour.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_behaviour_yearly AS behaviour
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = behaviour.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        ('suspensions_count', behaviour.suspensions_count::double precision),
+                        ('suspensions_rate', behaviour.suspensions_rate::double precision),
+                        (
+                            'permanent_exclusions_count',
+                            behaviour.permanent_exclusions_count::double precision
+                        ),
+                        (
+                            'permanent_exclusions_rate',
+                            behaviour.permanent_exclusions_rate::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    workforce.urn,
+                    workforce.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_workforce_yearly AS workforce
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = workforce.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        ('pupil_teacher_ratio', workforce.pupil_teacher_ratio::double precision),
+                        ('supply_staff_pct', workforce.supply_staff_pct::double precision),
+                        (
+                            'teachers_3plus_years_pct',
+                            workforce.teachers_3plus_years_pct::double precision
+                        ),
+                        ('teacher_turnover_pct', workforce.teacher_turnover_pct::double precision),
+                        ('qts_pct', workforce.qts_pct::double precision),
+                        (
+                            'qualifications_level6_plus_pct',
+                            workforce.qualifications_level6_plus_pct::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    performance.urn,
+                    performance.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_performance_yearly AS performance
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = performance.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        ('attainment8_average', performance.attainment8_average::double precision),
+                        ('progress8_average', performance.progress8_average::double precision),
+                        (
+                            'progress8_disadvantaged',
+                            performance.progress8_disadvantaged::double precision
+                        ),
+                        (
+                            'progress8_not_disadvantaged',
+                            performance.progress8_not_disadvantaged::double precision
+                        ),
+                        (
+                            'progress8_disadvantaged_gap',
+                            performance.progress8_disadvantaged_gap::double precision
+                        ),
+                        ('engmath_5_plus_pct', performance.engmath_5_plus_pct::double precision),
+                        ('engmath_4_plus_pct', performance.engmath_4_plus_pct::double precision),
+                        ('ebacc_entry_pct', performance.ebacc_entry_pct::double precision),
+                        ('ebacc_5_plus_pct', performance.ebacc_5_plus_pct::double precision),
+                        ('ebacc_4_plus_pct', performance.ebacc_4_plus_pct::double precision),
+                        (
+                            'ks2_reading_expected_pct',
+                            performance.ks2_reading_expected_pct::double precision
+                        ),
+                        (
+                            'ks2_writing_expected_pct',
+                            performance.ks2_writing_expected_pct::double precision
+                        ),
+                        (
+                            'ks2_maths_expected_pct',
+                            performance.ks2_maths_expected_pct::double precision
+                        ),
+                        (
+                            'ks2_combined_expected_pct',
+                            performance.ks2_combined_expected_pct::double precision
+                        ),
+                        (
+                            'ks2_reading_higher_pct',
+                            performance.ks2_reading_higher_pct::double precision
+                        ),
+                        (
+                            'ks2_writing_higher_pct',
+                            performance.ks2_writing_higher_pct::double precision
+                        ),
+                        (
+                            'ks2_maths_higher_pct',
+                            performance.ks2_maths_higher_pct::double precision
+                        ),
+                        (
+                            'ks2_combined_higher_pct',
+                            performance.ks2_combined_higher_pct::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    yearly_crime.urn,
+                    yearly_crime.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    'area_crime_incidents_per_1000' AS metric_key,
+                    yearly_crime.area_crime_incidents_per_1000 AS metric_value
+                FROM area_crime_yearly AS yearly_crime
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = yearly_crime.urn
+
+                UNION ALL
+
+                SELECT
+                    yearly_prices.urn,
+                    yearly_prices.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM area_house_price_yearly AS yearly_prices
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = yearly_prices.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        (
+                            'area_house_price_average',
+                            yearly_prices.area_house_price_average::double precision
+                        ),
+                        (
+                            'area_house_price_annual_change_pct',
+                            yearly_prices.area_house_price_annual_change_pct::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+            ),
+            national_benchmark_values AS (
+                SELECT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    avg(metric_rows.metric_value) AS benchmark_value
+                FROM metric_rows
+                WHERE metric_rows.metric_value IS NOT NULL
+                GROUP BY
+                    metric_rows.metric_key,
+                    metric_rows.academic_year
+            ),
+            lad_benchmark_values AS (
+                SELECT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    metric_rows.lad_code,
+                    avg(metric_rows.metric_value) AS benchmark_value
+                FROM metric_rows
+                WHERE metric_rows.metric_value IS NOT NULL
+                  AND metric_rows.lad_code IS NOT NULL
+                GROUP BY
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    metric_rows.lad_code
+            ),
+            phase_benchmark_values AS (
+                SELECT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    metric_rows.phase,
+                    avg(metric_rows.metric_value) AS benchmark_value
+                FROM metric_rows
+                WHERE metric_rows.metric_value IS NOT NULL
+                  AND metric_rows.phase IS NOT NULL
+                GROUP BY
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    metric_rows.phase
+            )
+            INSERT INTO metric_benchmarks_yearly (
+                metric_key,
+                academic_year,
+                benchmark_scope,
+                benchmark_area,
+                benchmark_label,
+                benchmark_value,
+                updated_at
+            )
+            SELECT
+                benchmark_rows.metric_key,
+                benchmark_rows.academic_year,
+                benchmark_rows.benchmark_scope,
+                benchmark_rows.benchmark_area,
+                benchmark_rows.benchmark_label,
+                benchmark_rows.benchmark_value,
+                {updated_at_expression}
+            FROM (
+                SELECT DISTINCT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    'national' AS benchmark_scope,
+                    'england' AS benchmark_area,
+                    'England' AS benchmark_label,
+                    national_benchmark_values.benchmark_value
+                FROM metric_rows
+                LEFT JOIN national_benchmark_values
+                    ON national_benchmark_values.metric_key = metric_rows.metric_key
+                   AND national_benchmark_values.academic_year = metric_rows.academic_year
+
+                UNION ALL
+
+                SELECT DISTINCT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    'local_authority_district' AS benchmark_scope,
+                    metric_rows.lad_code AS benchmark_area,
+                    coalesce(metric_rows.lad_name, metric_rows.lad_code, 'Unknown')
+                        AS benchmark_label,
+                    lad_benchmark_values.benchmark_value
+                FROM metric_rows
+                LEFT JOIN lad_benchmark_values
+                    ON lad_benchmark_values.metric_key = metric_rows.metric_key
+                   AND lad_benchmark_values.academic_year = metric_rows.academic_year
+                   AND lad_benchmark_values.lad_code = metric_rows.lad_code
+                WHERE metric_rows.lad_code IS NOT NULL
+
+                UNION ALL
+
+                SELECT DISTINCT
+                    metric_rows.metric_key,
+                    metric_rows.academic_year,
+                    'phase' AS benchmark_scope,
+                    metric_rows.phase AS benchmark_area,
+                    metric_rows.phase AS benchmark_label,
+                    phase_benchmark_values.benchmark_value
+                FROM metric_rows
+                LEFT JOIN phase_benchmark_values
+                    ON phase_benchmark_values.metric_key = metric_rows.metric_key
+                   AND phase_benchmark_values.academic_year = metric_rows.academic_year
+                   AND phase_benchmark_values.phase = metric_rows.phase
+                WHERE metric_rows.phase IS NOT NULL
+            ) AS benchmark_rows
+            """
+        )
+    )
+    return int(
+        connection.execute(text("SELECT count(*) FROM metric_benchmarks_yearly")).scalar_one()
     )
 
 

@@ -11,6 +11,7 @@ from civitas.bootstrap.container import (
     get_school_analyst_use_case,
     get_school_overview_use_case,
     list_tasks_use_case,
+    materialize_school_benchmarks_use_case,
     pipeline_runner,
     poll_school_analyst_batches_use_case,
     poll_school_overview_batches_use_case,
@@ -23,6 +24,7 @@ pipeline_app = typer.Typer(help="Pipeline commands")
 ops_app = typer.Typer(help="Operations commands")
 data_quality_app = typer.Typer(help="Data quality commands")
 GENERATE_SUMMARIES_URN_OPTION = typer.Option(None, "--urn")
+MATERIALIZE_BENCHMARKS_URN_OPTION = typer.Option(None, "--urn")
 app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(ops_app, name="ops")
 ops_app.add_typer(data_quality_app, name="data-quality")
@@ -220,6 +222,21 @@ def resume_pipeline(run_id: str = typer.Option(..., "--run-id")) -> None:
         typer.echo(f"  error: {result.error_message}")
     if result.status.is_hard_failure():
         raise typer.Exit(code=1)
+
+
+@pipeline_app.command("materialize-benchmarks")
+def materialize_benchmarks(
+    urn: list[str] | None = MATERIALIZE_BENCHMARKS_URN_OPTION,
+    run_all: bool = typer.Option(False, "--all"),
+) -> None:
+    if run_all and urn:
+        raise typer.BadParameter("Use either --all or one or more --urn values, not both.")
+    if not run_all and not urn:
+        raise typer.BadParameter("Use --all or provide at least one --urn.")
+
+    use_case = materialize_school_benchmarks_use_case()
+    materialized_rows = use_case.execute() if run_all else use_case.execute(urns=urn)
+    typer.echo(f"Materialized {materialized_rows} benchmark rows.")
 
 
 @data_quality_app.command("snapshot")

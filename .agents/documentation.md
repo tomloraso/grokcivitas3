@@ -11,6 +11,9 @@
 2. Add new pages to `docs/index.md`.
 3. Update architecture diagrams and decision records when boundaries change.
 4. For ingestion/data-shape changes, update `docs/runbooks/pipelines.md` and keep Bronze -> Silver -> Gold guidance current.
+5. For benchmark cache workflow changes, document when `metric_benchmarks_yearly` is rebuilt,
+   keep the request path read-only, and update `.agents/pipelines.md` alongside
+   `docs/runbooks/pipelines.md`.
 
 ## Required pages
 

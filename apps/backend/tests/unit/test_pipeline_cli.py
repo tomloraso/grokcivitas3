@@ -64,6 +64,16 @@ class FakeGenerateSchoolSummariesUseCase:
         return self._result
 
 
+class FakeMaterializeSchoolBenchmarksUseCase:
+    def __init__(self, result: int = 0) -> None:
+        self._result = result
+        self.calls: list[dict[str, object]] = []
+
+    def execute(self, **kwargs: object) -> int:
+        self.calls.append(kwargs)
+        return self._result
+
+
 def _result(status: PipelineRunStatus, error_message: str | None = None) -> PipelineResult:
     return PipelineResult(
         status=status,
@@ -339,6 +349,61 @@ def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_run_id == run_id
     assert "gias: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_materialize_benchmarks_for_all(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_use_case = FakeMaterializeSchoolBenchmarksUseCase(result=225)
+    monkeypatch.setattr(
+        "civitas.cli.main.materialize_school_benchmarks_use_case",
+        lambda: fake_use_case,
+    )
+
+    result = CliRunner().invoke(app, ["pipeline", "materialize-benchmarks", "--all"])
+
+    assert result.exit_code == 0
+    assert fake_use_case.calls == [{}]
+    assert "materialized 225 benchmark rows" in result.stdout.lower()
+
+
+def test_pipeline_materialize_benchmarks_for_specific_urns(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_use_case = FakeMaterializeSchoolBenchmarksUseCase(result=450)
+    monkeypatch.setattr(
+        "civitas.cli.main.materialize_school_benchmarks_use_case",
+        lambda: fake_use_case,
+    )
+
+    result = CliRunner().invoke(
+        app,
+        [
+            "pipeline",
+            "materialize-benchmarks",
+            "--urn",
+            "100001",
+            "--urn",
+            "200002",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert fake_use_case.calls == [{"urns": ["100001", "200002"]}]
+    assert "materialized 450 benchmark rows" in result.stdout.lower()
+
+
+def test_pipeline_materialize_benchmarks_requires_scope(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_use_case = FakeMaterializeSchoolBenchmarksUseCase(result=0)
+    monkeypatch.setattr(
+        "civitas.cli.main.materialize_school_benchmarks_use_case",
+        lambda: fake_use_case,
+    )
+
+    result = CliRunner().invoke(app, ["pipeline", "materialize-benchmarks"])
+
+    assert result.exit_code == 2
+    assert fake_use_case.calls == []
 
 
 def test_pipeline_run_all_triggers_ai_generation_when_enabled(

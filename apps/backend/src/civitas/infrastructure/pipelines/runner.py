@@ -660,6 +660,7 @@ class PipelineRunner:
         quality_config_by_source: Mapping[PipelineSource, PipelineQualityConfig] | None = None,
         retry_policy: PipelineRetryPolicy | None = None,
         *,
+        success_callback: Callable[[PipelineRunContext], None] | None = None,
         stage_chunk_size: int = 1000,
         promote_chunk_size: int = 1000,
         http_timeout_seconds: float = 60.0,
@@ -683,6 +684,7 @@ class PipelineRunner:
         self._bronze_root_key = _normalize_pipeline_path(bronze_root)
         self._quality_config_by_source = dict(quality_config_by_source or {})
         self._retry_policy = retry_policy or PipelineRetryPolicy(max_retries=0)
+        self._success_callback = success_callback
         self._stage_chunk_size = stage_chunk_size
         self._promote_chunk_size = promote_chunk_size
         self._http_timeout_seconds = http_timeout_seconds
@@ -864,6 +866,8 @@ class PipelineRunner:
                                     f"staged_rows={staged_result.staged_rows} "
                                     f"promoted_rows={promoted_rows}"
                                 )
+                            elif self._success_callback is not None:
+                                self._success_callback(context)
         except Exception as exc:  # pragma: no cover - covered via tests asserting output.
             status = PipelineRunStatus.FAILED
             error_message = str(exc)

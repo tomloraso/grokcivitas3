@@ -29,10 +29,16 @@ Do not bypass Silver and write raw assets directly into Gold.
 - Bronze stores raw assets + metadata/manifests.
 - Silver performs contract normalization and captures rejected records.
 - Gold promotions are upserts on table keys (no key-level duplicates from reruns).
+- `metric_benchmarks_yearly` is a derived cache populated after successful Gold promotes for
+  benchmark-affecting sources. Web requests must read it as a cache and must not rebuild
+  benchmarks inline on the request path.
 
 ## Agent checklist (pipeline sessions)
 
 1. Confirm current `CIVITAS_BRONZE_ROOT` and source overrides.
 2. Run source pipelines in documented sequence.
-3. Validate run statuses and quality SLO output.
-4. Verify `running=0` and no stale source locks before handoff.
+3. For benchmark-affecting sources, confirm benchmark materialization ran after Gold promote or
+   run `uv run --project apps/backend civitas pipeline materialize-benchmarks --all` before
+   handoff if the cache needs a manual rebuild.
+4. Validate run statuses and quality SLO output.
+5. Verify `running=0` and no stale source locks before handoff.
