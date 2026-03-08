@@ -29,6 +29,28 @@ Copy-Item .env.example .env
 
 Backend runtime configuration is loaded from `.env` via the shared settings module.
 
+## Testing database
+
+Backend integration tests are destructive. Do not point them at the same database your API, CLI,
+or local frontend session uses.
+This is not required for normal API/web development. It is required if you want backend
+integration tests to run locally.
+
+Preferred local setup:
+
+```bash
+CIVITAS_DATABASE_URL=postgresql+psycopg://app:app@localhost:5432/app
+CIVITAS_TEST_DATABASE_URL=postgresql+psycopg://app:app@localhost:5432/app_test
+```
+
+Create the `app_test` database once with your normal Postgres tooling before running backend
+integration suites.
+
+`CIVITAS_TEST_DATABASE_URL` is used only for backend integration tests. If it is unset, backend
+pytest will only run integration suites when `CIVITAS_DATABASE_URL` already targets a clearly
+test-scoped database such as `app_test`. Otherwise those integration suites are skipped on purpose
+to avoid clobbering the shared app database.
+
 Frontend (Vite) optional map tile configuration lives in `apps/web/.env.example`:
 
 ```bash
