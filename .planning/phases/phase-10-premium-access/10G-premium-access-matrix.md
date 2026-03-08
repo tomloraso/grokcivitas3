@@ -168,7 +168,7 @@ Keep CTA generation template-based. The only dynamic inputs should be school nam
 | Search | Postcode search form and radius selection | Full access | Full access | Free baseline | - | Phase 0 | Core discovery must remain open. |
 | Search | Result list, map markers, and school cards | Full access | Full access | Free baseline | - | Phase 0 | Includes core school identity and headline signals. |
 | Search | Baseline sort and filter controls | Full access | Full access | Free baseline | - | Phase 0 and Phase 5 | Search must stay genuinely usable for non-paying users. |
-| Search | Advanced search presets, saved filters, or future power-user search tools | Not available or teaser only | Full access when implemented | Deferred | `premium_advanced_search` | Phase 11 | Do not pull into Phase 10 unless separately prioritized. |
+| Search | Advanced search presets, saved filters, or future power-user search tools | Not available or teaser only | Full access when implemented | Deferred | `premium_advanced_search` | Phase 12 | Do not pull into Phase 10 unless separately prioritized. |
 | Profile | Profile header and school identity | Full access | Full access | Free baseline | - | Phase 1 | Core route framing and context stay free. |
 | Profile | AI school overview | Full access | Full access | Free baseline | - | Phase 8 | Overview supports discovery and should stay public. |
 | Profile | AI school analyst summary | Locked teaser or paywall panel | Full access | Premium | `premium_school_analyst` | Phase 8 and Phase 10 | Strongest immediate premium differentiator. |
@@ -182,17 +182,17 @@ Keep CTA generation template-based. The only dynamic inputs should be school nam
 | Profile | Completeness and unsupported-metric notices | Full access | Full access | Free baseline | - | Phase 3 and Phase 4 | Never hide data limitations behind premium. |
 | Compare | Add or remove schools from compare shortlist | Full access | Full access | Free baseline | - | Phase 9 | Compare workflow entry must remain free. |
 | Compare | Baseline compare table for up to four schools | Full access | Full access | Free baseline | - | Phase 9 | Compare is part of the core proposition, not the premium hook. |
-| Compare | Advanced compare insights, premium metric packs, or richer benchmark overlays | Not available or teaser only | Full access when implemented | Deferred | `premium_compare_plus` | Phase 10 follow-on or Phase 11 | Do not assume MVP scope until concrete compare-plus design exists. |
-| Compare | AI compare commentary | Not available | Full access when implemented | Deferred | `premium_compare_analyst` | Phase 11+ | Future premium candidate only. |
+| Compare | Advanced compare insights, premium metric packs, or richer benchmark overlays | Not available or teaser only | Full access when implemented | Deferred | `premium_compare_plus` | Phase 10 follow-on or Phase 12 | Do not assume MVP scope until concrete compare-plus design exists. |
+| Compare | AI compare commentary | Not available | Full access when implemented | Deferred | `premium_compare_analyst` | Phase 12+ | Future premium candidate only. |
 | Trends | Inline trend sparks and small trend summaries inside the profile | Full access | Full access | Free baseline | - | Current product | Keep lightweight trend direction in the free product. |
 | Trends | Dedicated cross-domain benchmark dashboard route | Upgrade prompt or locked section | Full access | Premium | `premium_benchmark_dashboard` | Phase 6 and Phase 10 | Reuse the same capability as the profile dashboard drill-down. |
 | Account | Sign-in, sign-out, and session state | Sign-in prompt only | Full access | Signed-in helper | - | Phase 10 | Required to purchase and manage premium. |
 | Account | Upgrade CTA and plan explanation | Full access | Full access | Free baseline | - | Phase 10 | Paywall explanation should be visible wherever relevant. |
 | Account | Current plan or access-status page | Sign-in required | Full access | Signed-in helper | - | Phase 10 | Useful for support and purchase recovery. |
 | Billing | Hosted checkout start flow | Sign-in required | Full access | Signed-in helper | - | Phase 10 | Not a paid feature itself; it is the purchase path. |
-| AI | Premium AI artifacts beyond the school analyst | Not available | Full access when implemented | Deferred | `premium_ai_plus` | Phase 11+ | Keep future AI premium expansion explicit and capability-based. |
-| Export | PDF or report export | Not available | Full access when implemented | Deferred | `premium_report_export` | Phase 11 | Already outside MVP scope. |
-| Saved workflow | Saved searches, saved compares, or research workspace features | Not available | Full access when implemented | Deferred | `premium_saved_research` | Phase 11+ | Candidate premium workflow bundle, not a Phase 10 requirement. |
+| AI | Premium AI artifacts beyond the school analyst | Not available | Full access when implemented | Deferred | `premium_ai_plus` | Phase 12+ | Keep future AI premium expansion explicit and capability-based. |
+| Export | PDF or report export | Not available | Full access when implemented | Deferred | `premium_report_export` | Phase 12 | Already outside MVP scope. |
+| Saved workflow | Saved searches, saved compares, or research workspace features | Not available | Full access when implemented | Deferred | `premium_saved_research` | Phase 12+ | Candidate premium workflow bundle, not a Phase 10 requirement. |
 
 ## Launch Scope Decision Summary
 
@@ -227,9 +227,9 @@ Keep CTA generation template-based. The only dynamic inputs should be school nam
 | `premium_benchmark_dashboard` | Dedicated dashboard drill-down from profile or trends surfaces | user session + dashboard capability | `GET /api/v1/schools/{urn}/trends/dashboard` or equivalent returns locked metadata with `teaser_payload` (layout structure plus limited real preview content) when absent; full dashboard when present | Partial real preview with fade or lock boundary, inline contextual CTA overlay | Dashboard and related profile drill-down caches must vary by access state | Second premium launch capability; free inline benchmark cues remain in the main profile payload. The current web benchmark view model must split into free inline snapshot mapping and premium drill-down mapping. |
 | `premium_compare_plus` | Future advanced compare features | user session + compare-plus capability | Compare contract extends with locked premium feature metadata until enabled | Hide or lock only the premium compare additions, not the base compare table | Compare cache must vary by access state once introduced | Deferred until concrete compare-plus scope exists. |
 | `premium_compare_analyst` | Future AI compare commentary | user session + compare-analyst capability | Separate premium compare analysis payload or premium section inside compare response | Locked premium insight panel | Compare commentary cache must vary by access state | Not part of Phase 10 launch. |
-| `premium_advanced_search` | Future advanced search tools | user session + advanced-search capability | Search response or search-settings endpoints expose locked premium controls | Upgrade CTA around advanced controls, not around the whole search route | Search state caches must separate premium control state from free results | Phase 11 candidate. |
-| `premium_report_export` | Future export endpoints | user session + export capability | Export endpoints reject or return paywall metadata when absent | Export CTA locked until premium is active | Minimal cache impact; authorization check on mutation path | Phase 11 candidate. |
-| `premium_saved_research` | Future saved workflows | user session + saved-workflow capability | Saved-search and saved-compare endpoints gated server-side | Upgrade CTA around save actions | Per-user cache and state only | Phase 11+ candidate. |
+| `premium_advanced_search` | Future advanced search tools | user session + advanced-search capability | Search response or search-settings endpoints expose locked premium controls | Upgrade CTA around advanced controls, not around the whole search route | Search state caches must separate premium control state from free results | Phase 12 candidate. |
+| `premium_report_export` | Future export endpoints | user session + export capability | Export endpoints reject or return paywall metadata when absent | Export CTA locked until premium is active | Minimal cache impact; authorization check on mutation path | Phase 12 candidate. |
+| `premium_saved_research` | Future saved workflows | user session + saved-workflow capability | Saved-search and saved-compare endpoints gated server-side | Upgrade CTA around save actions | Per-user cache and state only | Phase 12+ candidate. |
 
 ## Implementation Rules Derived From This Matrix
 

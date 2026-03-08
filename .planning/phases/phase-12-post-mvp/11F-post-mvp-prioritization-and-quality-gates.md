@@ -2,7 +2,7 @@
 
 ## Goal
 
-Define how Phase 11 slices are selected, sequenced, and signed off so the post-MVP roadmap does not become an unstructured backlog.
+Define how Phase 12 slices are selected, sequenced, and signed off so the post-MVP roadmap does not become an unstructured backlog.
 
 ## Required Inputs
 
@@ -19,5 +19,5 @@ Define how Phase 11 slices are selected, sequenced, and signed off so the post-M
 
 ## Acceptance Criteria
 
-- Phase 11 work is broken into explicit slices rather than vague backlog themes.
+- Phase 12 work is broken into explicit slices rather than vague backlog themes.
 - Every selected slice has a clear sign-off path before implementation starts.

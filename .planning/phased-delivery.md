@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning index
-- Last updated: 2026-03-07
+- Last updated: 2026-03-08
 - Scope: Full-stack delivery sequencing across backend, web, data pipelines, and AI summary generation
 
 ## How To Use This Document
@@ -35,7 +35,8 @@
 | Phase 8 | Phase AI | `.planning/phases/phase-8-ai-overview/` |
 | Phase 9 | Former Phase 3 | `.planning/phases/phase-9-compare/` |
 | Phase 10 | Former Phase 4 | `.planning/phases/phase-10-premium-access/` |
-| Phase 11 | Former Phase 5 | `.planning/phases/phase-11-post-mvp/` |
+| Phase 11 | New MVP follow-on | `.planning/phases/phase-11-search-results-mvp/` |
+| Phase 12 | Former Phase 5 | `.planning/phases/phase-12-post-mvp/` |
 
 ## Phase Sequence
 
@@ -228,11 +229,28 @@
   - Existing web caching for profile and trends responses must become access-aware before premium rollout.
   - Stage 10A can be feature-flagged and validated before Stage 10B goes live, but Phase 10 is not complete until both gates pass.
 
-### Phase 11 - Post-MVP growth and operational expansion
+### Phase 11 - Postcode results table MVP
+
+- Status: Planned
+- Goal: Turn postcode search into a shortlist-friendly decision table backed by a server-side, pipeline-maintained search summary projection while keeping linked map context and compare entry points.
+- Folder: `.planning/phases/phase-11-search-results-mvp/`
+- Detailed design:
+  - `README.md`
+  - `11A-search-summary-projection.md`
+  - `11B-search-summary-api-and-sort-contract.md`
+  - `11C-results-table-web-experience.md`
+  - `11D-phase-11-quality-gates.md`
+- Dependencies: Phase 0, Phase 1, Phase 6, and Phase 9
+- Coordination notes:
+  - Keep request-time work limited to postcode resolution, geospatial radius filtering, distance calculation, and final `ORDER BY`.
+  - Default postcode ranking remains straight-line distance in this phase; do not introduce blended quality scoring or personalization.
+  - Mobile parity is required, but it should use stacked result cards rather than a compressed horizontal table.
+
+### Phase 12 - Post-MVP growth and operational expansion
 
 - Status: Planned
 - Goal: Package the next wave of growth, SEO, admin tooling, performance optimization, and export features into scoped follow-on slices.
-- Folder: `.planning/phases/phase-11-post-mvp/`
+- Folder: `.planning/phases/phase-12-post-mvp/`
 - Detailed design:
   - `README.md`
   - `11A-seo-location-pages.md`
@@ -241,7 +259,7 @@
   - `11D-advanced-search-and-filters.md`
   - `11E-performance-and-cache-optimization.md`
   - `11F-post-mvp-prioritization-and-quality-gates.md`
-- Dependencies: Phase 9 and Phase 10 for MVP completion; individual slices may also depend on Phase 5 or Phase 8 where relevant
+- Dependencies: Phase 10 and Phase 11 for MVP completion; individual slices may also depend on Phase 5 or Phase 8 where relevant
 
 ## Phase Summary
 
@@ -258,7 +276,8 @@
 | 8 | AI overview and richer school identity data | Implemented |
 | 9 | Compare up to four schools | Completed |
 | 10 | Identity, feature entitlements, payments, and premium enforcement | Planned (two gated stages) |
-| 11 | Growth, admin, SEO, exports, optimization | Planned |
+| 11 | Fast postcode results table with server-side shortlist signals | Planned |
+| 12 | Growth, admin, SEO, exports, optimization | Planned |
 
 ## Open Decisions
 
@@ -266,4 +285,4 @@
 2. Final payment-provider choice and launch packaging for the account-level premium tier.
 3. Whether the Phase 10 launch bundle should stay limited to analyst plus dashboard capabilities, or add one compare enhancement if Phase 9 lands early.
 4. Whether Stage 10A should ship dark before Stage 10B, or remain internal-only until the full premium flow is ready.
-5. Whether Phase 11 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
+5. Whether Phase 12 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.

@@ -78,7 +78,7 @@ Define the minimum deployment assumptions that the current Civitas implementatio
 1. Final cloud provider and concrete managed service SKUs.
 2. Exact scheduler or job-runner product.
 3. Whether AI summary execution should use the same worker image as pipelines or split into a dedicated queue-backed service.
-4. Whether Phase 11 optimization work introduces read replicas, materialized views, or CDN caching beyond the current baseline.
+4. Whether Phase 12 optimization work introduces read replicas, materialized views, or CDN caching beyond the current baseline.
 
 ## Related Documents
 

@@ -33,9 +33,9 @@ The first vertical is school research for ages 4-16. The platform is intentional
    - System resolves the postcode to latitude and longitude.
    - System returns nearby schools in a configurable radius sorted by straight-line distance.
 2. Browse nearby results
-   - User sees school cards with headline stats and quick flags.
-   - User uses a linked map and list view.
-   - User can sort and filter the result set.
+   - User sees a mobile-friendly ranked results view: a desktop decision table with headline stats and stacked result cards on mobile.
+   - User uses a linked map and shortlist-friendly compare entry points.
+   - User can sort and filter the result set, with straight-line distance as the default postcode-search order.
 3. School profile
    - User sees core identifiers, headline indicators, and multi-year trends.
    - User sees Ofsted history, deprivation, crime, and benchmark context where available.
