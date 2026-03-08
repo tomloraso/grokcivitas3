@@ -57,6 +57,8 @@ SchoolProfileFeature
 | P4 | `P4-section-narrative-copy.md` | Completed |
 | P5 | `P5-responsive-mobile-polish.md` | Not started |
 | P6 | `P6-design-system-documentation.md` | Not started |
+| P7 | `P7-school-data-page-redesign-v2.md` | Completed (local, 2026-03-08) |
+| P8 | `P8-school-data-page-redesign-v3.md` | Completed (local, 2026-03-08) |
 
 ## Execution Sequence
 
@@ -84,6 +86,23 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-08 (Liora Voss design pass — P8, V3 polish, local only):
+  - `WorkforceLeadershipSection`: removed `WorkforceMetricCard` helper — catalog null-skip now in `.flatMap()` alongside value null-skip, eliminating ghost-card escape hatch. `StatCard` rendered directly.
+  - `LeadershipStrip`: replaced flex-wrap pill strip with single bordered container using `divide-x` CSS dividers. `overflow-x-auto` + `min-w-max` for horizontal scroll on narrow viewports.
+  - `SchoolProfileFeature`: added `hover:scale-[1.02] hover:border-brand/60 hover:shadow-[0_0_18px_rgba(168,85,247,0.22)] transition-all duration-200` to "Add to compare" and "Open compare" buttons.
+  - Planning doc created: `P8-school-data-page-redesign-v3.md`.
+
+- 2026-03-08 (Liora Voss design pass — P7 in progress, local only):
+  - Diagnosed three structural failures: ghost cards, flat hero hierarchy, wrong section order.
+  - `MetricGrid`: added `mobileTwo` prop — 2-col mobile layout without breaking existing callers.
+  - `StatCard`: bar height 3px → 5px; hero glow `shadow-[0_0_28px_rgba(168,85,247,0.10)]` added.
+  - `WorkforceLeadershipSection`: `.flatMap()` null-skip on workforce grid; leadership 2×2 Card replaced with horizontal flex-wrap pill strip — only populated fields render.
+  - `AttendanceBehaviourSection`: `.flatMap()` null-skip on attendance + behaviour grids; `mobileTwo` added to both.
+  - `DemographicsAndTrendsPanel`: `.flatMap()` null-skip on demographics grid; `mobileTwo` added.
+  - `SchoolProfileFeature`: section reorder — Results & Progress moved above Attendance, Demographics, Workforce.
+  - Planning doc created: `P7-school-data-page-redesign-v2.md`.
+  - Not committed — local test only.
 
 - 2026-03-07 (implementation checkpoint — P1–P4 complete):
   - Completed P1 design token foundation:

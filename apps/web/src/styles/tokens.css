@@ -275,3 +275,108 @@
     transparent 100%
   );
 }
+
+/* ================================================================== */
+/* btn-compare — premium compare CTA                                   */
+/* ================================================================== */
+
+.btn-compare {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.125rem;
+  height: 2.75rem;
+  min-width: 5rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(12, 18, 34, 0.65);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition:
+    transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 280ms ease,
+    background 280ms ease,
+    border-color 280ms ease,
+    color 280ms ease;
+  outline: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Gradient border ring — visible on hover */
+.btn-compare::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.75rem;
+  padding: 1px;
+  background: linear-gradient(135deg, #C084FC 0%, #7C3AED 45%, #A78BFA 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 280ms ease;
+  pointer-events: none;
+}
+
+.btn-compare:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: rgba(167, 139, 250, 0.13);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(192, 132, 252, 0.2),
+    0 0 22px rgba(192, 132, 252, 0.5),
+    0 0 55px rgba(167, 139, 250, 0.25),
+    0 8px 30px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.btn-compare:hover::before {
+  opacity: 1;
+}
+
+.btn-compare:active {
+  transform: scale(0.95) translateY(0);
+  transition-duration: 90ms;
+  box-shadow:
+    0 0 0 1px rgba(192, 132, 252, 0.4),
+    0 0 28px rgba(192, 132, 252, 0.55) inset,
+    0 0 18px rgba(192, 132, 252, 0.3);
+}
+
+.btn-compare:focus-visible {
+  outline: 2px solid rgba(192, 132, 252, 0.7);
+  outline-offset: 2px;
+}
+
+/* Light theme override */
+[data-theme="light"] .btn-compare {
+  color: #1c2840;
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(139, 47, 201, 0.25);
+}
+
+[data-theme="light"] .btn-compare:hover {
+  color: #1c2840;
+  background: rgba(168, 85, 247, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(139, 47, 201, 0.2),
+    0 0 18px rgba(139, 47, 201, 0.35),
+    0 0 40px rgba(139, 47, 201, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}

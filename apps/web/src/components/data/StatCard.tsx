@@ -83,7 +83,7 @@ function BarRow({
           </span>
         ) : null}
       </div>
-      <div className="h-[3px] w-full overflow-hidden rounded-full bg-border-subtle/40">
+      <div className="h-[5px] w-full overflow-hidden rounded-full bg-border-subtle/40">
         <div
           className={`h-full rounded-full ${barClass}`}
           style={{ width: `${widthPct}%`, opacity: 0.85 }}
@@ -243,7 +243,7 @@ export function StatCard({
     <Card
       className={cn(
         "group relative flex flex-col gap-2 overflow-hidden p-4 transition-colors duration-fast hover:border-brand/25 sm:p-5",
-        variant === "hero" && "border-brand/30 shadow-sm",
+        variant === "hero" && "border-brand/30 shadow-sm shadow-[0_0_28px_rgba(168,85,247,0.10)]",
         className
       )}
       {...props}

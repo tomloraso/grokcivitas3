@@ -64,7 +64,7 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
     .map((point) => point.value)
     .filter((value): value is number => value !== null);
   const isPercent = series.unit === "percent";
-  const period = sparkData.length > 1 ? `${sparkData.length}yr` : undefined;
+  const period = sparkData.length > 1 ? `${sparkData.length}-year trend` : undefined;
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -169,14 +169,16 @@ export function AttendanceBehaviourSection({
           sectionLabel="Attendance"
           completeness={attendanceCompleteness}
         />
-        <MetricGrid columns={3}>
-          {ATTENDANCE_METRIC_KEYS.map((metricKey) => {
+        <MetricGrid columns={3} mobileTwo>
+          {ATTENDANCE_METRIC_KEYS.flatMap((metricKey) => {
             const value =
               metricKey === "overall_attendance_pct"
                 ? attendance?.overallAttendancePct ?? null
                 : metricKey === "overall_absence_pct"
                   ? attendance?.overallAbsencePct ?? null
                   : attendance?.persistentAbsencePct ?? null;
+
+            if (value === null) return [];
 
             const bm = benchmarkLookup.get(metricKey);
 
@@ -205,8 +207,8 @@ export function AttendanceBehaviourSection({
           sectionLabel="Behaviour"
           completeness={behaviourCompleteness}
         />
-        <MetricGrid columns={4}>
-          {BEHAVIOUR_METRIC_KEYS.map((metricKey) => {
+        <MetricGrid columns={4} mobileTwo>
+          {BEHAVIOUR_METRIC_KEYS.flatMap((metricKey) => {
             const value =
               metricKey === "suspensions_count"
                 ? behaviour?.suspensionsCount ?? null
@@ -215,6 +217,8 @@ export function AttendanceBehaviourSection({
                   : metricKey === "permanent_exclusions_count"
                     ? behaviour?.permanentExclusionsCount ?? null
                     : behaviour?.permanentExclusionsRate ?? null;
+
+            if (value === null) return [];
 
             const bm = benchmarkLookup.get(metricKey);
 

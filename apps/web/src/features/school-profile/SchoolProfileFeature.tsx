@@ -102,9 +102,9 @@ export function SchoolProfileFeature(): JSX.Element {
               areaContext={profile.areaContext}
               actions={
                 <>
-                  <Button
+                  <button
                     type="button"
-                    variant={selected ? "ghost" : "secondary"}
+                    className="btn-compare"
                     onClick={() => {
                       if (selected) {
                         removeSchool(profile.school.urn);
@@ -129,11 +129,11 @@ export function SchoolProfileFeature(): JSX.Element {
                     }}
                   >
                     {selected ? "Remove from compare" : "Add to compare"}
-                  </Button>
+                  </button>
                   {items.length >= 2 ? (
-                    <Button asChild variant="secondary">
-                      <Link to={paths.compare(items.map((item) => item.urn))}>Open compare</Link>
-                    </Button>
+                    <Link to={paths.compare(items.map((item) => item.urn))} className="btn-compare">
+                      Open compare
+                    </Link>
                   ) : null}
                 </>
               }
@@ -150,11 +150,10 @@ export function SchoolProfileFeature(): JSX.Element {
                 timelineCompleteness={profile.completeness.ofstedTimeline}
               />
 
-              <DemographicsAndTrendsPanel
-                demographics={profile.demographics}
-                trends={profile.trends}
-                demographicsCompleteness={profile.completeness.demographics}
-                trendsCompleteness={profile.completeness.trends}
+              <AcademicPerformanceSection
+                performance={profile.performance}
+                completeness={profile.completeness.performance}
+                benchmarkDashboard={profile.benchmarkDashboard}
               />
 
               <AttendanceBehaviourSection
@@ -166,18 +165,19 @@ export function SchoolProfileFeature(): JSX.Element {
                 benchmarkDashboard={profile.benchmarkDashboard}
               />
 
+              <DemographicsAndTrendsPanel
+                demographics={profile.demographics}
+                trends={profile.trends}
+                demographicsCompleteness={profile.completeness.demographics}
+                trendsCompleteness={profile.completeness.trends}
+              />
+
               <WorkforceLeadershipSection
                 workforce={profile.workforce}
                 leadership={profile.leadership}
                 trends={profile.trends}
                 workforceCompleteness={profile.completeness.workforce}
                 leadershipCompleteness={profile.completeness.leadership}
-                benchmarkDashboard={profile.benchmarkDashboard}
-              />
-
-              <AcademicPerformanceSection
-                performance={profile.performance}
-                completeness={profile.completeness.performance}
                 benchmarkDashboard={profile.benchmarkDashboard}
               />
             </div>

@@ -4,7 +4,6 @@ import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
 import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
-import { Card } from "../../../components/ui/Card";
 import {
   formatMetricDelta,
   formatMetricValue,
@@ -64,7 +63,7 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
     .map((point) => point.value)
     .filter((value): value is number => value !== null);
   const isPercent = series.unit === "percent";
-  const period = sparkData.length > 1 ? `${sparkData.length}yr` : undefined;
+  const period = sparkData.length > 1 ? `${sparkData.length}-year trend` : undefined;
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -87,37 +86,39 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
   );
 }
 
-function WorkforceMetricCard({
-  metricKey,
-  value,
-  series,
-  benchmark,
-  variant = "default"
-}: {
-  metricKey: string;
-  value: number | null;
-  series: TrendSeriesVM | undefined;
-  benchmark: BenchmarkSlot | undefined;
-  variant?: "hero" | "default";
-}): JSX.Element {
-  const catalog = getMetricCatalogEntry(metricKey);
-  if (!catalog) {
-    return <MetricUnavailable metricLabel={metricKey} />;
+function LeadershipStrip({ leadership }: { leadership: LeadershipSnapshotVM }): JSX.Element {
+  const fields: { label: string; value: string }[] = [];
+
+  if (leadership.headteacherName) {
+    fields.push({ label: "Headteacher", value: leadership.headteacherName });
+  }
+  if (leadership.headteacherStartDate) {
+    fields.push({ label: "In post since", value: leadership.headteacherStartDate });
+  }
+  if (leadership.headteacherTenureYears !== null && leadership.headteacherTenureYears !== undefined) {
+    fields.push({ label: "Tenure", value: `${leadership.headteacherTenureYears.toFixed(1)} yrs` });
+  }
+  if (leadership.leadershipTurnoverScore !== null && leadership.leadershipTurnoverScore !== undefined) {
+    fields.push({ label: "Leadership Turnover", value: leadership.leadershipTurnoverScore.toFixed(2) });
   }
 
-  if (value === null) {
-    return <MetricUnavailable metricLabel={catalog.label} />;
+  if (fields.length === 0) {
+    return <MetricUnavailable metricLabel="Leadership metadata" />;
   }
 
   return (
-    <StatCard
-      label={catalog.label}
-      description={catalog.description}
-      value={formatMetricValue(value, catalog.unit, catalog.decimals) ?? "n/a"}
-      footer={renderTrendFooter(series)}
-      benchmark={benchmark}
-      variant={variant}
-    />
+    <div className="flex min-w-max divide-x divide-border-subtle/60 overflow-x-auto rounded-lg border border-border-subtle/60 bg-surface/50">
+      {fields.map((field) => (
+        <div key={field.label} className="flex flex-col px-4 py-3">
+          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-disabled whitespace-nowrap">
+            {field.label}
+          </p>
+          <p className="mt-1 text-sm font-semibold text-primary whitespace-nowrap">
+            {field.value}
+          </p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -136,14 +137,6 @@ export function WorkforceLeadershipSection({
   const benchmarkLookup = new Map<string, BenchmarkMetricVM>(
     benchmarkDashboard?.sections.flatMap((s) => s.metrics.map((m) => [m.metricKey, m] as const)) ?? []
   );
-
-  const leadershipValues = [
-    leadership?.headteacherName,
-    leadership?.headteacherStartDate,
-    leadership?.headteacherTenureYears,
-    leadership?.leadershipTurnoverScore
-  ];
-  const hasLeadershipValues = leadershipValues.some((value) => value !== null && value !== undefined);
 
   return (
     <section
@@ -174,8 +167,11 @@ export function WorkforceLeadershipSection({
           sectionLabel="Workforce"
           completeness={workforceCompleteness}
         />
-        <MetricGrid columns={3}>
-          {WORKFORCE_METRIC_KEYS.map((metricKey) => {
+        <MetricGrid columns={3} mobileTwo>
+          {WORKFORCE_METRIC_KEYS.flatMap((metricKey) => {
+            const catalog = getMetricCatalogEntry(metricKey);
+            if (!catalog) return [];
+
             const value =
               metricKey === "pupil_teacher_ratio"
                 ? workforce?.pupilTeacherRatio ?? null
@@ -189,14 +185,17 @@ export function WorkforceLeadershipSection({
                         ? workforce?.qtsPct ?? null
                         : workforce?.qualificationsLevel6PlusPct ?? null;
 
+            if (value === null) return [];
+
             const bm = benchmarkLookup.get(metricKey);
 
             return (
-              <WorkforceMetricCard
+              <StatCard
                 key={metricKey}
-                metricKey={metricKey}
-                value={value}
-                series={trendLookup.get(metricKey)}
+                label={catalog.label}
+                description={catalog.description}
+                value={formatMetricValue(value, catalog.unit, catalog.decimals) ?? "n/a"}
+                footer={renderTrendFooter(trendLookup.get(metricKey))}
                 benchmark={bm ? toBenchmarkSlot(bm) : undefined}
                 variant={metricKey === "pupil_teacher_ratio" ? "hero" : "default"}
               />
@@ -211,50 +210,10 @@ export function WorkforceLeadershipSection({
           sectionLabel="Leadership"
           completeness={leadershipCompleteness}
         />
-
-        {!hasLeadershipValues ? (
-          <MetricUnavailable metricLabel="Leadership metadata" />
+        {leadership ? (
+          <LeadershipStrip leadership={leadership} />
         ) : (
-          <Card className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
-                Headteacher
-              </p>
-              <p className="mt-1 text-base font-semibold text-primary">
-                {leadership?.headteacherName ?? "Not published"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
-                Start Date
-              </p>
-              <p className="mt-1 text-base font-semibold text-primary">
-                {leadership?.headteacherStartDate ?? "Not published"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
-                Tenure
-              </p>
-              <p className="mt-1 text-base font-semibold text-primary">
-                {leadership?.headteacherTenureYears !== null &&
-                leadership?.headteacherTenureYears !== undefined
-                  ? `${leadership.headteacherTenureYears.toFixed(1)} years`
-                  : "Not published"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-secondary">
-                Leadership Turnover Score
-              </p>
-              <p className="mt-1 text-base font-semibold text-primary">
-                {leadership?.leadershipTurnoverScore !== null &&
-                leadership?.leadershipTurnoverScore !== undefined
-                  ? leadership.leadershipTurnoverScore.toFixed(2)
-                  : "Not published"}
-              </p>
-            </div>
-          </Card>
+          <MetricUnavailable metricLabel="Leadership metadata" />
         )}
       </div>
     </section>

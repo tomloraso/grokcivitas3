@@ -42,7 +42,7 @@ function renderTrendFooter(metric: DemographicMetricVM, series: TrendSeriesVM | 
   }
 
   const sparkData = toSparkData(series);
-  const period = sparkData.length > 1 ? `${sparkData.length}yr` : undefined;
+  const period = sparkData.length > 1 ? `${sparkData.length}-year trend` : undefined;
   return (
     <div className="flex items-center justify-between gap-2">
       {sparkData.length > 1 ? (
@@ -160,16 +160,12 @@ export function DemographicsAndTrendsPanel({
       {!hasAnyMetrics ? (
         <MetricUnavailable metricLabel="Pupil demographics" />
       ) : (
-        <MetricGrid columns={4}>
-          {DEMOGRAPHICS_METRIC_KEYS.map((metricKey) => {
+        <MetricGrid columns={4} mobileTwo>
+          {DEMOGRAPHICS_METRIC_KEYS.flatMap((metricKey) => {
             const metric = metricLookup.get(metricKey);
             const catalog = getMetricCatalogEntry(metricKey);
-            if (!metric || !catalog) {
-              return null;
-            }
-
-            if (metric.value === null) {
-              return <MetricUnavailable key={metricKey} metricLabel={catalog.label} />;
+            if (!metric || !catalog || metric.value === null) {
+              return [];
             }
 
             return (
