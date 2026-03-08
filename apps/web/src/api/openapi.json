@@ -229,6 +229,41 @@
               ],
               "title": "Radius"
             }
+          },
+          {
+            "name": "phase",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Phase"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
           }
         ],
         "responses": {
@@ -569,6 +604,95 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "PostcodeSchoolSearchItemResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "distance_miles": {
+            "type": "number",
+            "title": "Distance Miles"
+          },
+          "pupil_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pupil Count"
+          },
+          "latest_ofsted": {
+            "$ref": "#/components/schemas/SchoolSearchLatestOfstedResponse"
+          },
+          "academic_metric": {
+            "$ref": "#/components/schemas/SchoolSearchAcademicMetricResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "name",
+          "type",
+          "phase",
+          "postcode",
+          "lat",
+          "lng",
+          "distance_miles",
+          "pupil_count",
+          "latest_ofsted",
+          "academic_metric"
+        ],
+        "title": "PostcodeSchoolSearchItemResponse"
       },
       "SchoolCompareBenchmarkResponse": {
         "properties": {
@@ -3685,6 +3809,67 @@
         ],
         "title": "SchoolProfileWorkforceLatestResponse"
       },
+      "SchoolSearchAcademicMetricResponse": {
+        "properties": {
+          "metric_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric Key"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "display_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Value"
+          },
+          "sort_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Value"
+          },
+          "availability": {
+            "type": "string",
+            "title": "Availability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "label",
+          "display_value",
+          "sort_value",
+          "availability"
+        ],
+        "title": "SchoolSearchAcademicMetricResponse"
+      },
       "SchoolSearchItemResponse": {
         "properties": {
           "urn": {
@@ -3753,6 +3938,43 @@
           "distance_miles"
         ],
         "title": "SchoolSearchItemResponse"
+      },
+      "SchoolSearchLatestOfstedResponse": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "sort_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Rank"
+          },
+          "availability": {
+            "type": "string",
+            "title": "Availability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "sort_rank",
+          "availability"
+        ],
+        "title": "SchoolSearchLatestOfstedResponse"
       },
       "SchoolTrendBenchmarkPointResponse": {
         "properties": {
@@ -4584,12 +4806,25 @@
           "radius_miles": {
             "type": "number",
             "title": "Radius Miles"
+          },
+          "phases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Phases"
+          },
+          "sort": {
+            "type": "string",
+            "title": "Sort"
           }
         },
         "type": "object",
         "required": [
           "postcode",
-          "radius_miles"
+          "radius_miles",
+          "phases",
+          "sort"
         ],
         "title": "SchoolsSearchQueryResponse"
       },
@@ -4607,7 +4842,7 @@
           },
           "schools": {
             "items": {
-              "$ref": "#/components/schemas/SchoolSearchItemResponse"
+              "$ref": "#/components/schemas/PostcodeSchoolSearchItemResponse"
             },
             "type": "array",
             "title": "Schools"

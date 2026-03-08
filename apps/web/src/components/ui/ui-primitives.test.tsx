@@ -117,6 +117,18 @@ describe("UI primitives", () => {
     expect(screen.getByRole("button", { name: "Run" }).className).toContain("h-11");
   });
 
+  it("supports the compare button variant through the shared primitive", () => {
+    renderWithProviders(
+      <Button type="button" variant="compare" size="none">
+        Compare
+      </Button>
+    );
+
+    const button = screen.getByRole("button", { name: "Compare" });
+    expect(button.className).toContain("btn-compare");
+    expect(button.className).not.toContain("h-11");
+  });
+
   it("passes accessibility smoke checks", async () => {
     const { container } = renderWithProviders(
       <div>

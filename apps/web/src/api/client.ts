@@ -212,11 +212,21 @@ export async function createTask(payload: CreateTaskRequest): Promise<Task> {
 
 export async function searchSchools({
   postcode,
-  radius
+  radius,
+  phase,
+  sort
 }: SearchSchoolsQuery): Promise<SchoolsSearchResponse> {
   const params = new URLSearchParams({ postcode });
   if (radius !== undefined && radius !== null) {
     params.set("radius", radius.toString());
+  }
+  if (phase) {
+    for (const phaseValue of phase) {
+      params.append("phase", phaseValue);
+    }
+  }
+  if (sort !== undefined && sort !== null) {
+    params.set("sort", sort);
   }
 
   return request<SchoolsSearchResponse>(`/api/v1/schools?${params.toString()}`);

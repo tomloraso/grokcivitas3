@@ -5,6 +5,9 @@ from fastapi.testclient import TestClient
 from civitas.api.dependencies import get_search_schools_by_postcode_use_case
 from civitas.api.main import app
 from civitas.application.schools.dto import (
+    PostcodeSchoolSearchAcademicMetricDto,
+    PostcodeSchoolSearchItemDto,
+    PostcodeSchoolSearchLatestOfstedDto,
     SchoolSearchQueryDto,
     SchoolsSearchResponseDto,
     SearchCenterDto,
@@ -14,7 +17,6 @@ from civitas.application.schools.errors import (
     PostcodeNotFoundError,
     PostcodeResolverUnavailableError,
 )
-from civitas.domain.schools.models import SchoolSearchResult
 
 client = TestClient(app)
 
@@ -25,12 +27,17 @@ class FakeSearchSchoolsByPostcodeUseCase:
     ) -> None:
         self._result = result
         self._error = error
-        self.calls: list[tuple[str, float | None]] = []
+        self.calls: list[tuple[str, float | None, tuple[str, ...] | None, str | None]] = []
 
     def execute(
-        self, *, postcode: str, radius_miles: float | None = None
+        self,
+        *,
+        postcode: str,
+        radius_miles: float | None = None,
+        phases: tuple[str, ...] | None = None,
+        sort: str | None = None,
     ) -> SchoolsSearchResponseDto:
-        self.calls.append((postcode, radius_miles))
+        self.calls.append((postcode, radius_miles, phases, sort))
         if self._error is not None:
             raise self._error
         if self._result is None:
@@ -51,31 +58,59 @@ def teardown_function() -> None:
 def test_search_schools_returns_expected_contract() -> None:
     fake_use_case = FakeSearchSchoolsByPostcodeUseCase(
         result=SchoolsSearchResponseDto(
-            query=SchoolSearchQueryDto(postcode="SW1A 1AA", radius_miles=5.0),
+            query=SchoolSearchQueryDto(
+                postcode="SW1A 1AA",
+                radius_miles=5.0,
+                phases=("secondary",),
+                sort="ofsted",
+            ),
             center=SearchCenterDto(lat=51.501009, lng=-0.141588),
             schools=(
-                SchoolSearchResult(
+                PostcodeSchoolSearchItemDto(
                     urn="123456",
                     name="Example Primary School",
                     school_type="Community school",
-                    phase="Primary",
+                    phase="Secondary",
                     postcode="SW1A 1AA",
                     lat=51.5002,
                     lng=-0.1421,
                     distance_miles=0.09,
+                    pupil_count=812,
+                    latest_ofsted=PostcodeSchoolSearchLatestOfstedDto(
+                        label="Outstanding",
+                        sort_rank=1,
+                        availability="published",
+                    ),
+                    academic_metric=PostcodeSchoolSearchAcademicMetricDto(
+                        metric_key="progress8_average",
+                        label="Progress 8",
+                        display_value="0.42",
+                        sort_value=0.42,
+                        availability="published",
+                    ),
                 ),
             ),
         )
     )
     app.dependency_overrides[get_search_schools_by_postcode_use_case] = lambda: fake_use_case
 
-    response = client.get("/api/v1/schools", params={"postcode": "sw1a1aa", "radius": "5"})
+    response = client.get(
+        "/api/v1/schools",
+        params=[
+            ("postcode", "sw1a1aa"),
+            ("radius", "5"),
+            ("phase", "secondary"),
+            ("sort", "ofsted"),
+        ],
+    )
 
     assert response.status_code == 200
     assert response.json() == {
         "query": {
             "postcode": "SW1A 1AA",
             "radius_miles": 5.0,
+            "phases": ["secondary"],
+            "sort": "ofsted",
         },
         "center": {"lat": 51.501009, "lng": -0.141588},
         "count": 1,
@@ -84,27 +119,48 @@ def test_search_schools_returns_expected_contract() -> None:
                 "urn": "123456",
                 "name": "Example Primary School",
                 "type": "Community school",
-                "phase": "Primary",
+                "phase": "Secondary",
                 "postcode": "SW1A 1AA",
                 "lat": 51.5002,
                 "lng": -0.1421,
                 "distance_miles": 0.09,
+                "pupil_count": 812,
+                "latest_ofsted": {
+                    "label": "Outstanding",
+                    "sort_rank": 1,
+                    "availability": "published",
+                },
+                "academic_metric": {
+                    "metric_key": "progress8_average",
+                    "label": "Progress 8",
+                    "display_value": "0.42",
+                    "sort_value": 0.42,
+                    "availability": "published",
+                },
             }
         ],
     }
-    assert fake_use_case.calls == [("sw1a1aa", 5.0)]
+    assert fake_use_case.calls == [("sw1a1aa", 5.0, ("secondary",), "ofsted")]
 
 
 def test_search_schools_returns_400_for_invalid_input() -> None:
     fake_use_case = FakeSearchSchoolsByPostcodeUseCase(
-        error=InvalidSchoolSearchParametersError("radius must be between 0 and 25 miles")
+        error=InvalidSchoolSearchParametersError("academic sort requires a single phase filter")
     )
     app.dependency_overrides[get_search_schools_by_postcode_use_case] = lambda: fake_use_case
 
-    response = client.get("/api/v1/schools", params={"postcode": "SW1A1AA", "radius": "99"})
+    response = client.get(
+        "/api/v1/schools",
+        params=[
+            ("postcode", "SW1A1AA"),
+            ("phase", "primary"),
+            ("phase", "secondary"),
+            ("sort", "academic"),
+        ],
+    )
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "radius must be between 0 and 25 miles"}
+    assert response.json() == {"detail": "academic sort requires a single phase filter"}
 
 
 def test_search_schools_returns_400_for_non_numeric_radius() -> None:

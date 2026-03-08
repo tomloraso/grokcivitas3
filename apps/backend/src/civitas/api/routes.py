@@ -58,8 +58,11 @@ from civitas.api.schemas.school_trends import (
     SchoolTrendsSeriesResponse,
 )
 from civitas.api.schemas.schools import (
+    PostcodeSchoolSearchItemResponse,
     SchoolNameSearchResponse,
+    SchoolSearchAcademicMetricResponse,
     SchoolSearchItemResponse,
+    SchoolSearchLatestOfstedResponse,
     SchoolsSearchCenterResponse,
     SchoolsSearchQueryResponse,
     SchoolsSearchResponse,
@@ -134,10 +137,17 @@ def list_tasks(
 def search_schools(
     postcode: str = Query(...),
     radius: float | None = Query(default=None),
+    phase: list[str] | None = Query(default=None),
+    sort: str | None = Query(default=None),
     use_case: SearchSchoolsByPostcodeUseCase = Depends(get_search_schools_by_postcode_use_case),
 ) -> SchoolsSearchResponse:
     try:
-        result = use_case.execute(postcode=postcode, radius_miles=radius)
+        result = use_case.execute(
+            postcode=postcode,
+            radius_miles=radius,
+            phases=tuple(phase) if phase is not None else None,
+            sort=sort,
+        )
     except InvalidSchoolSearchParametersError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except PostcodeNotFoundError as exc:
@@ -149,6 +159,8 @@ def search_schools(
         query=SchoolsSearchQueryResponse(
             postcode=result.query.postcode,
             radius_miles=result.query.radius_miles,
+            phases=list(result.query.phases),
+            sort=result.query.sort,
         ),
         center=SchoolsSearchCenterResponse(
             lat=result.center.lat,
@@ -156,7 +168,7 @@ def search_schools(
         ),
         count=result.count,
         schools=[
-            SchoolSearchItemResponse(
+            PostcodeSchoolSearchItemResponse(
                 urn=school.urn,
                 name=school.name,
                 type=school.school_type,
@@ -165,6 +177,19 @@ def search_schools(
                 lat=school.lat,
                 lng=school.lng,
                 distance_miles=school.distance_miles,
+                pupil_count=school.pupil_count,
+                latest_ofsted=SchoolSearchLatestOfstedResponse(
+                    label=school.latest_ofsted.label,
+                    sort_rank=school.latest_ofsted.sort_rank,
+                    availability=school.latest_ofsted.availability,
+                ),
+                academic_metric=SchoolSearchAcademicMetricResponse(
+                    metric_key=school.academic_metric.metric_key,
+                    label=school.academic_metric.label,
+                    display_value=school.academic_metric.display_value,
+                    sort_value=school.academic_metric.sort_value,
+                    availability=school.academic_metric.availability,
+                ),
             )
             for school in result.schools
         ],

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Create a pipeline-maintained Gold read model that supplies postcode search with shortlist-grade summary fields without hydrating full profiles on the request path.
+Create a pipeline-maintained Gold read model that supplies postcode search with results-analysis summary fields without hydrating full profiles on the request path.
 
 ## Projection Direction
 
@@ -14,7 +14,7 @@ Create a pipeline-maintained Gold read model that supplies postcode search with 
 
 - school identity: `urn`, `name`, `type`, `phase`, `postcode`
 - search geometry: `location` geography point suitable for radius search and distance calculation
-- shortlist fields:
+- results-analysis fields:
   - `pupil_count`
   - latest Ofsted label plus deterministic sort rank
   - one phase-aware academic headline metric label plus numeric sort value

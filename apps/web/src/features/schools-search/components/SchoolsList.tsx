@@ -10,12 +10,8 @@ import { ResultCard } from "../../../components/ui/ResultCard";
 import { useToast } from "../../../components/ui/ToastContext";
 import { useCompareSelection } from "../../../shared/context/CompareSelectionContext";
 import { paths } from "../../../shared/routing/paths";
+import type { SearchRestoreState } from "../../../shared/search/searchState";
 import type { SchoolsSearchStatus, SchoolSearchListItem } from "../types";
-
-interface SearchQuery {
-  postcode: string;
-  radius: number;
-}
 
 interface PhaseGroup {
   phase: string;
@@ -27,7 +23,7 @@ interface SchoolsListProps {
   schools: SchoolSearchListItem[];
   errorMessage: string | null;
   onRetry: () => Promise<void>;
-  searchContext?: SearchQuery;
+  searchContext?: SearchRestoreState;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
@@ -101,7 +97,7 @@ function PhaseGroupSection({
   renderCompareAction,
 }: {
   group: PhaseGroup;
-  searchContext?: SearchQuery;
+  searchContext?: SearchRestoreState;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
@@ -170,7 +166,7 @@ function ResultsList({
   renderCompareAction,
 }: {
   schools: SchoolSearchListItem[];
-  searchContext?: SearchQuery;
+  searchContext?: SearchRestoreState;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;

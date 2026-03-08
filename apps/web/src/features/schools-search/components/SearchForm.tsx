@@ -11,8 +11,7 @@ const RADIUS_OPTIONS = [
   { value: "1", label: "1 mile" },
   { value: "3", label: "3 miles" },
   { value: "5", label: "5 miles" },
-  { value: "10", label: "10 miles" },
-  { value: "25", label: "25 miles" }
+  { value: "10", label: "10 miles" }
 ];
 
 interface SearchFormProps {

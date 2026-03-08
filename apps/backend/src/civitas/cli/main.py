@@ -12,6 +12,7 @@ from civitas.bootstrap.container import (
     get_school_overview_use_case,
     list_tasks_use_case,
     materialize_school_benchmarks_use_case,
+    materialize_school_search_summaries_use_case,
     pipeline_runner,
     poll_school_analyst_batches_use_case,
     poll_school_overview_batches_use_case,
@@ -237,6 +238,17 @@ def materialize_benchmarks(
     use_case = materialize_school_benchmarks_use_case()
     materialized_rows = use_case.execute() if run_all else use_case.execute(urns=urn)
     typer.echo(f"Materialized {materialized_rows} benchmark rows.")
+
+
+@pipeline_app.command("materialize-search-summaries")
+def materialize_search_summaries(
+    run_all: bool = typer.Option(False, "--all"),
+) -> None:
+    if not run_all:
+        raise typer.BadParameter("Use --all to rebuild the postcode search summary projection.")
+
+    materialized_rows = materialize_school_search_summaries_use_case().execute()
+    typer.echo(f"Materialized {materialized_rows} search summary rows.")
 
 
 @data_quality_app.command("snapshot")

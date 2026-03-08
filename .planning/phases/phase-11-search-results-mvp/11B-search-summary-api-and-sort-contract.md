@@ -2,7 +2,7 @@
 
 ## Goal
 
-Extend postcode search so the API returns enriched shortlist rows and owns ranking semantics for the MVP results surface.
+Extend postcode search so the API returns enriched results rows and owns ranking semantics for the MVP results surface.
 
 ## API Direction
 
@@ -73,3 +73,4 @@ Extend postcode search so the API returns enriched shortlist rows and owns ranki
 - Frontend can render the full MVP postcode result row from one API response.
 - Sort order is deterministic and tested at the API boundary.
 - The contract makes mixed-phase academic sorting impossible rather than ambiguous.
+- The initial web MVP surfaces `closest` and `ofsted`; `academic` remains backend-capable but is not exposed in the first overlay controls.

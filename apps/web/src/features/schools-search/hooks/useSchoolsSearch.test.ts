@@ -20,7 +20,9 @@ const searchSchoolsByNameMock = vi.mocked(searchSchoolsByName);
 const postcodeResponse: SchoolsSearchResponse = {
   query: {
     postcode: "SW1A 1AA",
-    radius_miles: 5
+    radius_miles: 5,
+    phases: [],
+    sort: "closest"
   },
   center: {
     lat: 51.501009,
@@ -36,7 +38,20 @@ const postcodeResponse: SchoolsSearchResponse = {
       postcode: "NW1 8NH",
       lat: 51.5424,
       lng: -0.1418,
-      distance_miles: 0.52
+      distance_miles: 0.52,
+      pupil_count: 420,
+      latest_ofsted: {
+        label: "Good",
+        sort_rank: 2,
+        availability: "published"
+      },
+      academic_metric: {
+        metric_key: "ks2_combined_expected_pct",
+        label: "KS2 expected standard",
+        display_value: "67%",
+        sort_value: 67,
+        availability: "published"
+      }
     }
   ]
 };
@@ -89,7 +104,10 @@ describe("useSchoolsSearch", () => {
     expect(searchSchoolsMock).toHaveBeenCalledWith({ postcode: "SW1A 1AA", radius: 5 });
     expect(result.current.state.status).toBe("success");
     expect(result.current.state.result?.mode).toBe("postcode");
-    expect(result.current.state.result?.query?.postcode).toBe("SW1A 1AA");
+    if (result.current.state.result?.mode !== "postcode") {
+      throw new Error("Expected postcode search result");
+    }
+    expect(result.current.state.result.query.postcode).toBe("SW1A 1AA");
   });
 
   it("submits name search and stores name-mode result with query", async () => {
@@ -109,7 +127,10 @@ describe("useSchoolsSearch", () => {
     });
     expect(result.current.state.status).toBe("success");
     expect(result.current.state.result?.mode).toBe("name");
-    expect(result.current.state.result?.nameQuery).toBe("congleton high school");
+    if (result.current.state.result?.mode !== "name") {
+      throw new Error("Expected name search result");
+    }
+    expect(result.current.state.result.nameQuery).toBe("congleton high school");
   });
 
   it("clears stale postcode results when switching to name mode and shows name-specific errors", async () => {

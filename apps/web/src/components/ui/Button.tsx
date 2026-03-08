@@ -13,11 +13,13 @@ const buttonVariants = cva(
           "bg-brand-solid text-primary shadow-sm hover:bg-brand hover:text-primary active:bg-brand-solid",
         secondary:
           "border border-border bg-elevated text-primary hover:border-brand/60 hover:bg-brand/15",
-        ghost: "bg-transparent text-secondary hover:bg-elevated hover:text-primary"
+        ghost: "bg-transparent text-secondary hover:bg-elevated hover:text-primary",
+        compare: "btn-compare focus-visible:ring-0"
       },
       size: {
         default: "h-11 min-w-20 px-4 text-sm",
-        sm: "h-9 min-w-16 px-3 text-xs"
+        sm: "h-9 min-w-16 px-3 text-xs",
+        none: ""
       }
     },
     defaultVariants: {

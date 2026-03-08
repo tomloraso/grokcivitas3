@@ -3,6 +3,7 @@ import pytest
 from civitas.api.contract_checks import (
     validate_school_compare_response_contract,
     validate_school_profile_response_contract,
+    validate_schools_search_response_contract,
 )
 
 
@@ -49,6 +50,86 @@ def _openapi_with_compare_properties(properties: dict[str, object]) -> dict[str,
                         "cells": {},
                     },
                     "required": ["metric_key", "label", "unit", "cells"],
+                },
+            }
+        },
+    }
+
+
+def _openapi_with_search_properties(properties: dict[str, object]) -> dict[str, object]:
+    return {
+        "openapi": "3.1.0",
+        "components": {
+            "schemas": {
+                "SchoolsSearchResponse": {
+                    "type": "object",
+                    "properties": properties,
+                    "required": list(properties),
+                },
+                "SchoolsSearchQueryResponse": {
+                    "type": "object",
+                    "properties": {
+                        "postcode": {},
+                        "radius_miles": {},
+                        "phases": {},
+                        "sort": {},
+                    },
+                    "required": ["postcode", "radius_miles", "phases", "sort"],
+                },
+                "PostcodeSchoolSearchItemResponse": {
+                    "type": "object",
+                    "properties": {
+                        "urn": {},
+                        "name": {},
+                        "type": {},
+                        "phase": {},
+                        "postcode": {},
+                        "lat": {},
+                        "lng": {},
+                        "distance_miles": {},
+                        "pupil_count": {},
+                        "latest_ofsted": {},
+                        "academic_metric": {},
+                    },
+                    "required": [
+                        "urn",
+                        "name",
+                        "type",
+                        "phase",
+                        "postcode",
+                        "lat",
+                        "lng",
+                        "distance_miles",
+                        "pupil_count",
+                        "latest_ofsted",
+                        "academic_metric",
+                    ],
+                },
+                "SchoolSearchLatestOfstedResponse": {
+                    "type": "object",
+                    "properties": {
+                        "label": {},
+                        "sort_rank": {},
+                        "availability": {},
+                    },
+                    "required": ["label", "sort_rank", "availability"],
+                },
+                "SchoolSearchAcademicMetricResponse": {
+                    "type": "object",
+                    "properties": {
+                        "metric_key": {},
+                        "label": {},
+                        "display_value": {},
+                        "sort_value": {},
+                        "availability": {},
+                    },
+                    "required": [
+                        "metric_key",
+                        "label",
+                        "display_value",
+                        "sort_value",
+                        "availability",
+                    ],
                 },
             }
         },
@@ -185,3 +266,32 @@ def test_validate_school_compare_response_contract_rejects_missing_schema() -> N
         match="SchoolCompareResponse schema is missing",
     ):
         validate_school_compare_response_contract(openapi_schema)
+
+
+def test_validate_schools_search_response_contract_accepts_required_properties() -> None:
+    openapi_schema = _openapi_with_search_properties(
+        {
+            "query": {},
+            "center": {},
+            "count": {},
+            "schools": {},
+        }
+    )
+
+    validate_schools_search_response_contract(openapi_schema)
+
+
+def test_validate_schools_search_response_contract_rejects_missing_properties() -> None:
+    openapi_schema = _openapi_with_search_properties(
+        {
+            "query": {},
+            "count": {},
+            "schools": {},
+        }
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="SchoolsSearchResponse missing required properties: center",
+    ):
+        validate_schools_search_response_contract(openapi_schema)

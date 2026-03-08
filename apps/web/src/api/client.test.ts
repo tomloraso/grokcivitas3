@@ -6,11 +6,13 @@ import {
   getSchoolProfile,
   getSchoolTrendDashboard,
   getSchoolTrends,
-  prefetchSchoolProfile
+  prefetchSchoolProfile,
+  searchSchools
 } from "./client";
 import type {
   SchoolProfileResponse,
   SchoolTrendDashboardResponse,
+  SchoolsSearchResponse,
   SchoolTrendsResponse
 } from "./types";
 
@@ -48,6 +50,21 @@ const dashboardPayload = {
   urn: URN,
   sections: []
 } as unknown as SchoolTrendDashboardResponse;
+
+const searchPayload = {
+  query: {
+    postcode: "SW1A 1AA",
+    radius_miles: 5,
+    phases: ["primary"],
+    sort: "academic"
+  },
+  center: {
+    lat: 51.501009,
+    lng: -0.141588
+  },
+  count: 0,
+  schools: []
+} as unknown as SchoolsSearchResponse;
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -141,5 +158,24 @@ describe("api client school endpoint cache", () => {
     await expect(getSchoolTrends(URN)).resolves.toEqual(trendsPayload);
     await expect(getSchoolTrendDashboard(URN)).resolves.toEqual(dashboardPayload);
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("serializes postcode results filters into repeated query params", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(searchPayload));
+
+    await expect(
+      searchSchools({
+        postcode: "SW1A 1AA",
+        radius: 5,
+        phase: ["primary", "secondary"],
+        sort: "ofsted"
+      })
+    ).resolves.toEqual(searchPayload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(
+      "/api/v1/schools?postcode=SW1A+1AA&radius=5&phase=primary&phase=secondary&sort=ofsted"
+    );
   });
 });

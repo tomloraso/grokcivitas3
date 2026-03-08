@@ -33,6 +33,7 @@ from civitas.application.school_trends.use_cases import (
     MaterializeSchoolBenchmarksUseCase,
 )
 from civitas.application.schools.use_cases import (
+    MaterializeSchoolSearchSummariesUseCase,
     SearchSchoolsByNameUseCase,
     SearchSchoolsByPostcodeUseCase,
 )
@@ -99,6 +100,13 @@ _BENCHMARK_AFFECTING_PIPELINE_SOURCES = frozenset(
         PipelineSource.ONS_IMD,
         PipelineSource.UK_HOUSE_PRICES,
         PipelineSource.POLICE_CRIME_CONTEXT,
+    }
+)
+_SEARCH_SUMMARY_AFFECTING_PIPELINE_SOURCES = frozenset(
+    {
+        PipelineSource.GIAS,
+        PipelineSource.DFE_PERFORMANCE,
+        PipelineSource.OFSTED_LATEST,
     }
 )
 
@@ -278,6 +286,12 @@ def search_schools_by_name_use_case() -> SearchSchoolsByNameUseCase:
     )
 
 
+def materialize_school_search_summaries_use_case() -> MaterializeSchoolSearchSummariesUseCase:
+    return MaterializeSchoolSearchSummariesUseCase(
+        school_search_summary_materializer=school_search_repository(),
+    )
+
+
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return GetSchoolProfileUseCase(
         school_profile_repository=school_profile_repository(),
@@ -407,6 +421,8 @@ def data_quality_slo_check_use_case() -> RunDataQualitySloCheckUseCase:
 
 
 def _materialize_benchmarks_after_pipeline_success(context: PipelineRunContext) -> None:
+    if context.source in _SEARCH_SUMMARY_AFFECTING_PIPELINE_SOURCES:
+        materialize_school_search_summaries_use_case().execute()
     if context.source not in _BENCHMARK_AFFECTING_PIPELINE_SOURCES:
         return
     materialize_school_benchmarks_use_case().execute()

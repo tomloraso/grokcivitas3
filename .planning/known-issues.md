@@ -62,7 +62,7 @@ The resolver treated cache freshness as a hard requirement for lookup reuse. Tha
 
 ## BUG-003 - Compare test: underfilled state not reached after school removal
 
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** Low (test-only — UI behaviour correct in browser)
 **Introduced:** commit `9cd9525` (feat: add school compare flow)
 **Detected:** 2026-03-08, quality-gate run following phase 7 UX overhaul commit

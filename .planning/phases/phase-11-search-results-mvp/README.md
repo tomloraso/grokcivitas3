@@ -11,7 +11,7 @@
 
 This folder contains implementation-ready planning for the MVP refinement of the main postcode-search experience.
 
-Phase 11 should turn postcode-mode results from a browse-first card list into a fast shortlist-building surface: a server-ranked desktop decision table, stacked mobile result cards, and direct compare/detail entry points.
+Phase 11 should keep postcode search map-first while adding a fast results-analysis mode over the same result set: a route-backed overlay with a server-ranked desktop decision table, stacked mobile result cards, and direct compare/detail entry points.
 
 ## Delivery Model
 
@@ -32,7 +32,7 @@ Phase 11 is split into four deliverables:
 ## Definition Of Done
 
 - Postcode search returns an enriched, server-ordered result set backed by a pipeline-maintained read model.
-- Desktop postcode mode shows a shortlist-friendly results table with the agreed MVP columns.
-- Mobile postcode mode shows the same signals in stacked cards without forcing a wide horizontal table.
-- Users can filter by primary and secondary, switch among the agreed MVP sorts, add schools to compare, and open detail pages.
+- Desktop postcode mode keeps the existing map + sidebar search journey and adds a results overlay with the agreed MVP table columns.
+- Mobile postcode mode opens the same results overlay as a full-screen analysis sheet with stacked result cards.
+- Users can filter by primary and secondary, switch between `closest` and `ofsted`, add schools to compare, and open detail pages.
 - Request-time work is limited to postcode resolution, geo filtering, distance calculation, and final ordering.

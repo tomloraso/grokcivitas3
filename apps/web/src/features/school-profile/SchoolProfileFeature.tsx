@@ -8,6 +8,7 @@ import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { paths } from "../../shared/routing/paths";
+import type { SearchRestoreState } from "../../shared/search/searchState";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
 import { SchoolAnalystSection } from "./components/SchoolAnalystSection";
 import { AttendanceBehaviourSection } from "./components/AttendanceBehaviourSection";
@@ -24,7 +25,7 @@ export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
   const location = useLocation();
   const routeState = location.state as {
-    fromSearch?: { postcode: string; radius: number };
+    fromSearch?: SearchRestoreState;
     fromCompare?: { href: string };
   } | null;
   const fromSearch = routeState?.fromSearch;
@@ -83,7 +84,11 @@ export function SchoolProfileFeature(): JSX.Element {
                 ? [
                     {
                       label: `${fromSearch.postcode} - ${fromSearch.radius} mi`,
-                      href: paths.home,
+                      href: paths.homeSearch({
+                        view: fromSearch.view,
+                        resultsPhases: fromSearch.resultsPhases,
+                        resultsSort: fromSearch.resultsSort,
+                      }),
                       state: { restoreSearch: fromSearch }
                     }
                   ]
@@ -102,9 +107,10 @@ export function SchoolProfileFeature(): JSX.Element {
               areaContext={profile.areaContext}
               actions={
                 <>
-                  <button
+                  <Button
                     type="button"
-                    className="btn-compare"
+                    variant="compare"
+                    size="none"
                     onClick={() => {
                       if (selected) {
                         removeSchool(profile.school.urn);
@@ -129,11 +135,11 @@ export function SchoolProfileFeature(): JSX.Element {
                     }}
                   >
                     {selected ? "Remove from compare" : "Add to compare"}
-                  </button>
+                  </Button>
                   {items.length >= 2 ? (
-                    <Link to={paths.compare(items.map((item) => item.urn))} className="btn-compare">
-                      Open compare
-                    </Link>
+                    <Button asChild variant="compare" size="none">
+                      <Link to={paths.compare(items.map((item) => item.urn))}>Open compare</Link>
+                    </Button>
                   ) : null}
                 </>
               }

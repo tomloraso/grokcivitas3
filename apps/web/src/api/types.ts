@@ -17,7 +17,18 @@ export type CreateTaskRequest = components["schemas"]["TaskCreateRequest"];
 
 export type SchoolsSearchResponse = components["schemas"]["SchoolsSearchResponse"];
 
-export type SchoolSearchResultItem = components["schemas"]["SchoolSearchItemResponse"];
+export type PostcodeSchoolSearchResultItem =
+  components["schemas"]["PostcodeSchoolSearchItemResponse"];
+
+export type SchoolNameSearchResultItem = components["schemas"]["SchoolSearchItemResponse"];
+
+export type SchoolSearchResultItem = SchoolNameSearchResultItem;
+
+export type SchoolSearchAcademicMetric =
+  components["schemas"]["SchoolSearchAcademicMetricResponse"];
+
+export type SchoolSearchLatestOfsted =
+  components["schemas"]["SchoolSearchLatestOfstedResponse"];
 
 export type SchoolNameSearchResponse = components["schemas"]["SchoolNameSearchResponse"];
 

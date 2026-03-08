@@ -230,6 +230,29 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** PostcodeSchoolSearchItemResponse */
+        PostcodeSchoolSearchItemResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Distance Miles */
+            distance_miles: number;
+            /** Pupil Count */
+            pupil_count: number | null;
+            latest_ofsted: components["schemas"]["SchoolSearchLatestOfstedResponse"];
+            academic_metric: components["schemas"]["SchoolSearchAcademicMetricResponse"];
+        };
         /** SchoolCompareBenchmarkResponse */
         SchoolCompareBenchmarkResponse: {
             /** Academic Year */
@@ -911,6 +934,19 @@ export interface components {
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: number | null;
         };
+        /** SchoolSearchAcademicMetricResponse */
+        SchoolSearchAcademicMetricResponse: {
+            /** Metric Key */
+            metric_key: string | null;
+            /** Label */
+            label: string | null;
+            /** Display Value */
+            display_value: string | null;
+            /** Sort Value */
+            sort_value: number | null;
+            /** Availability */
+            availability: string;
+        };
         /** SchoolSearchItemResponse */
         SchoolSearchItemResponse: {
             /** Urn */
@@ -929,6 +965,15 @@ export interface components {
             lng: number;
             /** Distance Miles */
             distance_miles: number;
+        };
+        /** SchoolSearchLatestOfstedResponse */
+        SchoolSearchLatestOfstedResponse: {
+            /** Label */
+            label: string | null;
+            /** Sort Rank */
+            sort_rank: number | null;
+            /** Availability */
+            availability: string;
         };
         /** SchoolTrendBenchmarkPointResponse */
         SchoolTrendBenchmarkPointResponse: {
@@ -1153,6 +1198,10 @@ export interface components {
             postcode: string;
             /** Radius Miles */
             radius_miles: number;
+            /** Phases */
+            phases: string[];
+            /** Sort */
+            sort: string;
         };
         /** SchoolsSearchResponse */
         SchoolsSearchResponse: {
@@ -1161,7 +1210,7 @@ export interface components {
             /** Count */
             count: number;
             /** Schools */
-            schools: components["schemas"]["SchoolSearchItemResponse"][];
+            schools: components["schemas"]["PostcodeSchoolSearchItemResponse"][];
         };
         /** SessionResponse */
         SessionResponse: {
@@ -1401,6 +1450,8 @@ export interface operations {
             query: {
                 postcode: string;
                 radius?: number | null;
+                phase?: string[] | null;
+                sort?: string | null;
             };
             header?: never;
             path?: never;
