@@ -40,6 +40,7 @@ Freeze the MVP cutline for the postcode-results-table phase and define the sign-
   - sort explanation copy
   - close or back-to-map behavior
   - compare interaction from results
+  - results-to-profile navigation preserving the active results-mode context
 - end-to-end coverage for:
   - postcode search success path
   - no-results path

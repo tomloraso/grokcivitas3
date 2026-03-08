@@ -73,14 +73,20 @@ function getRankingExplanation(result: PostcodeSearchResult): string {
   return `Sorted by distance from ${result.query.postcode}.`;
 }
 
-function buildRestoreState(
-  result: PostcodeSearchResult,
-  phases: readonly SearchPhaseFilter[],
-  sort: SearchSortMode,
-): SearchRestoreState {
+function buildRestoreState({
+  postcode,
+  radiusMiles,
+  phases,
+  sort,
+}: {
+  postcode: string;
+  radiusMiles: number;
+  phases: readonly SearchPhaseFilter[];
+  sort: SearchSortMode;
+}): SearchRestoreState {
   return {
-    postcode: result.query.postcode,
-    radius: result.query.radius_miles,
+    postcode,
+    radius: radiusMiles,
     view: "results",
     resultsPhases: [...phases],
     resultsSort: sort,
@@ -145,18 +151,27 @@ function SortToggle({
 
 function ResultsTable({
   result,
+  phases,
+  sort,
   activeSchoolId,
   onSchoolHover,
   onPreviewSchool,
 }: {
   result: PostcodeSearchResult;
+  phases: readonly SearchPhaseFilter[];
+  sort: SearchSortMode;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
 }): JSX.Element {
   const { toast } = useToast();
   const { addSchool, count, hasSchool, removeSchool } = useCompareSelection();
-  const restoreState = buildRestoreState(result, result.query.phases, result.query.sort);
+  const restoreState = buildRestoreState({
+    postcode: result.query.postcode,
+    radiusMiles: result.query.radius_miles,
+    phases,
+    sort,
+  });
 
   return (
     <div className="overflow-x-auto">
@@ -281,18 +296,27 @@ function ResultsTable({
 
 function ResultsCards({
   result,
+  phases,
+  sort,
   activeSchoolId,
   onSchoolHover,
   onPreviewSchool,
 }: {
   result: PostcodeSearchResult;
+  phases: readonly SearchPhaseFilter[];
+  sort: SearchSortMode;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
 }): JSX.Element {
   const { toast } = useToast();
   const { addSchool, count, hasSchool, removeSchool } = useCompareSelection();
-  const restoreState = buildRestoreState(result, result.query.phases, result.query.sort);
+  const restoreState = buildRestoreState({
+    postcode: result.query.postcode,
+    radiusMiles: result.query.radius_miles,
+    phases,
+    sort,
+  });
 
   return (
     <div className="space-y-3">
@@ -620,6 +644,8 @@ export function ResultsOverlay({
               isMobile ? (
                 <ResultsCards
                   result={result}
+                  phases={phases}
+                  sort={sort}
                   activeSchoolId={activeSchoolId}
                   onSchoolHover={onSchoolHover}
                   onPreviewSchool={onPreviewSchool}
@@ -627,6 +653,8 @@ export function ResultsOverlay({
               ) : (
                 <ResultsTable
                   result={result}
+                  phases={phases}
+                  sort={sort}
                   activeSchoolId={activeSchoolId}
                   onSchoolHover={onSchoolHover}
                   onPreviewSchool={onPreviewSchool}
