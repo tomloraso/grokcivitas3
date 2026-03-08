@@ -6,6 +6,12 @@ Introduce authenticated user context and stable Civitas-managed sessions without
 
 Stage 10A is not complete until the backend can answer one question on every request: who is the current Civitas user, if any?
 
+## Sequencing Note
+
+- This document can be implemented before `10G-premium-access-matrix.md` when the active scope is identity and session handling only.
+- `10G` is not required to ship the login foundation itself because this slice does not yet evaluate premium capabilities or paywall states.
+- Once session state starts driving entitlement checks or premium-aware responses, `10G` becomes an input again.
+
 ## Scope
 
 ### Backend
@@ -73,6 +79,12 @@ Infrastructure responsibilities:
 - map provider payloads into internal `AuthIdentity` records
 - persist and revoke app sessions
 - set or clear session cookies at the API boundary
+- keep the `development` adapter available as a permanent local or test-only fallback for callback and session verification
+- fail fast in staging or production configuration if the `development` adapter is selected
+
+Provider note:
+
+- Auth0-specific adapter work is planned separately so this document can stay focused on provider-agnostic session foundations and current-user resolution.
 
 ### API
 

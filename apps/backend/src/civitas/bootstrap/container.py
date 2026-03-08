@@ -1,5 +1,13 @@
+from datetime import timedelta
 from functools import lru_cache
 
+from civitas.application.identity.ports.identity_provider import IdentityProvider
+from civitas.application.identity.use_cases import (
+    CompleteAuthCallbackUseCase,
+    GetCurrentSessionUseCase,
+    SignOutUseCase,
+    StartSignInUseCase,
+)
 from civitas.application.operations.use_cases import (
     DataQualitySloConfig,
     EvaluateDataQualityAlertsUseCase,
@@ -30,6 +38,8 @@ from civitas.application.schools.use_cases import (
 )
 from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseCase
 from civitas.infrastructure.ai.provider_factory import build_summary_generator
+from civitas.infrastructure.auth.provider_factory import build_identity_provider
+from civitas.infrastructure.auth.signed_auth_flow_state_codec import SignedAuthFlowStateCodec
 from civitas.infrastructure.config.settings import AppSettings, get_settings
 from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
 from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
@@ -39,6 +49,9 @@ from civitas.infrastructure.persistence.cached_school_profile_repository import 
 )
 from civitas.infrastructure.persistence.database import db_engine
 from civitas.infrastructure.persistence.in_memory_task_repository import InMemoryTaskRepository
+from civitas.infrastructure.persistence.postgres_auth_attempt_repository import (
+    PostgresAuthAttemptRepository,
+)
 from civitas.infrastructure.persistence.postgres_data_quality_repository import (
     PostgresDataQualityRepository,
 )
@@ -54,11 +67,17 @@ from civitas.infrastructure.persistence.postgres_school_search_repository import
 from civitas.infrastructure.persistence.postgres_school_trends_repository import (
     PostgresSchoolTrendsRepository,
 )
+from civitas.infrastructure.persistence.postgres_session_repository import (
+    PostgresSessionRepository,
+)
 from civitas.infrastructure.persistence.postgres_summary_context_repository import (
     PostgresSummaryContextRepository,
 )
 from civitas.infrastructure.persistence.postgres_summary_repository import (
     PostgresSummaryRepository,
+)
+from civitas.infrastructure.persistence.postgres_user_repository import (
+    PostgresUserRepository,
 )
 from civitas.infrastructure.pipelines import pipeline_registry
 from civitas.infrastructure.pipelines.base import (
@@ -100,6 +119,71 @@ def list_tasks_use_case() -> ListTasksUseCase:
 @lru_cache(maxsize=1)
 def app_settings() -> AppSettings:
     return get_settings()
+
+
+@lru_cache(maxsize=1)
+def user_repository() -> PostgresUserRepository:
+    settings = app_settings()
+    return PostgresUserRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def session_repository() -> PostgresSessionRepository:
+    settings = app_settings()
+    return PostgresSessionRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def auth_attempt_repository() -> PostgresAuthAttemptRepository:
+    settings = app_settings()
+    return PostgresAuthAttemptRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def auth_flow_state_codec() -> SignedAuthFlowStateCodec:
+    settings = app_settings()
+    return SignedAuthFlowStateCodec(
+        shared_secret=settings.auth.shared_secret,
+        ttl=timedelta(minutes=settings.auth.state_ttl_minutes),
+    )
+
+
+@lru_cache(maxsize=1)
+def identity_provider() -> IdentityProvider:
+    return build_identity_provider(app_settings())
+
+
+def start_sign_in_use_case() -> StartSignInUseCase:
+    settings = app_settings()
+    return StartSignInUseCase(
+        identity_provider=identity_provider(),
+        auth_flow_state_codec=auth_flow_state_codec(),
+        auth_attempt_repository=auth_attempt_repository(),
+        auth_attempt_ttl=timedelta(minutes=settings.auth.state_ttl_minutes),
+    )
+
+
+def complete_auth_callback_use_case() -> CompleteAuthCallbackUseCase:
+    settings = app_settings()
+    return CompleteAuthCallbackUseCase(
+        identity_provider=identity_provider(),
+        auth_flow_state_codec=auth_flow_state_codec(),
+        auth_attempt_repository=auth_attempt_repository(),
+        user_repository=user_repository(),
+        session_repository=session_repository(),
+        session_ttl=timedelta(hours=settings.auth.session_ttl_hours),
+    )
+
+
+def get_current_session_use_case() -> GetCurrentSessionUseCase:
+    return GetCurrentSessionUseCase(
+        user_repository=user_repository(),
+        session_repository=session_repository(),
+    )
+
+
+def sign_out_use_case() -> SignOutUseCase:
+    return SignOutUseCase(session_repository=session_repository())
 
 
 @lru_cache(maxsize=1)

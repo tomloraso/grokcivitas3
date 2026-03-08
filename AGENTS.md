@@ -18,7 +18,8 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 7. **Enforce inward imports.** Domain has zero outward dependencies; infrastructure depends on application/domain ports; entrypoints (`api`, `cli`) stay thin and bootstrap handles composition.
 8. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
 9. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
-10. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved. Keep benchmark cache materialization (`metric_benchmarks_yearly`) on the post-promote/manual workflow, not on the web request path.
+10. **For auth/session foundation work, read `docs/runbooks/auth-development-provider.md` and `.agents/auth.md`.** Keep the development provider local/test-only and keep origin/cookie guardrails documented.
+11. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved. Keep benchmark cache materialization (`metric_benchmarks_yearly`) on the post-promote/manual workflow, not on the web request path.
 
 ## Agent guides
 
@@ -26,6 +27,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 |------|-------|
 | Architecture | [.agents/architecture.md](.agents/architecture.md) |
 | Workflow | [.agents/workflow.md](.agents/workflow.md) |
+| Auth | [.agents/auth.md](.agents/auth.md) |
 | Tooling | [.agents/tooling.md](.agents/tooling.md) |
 | Testing | [.agents/testing.md](.agents/testing.md) |
 | Repo structure | [.agents/repo-structure.md](.agents/repo-structure.md) |

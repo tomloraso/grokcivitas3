@@ -6,8 +6,10 @@ import { SiteFooter } from "../components/layout/SiteFooter";
 import { SkipToContent } from "../components/layout/SkipToContent";
 import { ToastProvider } from "../components/ui/Toast";
 import { TooltipProvider } from "../components/ui/Tooltip";
+import { useTheme } from "./providers/useTheme";
 import { CompareSelectionProvider } from "../shared/context/CompareSelectionContext";
 import { SearchContextProvider } from "../shared/context/SearchContext";
+import { useAuth } from "../features/auth/useAuth";
 import { RouteTransition } from "./RouteTransition";
 import { paths } from "../shared/routing/paths";
 
@@ -19,6 +21,8 @@ import { paths } from "../shared/routing/paths";
 export function RootLayout(): JSX.Element {
   const location = useLocation();
   const isMapPage = location.pathname === paths.home;
+  const { session, signOut } = useAuth();
+  const { mode, cycleMode } = useTheme();
 
   return (
     <SearchContextProvider>
@@ -27,7 +31,13 @@ export function RootLayout(): JSX.Element {
           <ToastProvider>
             <AppShell>
               <SkipToContent />
-              <SiteHeader />
+              <SiteHeader
+                accountEmail={session.user?.email ?? null}
+                isAuthenticated={session.state === "authenticated"}
+                onSignOut={() => void signOut()}
+                themeMode={mode}
+                onCycleTheme={cycleMode}
+              />
               <main id="main-content">
                 <RouteTransition>
                   <Outlet />

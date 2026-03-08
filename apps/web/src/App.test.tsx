@@ -5,6 +5,8 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import { runA11yAudit } from "./test/accessibility";
 import { ThemeProvider } from "./app/providers/ThemeProvider";
+import { AuthProvider } from "./features/auth/AuthProvider";
+import { ANONYMOUS_SESSION } from "./features/auth/types";
 
 vi.mock("./components/maps/MapPanelChromeless", () => ({
   MapPanelChromeless: ({ markers }: { markers: Array<{ id: string }> }) => (
@@ -41,7 +43,13 @@ async function renderAppAtRoute(initialEntry = "/") {
     { initialEntries: [initialEntry] }
   );
 
-  return render(<ThemeProvider><RouterProvider router={router} /></ThemeProvider>);
+  return render(
+    <ThemeProvider>
+      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </ThemeProvider>
+  );
 }
 
 describe("App", () => {

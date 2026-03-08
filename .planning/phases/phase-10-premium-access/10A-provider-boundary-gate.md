@@ -18,7 +18,7 @@ This gate exists so implementation does not drift into provider-specific logic i
 
 - Launch premium should be account-level, not postcode-level or geography-level.
 - The launch SKU may be one premium plan or a small number of premium plans, but each plan must resolve to a defined capability bundle.
-- The exact free versus premium split belongs in `10G-premium-access-matrix.md` and must be frozen before Stage 10B starts.
+- The exact free versus premium split belongs in `10G-premium-access-matrix.md` and must be frozen before entitlement modelling, billing wiring, or premium-aware API enforcement starts.
 - Packaging remains open, but the backend model should support time-bound access windows and future plan variation without redesign.
 
 ### Free Versus Premium Boundary
@@ -26,12 +26,20 @@ This gate exists so implementation does not drift into provider-specific logic i
 - Search, profile, trends, and compare remain available in the free product.
 - Premium should unlock higher-value sections, deeper analysis, richer compare behavior, premium AI artifacts, or other advanced workflow features.
 - Premium boundaries should be explained section-by-section, not inferred from whether a route is public or private.
+- Locked premium sections should use a blur-with-teaser pattern so the user can see that valuable, school-specific content exists behind the boundary. Empty states or removed sections are not acceptable paywall signals.
+- CTA copy at premium boundaries must be contextual and school-specific, not generic platform-upgrade language.
 - The matrix must define whether premium affects:
   - additional sections
   - deeper history or benchmark views
   - advanced compare features
   - premium AI artifacts
   - future export or saved-workflow features
+
+### Premium Branding
+
+- The paid consumer tier is called `Premium`. All user-facing copy, route names, CTA labels, and design assets must use `Premium`.
+- `Pro` is reserved for a future B2B tier. Do not use `Pro` in Phase 10.
+- Premium status in the UI should be communicated through ambient quality cues (quiet header label, thin accent borders on unlocked sections), not badges, banners, or promotional elements.
 
 ### Identity And Checkout Preconditions
 
@@ -47,6 +55,7 @@ This gate exists so implementation does not drift into provider-specific logic i
 - Civitas should own the app session after provider verification.
 - The provider is responsible for email challenge delivery and identity proof.
 - Civitas is responsible for internal user records, session persistence, and session cookie issuance.
+- Until the selected managed provider is implemented, a development-only adapter may exist for local or test verification of callback and session plumbing, but it must be configuration-gated so staging and production cannot boot against it.
 
 Why this pattern:
 
@@ -68,9 +77,18 @@ Why this pattern:
 - supports staging and production parity
 - keeps purchase fulfillment backend-owned
 
-## Current Auth Provider Shortlist
+## Frozen Auth Provider Decision
 
-Pricing snapshot date: 2026-03-07. Re-check before any commercial commitment.
+Decision date: 2026-03-08
+
+- `Auth0` is the selected external auth provider for the next implementation stage.
+- `Auth0` is responsible for upstream email challenge delivery and identity proof only.
+- Civitas remains responsible for internal user records, `AuthIdentity` mapping, session persistence, and the first-party session cookie.
+- The `development` provider remains an approved local or test-only fallback for callback and session plumbing after Auth0 is adopted. It must remain rejected outside `local` or `test`, and it must remain blocked when any non-loopback allowed origin is configured.
+
+## Auth Provider Evaluation Record
+
+Pricing snapshot date: 2026-03-08. Re-check before any commercial commitment.
 
 | Provider | Public pricing snapshot | Pros | Cons | Fit for Civitas |
 |---|---|---|---|---|
@@ -91,17 +109,18 @@ The auth decision should be signed off against these criteria, not headline pric
 6. Cost predictability from launch through early growth, especially between 10,000 and 100,000 active users
 7. Contract, DPA, and UK or EU privacy review before procurement
 
-## Recommendation
+## Decision Rationale
 
-### Recommended Default
+### Selected Provider
 
-- Shortlist `Auth0` as the default recommendation for implementation planning.
+- Select `Auth0` as the provider to implement next.
 
 Reasoning:
 
 - It is the cleanest match for the current Civitas architecture plan: external identity proof plus first-party Civitas session.
 - It offers mature passwordless support, custom domains, and account-linking controls without forcing the frontend to become provider-owned.
 - It is more expensive than some alternatives, but the operational model is conservative and well understood.
+- It supports the planned provider boundary without changing the existing Phase 10 assumption that the backend callback, not the frontend, completes provider verification and issues the Civitas session.
 
 ### Strong Alternatives
 
@@ -112,6 +131,12 @@ Reasoning:
 ### Deferred Option
 
 - Do not add a self-hosted auth path to the MVP shortlist unless the team explicitly decides to own passwordless delivery, abuse protection, account recovery, and auth compliance in-house.
+
+## Immediate Follow-On Planning Decision
+
+- Add a dedicated Auth0 provider-plugin plan before entitlement, billing, or premium-boundary work resumes.
+- That plan should target an Auth0-backed infrastructure adapter behind the existing `IdentityProvider` port rather than introducing Auth0 concerns into domain, application, or web feature modules.
+- The local or test-only `development` provider remains in scope after the Auth0 adapter lands so the repo still has a no-provider development path for local verification and automated tests.
 
 ## Required Architecture Boundaries
 
@@ -158,8 +183,13 @@ Exact path names may change, but the shape should remain:
 2. Chosen payment-provider pattern and webhook flow
 3. Agreed internal premium product, capability, and entitlement names
 4. Reserved API route families
-5. `10G-premium-access-matrix.md` frozen as the free-baseline versus premium-feature source of truth
+5. `10G-premium-access-matrix.md` frozen as the free-baseline versus premium-feature source of truth before access and billing work starts
 6. Documented fallback behavior for provider outage, expired session, and duplicate webhook delivery
+
+## Sequencing Note
+
+- The initial user-auth implementation may proceed after this gate without `10G` if the scope is limited to identity, callback handling, and Civitas-managed sessions.
+- Once the backend starts modelling entitlements or the web starts rendering premium-aware surfaces, `10G` becomes a hard prerequisite again.
 
 ## Acceptance Criteria
 

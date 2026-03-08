@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-07
+- Last updated: 2026-03-08
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 
@@ -21,6 +21,7 @@ The original Phase 10 plan treated premium as a postcode-area unlock. That model
 ## Product Baseline For Planning
 
 - Premium is account-level, not geography-level.
+- The paid consumer tier is called `Premium`. `Pro` is reserved for a future B2B tier. All user-facing copy, code identifiers, and design assets must use `Premium`.
 - Core search, profile, trends, and compare journeys remain available in the free product.
 - Premium unlocks additional sections, deeper analysis, premium AI artifacts, and other advanced workflow features defined in `10G-premium-access-matrix.md`.
 - The exact free versus premium split is a prerequisite planning artifact for Stage 10B and should not be inferred ad hoc during implementation.
@@ -28,6 +29,18 @@ The original Phase 10 plan treated premium as a postcode-area unlock. That model
 - The launch premium bundle remains limited to the two capabilities frozen in `10G`; do not expand Stage 10 scope by implicitly monetizing other surfaces.
 - The premium benchmark surface is the dedicated drill-down dashboard, not the inline benchmark cues already embedded in the free profile experience.
 - Premium-sensitive contracts must distinguish `locked` from `unavailable` or `not_published`; missing JSON alone is not an acceptable paywall signal.
+- Locked premium sections use a blur-with-teaser pattern with backend-supplied teaser content and contextual, school-specific CTAs. Empty states and generic upgrade prompts are not acceptable.
+- Premium status in the UI is communicated through ambient design cues (quiet header label, thin accent borders), not badges, banners, or promotional elements.
+
+## Current Sequencing Decision
+
+- Date: 2026-03-08
+- The first implementation slice for Phase 10 is limited to user identity, sign-in, callback handling, and Civitas-managed sessions.
+- `10G-premium-access-matrix.md` is explicitly deferred for this identity-only slice.
+- `Auth0` is the selected managed provider for the next auth implementation slice.
+- The codebase may carry a local-only development identity adapter to exercise the callback and session flow alongside the Auth0 plugin, but staging and production remain blocked from using it.
+- `10G` becomes mandatory before entitlement modelling, billing wiring, or premium-aware API and web enforcement starts.
+- `10B1`, `10C`, `10D`, `10E`, and `10F` remain downstream of the auth/session foundation.
 
 ## Delivery Stages
 
@@ -38,7 +51,9 @@ Deliverables:
 1. `10G-premium-access-matrix.md` (freeze before backend access modelling)
 2. `10A-provider-boundary-gate.md`
 3. `10B-auth-session-foundation.md`
-4. `10C-entitlements-domain-and-persistence.md`
+4. `10B1-auth0-provider-plugin.md`
+5. `10B2-auth-pkce-hardening.md`
+6. `10C-entitlements-domain-and-persistence.md`
 
 Stage 10A exit outcome:
 
@@ -115,13 +130,15 @@ Stage 10B exit outcome:
 
 ## Execution Sequence
 
-1. Freeze `10G` first so product boundaries are explicit before architecture or billing work starts.
-2. Complete `10A` to freeze provider, packaging, and callback decisions.
-3. Complete `10B` to establish internal account and session handling.
-4. Complete `10C` to model premium products, capability grants, and access evaluation before any payment wiring exists.
-5. Complete `10D` to add checkout, provider callbacks, and idempotent fulfillment.
-6. Complete `10E` to wire premium boundaries into search, profile, trends, compare, and premium AI contracts plus web paywall UX.
-7. Complete `10F` to close both stages with architecture, security, staging, and acceptance evidence.
+1. Complete `10A` to freeze provider, packaging, and callback decisions for the identity slice.
+2. Complete `10B` to establish internal account and session handling.
+3. Complete `10B1` to implement the selected Auth0 provider adapter without changing the Civitas-owned session boundary.
+4. Complete `10B2` to add PKCE hardening to the Auth0 authorization-code flow without changing Civitas session ownership.
+5. Freeze `10G` before any entitlement, billing, or premium-surface enforcement work begins.
+6. Complete `10C` to model premium products, capability grants, and access evaluation before any payment wiring exists.
+7. Complete `10D` to add checkout, provider callbacks, and idempotent fulfillment.
+8. Complete `10E` to wire premium boundaries into search, profile, trends, compare, and premium AI contracts plus web paywall UX.
+9. Complete `10F` to close both stages with architecture, security, staging, and acceptance evidence.
 
 ## Definition Of Done
 

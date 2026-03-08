@@ -3,6 +3,7 @@ import { createBrowserRouter, type RouteObject } from "react-router-dom";
 
 import { PageContainer } from "../components/layout/PageContainer";
 import { LoadingSkeleton } from "../components/ui/LoadingSkeleton";
+import { SignInFeature } from "../features/auth/SignInFeature";
 import { RootLayout } from "./RootLayout";
 import { SchoolsSearchFeature } from "../features/schools-search/SchoolsSearchFeature";
 import { NotFoundPage } from "../pages/NotFoundPage";
@@ -24,6 +25,10 @@ const routes: RouteObject[] = [
       {
         index: true,
         element: <SchoolsSearchFeature />
+      },
+      {
+        path: "sign-in",
+        element: <SignInFeature />
       },
       {
         path: "compare",

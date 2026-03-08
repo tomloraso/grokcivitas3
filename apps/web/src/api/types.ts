@@ -1,7 +1,15 @@
 import type { components, operations } from "./generated-types";
 
+export type AuthStartRequest = components["schemas"]["AuthStartRequest"];
+
+export type AuthStartResponse = components["schemas"]["AuthStartResponse"];
+
 export type HealthResponse =
   operations["health_api_v1_health_get"]["responses"][200]["content"]["application/json"];
+
+export type SessionResponse = components["schemas"]["SessionResponse"];
+
+export type SessionUser = components["schemas"]["SessionUserResponse"];
 
 export type Task = components["schemas"]["TaskResponse"];
 

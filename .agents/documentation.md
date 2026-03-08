@@ -14,6 +14,7 @@
 5. For benchmark cache workflow changes, document when `metric_benchmarks_yearly` is rebuilt,
    keep the request path read-only, and update `.agents/pipelines.md` alongside
    `docs/runbooks/pipelines.md`.
+6. For auth/session foundation changes, update `docs/runbooks/auth-development-provider.md` and keep local/test provider guardrails current.
 
 ## Required pages
 
@@ -24,3 +25,7 @@
 - `docs/architecture/frontend-conventions.md`
 - `docs/architecture/testing-strategy.md`
 - `docs/runbooks/pipelines.md`
+
+## Task-specific pages
+
+- Auth/session foundation: `docs/runbooks/auth-development-provider.md`

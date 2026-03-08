@@ -6,16 +6,29 @@ import { useCompareSelection } from "../../shared/context/CompareSelectionContex
 import { useSearchContext } from "../../shared/context/SearchContext";
 import { readCompareUrlState } from "../../shared/routing/compareUrns";
 import { paths } from "../../shared/routing/paths";
-import { useTheme } from "../../app/providers/useTheme";
+import type { ThemeMode } from "../../shared/theme/theme-mode";
 import { ThemeModeToggle } from "./ThemeModeToggle";
 
-export function SiteHeader(): JSX.Element {
+interface SiteHeaderProps {
+  accountEmail?: string | null;
+  isAuthenticated?: boolean;
+  onSignOut?: () => void;
+  themeMode?: ThemeMode;
+  onCycleTheme?: () => void;
+}
+
+export function SiteHeader({
+  accountEmail = null,
+  isAuthenticated = false,
+  onSignOut,
+  themeMode = "system",
+  onCycleTheme = () => undefined,
+}: SiteHeaderProps): JSX.Element {
   const location = useLocation();
   const isMapPage = location.pathname === paths.home;
-  const isComparePage = location.pathname === "/compare";
+  const isComparePage = location.pathname === paths.compare();
   const { search } = useSearchContext();
   const { items } = useCompareSelection();
-  const { mode, cycleMode } = useTheme();
   const compareRouteState = readCompareUrlState(new URLSearchParams(location.search));
   const selectionUrns = items.map((item) => item.urn);
   const compareUrns =
@@ -25,6 +38,8 @@ export function SiteHeader(): JSX.Element {
   const compareCount = compareUrns.length;
   const compareHref = paths.compare(compareUrns);
   const compareLabel = `Compare ${compareCount}/4`;
+  const returnTo = `${location.pathname}${location.search}`;
+  const signInHref = paths.signIn(returnTo);
 
   return (
     <header
@@ -77,7 +92,31 @@ export function SiteHeader(): JSX.Element {
             </Button>
           )}
 
-          <ThemeModeToggle mode={mode} onCycle={cycleMode} />
+          {isAuthenticated ? (
+            <>
+              {accountEmail ? (
+                <div className="hidden items-center rounded-full border border-border-subtle/40 bg-surface/70 px-3 py-1 text-xs text-secondary sm:flex">
+                  <span className="max-w-[180px] truncate font-medium text-primary">
+                    {accountEmail}
+                  </span>
+                </div>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onSignOut}
+              >
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link to={signInHref}>Sign in</Link>
+            </Button>
+          )}
+
+          <ThemeModeToggle mode={themeMode} onCycle={onCycleTheme} />
         </div>
       </div>
     </header>

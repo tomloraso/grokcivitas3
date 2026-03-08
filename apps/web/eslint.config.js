@@ -59,7 +59,7 @@ export default tseslint.config(
     }
   },
   {
-    files: ["src/components/ui/**/*.{ts,tsx}"],
+    files: ["src/components/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -72,6 +72,10 @@ export default tseslint.config(
             {
               group: ["**/generated-types", "**/generated-types.ts"],
               message: "Import API contract aliases from src/api/types.ts."
+            },
+            {
+              group: ["**/features/**"],
+              message: "Shared components must not depend on feature modules."
             }
           ]
         }

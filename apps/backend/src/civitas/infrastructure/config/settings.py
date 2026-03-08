@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from ipaddress import ip_address
 from pathlib import Path
+from urllib.parse import urlparse
 
 from pydantic import (
     BaseModel,
@@ -94,6 +96,25 @@ DEFAULT_AI_BATCH_SIZE = 10
 DEFAULT_AI_REQUEST_TIMEOUT_SECONDS = 30.0
 DEFAULT_AI_MAX_RETRIES = 2
 DEFAULT_AI_RETRY_BACKOFF_SECONDS = 0.5
+DEFAULT_RUNTIME_ENVIRONMENT = "local"
+DEFAULT_AUTH_PROVIDER = "development"
+DEFAULT_AUTH_SESSION_COOKIE_NAME = "civitas_session"
+DEFAULT_AUTH_SESSION_COOKIE_SECURE = False
+DEFAULT_AUTH_SESSION_COOKIE_SAMESITE = "lax"
+DEFAULT_AUTH_SESSION_TTL_HOURS = 24 * 14
+DEFAULT_AUTH_STATE_TTL_MINUTES = 15
+DEFAULT_AUTH_CALLBACK_ERROR_PATH = "/sign-in"
+DEFAULT_AUTH_ALLOWED_ORIGINS = ",".join(
+    (
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://testserver",
+    )
+)
+DEFAULT_AUTH_SHARED_SECRET = "civitas-local-dev-shared-secret"
+DEFAULT_AUTH_AUTH0_CONNECTION = "email"
 
 
 class DatabaseSettings(BaseModel):
@@ -214,6 +235,27 @@ class AiSettings(BaseModel):
     request_timeout_seconds: PositiveFloat
     max_retries: NonNegativeInt
     retry_backoff_seconds: PositiveFloat
+
+
+class AuthSettings(BaseModel):
+    provider: str
+    session_cookie_name: str
+    session_cookie_secure: bool
+    session_cookie_samesite: str
+    session_ttl_hours: PositiveInt
+    state_ttl_minutes: PositiveInt
+    callback_error_path: str
+    allowed_origins: tuple[str, ...]
+    shared_secret: str
+    auth0: "Auth0ProviderSettings | None"
+
+
+class Auth0ProviderSettings(BaseModel):
+    domain: str
+    client_id: str
+    client_secret: str
+    audience: str | None = None
+    connection: str | None = None
 
 
 class AppSettings(BaseSettings):
@@ -614,6 +656,70 @@ class AppSettings(BaseSettings):
         default=DEFAULT_AI_RETRY_BACKOFF_SECONDS,
         validation_alias="CIVITAS_AI_RETRY_BACKOFF_SECONDS",
     )
+    runtime_environment: str = Field(
+        default=DEFAULT_RUNTIME_ENVIRONMENT,
+        validation_alias="CIVITAS_RUNTIME_ENVIRONMENT",
+    )
+    auth_provider: str = Field(
+        default=DEFAULT_AUTH_PROVIDER,
+        validation_alias="CIVITAS_AUTH_PROVIDER",
+    )
+    auth_session_cookie_name: str = Field(
+        default=DEFAULT_AUTH_SESSION_COOKIE_NAME,
+        validation_alias="CIVITAS_AUTH_SESSION_COOKIE_NAME",
+        min_length=1,
+    )
+    auth_session_cookie_secure: bool = Field(
+        default=DEFAULT_AUTH_SESSION_COOKIE_SECURE,
+        validation_alias="CIVITAS_AUTH_SESSION_COOKIE_SECURE",
+    )
+    auth_session_cookie_samesite: str = Field(
+        default=DEFAULT_AUTH_SESSION_COOKIE_SAMESITE,
+        validation_alias="CIVITAS_AUTH_SESSION_COOKIE_SAMESITE",
+        min_length=1,
+    )
+    auth_session_ttl_hours: PositiveInt = Field(
+        default=DEFAULT_AUTH_SESSION_TTL_HOURS,
+        validation_alias="CIVITAS_AUTH_SESSION_TTL_HOURS",
+    )
+    auth_state_ttl_minutes: PositiveInt = Field(
+        default=DEFAULT_AUTH_STATE_TTL_MINUTES,
+        validation_alias="CIVITAS_AUTH_STATE_TTL_MINUTES",
+    )
+    auth_callback_error_path: str = Field(
+        default=DEFAULT_AUTH_CALLBACK_ERROR_PATH,
+        validation_alias="CIVITAS_AUTH_CALLBACK_ERROR_PATH",
+        min_length=1,
+    )
+    auth_allowed_origins: str | None = Field(
+        default=DEFAULT_AUTH_ALLOWED_ORIGINS,
+        validation_alias="CIVITAS_AUTH_ALLOWED_ORIGINS",
+    )
+    auth_shared_secret: str = Field(
+        default=DEFAULT_AUTH_SHARED_SECRET,
+        validation_alias="CIVITAS_AUTH_SHARED_SECRET",
+        min_length=1,
+    )
+    auth_auth0_domain: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_AUTH_AUTH0_DOMAIN",
+    )
+    auth_auth0_client_id: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_AUTH_AUTH0_CLIENT_ID",
+    )
+    auth_auth0_client_secret: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_AUTH_AUTH0_CLIENT_SECRET",
+    )
+    auth_auth0_audience: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_AUTH_AUTH0_AUDIENCE",
+    )
+    auth_auth0_connection: str | None = Field(
+        default=DEFAULT_AUTH_AUTH0_CONNECTION,
+        validation_alias="CIVITAS_AUTH_AUTH0_CONNECTION",
+    )
 
     @property
     def database(self) -> DatabaseSettings:
@@ -749,6 +855,21 @@ class AppSettings(BaseSettings):
             retry_backoff_seconds=self.ai_retry_backoff_seconds,
         )
 
+    @property
+    def auth(self) -> AuthSettings:
+        return AuthSettings(
+            provider=self.auth_provider,
+            session_cookie_name=self.auth_session_cookie_name,
+            session_cookie_secure=self.auth_session_cookie_secure,
+            session_cookie_samesite=self.auth_session_cookie_samesite,
+            session_ttl_hours=self.auth_session_ttl_hours,
+            state_ttl_minutes=self.auth_state_ttl_minutes,
+            callback_error_path=self.auth_callback_error_path,
+            allowed_origins=_parse_origin_tokens(self.auth_allowed_origins),
+            shared_secret=self.auth_shared_secret,
+            auth0=self._build_auth0_settings(),
+        )
+
     @field_validator(
         "gias_source_csv",
         "gias_source_zip",
@@ -765,6 +886,15 @@ class AppSettings(BaseSettings):
         "ofsted_timeline_source_assets",
         "ai_api_key",
         "ai_api_base_url",
+        "auth_allowed_origins",
+        "auth_session_cookie_name",
+        "auth_callback_error_path",
+        "auth_shared_secret",
+        "auth_auth0_domain",
+        "auth_auth0_client_id",
+        "auth_auth0_client_secret",
+        "auth_auth0_audience",
+        "auth_auth0_connection",
         mode="before",
     )
     @classmethod
@@ -793,6 +923,119 @@ class AppSettings(BaseSettings):
     def _normalize_ai_model_id(cls, value: object) -> object:
         if isinstance(value, str):
             return value.strip()
+        return value
+
+    @field_validator("runtime_environment", mode="before")
+    @classmethod
+    def _normalize_runtime_environment(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized not in {"local", "test", "staging", "production"}:
+                raise ValueError(
+                    "CIVITAS_RUNTIME_ENVIRONMENT must be one of: local, test, staging, production"
+                )
+            return normalized
+        return value
+
+    @field_validator("auth_provider", mode="before")
+    @classmethod
+    def _normalize_auth_provider(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized not in {"development", "auth0"}:
+                raise ValueError("CIVITAS_AUTH_PROVIDER must be one of: auth0, development")
+            return normalized
+        return value
+
+    @field_validator("auth_session_cookie_name", mode="before")
+    @classmethod
+    def _normalize_auth_cookie_name(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("auth_session_cookie_samesite", mode="before")
+    @classmethod
+    def _normalize_auth_cookie_samesite(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized not in {"lax", "strict", "none"}:
+                raise ValueError(
+                    "CIVITAS_AUTH_SESSION_COOKIE_SAMESITE must be one of: lax, strict, none"
+                )
+            return normalized
+        return value
+
+    @field_validator("auth_callback_error_path", mode="before")
+    @classmethod
+    def _normalize_auth_callback_error_path(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized.startswith("/") or normalized.startswith("//"):
+                raise ValueError("CIVITAS_AUTH_CALLBACK_ERROR_PATH must start with a single /")
+            return normalized
+        return value
+
+    @field_validator("auth_allowed_origins", mode="before")
+    @classmethod
+    def _normalize_auth_allowed_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return ",".join(_parse_origin_tokens(value))
+            except ValueError as exc:
+                raise ValueError(
+                    "CIVITAS_AUTH_ALLOWED_ORIGINS must contain a comma-separated list of valid origins."
+                ) from exc
+        return value
+
+    @field_validator("auth_shared_secret", mode="before")
+    @classmethod
+    def _normalize_auth_shared_secret(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("auth_auth0_domain", mode="before")
+    @classmethod
+    def _normalize_auth0_domain(cls, value: object) -> object:
+        if not isinstance(value, str):
+            return value
+
+        candidate = value.strip().casefold()
+        if not candidate:
+            return None
+        if "://" in candidate or "/" in candidate or "?" in candidate or "#" in candidate:
+            raise ValueError(
+                "CIVITAS_AUTH_AUTH0_DOMAIN must be a bare Auth0 domain or custom host without scheme or path."
+            )
+
+        parsed = urlparse(f"https://{candidate}")
+        if (
+            not parsed.netloc
+            or parsed.username
+            or parsed.password
+            or parsed.path not in {"", "/"}
+            or parsed.params
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError(
+                "CIVITAS_AUTH_AUTH0_DOMAIN must be a bare Auth0 domain or custom host without scheme or path."
+            )
+        return parsed.netloc.casefold()
+
+    @field_validator(
+        "auth_auth0_client_id",
+        "auth_auth0_client_secret",
+        "auth_auth0_audience",
+        "auth_auth0_connection",
+        mode="before",
+    )
+    @classmethod
+    def _normalize_auth0_text_field(cls, value: object) -> object:
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
         return value
 
     @field_validator(
@@ -858,14 +1101,76 @@ class AppSettings(BaseSettings):
 
     def _validate_ai_settings(self) -> AppSettings:
         if not self.ai_enabled:
-            return self
+            return self._validate_auth_settings()
         if self.ai_api_key is None:
             raise ValueError("CIVITAS_AI_API_KEY must be set when CIVITAS_AI_ENABLED=true.")
         if self.ai_provider == "openai_compatible" and self.ai_api_base_url is None:
             raise ValueError(
                 "CIVITAS_AI_API_BASE_URL must be set when CIVITAS_AI_PROVIDER=openai_compatible."
             )
+        return self._validate_auth_settings()
+
+    def _validate_auth_settings(self) -> AppSettings:
+        if not self.auth.allowed_origins:
+            raise ValueError(
+                "CIVITAS_AUTH_ALLOWED_ORIGINS must contain at least one allowed origin."
+            )
+
+        if self.auth_session_cookie_samesite == "none" and not self.auth_session_cookie_secure:
+            raise ValueError(
+                "CIVITAS_AUTH_SESSION_COOKIE_SECURE must be true when "
+                "CIVITAS_AUTH_SESSION_COOKIE_SAMESITE=none."
+            )
+
+        if self.auth_provider == "development":
+            if self.runtime_environment not in {"local", "test"}:
+                raise ValueError(
+                    "CIVITAS_AUTH_PROVIDER=development is only allowed in local or test environments."
+                )
+            if any(not _is_local_auth_origin(origin) for origin in self.auth.allowed_origins):
+                raise ValueError(
+                    "CIVITAS_AUTH_PROVIDER=development requires localhost, loopback, or "
+                    "testserver auth allowed origins."
+                )
+        if self.auth_provider == "auth0" and (
+            self.auth_auth0_domain is None
+            or self.auth_auth0_client_id is None
+            or self.auth_auth0_client_secret is None
+        ):
+            raise ValueError(
+                "CIVITAS_AUTH_AUTH0_DOMAIN, CIVITAS_AUTH_AUTH0_CLIENT_ID, and "
+                "CIVITAS_AUTH_AUTH0_CLIENT_SECRET must be set when "
+                "CIVITAS_AUTH_PROVIDER=auth0."
+            )
+
+        if self.runtime_environment in {"staging", "production"}:
+            if not self.auth_session_cookie_secure:
+                raise ValueError(
+                    "CIVITAS_AUTH_SESSION_COOKIE_SECURE must be true in staging or production."
+                )
+            if self.auth_shared_secret == DEFAULT_AUTH_SHARED_SECRET:
+                raise ValueError(
+                    "CIVITAS_AUTH_SHARED_SECRET must be overridden outside local or test environments."
+                )
+
         return self
+
+    def _build_auth0_settings(self) -> Auth0ProviderSettings | None:
+        if (
+            self.auth_provider != "auth0"
+            or self.auth_auth0_domain is None
+            or self.auth_auth0_client_id is None
+            or self.auth_auth0_client_secret is None
+        ):
+            return None
+
+        return Auth0ProviderSettings(
+            domain=self.auth_auth0_domain,
+            client_id=self.auth_auth0_client_id,
+            client_secret=self.auth_auth0_client_secret,
+            audience=self.auth_auth0_audience,
+            connection=self.auth_auth0_connection or DEFAULT_AUTH_AUTH0_CONNECTION,
+        )
 
 
 @lru_cache(maxsize=1)
@@ -886,6 +1191,54 @@ def _parse_csv_tokens(raw_value: str | None) -> tuple[str, ...]:
         seen.add(normalized)
         tokens.append(normalized)
     return tuple(tokens)
+
+
+def _parse_origin_tokens(raw_value: str | None) -> tuple[str, ...]:
+    if raw_value is None:
+        return ()
+
+    tokens: list[str] = []
+    seen: set[str] = set()
+    for item in raw_value.split(","):
+        normalized = _normalize_origin(item)
+        if normalized is None or normalized in seen:
+            continue
+        seen.add(normalized)
+        tokens.append(normalized)
+    return tuple(tokens)
+
+
+def _normalize_origin(value: str) -> str | None:
+    candidate = value.strip()
+    if not candidate:
+        return None
+
+    parsed = urlparse(candidate)
+    if (
+        not parsed.scheme
+        or not parsed.netloc
+        or parsed.path not in {"", "/"}
+        or parsed.params
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("origin must be scheme + host (+ optional port)")
+
+    return f"{parsed.scheme.casefold()}://{parsed.netloc.casefold()}"
+
+
+def _is_local_auth_origin(origin: str) -> bool:
+    parsed = urlparse(origin)
+    host = parsed.hostname
+    if host in {"localhost", "testserver"}:
+        return True
+    if host is None:
+        return False
+
+    try:
+        return ip_address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def _normalize_config_path(path: Path) -> Path:

@@ -197,14 +197,14 @@ Phase 10 should extend existing feature use cases instead of pushing access chec
 - Load the free baseline profile exactly as today.
 - Evaluate the analyst section requirement through the access slice.
 - Only load premium-only analyst text when the decision is `premium_unlocked`.
-- When the decision is `locked`, return a typed analyst section payload with `state=locked` and paywall metadata rather than a nullable `analyst_text`.
-- Add a lightweight summary metadata lookup or equivalent repository method so the use case can distinguish `locked` from `unavailable` without loading premium text for unauthorized viewers.
+- When the decision is `locked`, return a typed analyst section payload with `state=locked`, `teaser_text` (first 2-3 sentences of the analyst text), the school name for contextual CTA rendering, and paywall metadata rather than a nullable `analyst_text`.
+- Add a lightweight summary metadata lookup or equivalent repository method so the use case can retrieve the teaser excerpt and distinguish `locked` from `unavailable` without loading the full premium text for unauthorized viewers.
 
 ### Trends And Benchmark Dashboard
 
 - Keep the main trends response free unless later planning changes the matrix.
 - Evaluate `premium_benchmark_dashboard` inside the dashboard use case before loading the full drill-down payload.
-- When locked, return a typed dashboard response with `state=locked` and no premium metric sections.
+- When locked, return a typed dashboard response with `state=locked`, `teaser_payload` (metric group headings, column labels, and layout structure), the school name for contextual CTA rendering, and paywall metadata but no premium metric values.
 - The free profile route should keep using the benchmark snapshot already embedded in the profile payload; it should not require dashboard access to render inline benchmark cues.
 
 ### Compare
@@ -228,6 +228,8 @@ Phase 10 should extend existing feature use cases instead of pushing access chec
 - Access evaluation belongs in backend domain or application code, not in API route handlers.
 - `10G-premium-access-matrix.md` must remain the product source of truth for which capabilities each surface requires.
 - Locked premium state must never be represented by silently dropping a field that also means "not published yet."
+- Locked premium responses must include teaser content (`teaser_text` or `teaser_payload`) and the school name so the frontend can render the blur-with-teaser pattern with contextual CTAs.
+- All user-facing product display names must use `Premium`, never `Pro`. `Pro` is reserved for a future B2B tier.
 
 ## Acceptance Criteria
 

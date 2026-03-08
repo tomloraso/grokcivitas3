@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.responses import Response
 
+from civitas.api.auth_routes import router as auth_router
 from civitas.api.contract_checks import validate_app_contracts
 from civitas.api.routes import router
 
@@ -18,6 +19,7 @@ async def app_lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Civitas API", version="0.1.0", lifespan=app_lifespan)
+app.include_router(auth_router)
 app.include_router(router)
 
 

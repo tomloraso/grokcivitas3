@@ -1,4 +1,5 @@
 import type {
+  AuthStartResponse,
   CreateTaskRequest,
   HealthResponse,
   SchoolCompareResponse,
@@ -7,6 +8,7 @@ import type {
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse,
   SearchSchoolsQuery,
+  SessionResponse,
   SchoolsSearchResponse,
   Task
 } from "./types";
@@ -25,6 +27,11 @@ interface CacheEntry {
 
 const responseCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<unknown>>();
+
+interface StartSignInInput {
+  email: string;
+  returnTo?: string | null;
+}
 
 export class ApiClientError extends Error {
   readonly status: number;
@@ -107,9 +114,16 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   }
 
   const runRequest = async (): Promise<T> => {
+    const { credentials, headers: incomingHeaders, ...restInit } = init ?? {};
+    const headers = new Headers(incomingHeaders);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
     const response = await fetch(url, {
-      headers: { "Content-Type": "application/json" },
-      ...init
+      ...restInit,
+      credentials: credentials ?? "same-origin",
+      headers
     });
 
     if (!response.ok) {
@@ -153,8 +167,32 @@ export function prefetchSchoolProfile(urn: string): void {
 }
 
 export function __resetApiRequestCacheForTests(): void {
+  resetApiRequestCache();
+}
+
+export function resetApiRequestCache(): void {
   responseCache.clear();
   inFlightRequests.clear();
+}
+
+export async function startSignIn(payload: StartSignInInput): Promise<AuthStartResponse> {
+  return request<AuthStartResponse>("/api/v1/auth/start", {
+    method: "POST",
+    body: JSON.stringify({
+      email: payload.email,
+      return_to: payload.returnTo ?? null
+    })
+  });
+}
+
+export async function getSession(): Promise<SessionResponse> {
+  return request<SessionResponse>("/api/v1/session");
+}
+
+export async function signOut(): Promise<SessionResponse> {
+  return request<SessionResponse>("/api/v1/auth/signout", {
+    method: "POST"
+  });
 }
 
 export async function getHealth(): Promise<HealthResponse> {

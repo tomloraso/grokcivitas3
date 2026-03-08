@@ -60,6 +60,67 @@ VITE_MAP_TILE_PROVIDER=cartodb-dark-matter
 # VITE_STADIA_MAPS_API_KEY=...
 ```
 
+## Auth foundation configuration
+
+Phase 10 auth/session foundation adds a Civitas-managed session layer on the backend.
+Two provider modes are now supported:
+
+- `development` for local or test-only no-provider flows
+- `auth0` for managed-provider rehearsal or managed environments
+
+Architecture notes for the implemented slice live in [Auth Session Boundary](../architecture/auth-session-boundary.md).
+The full local/test workflow, guardrails, and troubleshooting notes for the development provider live in [Development Auth Provider Runbook](./auth-development-provider.md).
+Managed-provider setup and tenant requirements live in [Auth0 Managed Provider Runbook](./auth0-managed-provider.md).
+
+Relevant `.env` values:
+
+```bash
+CIVITAS_RUNTIME_ENVIRONMENT=local
+CIVITAS_AUTH_PROVIDER=development
+CIVITAS_AUTH_SESSION_COOKIE_NAME=civitas_session
+CIVITAS_AUTH_SESSION_COOKIE_SECURE=false
+CIVITAS_AUTH_SESSION_COOKIE_SAMESITE=lax
+CIVITAS_AUTH_SESSION_TTL_HOURS=336
+CIVITAS_AUTH_STATE_TTL_MINUTES=15
+CIVITAS_AUTH_CALLBACK_ERROR_PATH=/sign-in
+CIVITAS_AUTH_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000,http://127.0.0.1:8000
+CIVITAS_AUTH_SHARED_SECRET=civitas-local-dev-shared-secret
+```
+
+For the normal Vite-driven browser flow, the `:5173` origins are the important entries.
+Keep the `:8000` origins only if you also browse backend endpoints directly from that host during local auth testing.
+
+Current local auth flow:
+
+1. Run backend migrations: `uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade head`
+2. Start the backend API and the web app.
+3. Open `/sign-in` in the web app. The browser-facing `/api/*` calls go through the Vite proxy on `http://localhost:5173`.
+4. Enter any email address. In `development` mode the backend still creates a short-lived auth attempt and signed opaque `state`, then issues a development callback immediately and creates a Civitas session cookie.
+
+Callback failures redirect back to `/sign-in?error=...`, and the web sign-in screen renders the error state from that query string.
+
+`CIVITAS_AUTH_STATE_TTL_MINUTES` governs both the signed `state` lifetime and the server-side auth-attempt lifetime used for PKCE-enabled managed-provider flows.
+`CIVITAS_AUTH_SHARED_SECRET` signs auth state and development-provider callback tickets; it does not replace the server-side Civitas session store.
+
+The `development` provider is intentionally local or test only. Staging and production configuration must use the managed-provider path, secure cookies, and an explicit origin allowlist before the API will start.
+The API also rejects the `development` provider if `CIVITAS_AUTH_ALLOWED_ORIGINS` contains any non-loopback origin, even when `CIVITAS_RUNTIME_ENVIRONMENT` is left at its local default.
+
+To rehearse the managed-provider path locally or in a shared environment, switch to:
+
+```bash
+CIVITAS_AUTH_PROVIDER=auth0
+CIVITAS_AUTH_SESSION_COOKIE_SECURE=true
+CIVITAS_AUTH_ALLOWED_ORIGINS=https://app.example.test
+CIVITAS_AUTH_SHARED_SECRET=<override-me>
+CIVITAS_AUTH_AUTH0_DOMAIN=tenant.eu.auth0.com
+CIVITAS_AUTH_AUTH0_CLIENT_ID=<client-id>
+CIVITAS_AUTH_AUTH0_CLIENT_SECRET=<client-secret>
+CIVITAS_AUTH_AUTH0_CONNECTION=email
+```
+
+Use HTTPS origins for any browser-based Auth0 rehearsal so secure cookies and callback URLs match the managed-provider path.
+For managed environments, keep the public browser-facing `/api/v1/*` routes on the same origin path space the web app uses, even if the backend runs behind a separate upstream proxy target.
+
 ## Daily commands
 
 ```bash

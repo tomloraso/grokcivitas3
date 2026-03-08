@@ -30,7 +30,11 @@ export function Field({
         className="block text-xs font-semibold uppercase tracking-[0.08em] text-secondary"
       >
         {label}
-        {required ? <span className="ml-1 text-brand">*</span> : null}
+        {required ? (
+          <span aria-hidden="true" className="ml-1 text-brand">
+            *
+          </span>
+        ) : null}
       </label>
       {children}
       {helperText ? (
