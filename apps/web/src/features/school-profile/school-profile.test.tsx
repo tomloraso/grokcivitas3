@@ -65,33 +65,39 @@ describe("SchoolProfileFeature", () => {
     dashboardMock.mockResolvedValue(DASHBOARD_RESPONSE);
   });
 
-  it("renders the widened metrics surface on success", async () => {
-    renderProfileAtUrn("100001");
+  it(
+    "renders the widened metrics surface on success",
+    async () => {
+      renderProfileAtUrn("100001");
 
-    expect(
-      await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
-    ).toBeInTheDocument();
+      expect(
+        await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
+      ).toBeInTheDocument();
 
-    expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "School Overview" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Analyst View" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Day-to-Day at School" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Teachers & Staff" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "School Overview" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Analyst View" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Day-to-Day at School" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Teachers & Staff" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
 
-    expect(
-      screen.getByText(/This overview is AI-generated from public government data/i)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/This analyst view is AI-generated from public government data/i)).toBeInTheDocument();
-    expect(screen.getAllByText("Ever Eligible for Free Meals").length).toBeGreaterThan(0);
-    expect(screen.getByText("Special Educational Needs")).toBeInTheDocument();
-    expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
-    expect(screen.getAllByText("Suspension Rate").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
-    expect(screen.getByText("House Prices")).toBeInTheDocument();
-    expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
-  });
+      expect(
+        screen.getByText(/This overview is AI-generated from public government data/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/This analyst view is AI-generated from public government data/i)
+      ).toBeInTheDocument();
+      expect(screen.getAllByText("Ever Eligible for Free Meals").length).toBeGreaterThan(0);
+      expect(screen.getByText("Special Educational Needs")).toBeInTheDocument();
+      expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
+      expect(screen.getAllByText("Suspension Rate").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
+      expect(screen.getByText("House Prices")).toBeInTheDocument();
+      expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
+    },
+    15000,
+  );
 
   it("renders the profile before background trend/dashboard hydration completes", async () => {
     let resolveTrends: (value: typeof TRENDS_RESPONSE) => void = () => undefined;

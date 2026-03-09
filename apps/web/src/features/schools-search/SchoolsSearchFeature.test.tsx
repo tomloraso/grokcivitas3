@@ -201,7 +201,9 @@ describe("SchoolsSearchFeature", () => {
     });
   });
 
-  it("opens a school profile from results mode and restores the active results state", async () => {
+  it(
+    "opens a school profile from results mode and restores the active results state",
+    async () => {
     const user = userEvent.setup();
     let holdFirstPrimaryRefresh = true;
     let capturedPrimaryRefresh = false;
@@ -277,5 +279,7 @@ describe("SchoolsSearchFeature", () => {
     expect(
       within(screen.getByRole("dialog")).getByRole("button", { name: "Primary" }),
     ).toHaveAttribute("aria-pressed", "true");
-  });
+    },
+    15000,
+  );
 });

@@ -4,7 +4,7 @@
 
 Implement the payment flow that converts a signed-in user's purchase intent into reconciled account-level premium access.
 
-Stage 10B starts here. Payment work should build on the identity and feature-entitlement foundations from `10B` and `10C`, not bypass them.
+Phase 10D builds on the identity and feature-entitlement foundations from `10B` and `10C`. Payment work must reuse those seams, not bypass them.
 
 ## Scope
 
@@ -23,15 +23,19 @@ Stage 10B starts here. Payment work should build on the identity and feature-ent
 civitas/
   domain/billing/
     models.py
+    value_objects.py          # optional
     services.py
   application/billing/
     use_cases.py
     dto.py
+    errors.py
     ports/
-      checkout_gateway.py
-      billing_repository.py
-      payment_event_repository.py
-      subscription_repository.py
+      billing_provider_gateway.py
+      billing_state_repository.py
+  api/
+    schemas/
+      billing.py
+    billing_routes.py
 ```
 
 Infrastructure adapters should live under:
@@ -39,11 +43,18 @@ Infrastructure adapters should live under:
 ```text
 infrastructure/
   payments/
-    <provider>_checkout_gateway.py
+    stripe_billing_provider_gateway.py
   persistence/
-    postgres_billing_repository.py
-    postgres_subscription_repository.py
+    postgres_billing_state_repository.py
 ```
+
+`ListAvailablePremiumProductsUseCase` already exists in the 10C `access` slice and should remain the product-catalog read path for MVP. 10D should reuse it rather than creating a second catalog source.
+
+The billing persistence port should be explicit about transaction ownership:
+
+- checkout creation and status reads may use narrower repository methods
+- webhook reconciliation must not fan out across multiple independently transactional repositories
+- one dedicated billing-state repository or equivalent unit-of-work must own the single database transaction that updates payment events, checkout state, subscription state, entitlement state, and entitlement audit events together
 
 Recommended application use cases:
 
@@ -55,12 +66,13 @@ Recommended application use cases:
 
 ## Launch Billing Defaults For Implementation Planning
 
-- Seed one launch product code such as `premium_launch`.
-- Map that launch product to exactly these three Phase 10 capabilities:
+- Reuse the existing 10C launch product `premium_launch`.
+- Keep that launch product mapped to exactly these three Phase 10 capabilities:
   - `premium_ai_analyst`
   - `premium_comparison`
   - `premium_neighbourhood`
-- For Stage 10B build planning, assume one recurring provider price mapped to that launch product in each environment.
+- Populate `premium_products.provider_price_lookup_key` for `premium_launch` rather than creating a parallel billing catalog.
+- For 10D implementation, assume one recurring provider price mapped to that launch product in each environment.
 - Keep the data model flexible enough for later annual or fixed-term products, but do not block Phase 10 on designing a multi-plan catalog.
 - If product later changes the launch interval, the intended goal is that only seed data and provider configuration move, not the entitlement or paywall architecture.
 - Benchmark context is not part of the paid launch product in this phase. Inline benchmark cues and the benchmark dashboard drill-down remain free.
@@ -73,6 +85,12 @@ Recommended application use cases:
 4. Backend creates an internal pending checkout record before calling the external provider.
 5. Infrastructure adapter creates the provider checkout session and stores provider reference IDs.
 6. API returns a redirect URL or hosted checkout token to the web app.
+
+Correlation rules for the provider session:
+
+- include internal `checkout_id`, `product_code`, and `user_id` in provider metadata where the provider supports it
+- store the provider checkout-session identifier on the internal checkout row
+- build success and cancel redirect URLs from the current public request origin plus sanitized internal paths, not from hardcoded upstream backend hosts
 
 If the user already has equivalent active coverage, checkout creation should not create a duplicate open purchase flow. The API should return current access state or an explicit "already covered" checkout status instead.
 
@@ -87,7 +105,7 @@ If the user already has equivalent active coverage, checkout creation should not
 
 ## Launch Entitlement Lifecycle Rules
 
-To keep implementation deterministic, Stage 10B should use the following default lifecycle rules unless product explicitly signs off a different policy before coding starts:
+To keep implementation deterministic, 10D should use the following default lifecycle rules unless product explicitly signs off a different policy before coding starts:
 
 - checkout created: no entitlement yet; persist only the pending checkout session
 - redirect success before webhook: account remains in `processing_payment` or equivalent non-entitled state until reconciliation completes
@@ -117,10 +135,17 @@ Relationship to access model:
 
 Recommended additional fields:
 
-- `checkout_sessions`: internal checkout ID, user ID, product code, provider checkout/session ID, provider customer ID, status, requested_at, completed_at, canceled_at, return URL, cancel URL
-- `billing_subscriptions`: internal subscription ID, user ID, product code, provider subscription ID, provider customer ID, status, current_period_starts_at, current_period_ends_at, cancel_at_period_end, canceled_at, latest_checkout_session_id, updated_at
+- `checkout_sessions`: internal checkout ID, user ID, product code, provider name, provider checkout/session ID, provider customer ID, provider subscription ID when known, status, requested_at, completed_at, canceled_at, expires_at, success path, cancel path
+- `billing_subscriptions`: internal subscription ID, user ID, product code, provider name, provider subscription ID, provider customer ID, status, current_period_starts_at, current_period_ends_at, cancel_at_period_end, canceled_at, latest_checkout_session_id, linked entitlement ID, updated_at
 - `payment_events`: provider name, provider event ID, event type, occurred_at, received_at, payload JSON, signature verification result, reconciliation status, reconciled_at
 - `payment_customers`: user ID, provider name, provider customer ID, created_at, updated_at
+
+Recommended constraints:
+
+- unique `(provider_name, provider_event_id)` on `payment_events`
+- unique `(provider_name, provider_checkout_session_id)` on `checkout_sessions`
+- unique `(provider_name, provider_subscription_id)` on `billing_subscriptions`
+- unique `(provider_name, provider_customer_id)` plus unique `(provider_name, user_id)` on `payment_customers`
 
 ## Idempotency And Retry Rules
 
@@ -149,6 +174,25 @@ Reconciliation should run inside one transaction that:
 
 The implementation plan must treat these as normal paths, not edge-case cleanup work.
 
+## API Surface
+
+10D should expose typed billing routes through backend OpenAPI rather than relying on frontend constants or opaque provider URLs alone.
+
+Recommended MVP route set:
+
+- `GET /api/v1/billing/products`
+- `POST /api/v1/billing/checkout-sessions`
+- `GET /api/v1/billing/checkout-sessions/{checkout_id}`
+- `POST /api/v1/billing/portal-sessions`
+- `POST /api/v1/billing/webhooks/stripe`
+
+Session and auth rules:
+
+- billing checkout and portal routes require a valid Civitas session
+- cookie-authenticated billing `POST` routes should use the same trusted-origin guard as sign-out
+- webhook routes are provider-authenticated by signature, not by browser session
+- 10D must not expand `/api/v1/session`; access metadata stays deferred to `10E`
+
 ## Guardrails
 
 - Provider payload shapes stay in infrastructure code.
@@ -160,6 +204,8 @@ The implementation plan must treat these as normal paths, not edge-case cleanup 
 - Reconciliation tests must cover overlapping entitlements or duplicate purchase attempts for the same product so support behavior is explicit.
 - `billing_subscriptions` should remain the billing system of record for recurring provider state, while `entitlements` remain the access system of record.
 - Prefer the provider's hosted customer portal or equivalent for cancellation and payment-method management in MVP rather than building custom billing-management screens.
+- The reconciliation write path must remain atomic even though existing 10C repositories open their own transactions today; 10D should introduce an explicit shared transaction seam rather than assuming per-repository writes are sufficient.
+- Product pricing configuration belongs on the existing `premium_products` row for `premium_launch`; do not create a second hardcoded product map inside Stripe adapters or the frontend.
 
 ## Acceptance Criteria
 

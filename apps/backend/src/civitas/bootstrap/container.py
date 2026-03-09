@@ -1,6 +1,18 @@
 from datetime import timedelta
 from functools import lru_cache
 
+from civitas.application.access.use_cases import (
+    EvaluateAccessUseCase,
+    GetCurrentAccountAccessUseCase,
+    ListAvailablePremiumProductsUseCase,
+    ListUserEntitlementsUseCase,
+)
+from civitas.application.billing.use_cases import (
+    CreateBillingPortalSessionUseCase,
+    CreateCheckoutSessionUseCase,
+    GetCheckoutStatusUseCase,
+    ReconcilePaymentEventUseCase,
+)
 from civitas.application.identity.ports.identity_provider import IdentityProvider
 from civitas.application.identity.use_cases import (
     CompleteAuthCallbackUseCase,
@@ -44,6 +56,7 @@ from civitas.infrastructure.auth.signed_auth_flow_state_codec import SignedAuthF
 from civitas.infrastructure.config.settings import AppSettings, get_settings
 from civitas.infrastructure.http.postcode_resolver import CachedPostcodeResolver
 from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
+from civitas.infrastructure.payments.provider_factory import build_billing_provider_gateway
 from civitas.infrastructure.persistence.cached_school_profile_repository import (
     CachedSchoolProfileRepository,
     PostgresSchoolProfileCacheVersionProvider,
@@ -53,11 +66,20 @@ from civitas.infrastructure.persistence.in_memory_task_repository import InMemor
 from civitas.infrastructure.persistence.postgres_auth_attempt_repository import (
     PostgresAuthAttemptRepository,
 )
+from civitas.infrastructure.persistence.postgres_billing_state_repository import (
+    PostgresBillingStateRepository,
+)
 from civitas.infrastructure.persistence.postgres_data_quality_repository import (
     PostgresDataQualityRepository,
 )
+from civitas.infrastructure.persistence.postgres_entitlement_repository import (
+    PostgresEntitlementRepository,
+)
 from civitas.infrastructure.persistence.postgres_postcode_cache_repository import (
     PostgresPostcodeCacheRepository,
+)
+from civitas.infrastructure.persistence.postgres_product_repository import (
+    PostgresProductRepository,
 )
 from civitas.infrastructure.persistence.postgres_school_profile_repository import (
     PostgresSchoolProfileRepository,
@@ -148,6 +170,29 @@ def auth_attempt_repository() -> PostgresAuthAttemptRepository:
 
 
 @lru_cache(maxsize=1)
+def product_repository() -> PostgresProductRepository:
+    settings = app_settings()
+    return PostgresProductRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def entitlement_repository() -> PostgresEntitlementRepository:
+    settings = app_settings()
+    return PostgresEntitlementRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def billing_state_repository() -> PostgresBillingStateRepository:
+    settings = app_settings()
+    return PostgresBillingStateRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def billing_provider_gateway():
+    return build_billing_provider_gateway(app_settings())
+
+
+@lru_cache(maxsize=1)
 def auth_flow_state_codec() -> SignedAuthFlowStateCodec:
     settings = app_settings()
     return SignedAuthFlowStateCodec(
@@ -187,6 +232,62 @@ def get_current_session_use_case() -> GetCurrentSessionUseCase:
     return GetCurrentSessionUseCase(
         user_repository=user_repository(),
         session_repository=session_repository(),
+    )
+
+
+def get_current_account_access_use_case() -> GetCurrentAccountAccessUseCase:
+    return GetCurrentAccountAccessUseCase(
+        entitlement_repository=entitlement_repository(),
+        product_repository=product_repository(),
+    )
+
+
+def evaluate_access_use_case() -> EvaluateAccessUseCase:
+    return EvaluateAccessUseCase(
+        entitlement_repository=entitlement_repository(),
+        product_repository=product_repository(),
+    )
+
+
+def list_available_premium_products_use_case() -> ListAvailablePremiumProductsUseCase:
+    return ListAvailablePremiumProductsUseCase(product_repository=product_repository())
+
+
+def list_user_entitlements_use_case() -> ListUserEntitlementsUseCase:
+    return ListUserEntitlementsUseCase(
+        entitlement_repository=entitlement_repository(),
+        product_repository=product_repository(),
+    )
+
+
+def create_checkout_session_use_case() -> CreateCheckoutSessionUseCase:
+    return CreateCheckoutSessionUseCase(
+        billing_provider_gateway=billing_provider_gateway(),
+        billing_state_repository=billing_state_repository(),
+        entitlement_repository=entitlement_repository(),
+        product_repository=product_repository(),
+    )
+
+
+def get_checkout_status_use_case() -> GetCheckoutStatusUseCase:
+    return GetCheckoutStatusUseCase(
+        billing_state_repository=billing_state_repository(),
+        entitlement_repository=entitlement_repository(),
+        product_repository=product_repository(),
+    )
+
+
+def create_billing_portal_session_use_case() -> CreateBillingPortalSessionUseCase:
+    return CreateBillingPortalSessionUseCase(
+        billing_provider_gateway=billing_provider_gateway(),
+        billing_state_repository=billing_state_repository(),
+    )
+
+
+def reconcile_payment_event_use_case() -> ReconcilePaymentEventUseCase:
+    return ReconcilePaymentEventUseCase(
+        billing_state_repository=billing_state_repository(),
+        entitlement_repository=entitlement_repository(),
     )
 
 

@@ -11,6 +11,7 @@ Read these pages before changing structure:
 - `docs/architecture/principles.md`
 - `docs/architecture/boundaries.md`
 - `docs/architecture/auth-session-boundary.md`
+- `docs/architecture/premium-access-boundary.md`
 - `docs/architecture/backend-conventions.md`
 - `docs/architecture/frontend-conventions.md`
 - `docs/architecture/ai-extension-guide.md`

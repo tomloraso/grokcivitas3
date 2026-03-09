@@ -15,6 +15,8 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_AI_REQUEST_TIMEOUT_SECONDS,
     DEFAULT_AI_RETRY_BACKOFF_SECONDS,
     DEFAULT_ALLOW_NONCANONICAL_BRONZE_ROOT,
+    DEFAULT_BILLING_ENABLED,
+    DEFAULT_BILLING_PROVIDER,
     DEFAULT_BRONZE_ROOT,
     DEFAULT_DATA_QUALITY_COVERAGE_DRIFT_THRESHOLD,
     DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -163,6 +165,11 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_AUTH_AUTH0_CLIENT_SECRET",
         "CIVITAS_AUTH_AUTH0_AUDIENCE",
         "CIVITAS_AUTH_AUTH0_CONNECTION",
+        "CIVITAS_BILLING_ENABLED",
+        "CIVITAS_BILLING_PROVIDER",
+        "CIVITAS_BILLING_STRIPE_SECRET_KEY",
+        "CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET",
+        "CIVITAS_BILLING_STRIPE_PORTAL_CONFIGURATION_ID",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -313,6 +320,9 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.ai.request_timeout_seconds == DEFAULT_AI_REQUEST_TIMEOUT_SECONDS
     assert settings.ai.max_retries == DEFAULT_AI_MAX_RETRIES
     assert settings.ai.retry_backoff_seconds == DEFAULT_AI_RETRY_BACKOFF_SECONDS
+    assert settings.billing.enabled is DEFAULT_BILLING_ENABLED
+    assert settings.billing.provider == DEFAULT_BILLING_PROVIDER
+    assert settings.billing.stripe is None
 
 
 def test_app_settings_reads_environment_overrides(
@@ -412,6 +422,14 @@ def test_app_settings_reads_environment_overrides(
     monkeypatch.setenv("CIVITAS_AI_REQUEST_TIMEOUT_SECONDS", "45")
     monkeypatch.setenv("CIVITAS_AI_MAX_RETRIES", "3")
     monkeypatch.setenv("CIVITAS_AI_RETRY_BACKOFF_SECONDS", "0.75")
+    monkeypatch.setenv("CIVITAS_BILLING_ENABLED", "true")
+    monkeypatch.setenv("CIVITAS_BILLING_PROVIDER", " stripe ")
+    monkeypatch.setenv("CIVITAS_BILLING_STRIPE_SECRET_KEY", " sk_test_123 ")
+    monkeypatch.setenv("CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET", " whsec_test_123 ")
+    monkeypatch.setenv(
+        "CIVITAS_BILLING_STRIPE_PORTAL_CONFIGURATION_ID",
+        " bpc_test_123 ",
+    )
 
     settings = AppSettings(_env_file=None)
 
@@ -499,6 +517,12 @@ def test_app_settings_reads_environment_overrides(
     assert settings.ai.request_timeout_seconds == 45.0
     assert settings.ai.max_retries == 3
     assert settings.ai.retry_backoff_seconds == 0.75
+    assert settings.billing.enabled is True
+    assert settings.billing.provider == "stripe"
+    assert settings.billing.stripe is not None
+    assert settings.billing.stripe.secret_key == "sk_test_123"
+    assert settings.billing.stripe.webhook_secret == "whsec_test_123"
+    assert settings.billing.stripe.portal_configuration_id == "bpc_test_123"
 
 
 def test_app_settings_rejects_noncanonical_bronze_root_without_override(
@@ -549,6 +573,20 @@ def test_app_settings_requires_ai_key_when_enabled(monkeypatch: pytest.MonkeyPat
     monkeypatch.delenv("CIVITAS_AI_API_KEY", raising=False)
 
     with pytest.raises(ValidationError, match="CIVITAS_AI_API_KEY"):
+        AppSettings(_env_file=None)
+
+
+def test_app_settings_requires_billing_secrets_when_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CIVITAS_BILLING_ENABLED", "true")
+    monkeypatch.delenv("CIVITAS_BILLING_STRIPE_SECRET_KEY", raising=False)
+    monkeypatch.delenv("CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET", raising=False)
+
+    with pytest.raises(
+        ValidationError,
+        match="CIVITAS_BILLING_STRIPE_SECRET_KEY and CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET",
+    ):
         AppSettings(_env_file=None)
 
 

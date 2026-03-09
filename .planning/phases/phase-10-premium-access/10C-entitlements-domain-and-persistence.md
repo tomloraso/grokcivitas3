@@ -1,5 +1,23 @@
 # 10C - Feature-Tier Entitlements And Persistence
 
+## Implementation Tracking
+
+- Status: Implemented in codebase on 2026-03-09
+- Implemented artifacts:
+  - backend `access` slice under `apps/backend/src/civitas/domain/access` and `apps/backend/src/civitas/application/access`
+  - Postgres persistence adapters under `apps/backend/src/civitas/infrastructure/persistence`
+  - Alembic migration `20260309_29_phase_10_entitlements_domain_persistence.py`
+  - launch seed product `premium_launch` granting:
+    - `premium_ai_analyst`
+    - `premium_comparison`
+    - `premium_neighbourhood`
+  - unit coverage in `apps/backend/tests/unit/test_access_use_cases.py`
+  - integration coverage in `apps/backend/tests/integration/test_access_repositories.py`
+- Intentionally deferred to `10E`:
+  - session contract exposure of account access state
+  - profile and compare paywall response wrappers
+  - teaser payload loading and web paywall rendering
+
 ## Goal
 
 Model premium access in the backend so account-level premium products, capability grants, expiry, and audit history are first-class concepts before payment integration is wired in.
@@ -237,11 +255,13 @@ Phase 10 should extend existing feature use cases instead of pushing access chec
 
 ## Recommended Launch Seed Data
 
-- Seed one launch product code such as `premium_launch`.
+- Seed the launch product code `premium_launch`.
 - Map that product to all three launch capabilities:
   - `premium_ai_analyst`
   - `premium_comparison`
   - `premium_neighbourhood`
+- Populate `premium_products.provider_price_lookup_key` on that same row so 10D can reuse the
+  existing catalog entry for provider checkout configuration.
 - Keep the schema able to support additional product rows later without changing access-evaluation code.
 
 ## Guardrails

@@ -115,6 +115,8 @@ DEFAULT_AUTH_ALLOWED_ORIGINS = ",".join(
 )
 DEFAULT_AUTH_SHARED_SECRET = "civitas-local-dev-shared-secret"
 DEFAULT_AUTH_AUTH0_CONNECTION = "email"
+DEFAULT_BILLING_ENABLED = False
+DEFAULT_BILLING_PROVIDER = "stripe"
 
 
 class DatabaseSettings(BaseModel):
@@ -256,6 +258,18 @@ class Auth0ProviderSettings(BaseModel):
     client_secret: str
     audience: str | None = None
     connection: str | None = None
+
+
+class BillingSettings(BaseModel):
+    enabled: bool
+    provider: str
+    stripe: "StripeBillingSettings | None"
+
+
+class StripeBillingSettings(BaseModel):
+    secret_key: str
+    webhook_secret: str
+    portal_configuration_id: str | None = None
 
 
 class AppSettings(BaseSettings):
@@ -720,6 +734,26 @@ class AppSettings(BaseSettings):
         default=DEFAULT_AUTH_AUTH0_CONNECTION,
         validation_alias="CIVITAS_AUTH_AUTH0_CONNECTION",
     )
+    billing_enabled: bool = Field(
+        default=DEFAULT_BILLING_ENABLED,
+        validation_alias="CIVITAS_BILLING_ENABLED",
+    )
+    billing_provider: str = Field(
+        default=DEFAULT_BILLING_PROVIDER,
+        validation_alias="CIVITAS_BILLING_PROVIDER",
+    )
+    billing_stripe_secret_key: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_BILLING_STRIPE_SECRET_KEY",
+    )
+    billing_stripe_webhook_secret: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET",
+    )
+    billing_stripe_portal_configuration_id: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_BILLING_STRIPE_PORTAL_CONFIGURATION_ID",
+    )
 
     @property
     def database(self) -> DatabaseSettings:
@@ -870,6 +904,14 @@ class AppSettings(BaseSettings):
             auth0=self._build_auth0_settings(),
         )
 
+    @property
+    def billing(self) -> BillingSettings:
+        return BillingSettings(
+            enabled=self.billing_enabled,
+            provider=self.billing_provider,
+            stripe=self._build_stripe_billing_settings(),
+        )
+
     @field_validator(
         "gias_source_csv",
         "gias_source_zip",
@@ -895,6 +937,9 @@ class AppSettings(BaseSettings):
         "auth_auth0_client_secret",
         "auth_auth0_audience",
         "auth_auth0_connection",
+        "billing_stripe_secret_key",
+        "billing_stripe_webhook_secret",
+        "billing_stripe_portal_configuration_id",
         mode="before",
     )
     @classmethod
@@ -944,6 +989,16 @@ class AppSettings(BaseSettings):
             normalized = value.strip().casefold()
             if normalized not in {"development", "auth0"}:
                 raise ValueError("CIVITAS_AUTH_PROVIDER must be one of: auth0, development")
+            return normalized
+        return value
+
+    @field_validator("billing_provider", mode="before")
+    @classmethod
+    def _normalize_billing_provider(cls, value: object) -> object:
+        if isinstance(value, str):
+            normalized = value.strip().casefold()
+            if normalized != "stripe":
+                raise ValueError("CIVITAS_BILLING_PROVIDER must be one of: stripe")
             return normalized
         return value
 
@@ -1153,6 +1208,20 @@ class AppSettings(BaseSettings):
                     "CIVITAS_AUTH_SHARED_SECRET must be overridden outside local or test environments."
                 )
 
+        return self._validate_billing_settings()
+
+    def _validate_billing_settings(self) -> AppSettings:
+        if not self.billing_enabled:
+            return self
+
+        if self.billing_provider == "stripe" and (
+            self.billing_stripe_secret_key is None or self.billing_stripe_webhook_secret is None
+        ):
+            raise ValueError(
+                "CIVITAS_BILLING_STRIPE_SECRET_KEY and CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET "
+                "must be set when CIVITAS_BILLING_ENABLED=true."
+            )
+
         return self
 
     def _build_auth0_settings(self) -> Auth0ProviderSettings | None:
@@ -1170,6 +1239,20 @@ class AppSettings(BaseSettings):
             client_secret=self.auth_auth0_client_secret,
             audience=self.auth_auth0_audience,
             connection=self.auth_auth0_connection or DEFAULT_AUTH_AUTH0_CONNECTION,
+        )
+
+    def _build_stripe_billing_settings(self) -> StripeBillingSettings | None:
+        if (
+            self.billing_provider != "stripe"
+            or self.billing_stripe_secret_key is None
+            or self.billing_stripe_webhook_secret is None
+        ):
+            return None
+
+        return StripeBillingSettings(
+            secret_key=self.billing_stripe_secret_key,
+            webhook_secret=self.billing_stripe_webhook_secret,
+            portal_configuration_id=self.billing_stripe_portal_configuration_id,
         )
 
 

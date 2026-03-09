@@ -139,7 +139,9 @@ describe("useResultsMode", () => {
       });
     });
 
-    expect(result.current.status).toBe("success");
+    await waitFor(() => {
+      expect(result.current.status).toBe("success");
+    });
     expect(result.current.result?.mode).toBe("postcode");
     expect(result.current.result?.query.phases).toEqual(["primary"]);
     expect(result.current.result?.query.sort).toBe("academic");

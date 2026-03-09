@@ -1,4 +1,10 @@
 import type {
+  BillingPortalSessionCreateRequest,
+  BillingPortalSessionCreateResponse,
+  BillingProductsResponse,
+  CheckoutSessionCreateRequest,
+  CheckoutSessionCreateResponse,
+  CheckoutSessionStatusResponse,
   AuthStartResponse,
   CreateTaskRequest,
   HealthResponse,
@@ -18,7 +24,8 @@ const SCHOOL_ENDPOINT_CACHE_LIMIT = 200;
 const SCHOOL_PROFILE_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+$/;
 const SCHOOL_COMPARE_PATH_RE = /^\/api\/v1\/schools\/compare\?urns=[^?#]+$/;
 const SCHOOL_TRENDS_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends$/;
-const SCHOOL_TRENDS_DASHBOARD_PATH_RE = /^\/api\/v1\/schools\/[^/?#]+\/trends\/dashboard$/;
+const SCHOOL_TRENDS_DASHBOARD_PATH_RE =
+  /^\/api\/v1\/schools\/[^/?#]+\/trends\/dashboard$/;
 
 interface CacheEntry {
   value: unknown;
@@ -175,7 +182,9 @@ export function resetApiRequestCache(): void {
   inFlightRequests.clear();
 }
 
-export async function startSignIn(payload: StartSignInInput): Promise<AuthStartResponse> {
+export async function startSignIn(
+  payload: StartSignInInput
+): Promise<AuthStartResponse> {
   return request<AuthStartResponse>("/api/v1/auth/start", {
     method: "POST",
     body: JSON.stringify({
@@ -193,6 +202,42 @@ export async function signOut(): Promise<SessionResponse> {
   return request<SessionResponse>("/api/v1/auth/signout", {
     method: "POST"
   });
+}
+
+export async function listBillingProducts(): Promise<BillingProductsResponse> {
+  return request<BillingProductsResponse>("/api/v1/billing/products");
+}
+
+export async function createCheckoutSession(
+  payload: CheckoutSessionCreateRequest
+): Promise<CheckoutSessionCreateResponse> {
+  return request<CheckoutSessionCreateResponse>(
+    "/api/v1/billing/checkout-sessions",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
+}
+
+export async function getCheckoutSessionStatus(
+  checkoutId: string
+): Promise<CheckoutSessionStatusResponse> {
+  return request<CheckoutSessionStatusResponse>(
+    `/api/v1/billing/checkout-sessions/${encodeURIComponent(checkoutId)}`
+  );
+}
+
+export async function createBillingPortalSession(
+  payload: BillingPortalSessionCreateRequest
+): Promise<BillingPortalSessionCreateResponse> {
+  return request<BillingPortalSessionCreateResponse>(
+    "/api/v1/billing/portal-sessions",
+    {
+      method: "POST",
+      body: JSON.stringify(payload)
+    }
+  );
 }
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -232,21 +277,35 @@ export async function searchSchools({
   return request<SchoolsSearchResponse>(`/api/v1/schools?${params.toString()}`);
 }
 
-export async function searchSchoolsByName(name: string): Promise<SchoolNameSearchResponse> {
+export async function searchSchoolsByName(
+  name: string
+): Promise<SchoolNameSearchResponse> {
   const params = new URLSearchParams({ name });
-  return request<SchoolNameSearchResponse>(`/api/v1/schools/search?${params.toString()}`);
+  return request<SchoolNameSearchResponse>(
+    `/api/v1/schools/search?${params.toString()}`
+  );
 }
 
-export async function getSchoolProfile(urn: string): Promise<SchoolProfileResponse> {
-  return request<SchoolProfileResponse>(`/api/v1/schools/${encodeURIComponent(urn)}`);
+export async function getSchoolProfile(
+  urn: string
+): Promise<SchoolProfileResponse> {
+  return request<SchoolProfileResponse>(
+    `/api/v1/schools/${encodeURIComponent(urn)}`
+  );
 }
 
-export async function getSchoolCompare(urns: string[]): Promise<SchoolCompareResponse> {
+export async function getSchoolCompare(
+  urns: string[]
+): Promise<SchoolCompareResponse> {
   const params = new URLSearchParams({ urns: urns.join(",") });
-  return request<SchoolCompareResponse>(`/api/v1/schools/compare?${params.toString()}`);
+  return request<SchoolCompareResponse>(
+    `/api/v1/schools/compare?${params.toString()}`
+  );
 }
 
-export async function getSchoolTrends(urn: string): Promise<SchoolTrendsResponse> {
+export async function getSchoolTrends(
+  urn: string
+): Promise<SchoolTrendsResponse> {
   return request<SchoolTrendsResponse>(
     `/api/v1/schools/${encodeURIComponent(urn)}/trends`
   );

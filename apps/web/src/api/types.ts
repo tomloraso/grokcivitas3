@@ -7,6 +7,26 @@ export type AuthStartResponse = components["schemas"]["AuthStartResponse"];
 export type HealthResponse =
   operations["health_api_v1_health_get"]["responses"][200]["content"]["application/json"];
 
+export type BillingProductsResponse =
+  components["schemas"]["BillingProductsResponse"];
+
+export type BillingProduct = components["schemas"]["BillingProductResponse"];
+
+export type CheckoutSessionCreateRequest =
+  components["schemas"]["CheckoutSessionCreateRequest"];
+
+export type CheckoutSessionCreateResponse =
+  components["schemas"]["CheckoutSessionCreateResponse"];
+
+export type CheckoutSessionStatusResponse =
+  components["schemas"]["CheckoutSessionStatusResponse"];
+
+export type BillingPortalSessionCreateRequest =
+  components["schemas"]["BillingPortalSessionCreateRequest"];
+
+export type BillingPortalSessionCreateResponse =
+  components["schemas"]["BillingPortalSessionCreateResponse"];
+
 export type SessionResponse = components["schemas"]["SessionResponse"];
 
 export type SessionUser = components["schemas"]["SessionUserResponse"];
@@ -15,12 +35,14 @@ export type Task = components["schemas"]["TaskResponse"];
 
 export type CreateTaskRequest = components["schemas"]["TaskCreateRequest"];
 
-export type SchoolsSearchResponse = components["schemas"]["SchoolsSearchResponse"];
+export type SchoolsSearchResponse =
+  components["schemas"]["SchoolsSearchResponse"];
 
 export type PostcodeSchoolSearchResultItem =
   components["schemas"]["PostcodeSchoolSearchItemResponse"];
 
-export type SchoolNameSearchResultItem = components["schemas"]["SchoolSearchItemResponse"];
+export type SchoolNameSearchResultItem =
+  components["schemas"]["SchoolSearchItemResponse"];
 
 export type SchoolSearchResultItem = SchoolNameSearchResultItem;
 
@@ -30,7 +52,8 @@ export type SchoolSearchAcademicMetric =
 export type SchoolSearchLatestOfsted =
   components["schemas"]["SchoolSearchLatestOfstedResponse"];
 
-export type SchoolNameSearchResponse = components["schemas"]["SchoolNameSearchResponse"];
+export type SchoolNameSearchResponse =
+  components["schemas"]["SchoolNameSearchResponse"];
 
 export type SearchSchoolsQuery =
   operations["search_schools_api_v1_schools_get"]["parameters"]["query"];
@@ -39,9 +62,11 @@ export type SearchSchoolsQuery =
 /* School profile + trends (Phase 1D / 1E)                             */
 /* ------------------------------------------------------------------ */
 
-export type SchoolProfileResponse = components["schemas"]["SchoolProfileResponse"];
+export type SchoolProfileResponse =
+  components["schemas"]["SchoolProfileResponse"];
 
-export type SchoolProfileSchool = components["schemas"]["SchoolProfileSchoolResponse"];
+export type SchoolProfileSchool =
+  components["schemas"]["SchoolProfileSchoolResponse"];
 
 export type SchoolProfileDemographicsLatest =
   components["schemas"]["SchoolProfileDemographicsLatestResponse"];
@@ -76,24 +101,32 @@ export type SchoolProfileAreaContext =
 export type SchoolProfileAreaHousePrices =
   components["schemas"]["SchoolProfileAreaHousePricesResponse"];
 
-export type SchoolCompareResponse = components["schemas"]["SchoolCompareResponse"];
+export type SchoolCompareResponse =
+  components["schemas"]["SchoolCompareResponse"];
 
-export type SchoolCompareSchool = components["schemas"]["SchoolCompareSchoolResponse"];
+export type SchoolCompareSchool =
+  components["schemas"]["SchoolCompareSchoolResponse"];
 
-export type SchoolCompareSection = components["schemas"]["SchoolCompareSectionResponse"];
+export type SchoolCompareSection =
+  components["schemas"]["SchoolCompareSectionResponse"];
 
-export type SchoolCompareRow = components["schemas"]["SchoolCompareRowResponse"];
+export type SchoolCompareRow =
+  components["schemas"]["SchoolCompareRowResponse"];
 
-export type SchoolCompareCell = components["schemas"]["SchoolCompareCellResponse"];
+export type SchoolCompareCell =
+  components["schemas"]["SchoolCompareCellResponse"];
 
 export type SchoolCompareBenchmark =
   components["schemas"]["SchoolCompareBenchmarkResponse"];
 
-export type SchoolTrendsResponse = components["schemas"]["SchoolTrendsResponse"];
+export type SchoolTrendsResponse =
+  components["schemas"]["SchoolTrendsResponse"];
 
-export type SchoolTrendsSeries = components["schemas"]["SchoolTrendsSeriesResponse"];
+export type SchoolTrendsSeries =
+  components["schemas"]["SchoolTrendsSeriesResponse"];
 
-export type SchoolTrendPoint = components["schemas"]["SchoolTrendPointResponse"];
+export type SchoolTrendPoint =
+  components["schemas"]["SchoolTrendPointResponse"];
 
 export type SchoolTrendBenchmarkPoint =
   components["schemas"]["SchoolTrendBenchmarkPointResponse"];

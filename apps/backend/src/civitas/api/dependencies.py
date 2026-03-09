@@ -1,9 +1,18 @@
 from typing import Literal, cast
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, Response
 
 from civitas.api.request_origins import require_allowed_cookie_origin
-from civitas.api.session_cookies import SessionCookieSettings
+from civitas.api.session_cookies import SessionCookieSettings, clear_session_cookie
+from civitas.application.access.use_cases import ListAvailablePremiumProductsUseCase
+from civitas.application.billing.ports.billing_provider_gateway import BillingProviderGateway
+from civitas.application.billing.use_cases import (
+    CreateBillingPortalSessionUseCase,
+    CreateCheckoutSessionUseCase,
+    GetCheckoutStatusUseCase,
+    ReconcilePaymentEventUseCase,
+)
+from civitas.application.identity.dto import SessionUserDto
 from civitas.application.identity.use_cases import (
     CompleteAuthCallbackUseCase,
     GetCurrentSessionUseCase,
@@ -24,12 +33,22 @@ from civitas.application.tasks.use_cases import CreateTaskUseCase, ListTasksUseC
 from civitas.bootstrap.container import (
     app_settings,
     complete_auth_callback_use_case,
+    create_billing_portal_session_use_case,
+    create_checkout_session_use_case,
     create_task_use_case,
+    list_available_premium_products_use_case,
     list_tasks_use_case,
+    reconcile_payment_event_use_case,
     search_schools_by_name_use_case,
     search_schools_by_postcode_use_case,
     sign_out_use_case,
     start_sign_in_use_case,
+)
+from civitas.bootstrap.container import (
+    billing_provider_gateway as build_billing_provider_gateway,
+)
+from civitas.bootstrap.container import (
+    get_checkout_status_use_case as build_checkout_status_use_case,
 )
 from civitas.bootstrap.container import (
     get_current_session_use_case as build_current_session_use_case,
@@ -68,6 +87,30 @@ def get_sign_out_use_case() -> SignOutUseCase:
     return sign_out_use_case()
 
 
+def get_list_available_premium_products_use_case() -> ListAvailablePremiumProductsUseCase:
+    return list_available_premium_products_use_case()
+
+
+def get_create_checkout_session_use_case() -> CreateCheckoutSessionUseCase:
+    return create_checkout_session_use_case()
+
+
+def get_checkout_status_use_case() -> GetCheckoutStatusUseCase:
+    return build_checkout_status_use_case()
+
+
+def get_create_billing_portal_session_use_case() -> CreateBillingPortalSessionUseCase:
+    return create_billing_portal_session_use_case()
+
+
+def get_reconcile_payment_event_use_case() -> ReconcilePaymentEventUseCase:
+    return reconcile_payment_event_use_case()
+
+
+def get_billing_provider_gateway() -> BillingProviderGateway:
+    return build_billing_provider_gateway()
+
+
 def get_session_cookie_settings() -> SessionCookieSettings:
     settings = app_settings().auth
     return SessionCookieSettings(
@@ -98,6 +141,25 @@ def require_valid_auth_origin(
         cookie_name=cookie_settings.name,
         allowed_origins=allowed_origins,
     )
+
+
+def require_authenticated_session(
+    request: Request,
+    response: Response,
+    use_case: GetCurrentSessionUseCase = Depends(get_current_session_use_case),
+    cookie_settings: SessionCookieSettings = Depends(get_session_cookie_settings),
+) -> SessionUserDto:
+    session_token = request.cookies.get(cookie_settings.name)
+    result = use_case.execute(session_token=session_token)
+    if result.state == "authenticated" and result.user is not None:
+        return result.user
+    if session_token and result.anonymous_reason in {
+        "invalid",
+        "expired",
+        "revoked",
+    }:
+        clear_session_cookie(response, settings=cookie_settings)
+    raise HTTPException(status_code=401, detail="authentication required")
 
 
 def get_list_tasks_use_case() -> ListTasksUseCase:
