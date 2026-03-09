@@ -1,4 +1,4 @@
-import { Calendar, CalendarDays, Clock3 } from "lucide-react";
+import { Calendar, CalendarDays, Clock3, ExternalLink } from "lucide-react";
 
 import { DataStatusBadge } from "../../../components/data/DataStatusBadge";
 import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
@@ -12,6 +12,7 @@ import type { OfstedVM, OfstedTimelineVM, SectionCompletenessVM } from "../types
 /* ------------------------------------------------------------------ */
 
 interface OfstedProfileSectionProps {
+  ofstedReportUrl: string | null;
   ofsted: OfstedVM | null;
   timeline: OfstedTimelineVM;
   ofstedCompleteness: SectionCompletenessVM;
@@ -93,6 +94,7 @@ function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
 /* ------------------------------------------------------------------ */
 
 export function OfstedProfileSection({
+  ofstedReportUrl,
   ofsted,
   timeline,
   ofstedCompleteness,
@@ -135,17 +137,19 @@ export function OfstedProfileSection({
       className="panel-surface rounded-lg space-y-6 p-5 sm:p-6"
     >
       {/* ── Section header ─────────────────────── */}
-      <div className="space-y-1">
-        <h2
-          id="ofsted-heading"
-          className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl"
-        >
-          <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
-          <GlossaryTerm term="ofsted">Ofsted Profile</GlossaryTerm>
-        </h2>
-        <p className="text-sm text-secondary">
-          Inspection judgements and history from Ofsted.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h2
+            id="ofsted-heading"
+            className="flex items-center gap-2 text-lg font-semibold text-primary sm:text-xl"
+          >
+            <span className="inline-block h-5 w-[3px] rounded-full bg-brand" aria-hidden />
+            <GlossaryTerm term="ofsted">Ofsted Profile</GlossaryTerm>
+          </h2>
+          <p className="text-sm text-secondary">
+            Inspection judgements and history from Ofsted.
+          </p>
+        </div>
       </div>
 
       {/* ── Sub-judgements ─────────────────────── */}
@@ -274,12 +278,25 @@ export function OfstedProfileSection({
                       </Badge>
                     </div>
 
-                    {event.publicationDate ? (
-                      <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-secondary">
-                        <Clock3 className="h-3.5 w-3.5 text-disabled" aria-hidden />
-                        Published: {event.publicationDate}
-                      </p>
-                    ) : null}
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      {event.publicationDate ? (
+                        <p className="inline-flex items-center gap-1.5 text-xs text-secondary">
+                          <Clock3 className="h-3.5 w-3.5 text-disabled" aria-hidden />
+                          Published: {event.publicationDate}
+                        </p>
+                      ) : null}
+                      {isLatest && ofstedReportUrl ? (
+                        <a
+                          href={ofstedReportUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-800 hover:underline"
+                        >
+                          View report
+                          <ExternalLink className="h-3 w-3" aria-hidden />
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </li>
               );
