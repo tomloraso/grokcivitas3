@@ -37,6 +37,7 @@
 | Phase 10 | Former Phase 4 | `.planning/phases/phase-10-premium-access/` |
 | Phase 11 | New MVP follow-on | `.planning/phases/phase-11-search-results-mvp/` |
 | Phase 12 | Former Phase 5 | `.planning/phases/phase-12-post-mvp/` |
+| Phase 13 | New launch readiness | `.planning/phases/phase-13-launch-readiness/` |
 
 ## Phase Sequence
 
@@ -261,6 +262,25 @@
   - `11F-post-mvp-prioritization-and-quality-gates.md`
 - Dependencies: Phase 10 and Phase 11 for MVP completion; individual slices may also depend on Phase 5 or Phase 8 where relevant
 
+### Phase 13 - Product foundation and launch readiness
+
+- Status: Planned
+- Goal: Deliver the foundational product pages (About, Data Sources, Contact), legal compliance pages (Privacy, Terms, Accessibility), SEO infrastructure (meta tags, structured data, robots.txt, sitemap, favicon), and cookie consent required before public launch or Phase 10 billing.
+- Folder: `.planning/phases/phase-13-launch-readiness/`
+- Detailed design:
+  - `README.md`
+  - `L1-content-page-foundation.md`
+  - `L2-seo-and-discoverability-infrastructure.md`
+  - `L3-about-and-data-sources.md`
+  - `L4-legal-and-compliance.md`
+  - `L5-quality-gates.md`
+- Dependencies: Phase 5 (design tokens, component primitives, site chrome)
+- Coordination notes:
+  - L4 (Legal and Compliance) is a hard prerequisite for Phase 10 Stage 10B. Cookie consent must be live before Stage 10A sets session cookies in non-local environments.
+  - L2 SEO infrastructure is the foundation that Phase 12 location-based SEO pages build on.
+  - No backend dependencies — this is a frontend-only phase.
+  - Can run in parallel with Phase 10 Stage 10A identity work.
+
 ## Phase Summary
 
 | Phase | Outcome | Status |
@@ -278,6 +298,7 @@
 | 10 | Identity, feature entitlements, payments, and premium enforcement | Planned (two gated stages) |
 | 11 | Fast postcode results table with server-side shortlist signals | Planned |
 | 12 | Growth, admin, SEO, exports, optimization | Planned |
+| 13 | Product pages, legal compliance, SEO infra, cookie consent | Planned |
 
 ## Open Decisions
 
