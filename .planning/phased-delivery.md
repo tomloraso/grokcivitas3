@@ -39,6 +39,12 @@
 | Phase 12 | Former Phase 5 | `.planning/phases/phase-12-post-mvp/` |
 | Phase 13 | New launch readiness | `.planning/phases/phase-13-launch-readiness/` |
 | Phase 14 | New post-launch follow-on | `.planning/phases/phase-14-favourites-and-saved-research/` |
+| Phase 15 | New school financial benchmarks | `.planning/phases/phase-15-school-financial-benchmarks/` |
+| Phase 16 | New workforce census depth | `.planning/phases/phase-16-workforce-census-depth/` |
+| Phase 17 | New school admissions | `.planning/phases/phase-17-school-admissions/` |
+| Phase 18 | New leaver destinations | `.planning/phases/phase-18-leaver-destinations/` |
+| Phase 19 | New subject performance | `.planning/phases/phase-19-subject-performance/` |
+| Phase 20 | New similar-school benchmarking | `.planning/phases/phase-20-similar-school-benchmarking/` |
 
 ## Phase Sequence
 
@@ -300,6 +306,108 @@
   - Reuse the `school_search_summary` read model for account-library rows rather than hydrating full school profiles.
   - Use explicit save and remove mutations plus viewer-aware saved-state on search and profile routes; do not depend on browser-only toggle state.
 
+### Phase 15 - School financial benchmarks
+
+- Status: Planned
+- Goal: Add annual academy financial benchmarking data from the Academies Accounts Return into the Bronze -> Silver -> Gold platform and expose finance metrics in trends, profiles, and benchmark materialization.
+- Folder: `.planning/phases/phase-15-school-financial-benchmarks/`
+- Detailed design:
+  - `README.md`
+  - `15A-source-contract-and-schema-freeze.md`
+  - `15B-aar-pipeline-and-gold-schema.md`
+  - `15C-serving-contract-and-benchmark-integration.md`
+  - `15D-quality-gates.md`
+- Dependencies: Phase 4 and Phase 6
+- Coordination notes:
+  - This phase is academy-first because the verified live source is the annual AAR workbook.
+  - Do not introduce Parquet or request-time benchmark computation in this phase; stay on the current raw-asset Bronze and post-promote benchmark workflow.
+  - If maintained-school finance parity is later required, add it as a follow-on source-contract slice rather than broadening this phase without verified school-level source evidence.
+
+### Phase 16 - Workforce census depth
+
+- Status: Planned
+- Goal: Expand workforce coverage from the current summary metrics into teacher characteristics, support-staff structure, pay, absence, vacancy, and third-party support datasets using published school-level workforce files.
+- Folder: `.planning/phases/phase-16-workforce-census-depth/`
+- Detailed design:
+  - `README.md`
+  - `16A-source-catalog-and-schema-freeze.md`
+  - `16B-teacher-characteristics-pipeline.md`
+  - `16C-support-staff-and-derived-metrics.md`
+  - `16D-serving-contract-and-quality-gates.md`
+- Dependencies: Phase 4 and Phase 6
+- Coordination notes:
+  - The live 2024 school-level size and teacher-turnover files currently resolve to zero-byte payloads, so this phase must not depend on them for first implementation.
+  - Extend the existing `dfe_workforce` pipeline rather than creating parallel workforce source IDs unless a verified contract difference makes the split cleaner.
+  - Keep completeness semantics explicit at metric level where suppression or source gaps remain.
+
+### Phase 17 - School admissions
+
+- Status: Planned
+- Goal: Add school-level admissions demand and offer metrics, starting with deterministic GIAS join-key support and then annual admissions pipeline promotion into profile, trends, and benchmarks.
+- Folder: `.planning/phases/phase-17-school-admissions/`
+- Detailed design:
+  - `README.md`
+  - `17A-join-key-foundation-and-source-contract.md`
+  - `17B-admissions-pipeline-and-gold-schema.md`
+  - `17C-serving-contract-and-benchmark-integration.md`
+  - `17D-quality-gates.md`
+- Dependencies: Phase 0, Phase 4, and Phase 6
+- Coordination notes:
+  - `school_laestab` and establishment-number persistence are hard prerequisites before any admissions normalization work lands.
+  - The verified source already contains both `school_urn` and `school_laestab_as_used`; the GIAS join-key work is still required to make the school dimension deterministic across releases.
+  - Keep derived oversubscription and offer-rate logic in Silver or Gold, not in the API layer.
+
+### Phase 18 - Leaver destinations
+
+- Status: Planned
+- Goal: Add school-level KS4 and 16-18 destination outcomes using published DfE data-catalogue CSV datasets, with a unified school-destination gold model and completeness-aware profile/trends exposure.
+- Folder: `.planning/phases/phase-18-leaver-destinations/`
+- Detailed design:
+  - `README.md`
+  - `18A-source-contract-and-bronze-strategy.md`
+  - `18B-destinations-pipeline-and-gold-schema.md`
+  - `18C-serving-contract-and-completeness.md`
+  - `18D-quality-gates.md`
+- Dependencies: Phase 6
+- Coordination notes:
+  - The verified release-file content endpoints for the latest publications currently return zero-byte payloads; use the live data-catalogue CSV endpoints defined in this phase instead of the empty release-file path.
+  - The 16-18 slice extends beyond the current 4-16 MVP brief and should be sequenced after launch-critical roadmap items unless the brief is updated.
+  - Keep the Bronze contract explicit about dataset URLs and downloaded metadata because this source does not use the current release-file discovery pattern.
+
+### Phase 19 - Subject performance
+
+- Status: Planned
+- Goal: Add school-level KS4 subject attainment and 16-18 subject entry/grade datasets, then expose subject-strength summaries and granular subject trends without promising school-level subject value-added where no verified source exists.
+- Folder: `.planning/phases/phase-19-subject-performance/`
+- Detailed design:
+  - `README.md`
+  - `19A-source-contract-and-scope-freeze.md`
+  - `19B-ks4-subject-performance-pipeline.md`
+  - `19C-16-to-18-subject-performance-pipeline.md`
+  - `19D-serving-contract-and-quality-gates.md`
+- Dependencies: Phase 6
+- Coordination notes:
+  - The school-level subject datasets come from the EES data catalogue and should be ingested as explicit CSV downloads, not inferred from the current `dfe_performance` pipeline.
+  - Verified subject value-added data is national-level only; do not plan school-level subject progress metrics until a school-level source is confirmed.
+  - The 16-18 slice extends beyond the current 4-16 MVP brief and should be sequenced after launch-critical roadmap items unless the brief is updated.
+
+### Phase 20 - Similar-school benchmarking
+
+- Status: Planned
+- Goal: Replace average-only benchmark outputs with reusable cohort definitions and percentile distributions, including a deterministic similar-school cohort model built from already-ingested school attributes and metrics.
+- Folder: `.planning/phases/phase-20-similar-school-benchmarking/`
+- Detailed design:
+  - `README.md`
+  - `20A-cohort-model-and-benchmark-schema.md`
+  - `20B-materialization-and-backfill.md`
+  - `20C-api-contract-and-web-adoption.md`
+  - `20D-quality-gates.md`
+- Dependencies: Phase 6, Phase 15, Phase 16, Phase 17, Phase 18, and Phase 19 for full metric coverage
+- Coordination notes:
+  - This phase is a serving-model change, not a new external source ingest.
+  - Materialization must remain on the post-promote or manual workflow path; do not move benchmark cohort computation into the request path.
+  - Similar-school cohorts should only use attributes already present in Gold or in a completed earlier phase; no runtime calls to external services are allowed.
+
 ## Phase Summary
 
 | Phase | Outcome | Status |
@@ -319,6 +427,12 @@
 | 12 | Growth, admin, SEO, exports, optimization | Planned |
 | 13 | Product pages, legal compliance, SEO infra, cookie consent | Planned |
 | 14 | Account favourites and saved research workflows | Planned |
+| 15 | Academy financial benchmarks and finance trends | Planned |
+| 16 | Deeper workforce census metrics and staffing structure | Planned |
+| 17 | School-level admissions demand and offer signals | Planned |
+| 18 | KS4 and 16-18 leaver destination outcomes | Planned |
+| 19 | Subject-level KS4 and 16-18 performance | Planned |
+| 20 | Similar-school percentile benchmarking model | Planned |
 
 ## Open Decisions
 
@@ -327,3 +441,5 @@
 3. Whether Stage 10A should ship dark before Stage 10B, or remain internal-only until the full premium flow is ready.
 4. Whether Phase 12 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
 5. Whether Phase 14 favourites work should stay strictly post-launch or be pulled forward if pre-launch capacity remains after launch blockers close.
+6. Whether the project brief should expand from the current 4-16 MVP scope before Phase 18 and Phase 19 16-18 slices are scheduled.
+7. Whether maintained-school finance parity should become a separate phase after Phase 15 once a verified school-level source contract is frozen.
