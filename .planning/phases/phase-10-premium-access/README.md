@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-08
+- Last updated: 2026-03-09
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 
@@ -22,12 +22,14 @@ The original Phase 10 plan treated premium as a postcode-area unlock. That model
 
 - Premium is account-level, not geography-level.
 - The paid consumer tier is called `Premium`. `Pro` is reserved for a future B2B tier. All user-facing copy, code identifiers, and design assets must use `Premium`.
-- Core search, profile, trends, and compare journeys remain available in the free product.
-- Premium unlocks additional sections, deeper analysis, premium AI artifacts, and other advanced workflow features defined in `10G-premium-access-matrix.md`.
+- Core search, profile, and baseline trends remain available in the free product.
+- Compare entry points remain visible in the free product, but the compare workflow itself is a premium capability in the Phase 10 launch bundle.
+- Premium unlocks additional sections, deeper analysis, and workflow features defined in `10G-premium-access-matrix.md`.
+- Benchmark context remains free in Phase 10, including inline benchmark cues and the benchmark dashboard drill-down.
 - The exact free versus premium split is a prerequisite planning artifact for Stage 10B and should not be inferred ad hoc during implementation.
 - Access decisions remain backend-owned. The frontend renders the result and sends user intent.
-- The launch premium bundle remains limited to the two capabilities frozen in `10G`; do not expand Stage 10 scope by implicitly monetizing other surfaces.
-- The premium benchmark surface is the dedicated drill-down dashboard, not the inline benchmark cues already embedded in the free profile experience.
+- The launch premium bundle is frozen around three capabilities in `10G`: AI Analyst, Comparison, and Neighbourhood Context.
+- School favourites are explicitly deferred out of Phase 10 into a later follow-on phase.
 - Premium-sensitive contracts must distinguish `locked` from `unavailable` or `not_published`; missing JSON alone is not an acceptable paywall signal.
 - Locked premium sections use a blur-with-teaser pattern with backend-supplied teaser content and contextual, school-specific CTAs. Empty states and generic upgrade prompts are not acceptable.
 - Premium status in the UI is communicated through ambient design cues (quiet header label, thin accent borders), not badges, banners, or promotional elements.
@@ -73,7 +75,7 @@ Stage 10B exit outcome:
 
 - Hosted checkout creates paid account-level premium access.
 - Signed provider webhooks reconcile into active or revoked premium entitlements.
-- Search, profile, trends, compare, and premium AI surfaces consistently enforce feature-tier premium boundaries.
+- Profile sections, compare, and premium AI surfaces consistently enforce the launch premium boundaries.
 
 ## Technical Approach Summary
 
@@ -103,8 +105,8 @@ Stage 10B exit outcome:
 
 - Add dedicated `auth` and `premium-access` feature ownership inside `apps/web/src/features`.
 - The app shell reads typed session state from Civitas API endpoints only.
-- Existing cached profile and trends requests must become access-aware so free responses are not reused after upgrade and premium responses are not reused after sign-out.
-- The profile page should stop depending on the premium dashboard route for its free baseline render path; free inline benchmark cues stay available from the main profile payload.
+- Existing cached profile and compare requests must become access-aware so free responses are not reused after upgrade and premium responses are not reused after sign-out.
+- The profile page should model analyst and neighbourhood content as premium-aware section wrappers while keeping the free benchmark path intact.
 
 ## Key Domain Concepts
 
@@ -137,7 +139,7 @@ Stage 10B exit outcome:
 5. Freeze `10G` before any entitlement, billing, or premium-surface enforcement work begins.
 6. Complete `10C` to model premium products, capability grants, and access evaluation before any payment wiring exists.
 7. Complete `10D` to add checkout, provider callbacks, and idempotent fulfillment.
-8. Complete `10E` to wire premium boundaries into search, profile, trends, compare, and premium AI contracts plus web paywall UX.
+8. Complete `10E` to wire premium boundaries into profile, compare, and premium AI contracts plus web paywall UX while keeping benchmark context free.
 9. Complete `10F` to close both stages with architecture, security, staging, and acceptance evidence.
 
 ## Definition Of Done

@@ -52,9 +52,14 @@ Recommended application use cases:
 ## Launch Billing Defaults For Implementation Planning
 
 - Seed one launch product code such as `premium_launch`.
+- Map that launch product to exactly these three Phase 10 capabilities:
+  - `premium_ai_analyst`
+  - `premium_comparison`
+  - `premium_neighbourhood`
 - For Stage 10B build planning, assume one recurring provider price mapped to that launch product in each environment.
 - Keep the data model flexible enough for later annual or fixed-term products, but do not block Phase 10 on designing a multi-plan catalog.
 - If product later changes the launch interval, the intended goal is that only seed data and provider configuration move, not the entitlement or paywall architecture.
+- Benchmark context is not part of the paid launch product in this phase. Inline benchmark cues and the benchmark dashboard drill-down remain free.
 
 ### Checkout Flow
 
@@ -144,6 +149,7 @@ The implementation plan must treat these as normal paths, not edge-case cleanup 
 - The web app should show "processing payment" states, but unlock should only occur after backend reconciliation.
 - Product catalog mapping must not live in frontend constants.
 - The billing slice should not depend on route-specific profile or trends logic; it grants commercial coverage only, while the access slice decides which premium surfaces that coverage unlocks.
+- The Phase 10 launch product must stay aligned to the three-capability bundle frozen in `10G`; do not silently add benchmark or favourites coverage in billing configuration.
 - Reconciliation tests must cover overlapping entitlements or duplicate purchase attempts for the same product so support behavior is explicit.
 
 ## Acceptance Criteria

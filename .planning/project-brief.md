@@ -38,13 +38,14 @@ The first vertical is school research for ages 4-16. The platform is intentional
    - User can sort and filter the result set, with straight-line distance as the default postcode-search order.
 3. School profile
    - User sees core identifiers, headline indicators, and multi-year trends.
-   - User sees Ofsted history, deprivation, crime, and benchmark context where available.
+   - User sees Ofsted history and benchmark context where available, including inline benchmark cues and the benchmark dashboard drill-down, with neighbourhood context unlocked through premium access.
    - User may also see two pre-generated AI summaries with explicit disclaimer and provenance: a factual overview and an evidence-grounded analyst view.
 4. Compare schools
-   - User compares up to four schools side by side using a consistent metric set.
+   - Premium users can compare up to four schools side by side using a consistent metric set.
 5. Paywall and purchase
-   - Free users can complete the core research journey across search, profile, trends, and compare.
-   - Paid users unlock additional feature layers, deeper data views, and premium analysis on the same account.
+   - Free users can complete the core research journey across search, school profiles, and baseline trends.
+   - Paid users unlock side-by-side comparison, neighbourhood context, and premium analysis on the same account.
+   - Benchmark context remains free in Phase 10, including inline benchmark cues and the benchmark dashboard drill-down.
 
 ## Schools Data Scope (v1)
 
@@ -110,18 +111,19 @@ Minimum indicator groups:
 ## Business Model (Initial)
 
 - Free tier for core school research.
-- Paid account-level premium tier for deeper data, richer analysis, and advanced workflow features.
+- Paid account-level premium tier for side-by-side comparison, neighbourhood context, and richer analysis.
 
 ## Success Criteria (Initial)
 
-- Users can search by postcode and compare nearby schools in minutes.
-- Users can open school profiles and understand local context and multi-year trends.
+- Users can search by postcode and assess nearby schools in minutes.
+- Users can open school profiles and understand baseline evidence and multi-year trends without paying.
+- Premium users can compare nearby schools and unlock neighbourhood context without friction.
 - Premium users can unlock richer analysis and advanced features without disrupting the free research experience.
 - Data refreshes are reliable, auditable, and trend history is maintained.
 
 ## Open Decisions
 
 - Final premium packaging: monthly, annual, one-time, or hybrid.
-- Whether premium launch should stay limited to analyst plus dashboard capabilities, or add one compare enhancement if Phase 9 lands early.
+- Whether neighbourhood context should remain premium after launch learning or move back into the free baseline.
 - Exact metric thresholds for risk flags.
-- Which post-MVP expanders, such as report export or deeper house-price context, move up in priority after MVP.
+- Whether post-launch capacity should pull favourites forward ahead of broader post-MVP slices.

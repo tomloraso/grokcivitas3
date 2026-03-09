@@ -3,15 +3,12 @@
 ## Document Control
 
 - Status: Planning baseline
-- Last updated: 2026-03-07
+- Last updated: 2026-03-09
 - Scope: Launch sequencing aligned to current product completeness
 
 ## Current Readiness Snapshot
 
-As of 2026-03-06, Civitas already supports the core research journey for search, school profile depth, multi-year trends, benchmark dashboards, and AI-generated school overviews. Two important MVP slices are still planned:
-
-1. school comparison
-2. premium access and payments
+As of 2026-03-09, Civitas already supports the core research journey for search, school profile depth, multi-year trends, benchmark dashboards, AI-generated school overviews, and comparison. The remaining MVP launch-critical slice is premium access and payments.
 
 Launch planning should therefore be staged around product completeness rather than treated as a single public launch date.
 
@@ -33,12 +30,13 @@ Launch planning should therefore be staged around product completeness rather th
 
 - Public launch should follow successful Phase 9 sign-off.
 - Position the product around honest, source-backed school research, not opinion or recommendations.
-- Public launch scope should emphasize search, profile depth, trends, benchmarks, and comparison.
+- Public launch scope should emphasize search, profile depth, trends, and benchmark context while making premium upgrade paths visible but restrained.
 
 ### Stage 4 - Premium launch
 
 - Premium launch should follow successful Phase 10 sign-off.
-- Position premium around richer data depth, premium analysis, and advanced research features while keeping the core product free.
+- Position premium around AI analyst depth, side-by-side comparison, and neighbourhood context while keeping the free product credible.
+- Benchmark context should remain free in this launch cut, including inline benchmark cues and the benchmark dashboard drill-down.
 - Conversion flow must be backed by proven feature-tier entitlement enforcement and payment reconciliation.
 
 ## Readiness Gates
@@ -60,13 +58,13 @@ Before premium launch:
 ## Early Success Measures
 
 - Search-to-profile conversion rate
-- Profile-to-compare usage rate
-- Compare completion rate
+- Profile-to-premium-upgrade intent rate
+- Compare unlock rate
 - Premium conversion rate after launch
 - Data-refresh success rate and time-to-recover from failures
 
 ## Open Decisions
 
 1. Whether there is one public launch or a soft public beta before premium goes live.
-2. Whether premium launch should ship only the initial analyst plus dashboard bundle, or include one compare enhancement if Phase 9 lands early.
+2. Whether neighbourhood context should remain premium after launch learning or move back into the free baseline.
 3. Final premium packaging model for launch.

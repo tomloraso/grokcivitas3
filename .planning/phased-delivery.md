@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning index
-- Last updated: 2026-03-08
+- Last updated: 2026-03-09
 - Scope: Full-stack delivery sequencing across backend, web, data pipelines, and AI summary generation
 
 ## How To Use This Document
@@ -38,6 +38,7 @@
 | Phase 11 | New MVP follow-on | `.planning/phases/phase-11-search-results-mvp/` |
 | Phase 12 | Former Phase 5 | `.planning/phases/phase-12-post-mvp/` |
 | Phase 13 | New launch readiness | `.planning/phases/phase-13-launch-readiness/` |
+| Phase 14 | New post-launch follow-on | `.planning/phases/phase-14-favourites-and-saved-research/` |
 
 ## Phase Sequence
 
@@ -227,7 +228,7 @@
 - Dependencies: Phase 9
 - Coordination notes:
   - `10G-premium-access-matrix.md` is the product source of truth for free versus premium boundaries; payment and API wiring should not guess at section-level product boundaries.
-  - Existing web caching for profile and trends responses must become access-aware before premium rollout.
+  - Existing web caching for profile and compare responses must become access-aware before premium rollout.
   - Stage 10A can be feature-flagged and validated before Stage 10B goes live, but Phase 10 is not complete until both gates pass.
 
 ### Phase 11 - Postcode results table MVP
@@ -281,6 +282,24 @@
   - No backend dependencies — this is a frontend-only phase.
   - Can run in parallel with Phase 10 Stage 10A identity work.
 
+### Phase 14 - Favourites and saved research workflows
+
+- Status: Planned, deferred until after go-live unless spare pre-launch capacity appears
+- Goal: Add account-owned school favourites and a lightweight saved research library on top of the Phase 10 identity and entitlement foundation.
+- Folder: `.planning/phases/phase-14-favourites-and-saved-research/`
+- Detailed design:
+  - `README.md`
+  - `14A-account-favourites-foundation.md`
+  - `14B-favourites-web-and-library.md`
+  - `14C-phase-14-quality-gates.md`
+- Dependencies: Phase 9, Phase 10, and Phase 11
+- Coordination notes:
+  - This phase is intentionally outside the Phase 10 launch bundle even though favourites may later use a premium capability.
+  - Pull this phase forward before go-live only if Phase 10 Stage 10B and Phase 13 launch blockers are already complete.
+  - Keep the saved-research scope narrow at first: school favourites and a personal library, not a full workspace product.
+  - Reuse the `school_search_summary` read model for account-library rows rather than hydrating full school profiles.
+  - Use explicit save and remove mutations plus viewer-aware saved-state on search and profile routes; do not depend on browser-only toggle state.
+
 ## Phase Summary
 
 | Phase | Outcome | Status |
@@ -299,11 +318,12 @@
 | 11 | Fast postcode results table with server-side shortlist signals | Planned |
 | 12 | Growth, admin, SEO, exports, optimization | Planned |
 | 13 | Product pages, legal compliance, SEO infra, cookie consent | Planned |
+| 14 | Account favourites and saved research workflows | Planned |
 
 ## Open Decisions
 
-1. Final auth-provider choice within the managed email-based pattern defined for Phase 10.
-2. Final payment-provider choice and launch packaging for the account-level premium tier.
-3. Whether the Phase 10 launch bundle should stay limited to analyst plus dashboard capabilities, or add one compare enhancement if Phase 9 lands early.
-4. Whether Stage 10A should ship dark before Stage 10B, or remain internal-only until the full premium flow is ready.
-5. Whether Phase 12 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
+1. Final payment-provider choice and launch packaging for the account-level premium tier.
+2. Whether neighbourhood context should remain premium after launch learning or move back into the free baseline.
+3. Whether Stage 10A should ship dark before Stage 10B, or remain internal-only until the full premium flow is ready.
+4. Whether Phase 12 should remain one numbered backlog phase or later split into individually scheduled delivery phases once MVP is complete.
+5. Whether Phase 14 favourites work should stay strictly post-launch or be pulled forward if pre-launch capacity remains after launch blockers close.

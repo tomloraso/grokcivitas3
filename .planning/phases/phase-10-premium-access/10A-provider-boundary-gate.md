@@ -23,15 +23,19 @@ This gate exists so implementation does not drift into provider-specific logic i
 
 ### Free Versus Premium Boundary
 
-- Search, profile, trends, and compare remain available in the free product.
-- Premium should unlock higher-value sections, deeper analysis, richer compare behavior, premium AI artifacts, or other advanced workflow features.
+- Search, profile, and baseline trends remain available in the free product.
+- Compare entry points remain visible in free journeys, but the compare workflow itself is premium in the launch bundle.
+- Benchmark context remains free in the launch bundle, including inline benchmark cues and the benchmark dashboard drill-down.
+- Premium should unlock higher-value sections, richer compare behavior, premium AI artifacts, or other advanced workflow features.
 - Premium boundaries should be explained section-by-section, not inferred from whether a route is public or private.
 - Locked premium sections should use a blur-with-teaser pattern so the user can see that valuable, school-specific content exists behind the boundary. Empty states or removed sections are not acceptable paywall signals.
 - CTA copy at premium boundaries must be contextual and school-specific, not generic platform-upgrade language.
+- Phase 10 launch is frozen around three capabilities: `premium_ai_analyst`, `premium_comparison`, and `premium_neighbourhood`.
+- School favourites are explicitly deferred to a later phase rather than carried inside the Phase 10 launch scope.
 - The matrix must define whether premium affects:
   - additional sections
-  - deeper history or benchmark views
-  - advanced compare features
+  - compare tool access
+  - neighbourhood or location context
   - premium AI artifacts
   - future export or saved-workflow features
 

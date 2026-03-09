@@ -22,17 +22,28 @@ This document is the core of the phase. If the entitlement model is vague, every
 - query paths that work independently of web-session transport
 - deterministic expiry and revocation handling
 
+## Launch Inputs From 10G
+
+Phase 10 launch now freezes three premium capabilities:
+
+1. `premium_ai_analyst`
+2. `premium_comparison`
+3. `premium_neighbourhood`
+
+School favourites are explicitly deferred to a later phase and must not be pulled into this slice by accident.
+Benchmark context is explicitly outside the paid launch bundle in this phase. Inline benchmark cues and the benchmark dashboard drill-down remain free.
+
 ## Why The Unlock Scope Is Capability-Based
 
-The premium model is now account-level. Users do not buy access to one postcode or one search area. They buy access to premium features on their account.
+The premium model is account-level. Users do not buy access to one postcode or one search area. They buy access to premium features on their account.
 
 That means backend enforcement should answer questions like:
 
-- does this user have access to premium profile section `X`?
-- does this user have access to premium compare feature `Y`?
-- does this user have access to premium AI artifact `Z`?
+- does this user have access to the AI analyst section?
+- does this user have access to the compare workflow?
+- does this user have access to neighbourhood context on the profile?
 
-The access model should therefore operate on named capabilities or access requirements, not geography-derived scope.
+The access model should therefore operate on named capabilities or access requirements, not geography-derived scope or route-specific booleans.
 
 ## Intended Backend Model
 
@@ -92,13 +103,16 @@ Recommended section states carried by access-aware feature DTOs:
 - `locked`
 - `unavailable`
 
-`locked` means the premium artifact exists conceptually but the current viewer lacks access. `unavailable` means the artifact does not exist yet, is not supported, or has not been published.
+`locked` means the premium artefact exists conceptually but the current viewer lacks access. `unavailable` means the artefact does not exist yet, is not supported, or has not been published.
 
 ## Policy Source For MVP
 
 - `10G-premium-access-matrix.md` remains the product source of truth.
 - For the Phase 10 launch, that matrix should compile into a backend-owned policy registry in code, not a database-managed or admin-managed rules engine.
-- The registry should map surface requirements such as `school_profile.analyst` or `school_trends.dashboard` to capability keys such as `premium_school_analyst` and `premium_benchmark_dashboard`.
+- The registry should map surface requirements such as:
+  - `school_profile.ai_analyst` -> `premium_ai_analyst`
+  - `school_profile.neighbourhood` -> `premium_neighbourhood`
+  - `school_compare.core` -> `premium_comparison`
 - `premium_products` and `product_capabilities` remain persistence concerns for commercial packaging. They do not replace the backend policy registry that decides which product surface requires which capability.
 
 This keeps the launch policy explicit, testable, and aligned with the current repo architecture. A later admin-editable access policy system can be added only if product needs justify the extra complexity.
@@ -144,22 +158,30 @@ The exact section-by-section rules come from `10G-premium-access-matrix.md`, but
 ### Search
 
 - Search remains free at the route level.
-- If any search enhancement is premium, evaluate the named capability for that enhancement and return access metadata accordingly.
+- Premium compare entry points stay visible in search, but the actual compare workflow is gated by `premium_comparison`.
 
-### Profile And Trends
+### Profile
 
-- Evaluate requested premium sections against named capabilities such as premium analysis, deeper benchmark layers, or advanced detail sections.
+- Load the free baseline profile exactly as today.
+- Evaluate the AI analyst section through `premium_ai_analyst`.
+- Evaluate neighbourhood context through `premium_neighbourhood`.
 - Return free baseline content plus locked metadata when the user lacks the required capability.
 
 ### Compare
 
-- Core compare can remain free while advanced compare features, richer metric packs, or premium analysis are capability-gated.
-- The response should express which compare features are locked rather than collapsing the entire route into a binary premium or free decision.
+- Compare is a premium workflow in the launch bundle.
+- Evaluate `premium_comparison` before loading the full compare payload.
+- Return a typed locked response when the user lacks access rather than a generic route failure.
 
-### AI Artifacts
+### Trends And Benchmark Dashboard
 
-- AI overview may stay free.
-- Premium AI artifacts such as analyst views or other future commentary should be gated by named capabilities rather than by route-wide checks.
+- Baseline trends and benchmark cues remain free in the Phase 10 launch bundle.
+- Do not add premium access rules to the benchmark dashboard route in this slice unless product reopens the launch bundle later.
+
+### AI Artefacts
+
+- AI overview stays free.
+- The AI analyst view is gated by `premium_ai_analyst`.
 
 ## Access Decision Contract Shape
 
@@ -180,8 +202,8 @@ Recommended reason-code categories:
 - `free_baseline`
 - `premium_capability_missing`
 - `anonymous_user`
-- `artifact_not_published`
-- `artifact_not_supported`
+- `artefact_not_published`
+- `artefact_not_supported`
 - `entitlement_expired`
 - `entitlement_revoked`
 
@@ -200,24 +222,26 @@ Phase 10 should extend existing feature use cases instead of pushing access chec
 - When the decision is `locked`, return a typed analyst section payload with `state=locked`, `teaser_text` (first 2-3 sentences of the analyst text), the school name for contextual CTA rendering, and paywall metadata rather than a nullable `analyst_text`.
 - Add a lightweight summary metadata lookup or equivalent repository method so the use case can retrieve the teaser excerpt and distinguish `locked` from `unavailable` without loading the full premium text for unauthorized viewers.
 
-### Trends And Benchmark Dashboard
+### Profile Neighbourhood Context
 
-- Keep the main trends response free unless later planning changes the matrix.
-- Evaluate `premium_benchmark_dashboard` inside the dashboard use case before loading the full drill-down payload.
-- When locked, return a typed dashboard response with `state=locked`, `teaser_payload` (metric group headings, column labels, and layout structure), the school name for contextual CTA rendering, and paywall metadata but no premium metric values.
-- The free profile route should keep using the benchmark snapshot already embedded in the profile payload; it should not require dashboard access to render inline benchmark cues.
+- Evaluate `premium_neighbourhood` inside the profile use case before mapping deprivation, crime, and house-price data into the response.
+- When unlocked, return the full neighbourhood payload through a typed `available` wrapper.
+- When locked, return a typed neighbourhood section payload with `state=locked`, a short teaser line or teaser payload, the school name for contextual CTA rendering, and paywall metadata but no raw deprivation, crime, or house-price values.
+- `unavailable` must continue to mean the underlying artefact is absent or unsupported, not merely paywalled.
 
 ### Compare
 
-- Phase 9 compare remains free.
-- When future compare-plus capabilities are added, the compare use case should compose additional premium sections behind access decisions rather than forking into a separate premium route.
+- Evaluate `premium_comparison` before loading or returning the full compare dataset.
+- When locked, return a typed compare response or locked route state that includes requested school context plus paywall metadata so the web app can support both a teaser modal and a direct-route locked state.
+- Do not rely on client-side button disablement as the only comparison guard.
 
 ## Recommended Launch Seed Data
 
 - Seed one launch product code such as `premium_launch`.
-- Map that product to both launch capabilities:
-  - `premium_school_analyst`
-  - `premium_benchmark_dashboard`
+- Map that product to all three launch capabilities:
+  - `premium_ai_analyst`
+  - `premium_comparison`
+  - `premium_neighbourhood`
 - Keep the schema able to support additional product rows later without changing access-evaluation code.
 
 ## Guardrails
@@ -228,13 +252,14 @@ Phase 10 should extend existing feature use cases instead of pushing access chec
 - Access evaluation belongs in backend domain or application code, not in API route handlers.
 - `10G-premium-access-matrix.md` must remain the product source of truth for which capabilities each surface requires.
 - Locked premium state must never be represented by silently dropping a field that also means "not published yet."
-- Locked premium responses must include teaser content (`teaser_text` or `teaser_payload`) and the school name so the frontend can render the blur-with-teaser pattern with contextual CTAs.
+- Locked premium responses must include teaser content and the school name so the frontend can render contextual CTAs.
+- Compare entry points may stay visible for conversion, but compare access itself must still be enforced server-side.
 - All user-facing product display names must use `Premium`, never `Pro`. `Pro` is reserved for a future B2B tier.
 
 ## Acceptance Criteria
 
 - Backend has a stable feature-tier entitlement model and persistence contract.
 - Unlock state can be queried independently of web-session concerns and independently of payment-provider payloads.
-- Search, profile, trends, compare, and premium AI access can be evaluated through named access requirements instead of route-specific special cases.
+- Profile AI analyst, profile neighbourhood context, and compare access can be evaluated through named access requirements instead of route-specific special cases.
 - The data model is sufficient for later payment reconciliation and basic support workflows.
-- Existing profile and trends use cases have a clear, testable integration path for access-aware outputs.
+- Existing profile and compare use cases have a clear, testable integration path for access-aware outputs.

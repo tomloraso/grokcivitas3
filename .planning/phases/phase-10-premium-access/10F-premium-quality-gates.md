@@ -36,14 +36,15 @@ This phase changes authentication state, billing state, API contracts, and web r
 - unit and integration coverage for checkout creation and webhook verification
 - reconciliation tests covering duplicate, out-of-order, and replayed payment events
 - expiry and revocation tests proving access changes take effect immediately
-- access-evaluation tests for premium sections, compare features, and premium AI surfaces
+- access-evaluation tests for premium profile sections, premium compare actions or route states, and premium AI surfaces
 
 ### Frontend
 
 - checkout CTA and post-purchase refresh tests
 - cache-invalidation or access-aware-cache tests
 - locked-to-unlocked journey tests for representative premium surfaces
-- profile tests proving the free benchmark snapshot path still works without the premium dashboard route
+- profile tests proving the free benchmark snapshot path still works alongside premium analyst and neighbourhood wrappers
+- compare tests proving the locked compare state upgrades cleanly without affecting free benchmark routes
 
 ### End-To-End
 
@@ -73,6 +74,8 @@ This phase changes authentication state, billing state, API contracts, and web r
 - verify support recovery path for a checkout that succeeded at provider side but arrived late to the app
 - verify the premium access matrix behaves as documented for at least one free baseline surface, one locked premium section, and one unlocked premium flow
 - verify the locked analyst state and unpublished-analyst state render as different contract and UI outcomes
+- verify the locked neighbourhood state and compare-locked state render as different outcomes from genuinely unavailable content
+- verify benchmark context remains free for both anonymous and premium users in the same release candidate
 
 ## Acceptance Evidence
 
