@@ -148,9 +148,9 @@ The Data Sources page includes a styled `<table>` or definition list. Use the ex
 
 ### Quality gate
 
-- `npm run lint` passes.
-- `npm run typecheck` passes.
-- `npm run test` passes.
+- `make lint` passes.
+- `make test` passes.
+- `cd apps/web && npm run build` passes.
 - No layout regression at 375px mobile width.
 
 ## Acceptance Criteria
@@ -158,7 +158,7 @@ The Data Sources page includes a styled `<table>` or definition list. Use the ex
 - `/about`, `/data-sources`, and `/contact` routes render full content.
 - Footer links for About and Contact navigate to the correct pages.
 - Data Sources page lists every source from the source table with links to the original publisher.
-- All three pages use `ContentPageLayout` and have correct PageMeta (title, description, OG tags from L2).
+- All three pages use `ContentPageLayout` and have correct PageMeta (title, description, and canonical path from L2 where applicable).
 - Content is readable and well-formatted in both themes.
 
 ## Rollback

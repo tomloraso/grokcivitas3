@@ -146,9 +146,9 @@ Replace the current `FOOTER_LINKS` array in `SiteFooter.tsx`:
 
 ### Quality gate
 
-- `npm run lint` passes.
-- `npm run typecheck` passes.
-- `npm run test` passes.
+- `make lint` passes.
+- `make test` passes.
+- `cd apps/web && npm run build` passes.
 - No layout regression on existing routes (search, profile, compare).
 
 ## Acceptance Criteria
