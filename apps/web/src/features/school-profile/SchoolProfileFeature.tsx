@@ -150,7 +150,7 @@ export function SchoolProfileFeature(): JSX.Element {
 
             <div className="space-y-10 sm:space-y-12">
               <OfstedProfileSection
-                ofstedReportUrl={null}
+                providerPageUrl={profile.ofsted?.providerPageUrl ?? null}
                 ofsted={profile.ofsted}
                 timeline={profile.ofstedTimeline}
                 ofstedCompleteness={profile.completeness.ofstedLatest}

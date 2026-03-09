@@ -12,7 +12,7 @@ import type { OfstedVM, OfstedTimelineVM, SectionCompletenessVM } from "../types
 /* ------------------------------------------------------------------ */
 
 interface OfstedProfileSectionProps {
-  ofstedReportUrl: string | null;
+  providerPageUrl: string | null;
   ofsted: OfstedVM | null;
   timeline: OfstedTimelineVM;
   ofstedCompleteness: SectionCompletenessVM;
@@ -94,7 +94,7 @@ function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
 /* ------------------------------------------------------------------ */
 
 export function OfstedProfileSection({
-  ofstedReportUrl,
+  providerPageUrl,
   ofsted,
   timeline,
   ofstedCompleteness,
@@ -285,9 +285,9 @@ export function OfstedProfileSection({
                           Published: {event.publicationDate}
                         </p>
                       ) : null}
-                      {isLatest && ofstedReportUrl ? (
+                      {isLatest && providerPageUrl ? (
                         <a
-                          href={ofstedReportUrl}
+                          href={providerPageUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-800 hover:underline"

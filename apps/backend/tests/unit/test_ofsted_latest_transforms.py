@@ -18,6 +18,9 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures" / "ofsted_lat
 def _row(**overrides: str) -> dict[str, str]:
     row = {
         "URN": "100001",
+        "Web Link (opens in new window)": (
+            "http://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/100001"
+        ),
         "Inspection start date": "15/01/2026",
         "Publication date": "20/02/2026",
         "Latest OEIF overall effectiveness": "2",
@@ -87,6 +90,24 @@ def test_normalize_ofsted_row_returns_typed_record_for_graded_value() -> None:
     assert normalized.latest_ungraded_publication_date is None
     assert normalized.is_graded is True
     assert normalized.ungraded_outcome is None
+    assert (
+        normalized.provider_page_url
+        == "https://reports.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/100001"
+    )
+
+
+def test_normalize_ofsted_row_keeps_reports_host_when_already_present() -> None:
+    normalized, rejection = normalize_ofsted_latest_row(
+        _row(
+            **{"Web Link (opens in new window)": "https://reports.ofsted.gov.uk/provider/21/100001"}
+        ),
+        source_asset_url="https://assets.publishing.service.gov.uk/media/abc/latest.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert rejection is None
+    assert normalized is not None
+    assert normalized.provider_page_url == "https://reports.ofsted.gov.uk/provider/21/100001"
 
 
 def test_normalize_ofsted_row_supports_ungraded_outcome_when_code_missing() -> None:
@@ -107,6 +128,17 @@ def test_normalize_ofsted_row_supports_ungraded_outcome_when_code_missing() -> N
     assert normalized.overall_effectiveness_label is None
     assert normalized.is_graded is False
     assert normalized.ungraded_outcome == "Maintained standards"
+
+
+def test_normalize_ofsted_row_rejects_missing_provider_page_url() -> None:
+    normalized, rejection = normalize_ofsted_latest_row(
+        _row(**{"Web Link (opens in new window)": ""}),
+        source_asset_url="https://assets.publishing.service.gov.uk/media/abc/latest.csv",
+        source_asset_month="2026-01",
+    )
+
+    assert normalized is None
+    assert rejection == "missing_provider_page_url"
 
 
 def test_normalize_ofsted_row_treats_null_code_as_missing() -> None:

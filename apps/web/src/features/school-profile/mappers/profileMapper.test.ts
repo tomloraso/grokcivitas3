@@ -59,6 +59,7 @@ describe("mapProfileToVM", () => {
     expect(vm.behaviour?.suspensionsRate).toBe(0.9);
     expect(vm.workforce?.pupilTeacherRatio).toBe(16.7);
     expect(vm.leadership?.headteacherName).toBe("A. Smith");
+    expect(vm.ofsted?.providerPageUrl).toBe("https://reports.ofsted.gov.uk/provider/21/100001");
     expect(vm.areaContext.housePrices?.areaName).toBe("Camden");
     expect(vm.areaContext.crime?.annualIncidentsPer1000).toHaveLength(3);
     expect(vm.benchmarkDashboard?.sections).toHaveLength(6);

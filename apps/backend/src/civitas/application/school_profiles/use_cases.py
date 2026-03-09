@@ -188,6 +188,7 @@ class GetSchoolProfileUseCase:
                 days_since_most_recent_inspection=profile.ofsted_latest.days_since_most_recent_inspection,
                 is_graded=profile.ofsted_latest.is_graded,
                 ungraded_outcome=profile.ofsted_latest.ungraded_outcome,
+                provider_page_url=profile.ofsted_latest.provider_page_url,
             )
 
         ofsted_timeline = None

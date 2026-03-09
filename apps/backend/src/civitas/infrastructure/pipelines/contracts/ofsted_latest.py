@@ -3,11 +3,13 @@ from __future__ import annotations
 from contextlib import suppress
 from datetime import date, datetime
 from typing import Mapping, Sequence, TypedDict
+from urllib.parse import urlparse, urlunparse
 
-CONTRACT_VERSION = "ofsted_latest.v2"
+CONTRACT_VERSION = "ofsted_latest.v4"
 
 REQUIRED_HEADERS: tuple[str, ...] = (
     "URN",
+    "Web Link (opens in new window)",
     "Inspection start date",
     "Publication date",
     "Latest OEIF overall effectiveness",
@@ -35,6 +37,7 @@ JUDGEMENT_CODE_TO_LABEL: dict[str, str] = {
 
 class NormalizedOfstedLatestRow(TypedDict):
     urn: str
+    provider_page_url: str
     inspection_start_date: date | None
     publication_date: date | None
     overall_effectiveness_code: str | None
@@ -76,6 +79,12 @@ def normalize_row(
     urn = raw_row["URN"].strip()
     if not urn:
         return None, "missing_urn"
+
+    try:
+        provider_page_url = parse_provider_page_url(raw_row["Web Link (opens in new window)"])
+    except ValueError as exc:
+        rejection_code = str(exc)
+        return None, rejection_code
 
     try:
         inspection_start_date = parse_optional_date(raw_row["Inspection start date"])
@@ -170,6 +179,7 @@ def normalize_row(
     return (
         NormalizedOfstedLatestRow(
             urn=urn,
+            provider_page_url=provider_page_url,
             inspection_start_date=inspection_start_date,
             publication_date=publication_date,
             overall_effectiveness_code=overall_effectiveness_code,
@@ -214,6 +224,31 @@ def normalize_judgement_code(raw_value: str) -> str | None:
         return value
 
     return value
+
+
+def parse_provider_page_url(raw_value: str | None) -> str:
+    value = strip_or_none(raw_value)
+    if value is None:
+        raise ValueError("missing_provider_page_url")
+
+    parsed = urlparse(value)
+    host = parsed.netloc.casefold()
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError("invalid_provider_page_url")
+    if host not in {"www.ofsted.gov.uk", "ofsted.gov.uk", "reports.ofsted.gov.uk"}:
+        raise ValueError("invalid_provider_page_url")
+    if not (
+        parsed.path.startswith("/inspection-reports/find-inspection-report/provider/")
+        or parsed.path.startswith("/provider/")
+    ):
+        raise ValueError("invalid_provider_page_url")
+
+    normalized_host = host
+    if host in {"www.ofsted.gov.uk", "ofsted.gov.uk"}:
+        normalized_host = "reports.ofsted.gov.uk"
+
+    normalized = parsed._replace(scheme="https", netloc=normalized_host)
+    return urlunparse(normalized)
 
 
 def _parse_sub_judgement(

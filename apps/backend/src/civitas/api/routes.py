@@ -396,6 +396,7 @@ def get_school_profile(
             days_since_most_recent_inspection=result.ofsted_latest.days_since_most_recent_inspection,
             is_graded=result.ofsted_latest.is_graded,
             ungraded_outcome=result.ofsted_latest.ungraded_outcome,
+            provider_page_url=result.ofsted_latest.provider_page_url,
         )
 
     ofsted_timeline = SchoolProfileOfstedTimelineResponse(

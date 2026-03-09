@@ -161,6 +161,7 @@ export interface OfstedVM {
   leadershipAndManagementLabel: string | null;
   isGraded: boolean;
   ungradedOutcome: string | null;
+  providerPageUrl: string | null;
 }
 
 export interface OfstedTimelineEventVM {

@@ -4,7 +4,7 @@ Raised by: Tom
 Assigned to: Liam
 Last updated: 2026-03-09
 
-Items below are sequenced by priority. Each item includes the current state, what is being asked for, the recommended approach, and completion status.
+Items below are sequenced by priority. Each item includes the current state, what was asked for, the implemented approach, and completion status.
 
 ---
 
@@ -16,49 +16,72 @@ Items below are sequenced by priority. Each item includes the current state, wha
 
 ---
 
-## 1. Ofsted report URL — move to backend
+## 1. Ofsted provider page URL - source from backend Ofsted data
 
-**Status:** `[~]`
+**Status:** `[x]`
 
 **Current state:**
-The "View report" link UI is in place on the latest inspection card (opens in a new tab). The "View on Ofsted" header link has been removed. The frontend no longer constructs any URL — `OfstedProfileSection` accepts an `ofstedReportUrl: string | null` prop and only renders the link when the value is non-null. Currently `SchoolProfileFeature` passes `null`, so the link is hidden until the backend supplies the URL.
+The latest inspection card now renders a "View report" link when the backend supplies an Ofsted provider page URL. The frontend does not construct any Ofsted URL locally.
 
-**What is being asked for:**
-~~1. **New "View report" link on the latest inspection card.**~~ ✓ Done — the latest inspection card now shows a "View report" link opening in a new tab to the Ofsted search results for that school. Header link removed.
+**What was asked for:**
+Move the Ofsted URL decision out of the frontend and have the backend provide the link as part of the school profile response.
 
-2. **Move URL construction to the backend.** Remove the URL construction from the frontend entirely. The backend should supply a computed `ofsted_report_url` field on the school profile response. The frontend just renders it as an external link — no URL logic on the client.
+**Validated source data:**
+The Ofsted bronze source (`latest_inspections.csv`) already includes a per-row `Web Link (opens in new window)` value. That source link resolves to the correct provider route and is safer than synthesizing `/provider/{type}/{urn}` or falling back to search URLs. Validation on 2026-03-09 showed:
 
-**Why:**
-The project architecture states the backend owns business logic and decision rules; the frontend renders data and sends intent. The correct Ofsted URL is not purely mechanical — it depends on school type. For example, `/provider/21/{urn}` only resolves correctly for certain school types (verified: returns 404 for independent schools). The backend has the full school record including type and can produce the most precise link. If Ofsted change their URL structure, the fix is in one place.
+1. Bronze rows include a non-empty provider/report page link.
+2. The legacy Ofsted source URLs redirect successfully to live `https://reports.ofsted.gov.uk/provider/{type}/{urn}` pages.
+3. Provider type codes vary by record, so hardcoding `/provider/21/{urn}` is not reliable.
+4. Search results pages are not a safe substitute for schools absent from the Ofsted latest dataset.
 
-**Recommended approach:**
+**Implemented approach:**
 
-1. Add `ofsted_report_url: str | None` to `SchoolProfileIdentityResponse` in `apps/backend/src/civitas/api/schemas/school_profiles.py`.
+1. Added `provider_page_url` to the Ofsted latest pipeline contract and normalized it from the authoritative Ofsted source column onto a browser-safe `reports.ofsted.gov.uk` URL.
+2. Validated and normalized accepted URLs in the backend contract layer before staging/promoting the data.
+3. Persisted `provider_page_url` onto `school_ofsted_latest` and added an Alembic migration for the new column.
+4. Exposed `provider_page_url` through the school profile domain model, application DTO, API schema, OpenAPI contract, and generated web types.
+5. Mapped the field into the web `OfstedVM` and passed it through to `OfstedProfileSection`.
+6. Kept the frontend rendering-only: if no authoritative Ofsted row exists, the link stays hidden.
 
-2. Compute the value in the school profile use case or mapper. For now the safe fallback is the search URL:
-   ```python
-   f"https://reports.ofsted.gov.uk/search?q={urn}"
-   ```
-   Optionally, map known GIAS school types to their Ofsted provider type codes and use the direct `/provider/{type}/{urn}` URL where reliable.
+**Best-practice decision:**
+Use the Ofsted-published provider page URL as the source of truth. Do not generate fallback search URLs or guess provider type codes in the client.
 
-3. Regenerate frontend types:
-   ```bash
-   cd apps/web && npm run generate:types
-   ```
-
-4. Update `SchoolIdentityVM` in `apps/web/src/features/school-profile/types.ts` to include `ofstedReportUrl: string | null`.
-
-5. Update the profile mapper to pass the field through.
-
-6. In `SchoolProfileFeature.tsx`, replace `ofstedReportUrl={null}` with `ofstedReportUrl={profile.school.ofstedReportUrl}` (or wherever the mapper surfaces it). No changes needed in `OfstedProfileSection.tsx` — it already accepts the prop and renders the link only when the value is non-null.
-
-**Files to touch:**
+**Files changed:**
+- `apps/backend/alembic/versions/20260309_31_phase_m7_ofsted_provider_page_url.py`
+- `apps/backend/src/civitas/api/routes.py`
 - `apps/backend/src/civitas/api/schemas/school_profiles.py`
-- `apps/backend/src/civitas/application/schools/use_cases.py` (or relevant mapper)
-- `apps/web/src/api/generated-types.ts` (regenerated)
-- `apps/web/src/features/school-profile/types.ts`
-- `apps/web/src/features/school-profile/mappers/profileMapper.ts`
-- `apps/web/src/features/school-profile/components/OfstedProfileSection.tsx`
+- `apps/backend/src/civitas/application/school_profiles/dto.py`
+- `apps/backend/src/civitas/application/school_profiles/use_cases.py`
+- `apps/backend/src/civitas/domain/school_profiles/models.py`
+- `apps/backend/src/civitas/infrastructure/persistence/postgres_school_profile_repository.py`
+- `apps/backend/src/civitas/infrastructure/pipelines/contracts/ofsted_latest.py`
+- `apps/backend/src/civitas/infrastructure/pipelines/ofsted_latest.py`
+- `apps/backend/tests/fixtures/ofsted_latest/latest_inspections_mixed.csv`
+- `apps/backend/tests/fixtures/ofsted_latest/latest_inspections_valid.csv`
+- `apps/backend/tests/integration/test_ofsted_latest_pipeline.py`
+- `apps/backend/tests/integration/test_school_profile_api.py`
+- `apps/backend/tests/integration/test_school_profile_repository.py`
+- `apps/backend/tests/unit/test_get_school_profile_use_case.py`
+- `apps/backend/tests/unit/test_ofsted_latest_transforms.py`
+- `apps/web/src/api/generated-types.ts`
+- `apps/web/src/api/openapi.json`
 - `apps/web/src/features/school-profile/SchoolProfileFeature.tsx`
+- `apps/web/src/features/school-profile/components/OfstedProfileSection.tsx`
+- `apps/web/src/features/school-profile/mappers/profileMapper.test.ts`
+- `apps/web/src/features/school-profile/mappers/profileMapper.ts`
+- `apps/web/src/features/school-profile/testData.ts`
+- `apps/web/src/features/school-profile/types.ts`
+
+**Operational follow-up after merge/deploy:**
+
+1. Apply the Ofsted migration revision with `uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade 2026030931`.
+2. Rerun the Ofsted latest pipeline so existing records are backfilled with `provider_page_url`.
+
+**Validation completed:**
+
+1. Focused backend tests for contract normalization, pipeline persistence, repository mapping, use case mapping, and API serialization.
+2. OpenAPI export and frontend type regeneration.
+3. Focused frontend mapper tests, full web typecheck, full web lint, and production web build.
+4. Repo-level `make test` was attempted. Backend tests passed; the web suite still has a pre-existing timeout in `src/features/schools-search/SchoolsSearchFeature.test.tsx`.
 
 ---

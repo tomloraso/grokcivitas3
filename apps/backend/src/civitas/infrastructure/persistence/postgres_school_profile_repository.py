@@ -238,6 +238,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                             ofsted.urn AS ofsted_urn,
                             ofsted.overall_effectiveness_code,
                             ofsted.overall_effectiveness_label,
+                            ofsted.provider_page_url,
                             ofsted.inspection_start_date,
                             ofsted.publication_date,
                             ofsted.latest_oeif_inspection_start_date,
@@ -967,6 +968,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             ofsted_latest = SchoolOfstedLatest(
                 overall_effectiveness_code=_to_optional_str(row["overall_effectiveness_code"]),
                 overall_effectiveness_label=_to_optional_str(row["overall_effectiveness_label"]),
+                provider_page_url=_to_optional_str(row["provider_page_url"]),
                 inspection_start_date=row["inspection_start_date"],
                 publication_date=row["publication_date"],
                 latest_oeif_inspection_start_date=row["latest_oeif_inspection_start_date"],

@@ -388,7 +388,8 @@ function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
     leadershipAndManagementCode: ofsted.leadership_and_management_code,
     leadershipAndManagementLabel: ofsted.leadership_and_management_label,
     isGraded: ofsted.is_graded,
-    ungradedOutcome: ofsted.ungraded_outcome
+    ungradedOutcome: ofsted.ungraded_outcome,
+    providerPageUrl: toOptionalText(ofsted.provider_page_url)
   };
 }
 

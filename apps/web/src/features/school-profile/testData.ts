@@ -219,7 +219,8 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     most_recent_inspection_date: "2026-01-02",
     days_since_most_recent_inspection: 61,
     is_graded: true,
-    ungraded_outcome: null
+    ungraded_outcome: null,
+    provider_page_url: "https://reports.ofsted.gov.uk/provider/21/100001"
   },
   ofsted_timeline: {
     events: [

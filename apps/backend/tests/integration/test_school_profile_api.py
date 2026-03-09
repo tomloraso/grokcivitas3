@@ -261,6 +261,7 @@ def test_get_school_profile_returns_expected_contract() -> None:
                 days_since_most_recent_inspection=61,
                 is_graded=True,
                 ungraded_outcome=None,
+                provider_page_url="https://reports.ofsted.gov.uk/provider/21/123456",
             ),
             ofsted_timeline=SchoolOfstedTimelineDto(
                 events=(
@@ -647,6 +648,7 @@ def test_get_school_profile_returns_expected_contract() -> None:
             "days_since_most_recent_inspection": 61,
             "is_graded": True,
             "ungraded_outcome": None,
+            "provider_page_url": "https://reports.ofsted.gov.uk/provider/21/123456",
         },
         "ofsted_timeline": {
             "events": [

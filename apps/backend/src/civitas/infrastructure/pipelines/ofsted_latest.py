@@ -55,6 +55,7 @@ OFSTED_LATEST_NORMALIZATION_CONTRACT_VERSION = ofsted_latest_contract.CONTRACT_V
 @dataclass(frozen=True)
 class OfstedLatestStagedRow:
     urn: str
+    provider_page_url: str
     inspection_start_date: date | None
     publication_date: date | None
     overall_effectiveness_code: str | None
@@ -120,6 +121,7 @@ def normalize_ofsted_latest_row(
     return (
         OfstedLatestStagedRow(
             urn=normalized_row["urn"],
+            provider_page_url=normalized_row["provider_page_url"],
             inspection_start_date=normalized_row["inspection_start_date"],
             publication_date=normalized_row["publication_date"],
             overall_effectiveness_code=normalized_row["overall_effectiveness_code"],
@@ -220,6 +222,7 @@ class OfstedLatestPipeline:
                     f"""
                     CREATE TABLE staging.{staging_table_name} (
                         urn text PRIMARY KEY,
+                        provider_page_url text NOT NULL,
                         inspection_start_date date NULL,
                         publication_date date NULL,
                         overall_effectiveness_code text NULL,
@@ -250,6 +253,7 @@ class OfstedLatestPipeline:
                     f"""
                     INSERT INTO staging.{staging_table_name} (
                         urn,
+                        provider_page_url,
                         inspection_start_date,
                         publication_date,
                         overall_effectiveness_code,
@@ -272,6 +276,7 @@ class OfstedLatestPipeline:
                         source_asset_month
                     ) VALUES (
                         :urn,
+                        :provider_page_url,
                         :inspection_start_date,
                         :publication_date,
                         :overall_effectiveness_code,
@@ -294,6 +299,7 @@ class OfstedLatestPipeline:
                         :source_asset_month
                     )
                     ON CONFLICT (urn) DO UPDATE SET
+                        provider_page_url = EXCLUDED.provider_page_url,
                         inspection_start_date = EXCLUDED.inspection_start_date,
                         publication_date = EXCLUDED.publication_date,
                         overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,
@@ -322,6 +328,7 @@ class OfstedLatestPipeline:
                         [
                             {
                                 "urn": row.urn,
+                                "provider_page_url": row.provider_page_url,
                                 "inspection_start_date": row.inspection_start_date,
                                 "publication_date": row.publication_date,
                                 "overall_effectiveness_code": row.overall_effectiveness_code,
@@ -395,6 +402,7 @@ class OfstedLatestPipeline:
                         WITH upserted AS (
                             INSERT INTO school_ofsted_latest (
                                 urn,
+                                provider_page_url,
                                 inspection_start_date,
                                 publication_date,
                                 overall_effectiveness_code,
@@ -419,6 +427,7 @@ class OfstedLatestPipeline:
                             )
                             SELECT
                                 staged.urn,
+                                staged.provider_page_url,
                                 staged.inspection_start_date,
                                 staged.publication_date,
                                 staged.overall_effectiveness_code,
@@ -443,6 +452,7 @@ class OfstedLatestPipeline:
                             FROM staging.{staging_table_name} AS staged
                             INNER JOIN schools ON schools.urn = staged.urn
                             ON CONFLICT (urn) DO UPDATE SET
+                                provider_page_url = EXCLUDED.provider_page_url,
                                 inspection_start_date = EXCLUDED.inspection_start_date,
                                 publication_date = EXCLUDED.publication_date,
                                 overall_effectiveness_code = EXCLUDED.overall_effectiveness_code,

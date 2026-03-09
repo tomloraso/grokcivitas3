@@ -676,6 +676,7 @@ def _ensure_schema(engine: Engine) -> None:
                     publication_date date NULL,
                     overall_effectiveness_code text NULL,
                     overall_effectiveness_label text NULL,
+                    provider_page_url text NULL,
                     latest_oeif_inspection_start_date date NULL,
                     latest_oeif_publication_date date NULL,
                     quality_of_education_code text NULL,
@@ -695,6 +696,12 @@ def _ensure_schema(engine: Engine) -> None:
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS provider_page_url text NULL"
             )
         )
         connection.execute(
@@ -1266,6 +1273,7 @@ def _seed_data(engine: Engine) -> None:
                     latest_ungraded_publication_date,
                     is_graded,
                     ungraded_outcome,
+                    provider_page_url,
                     source_asset_url,
                     source_asset_month
                 ) VALUES (
@@ -1288,6 +1296,7 @@ def _seed_data(engine: Engine) -> None:
                     '2026-01-20',
                     true,
                     NULL,
+                    'https://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/910001',
                     'https://assets.publishing.service.gov.uk/media/example/latest.csv',
                     '2026-01'
                 )
@@ -1727,6 +1736,10 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.ofsted_latest.most_recent_inspection_date == date(2026, 1, 2)
     assert result.ofsted_latest.days_since_most_recent_inspection is not None
     assert result.ofsted_latest.days_since_most_recent_inspection >= 0
+    assert (
+        result.ofsted_latest.provider_page_url
+        == "https://www.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/910001"
+    )
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.coverage.is_partial_history is False
     assert result.ofsted_timeline.coverage.earliest_event_date == date(2015, 9, 14)

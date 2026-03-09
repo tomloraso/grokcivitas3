@@ -323,6 +323,7 @@ def test_get_school_profile_returns_contract_dto() -> None:
                 days_since_most_recent_inspection=60,
                 is_graded=True,
                 ungraded_outcome=None,
+                provider_page_url="https://reports.ofsted.gov.uk/provider/21/123456",
             ),
             ofsted_timeline=SchoolOfstedTimeline(
                 events=(
@@ -515,6 +516,9 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.ofsted_latest.overall_effectiveness_label == "Good"
     assert result.ofsted_latest.quality_of_education_label == "Good"
     assert result.ofsted_latest.days_since_most_recent_inspection == 60
+    assert (
+        result.ofsted_latest.provider_page_url == "https://reports.ofsted.gov.uk/provider/21/123456"
+    )
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.coverage.is_partial_history is False
     assert result.ofsted_timeline.events[0].inspection_number == "10426709"

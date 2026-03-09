@@ -124,6 +124,7 @@ def _ensure_schema(engine: Engine) -> None:
                     publication_date date NULL,
                     overall_effectiveness_code text NULL,
                     overall_effectiveness_label text NULL,
+                    provider_page_url text NULL,
                     latest_oeif_inspection_start_date date NULL,
                     latest_oeif_publication_date date NULL,
                     quality_of_education_code text NULL,
@@ -143,6 +144,12 @@ def _ensure_schema(engine: Engine) -> None:
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
                 )
                 """
+            )
+        )
+        connection.execute(
+            text(
+                "ALTER TABLE school_ofsted_latest "
+                "ADD COLUMN IF NOT EXISTS provider_page_url text NULL"
             )
         )
         connection.execute(
@@ -377,6 +384,7 @@ def test_ofsted_latest_pipeline_stage_and_promote_are_idempotent(
                 SELECT
                     overall_effectiveness_code,
                     overall_effectiveness_label,
+                    provider_page_url,
                     quality_of_education_code,
                     behaviour_and_attitudes_code,
                     is_graded,
@@ -386,7 +394,15 @@ def test_ofsted_latest_pipeline_stage_and_promote_are_idempotent(
                 """
             )
         ).one()
-        assert ofsted_100001 == ("1", "Outstanding", "1", "2", True, "2026-01")
+        assert ofsted_100001 == (
+            "1",
+            "Outstanding",
+            "https://reports.ofsted.gov.uk/inspection-reports/find-inspection-report/provider/ELS/100001",
+            "1",
+            "2",
+            True,
+            "2026-01",
+        )
 
         ofsted_100002 = connection.execute(
             text(
