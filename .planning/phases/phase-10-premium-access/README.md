@@ -44,6 +44,10 @@ The original Phase 10 plan treated premium as a postcode-area unlock. That model
 - `10G` becomes mandatory before entitlement modelling, billing wiring, or premium-aware API and web enforcement starts.
 - `10B1`, `10C`, `10D`, `10E`, and `10F` remain downstream of the auth/session foundation.
 
+## Supporting Decision Records
+
+- `10H-payment-provider-decision-memo.md` compares Stripe, Paddle, and secondary alternatives for Stage 10B billing and records the current recommendation.
+
 ## Delivery Stages
 
 ### Stage 10A - Identity And Access Foundation
@@ -89,7 +93,7 @@ Stage 10B exit outcome:
 
 ### Data And Persistence
 
-- Introduce first-class tables for users, auth identities, sessions, premium products, product capabilities, entitlement grants, checkout sessions, and payment events.
+- Introduce first-class tables for users, auth identities, sessions, premium products, product capabilities, entitlement grants, billing subscriptions, checkout sessions, and payment events.
 - Keep payment events append-only and idempotent so webhook retries are safe.
 - Entitlement expiry and revocation must take effect immediately in access evaluation.
 - Persist commercial product data separately from access policy mapping so later plan or pricing changes do not require redesign of profile or trends contracts.

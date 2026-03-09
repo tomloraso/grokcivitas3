@@ -12,6 +12,7 @@ Stage 10B starts here. Payment work should build on the identity and feature-ent
 - success and cancellation redirects
 - signed webhook ingestion
 - idempotent fulfillment into premium entitlement state
+- provider-hosted billing management handoff for cancellation and payment-method updates
 - audit-safe storage of commercial events and reconciliation results
 
 ## Intended Technical Approach
@@ -30,6 +31,7 @@ civitas/
       checkout_gateway.py
       billing_repository.py
       payment_event_repository.py
+      subscription_repository.py
 ```
 
 Infrastructure adapters should live under:
@@ -40,11 +42,13 @@ infrastructure/
     <provider>_checkout_gateway.py
   persistence/
     postgres_billing_repository.py
+    postgres_subscription_repository.py
 ```
 
 Recommended application use cases:
 
 - `CreateCheckoutSessionUseCase`
+- `CreateBillingPortalSessionUseCase` if self-serve billing management is in MVP
 - `GetCheckoutStatusUseCase`
 - `ReconcilePaymentEventUseCase`
 - `ListAccountBillingHistoryUseCase` if a basic account page needs audit visibility in MVP
@@ -100,19 +104,21 @@ Minimum additional table set:
 | Table | Purpose |
 |---|---|
 | `payment_customers` | Optional mapping between Civitas user and provider customer record |
+| `billing_subscriptions` | Current provider subscription agreement and period state for a user and product |
 | `checkout_sessions` | Internal checkout intents and provider references |
 | `payment_events` | Append-only provider event log with unique provider event IDs |
 
 Relationship to access model:
 
 - `checkout_sessions` reference `users` and `premium_products`
-- successful reconciliation writes to `entitlements`
+- successful reconciliation creates or updates `billing_subscriptions` and writes to `entitlements`
 - product-to-capability mapping remains in `product_capabilities`
 - replayed or duplicate events must not create duplicate entitlements
 
 Recommended additional fields:
 
 - `checkout_sessions`: internal checkout ID, user ID, product code, provider checkout/session ID, provider customer ID, status, requested_at, completed_at, canceled_at, return URL, cancel URL
+- `billing_subscriptions`: internal subscription ID, user ID, product code, provider subscription ID, provider customer ID, status, current_period_starts_at, current_period_ends_at, cancel_at_period_end, canceled_at, latest_checkout_session_id, updated_at
 - `payment_events`: provider name, provider event ID, event type, occurred_at, received_at, payload JSON, signature verification result, reconciliation status, reconciled_at
 - `payment_customers`: user ID, provider name, provider customer ID, created_at, updated_at
 
@@ -128,8 +134,9 @@ Reconciliation should run inside one transaction that:
 
 1. inserts or no-ops the provider event row
 2. updates checkout-session state if relevant
-3. creates or updates the entitlement grant
-4. appends the corresponding entitlement event
+3. creates or updates the subscription record if the provider event represents recurring coverage
+4. creates or updates the entitlement grant
+5. appends the corresponding entitlement event
 
 ## Failure And Recovery Cases
 
@@ -151,6 +158,8 @@ The implementation plan must treat these as normal paths, not edge-case cleanup 
 - The billing slice should not depend on route-specific profile or trends logic; it grants commercial coverage only, while the access slice decides which premium surfaces that coverage unlocks.
 - The Phase 10 launch product must stay aligned to the three-capability bundle frozen in `10G`; do not silently add benchmark or favourites coverage in billing configuration.
 - Reconciliation tests must cover overlapping entitlements or duplicate purchase attempts for the same product so support behavior is explicit.
+- `billing_subscriptions` should remain the billing system of record for recurring provider state, while `entitlements` remain the access system of record.
+- Prefer the provider's hosted customer portal or equivalent for cancellation and payment-method management in MVP rather than building custom billing-management screens.
 
 ## Acceptance Criteria
 

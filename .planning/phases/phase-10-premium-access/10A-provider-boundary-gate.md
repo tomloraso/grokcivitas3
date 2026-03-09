@@ -73,6 +73,7 @@ Why this pattern:
 - Use a hosted checkout provider with signed webhook support and stable session identifiers.
 - Civitas should own the internal product catalog, capability mapping, and entitlement grants.
 - Provider price IDs or product IDs should map to Civitas product codes in infrastructure configuration or persistence, not in UI code.
+- Current planning recommendation: prefer `Stripe` for Phase 10B because it best matches the current backend-owned session and entitlement design. If merchant-of-record requirements become the dominant decision driver before implementation starts, `Paddle` becomes the leading alternative. Full comparison lives in `10H-payment-provider-decision-memo.md`.
 
 Why this pattern:
 
