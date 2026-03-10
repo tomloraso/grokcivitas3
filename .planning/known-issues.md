@@ -139,6 +139,44 @@ Confirm that immediately after running `civitas pipeline materialize-benchmarks 
 
 ---
 
+## BUG-005 - Results & Progress section shows no sparklines or trend indicators for schools with only one year of academic data
+
+**Status:** Open
+**Severity:** Low (data gap — no incorrect data shown; section renders correctly with what is available)
+**Detected:** 2026-03-10
+**Assigned to:** Liam Kerrigan
+**Files:**
+- `apps/backend/src/civitas/infrastructure/persistence/postgres_school_profile_repository.py` — `school_performance_yearly` query (no code change needed; data fix only)
+- DfE performance pipeline — needs prior-year release file ingested
+
+### Validation
+
+Confirmed. Querying `school_performance_yearly WHERE urn = '136655'` returns a single row (`2024/25`). The `AcademicPerformanceSection` component requires `performance.history.length >= 2` to compute a year-on-year delta and render the sparkline + `TrendIndicator` footer. With only one year present, `delta = null` and the footer is suppressed entirely. Verified on 2026-03-10 via direct DB query:
+
+```
+academic_year: 2024/25  attainment8_average: 44.8  progress8_average: null
+```
+
+### Root cause
+
+The DfE academic performance pipeline has only ingested a single academic year (`2024/25`) into `school_performance_yearly`. The trend display is data-driven: trends appear automatically once a second year exists. No frontend code change is required.
+
+### Proposed fix
+
+Run the DfE performance pipeline against the 2023/24 release file to populate a prior-year row for each affected school. Trends and sparklines will appear in the Results & Progress section immediately on the next profile fetch (after the in-process cache TTL expires or the server is restarted).
+
+Check scope of the gap — it likely affects all or most schools, not just Congleton High School (URN 136655).
+
+### Workaround
+
+None. The section renders correctly for available data; it simply has nothing to compare against.
+
+### Verification (once fixed)
+
+Confirm that `school_performance_yearly WHERE urn = '136655'` returns at least two rows, and that the Results & Progress section on `/schools/136655` shows sparklines and trend indicators for attainment/progress metrics.
+
+---
+
 ## Tracker Notes
 
 - `make lint` still fails in the current branch because unrelated files already need formatting:
