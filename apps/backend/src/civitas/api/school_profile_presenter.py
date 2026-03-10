@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from civitas.api.favourites_presenter import to_saved_school_state_response
 from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.school_profiles import (
     SchoolProfileAnalystSectionResponse,
@@ -313,6 +314,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             area_context=_to_area_context_response(result.neighbourhood.area_context),
             teaser_text=result.neighbourhood.teaser_text,
         ),
+        saved_state=to_saved_school_state_response(result.saved_state),
         benchmarks=SchoolProfileBenchmarksResponse(
             metrics=[
                 SchoolProfileMetricBenchmarkResponse(

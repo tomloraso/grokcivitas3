@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from civitas.api.schemas.access import SectionAccessResponse
+from civitas.api.schemas.favourites import SavedSchoolStateResponse
 
 
 class SchoolProfileSchoolResponse(BaseModel):
@@ -382,6 +383,7 @@ class SchoolProfileResponse(BaseModel):
     ofsted_latest: SchoolProfileOfstedLatestResponse | None
     ofsted_timeline: SchoolProfileOfstedTimelineResponse
     neighbourhood: SchoolProfileNeighbourhoodSectionResponse
+    saved_state: SavedSchoolStateResponse
     benchmarks: SchoolProfileBenchmarksResponse = Field(
         default_factory=SchoolProfileBenchmarksResponse
     )

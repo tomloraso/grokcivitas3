@@ -1,6 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from civitas.domain.schools.models import SchoolSearchResult
+from civitas.application.favourites.dto import (
+    SavedSchoolStateDto,
+    anonymous_saved_school_state,
+)
 
 
 @dataclass(frozen=True)
@@ -32,6 +35,20 @@ class PostcodeSchoolSearchItemDto:
     pupil_count: int | None
     latest_ofsted: PostcodeSchoolSearchLatestOfstedDto
     academic_metric: PostcodeSchoolSearchAcademicMetricDto
+    saved_state: SavedSchoolStateDto = field(default_factory=anonymous_saved_school_state)
+
+
+@dataclass(frozen=True)
+class SchoolNameSearchItemDto:
+    urn: str
+    name: str
+    school_type: str | None
+    phase: str | None
+    postcode: str | None
+    lat: float
+    lng: float
+    distance_miles: float
+    saved_state: SavedSchoolStateDto = field(default_factory=anonymous_saved_school_state)
 
 
 @dataclass(frozen=True)
@@ -61,7 +78,7 @@ class SchoolsSearchResponseDto:
 
 @dataclass(frozen=True)
 class SchoolNameSearchResponseDto:
-    schools: tuple[SchoolSearchResult, ...]
+    schools: tuple[SchoolNameSearchItemDto, ...]
 
     @property
     def count(self) -> int:

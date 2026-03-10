@@ -16,6 +16,11 @@ from civitas.application.billing.use_cases import (
     GetCheckoutStatusUseCase,
     ReconcilePaymentEventUseCase,
 )
+from civitas.application.favourites.use_cases import (
+    ListSavedSchoolsUseCase,
+    RemoveSavedSchoolUseCase,
+    SaveSchoolUseCase,
+)
 from civitas.application.identity.dto import CurrentSessionDto, SessionUserDto
 from civitas.application.identity.use_cases import (
     CompleteAuthCallbackUseCase,
@@ -41,8 +46,11 @@ from civitas.bootstrap.container import (
     create_checkout_session_use_case,
     create_task_use_case,
     list_available_premium_products_use_case,
+    list_saved_schools_use_case,
     list_tasks_use_case,
     reconcile_payment_event_use_case,
+    remove_saved_school_use_case,
+    save_school_use_case,
     search_schools_by_name_use_case,
     search_schools_by_postcode_use_case,
     sign_out_use_case,
@@ -197,6 +205,18 @@ def get_optional_session_user(
 
 def get_list_tasks_use_case() -> ListTasksUseCase:
     return list_tasks_use_case()
+
+
+def get_list_saved_schools_use_case() -> ListSavedSchoolsUseCase:
+    return list_saved_schools_use_case()
+
+
+def get_save_school_use_case() -> SaveSchoolUseCase:
+    return save_school_use_case()
+
+
+def get_remove_saved_school_use_case() -> RemoveSavedSchoolUseCase:
+    return remove_saved_school_use_case()
 
 
 def get_search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:

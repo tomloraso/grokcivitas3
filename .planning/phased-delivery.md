@@ -304,7 +304,7 @@
   - Pull this phase forward before go-live only if Phase 10 Stage 10B and Phase 13 launch blockers are already complete.
   - Keep the saved-research scope narrow at first: school favourites and a personal library, not a full workspace product.
   - Reuse the `school_search_summary` read model for account-library rows rather than hydrating full school profiles.
-  - Use explicit save and remove mutations plus viewer-aware saved-state on search and profile routes; do not depend on browser-only toggle state.
+- Use explicit save and remove mutations plus viewer-aware saved-state on postcode search, name search, and profile routes; do not depend on browser-only toggle state.
 
 ### Phase 15 - School financial benchmarks
 

@@ -10,6 +10,13 @@ import { CompareSelectionProvider } from "../../../shared/context/CompareSelecti
 import { ResultsOverlay } from "./ResultsOverlay";
 import type { PostcodeSearchResult } from "../types";
 
+const notSavedState = {
+  status: "not_saved" as const,
+  saved_at: null,
+  capability_key: null,
+  reason_code: null,
+};
+
 function setMobile(mobile: boolean): void {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
@@ -61,7 +68,8 @@ const RESULT: PostcodeSearchResult = {
         display_value: "67%",
         sort_value: 67,
         availability: "published"
-      }
+      },
+      saved_state: notSavedState
     },
     {
       urn: "100002",
@@ -84,7 +92,8 @@ const RESULT: PostcodeSearchResult = {
         display_value: null,
         sort_value: null,
         availability: "not_published"
-      }
+      },
+      saved_state: notSavedState
     }
   ]
 };
@@ -99,11 +108,13 @@ function renderOverlay() {
               open
               status="success"
               result={RESULT}
+              savedStateByUrn={{}}
               errorMessage={null}
               phases={["primary"]}
               sort="ofsted"
               onClose={vi.fn()}
               onRetry={vi.fn(async () => undefined)}
+              onSavedStateChange={vi.fn()}
               onPhasesChange={vi.fn()}
               onSortChange={vi.fn()}
             />

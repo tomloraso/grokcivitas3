@@ -15,6 +15,12 @@ vi.mock("../../../api/client", async (importOriginal) => {
 });
 
 const searchSchoolsMock = vi.mocked(searchSchools);
+const notSavedState = {
+  status: "not_saved" as const,
+  saved_at: null,
+  capability_key: null,
+  reason_code: null,
+};
 
 const BASE_RESULT: PostcodeSearchResult = {
   mode: "postcode",
@@ -51,7 +57,8 @@ const BASE_RESULT: PostcodeSearchResult = {
         display_value: "67%",
         sort_value: 67,
         availability: "published"
-      }
+      },
+      saved_state: notSavedState
     }
   ]
 };
@@ -90,7 +97,8 @@ const PRIMARY_ACADEMIC_RESPONSE: SchoolsSearchResponse = {
         display_value: "67%",
         sort_value: 67,
         availability: "published"
-      }
+      },
+      saved_state: notSavedState
     }
   ]
 };

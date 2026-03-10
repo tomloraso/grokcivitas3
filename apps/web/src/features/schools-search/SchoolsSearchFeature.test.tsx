@@ -46,6 +46,12 @@ const searchSchoolsByNameMock = vi.mocked(searchSchoolsByName);
 const getSchoolProfileMock = vi.mocked(getSchoolProfile);
 const getSchoolTrendsMock = vi.mocked(getSchoolTrends);
 const getSchoolTrendDashboardMock = vi.mocked(getSchoolTrendDashboard);
+const notSavedState = {
+  status: "not_saved" as const,
+  saved_at: null,
+  capability_key: null,
+  reason_code: null,
+};
 
 const POSTCODE_RESPONSE: SchoolsSearchResponse = {
   query: {
@@ -81,7 +87,8 @@ const POSTCODE_RESPONSE: SchoolsSearchResponse = {
         display_value: "67%",
         sort_value: 67,
         availability: "published"
-      }
+      },
+      saved_state: notSavedState
     }
   ]
 };
@@ -153,6 +160,7 @@ describe("SchoolsSearchFeature", () => {
     });
 
     expect(searchSchoolsMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Results" }));
 

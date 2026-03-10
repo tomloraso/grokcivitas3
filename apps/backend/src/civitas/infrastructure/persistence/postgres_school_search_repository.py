@@ -7,12 +7,12 @@ from civitas.application.schools.dto import (
     PostcodeSchoolSearchAcademicMetricDto,
     PostcodeSchoolSearchItemDto,
     PostcodeSchoolSearchLatestOfstedDto,
+    SchoolNameSearchItemDto,
 )
 from civitas.application.schools.ports.school_search_repository import SchoolSearchRepository
 from civitas.application.schools.ports.school_search_summary_materializer import (
     SchoolSearchSummaryMaterializer,
 )
-from civitas.domain.schools.models import SchoolSearchResult
 
 METERS_PER_MILE = 1609.344
 PRIMARY_FAMILY_PHASES = ("Primary", "Middle deemed primary")
@@ -184,7 +184,7 @@ class PostgresSchoolSearchRepository(SchoolSearchRepository, SchoolSearchSummary
         *,
         name: str,
         limit: int,
-    ) -> tuple[SchoolSearchResult, ...]:
+    ) -> tuple[SchoolNameSearchItemDto, ...]:
         normalized_name = " ".join(name.split())
         tokens = [token.lower() for token in normalized_name.split(" ") if token]
         if not tokens:
@@ -235,7 +235,7 @@ class PostgresSchoolSearchRepository(SchoolSearchRepository, SchoolSearchSummary
             ).mappings()
 
             return tuple(
-                SchoolSearchResult(
+                SchoolNameSearchItemDto(
                     urn=str(row["urn"]),
                     name=str(row["name"]),
                     school_type=str(row["type"]) if row["type"] is not None else None,

@@ -56,12 +56,15 @@ Before implementation starts, the phase should already assume these concrete ext
 - Backend auth-aware read routes resolve the current viewer through a shared dependency in `apps/backend/src/civitas/api/dependencies.py` instead of reading cookies ad hoc in each handler.
 - New favourites routes live in a dedicated router module, similar to `auth_routes.py`, and are registered in `apps/backend/src/civitas/api/main.py`.
 - Search and profile use cases accept optional viewer context so saved-state can be mapped in the application layer rather than bolted onto route handlers.
+- Both search entry points participate in the saved-state contract:
+  - `GET /api/v1/schools`
+  - `GET /api/v1/schools/search`
 - The web app owns favourites UI under `apps/web/src/features/favourites/`.
 - Viewer-specific cache invalidation is handled deliberately in `apps/web/src/api/client.ts` and `apps/web/src/features/auth/AuthProvider.tsx`; save or remove actions must not leave stale saved-state behind.
 
 ## Definition Of Done
 
-- Signed-in users can save and remove schools from a personal favourites library.
+- Signed-in users can save and remove schools from postcode results, name-search results, profile pages, and their personal favourites library.
 - If favourites remain premium-scoped, backend entitlement checks enforce that boundary consistently.
 - Search, profile, and account surfaces all render the same saved-state model.
 - Repository lint, tests, and critical saved-research journeys pass.

@@ -13,6 +13,7 @@ from civitas.api.dependencies import (
     get_search_schools_by_name_use_case,
     get_search_schools_by_postcode_use_case,
 )
+from civitas.api.favourites_presenter import to_saved_school_state_response
 from civitas.api.schemas.school_compare import SchoolCompareResponse
 from civitas.api.schemas.school_profiles import SchoolProfileResponse
 from civitas.api.schemas.school_trends import (
@@ -112,6 +113,7 @@ def search_schools(
     radius: float | None = Query(default=None),
     phase: list[str] | None = Query(default=None),
     sort: str | None = Query(default=None),
+    viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: SearchSchoolsByPostcodeUseCase = Depends(get_search_schools_by_postcode_use_case),
 ) -> SchoolsSearchResponse:
     try:
@@ -120,6 +122,7 @@ def search_schools(
             radius_miles=radius,
             phases=tuple(phase) if phase is not None else None,
             sort=sort,
+            viewer_user_id=viewer.id if viewer is not None else None,
         )
     except InvalidSchoolSearchParametersError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -163,6 +166,7 @@ def search_schools(
                     sort_value=school.academic_metric.sort_value,
                     availability=school.academic_metric.availability,
                 ),
+                saved_state=to_saved_school_state_response(school.saved_state),
             )
             for school in result.schools
         ],
@@ -179,10 +183,14 @@ def search_schools(
 )
 def search_schools_by_name(
     name: str = Query(..., min_length=3),
+    viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: SearchSchoolsByNameUseCase = Depends(get_search_schools_by_name_use_case),
 ) -> SchoolNameSearchResponse:
     try:
-        result = use_case.execute(name=name)
+        result = use_case.execute(
+            name=name,
+            viewer_user_id=viewer.id if viewer is not None else None,
+        )
     except InvalidSchoolSearchParametersError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -198,6 +206,7 @@ def search_schools_by_name(
                 lat=school.lat,
                 lng=school.lng,
                 distance_miles=school.distance_miles,
+                saved_state=to_saved_school_state_response(school.saved_state),
             )
             for school in result.schools
         ],

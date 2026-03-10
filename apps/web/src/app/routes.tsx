@@ -23,6 +23,11 @@ const AccountFeature = lazy(async () => {
   return { default: module.AccountFeature };
 });
 
+const FavouritesLibraryFeature = lazy(async () => {
+  const module = await import("../features/favourites/FavouritesLibraryFeature");
+  return { default: module.FavouritesLibraryFeature };
+});
+
 const UpgradeFeature = lazy(async () => {
   const module = await import("../features/premium-access/UpgradeFeature");
   return { default: module.UpgradeFeature };
@@ -54,6 +59,23 @@ const routes: RouteObject[] = [
             }
           >
             <AccountFeature />
+          </Suspense>
+        )
+      },
+      {
+        path: "account/favourites",
+        element: (
+          <Suspense
+            fallback={
+              <PageContainer>
+                <div className="space-y-6">
+                  <LoadingSkeleton lines={4} />
+                  <LoadingSkeleton lines={6} />
+                </div>
+              </PageContainer>
+            }
+          >
+            <FavouritesLibraryFeature />
           </Suspense>
         )
       },

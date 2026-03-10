@@ -9,6 +9,9 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
 import { useToast } from "../../../components/ui/ToastContext";
+import { SaveSchoolButton } from "../../favourites/components/SaveSchoolButton";
+import { mapSavedSchoolState } from "../../favourites/mappers";
+import type { SavedSchoolStateVM } from "../../favourites/types";
 import { CompareActionButton } from "../../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../../shared/context/CompareSelectionContext";
 import { useIsMobile } from "../../../shared/hooks/useIsMobile";
@@ -29,11 +32,13 @@ interface ResultsOverlayProps {
   open: boolean;
   status: SchoolsSearchStatus;
   result: PostcodeSearchResult | null;
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
   errorMessage: string | null;
   phases: readonly SearchPhaseFilter[];
   sort: SearchSortMode;
   onClose: () => void;
   onRetry: () => Promise<void>;
+  onSavedStateChange: (urn: string, savedState: SavedSchoolStateVM) => void;
   onPhasesChange: (phases: SearchPhaseFilter[]) => void;
   onSortChange: (sort: SearchSortMode) => void;
   activeSchoolId?: string | null;
@@ -154,6 +159,8 @@ function ResultsTable({
   result,
   phases,
   sort,
+  savedStateByUrn,
+  onSavedStateChange,
   activeSchoolId,
   onSchoolHover,
   onPreviewSchool,
@@ -161,6 +168,8 @@ function ResultsTable({
   result: PostcodeSearchResult;
   phases: readonly SearchPhaseFilter[];
   sort: SearchSortMode;
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
+  onSavedStateChange: (urn: string, savedState: SavedSchoolStateVM) => void;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
@@ -186,12 +195,14 @@ function ResultsTable({
             <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Ofsted</th>
             <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Academic</th>
             <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Pupils</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Compare</th>
+            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
           {result.schools.map((school) => {
             const selected = hasSchool(school.urn);
+            const savedState =
+              savedStateByUrn[school.urn] ?? mapSavedSchoolState(school.saved_state);
             return (
               <tr
                 key={school.urn}
@@ -255,36 +266,45 @@ function ResultsTable({
                   {formatPupilCount(school.pupil_count)}
                 </td>
                 <td className="border-b border-border-subtle/40 px-4 py-4 align-top">
-                  <Button
-                    type="button"
-                    variant={selected ? "ghost" : "secondary"}
-                    size="sm"
-                    onClick={() => {
-                      if (selected) {
-                        removeSchool(school.urn);
-                        return;
-                      }
+                  <div className="flex min-w-[152px] flex-col items-start gap-2">
+                    <SaveSchoolButton
+                      schoolUrn={school.urn}
+                      savedState={savedState}
+                      onSavedStateChange={(nextState) => {
+                        onSavedStateChange(school.urn, nextState);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant={selected ? "ghost" : "secondary"}
+                      size="sm"
+                      onClick={() => {
+                        if (selected) {
+                          removeSchool(school.urn);
+                          return;
+                        }
 
-                      const addResult = addSchool({
-                        urn: school.urn,
-                        name: school.name,
-                        phase: school.phase,
-                        type: school.type,
-                        postcode: school.postcode,
-                        distanceMiles: school.distance_miles,
-                        source: "search",
-                      });
-                      if (addResult === "limit") {
-                        toast({
-                          title: "Compare limit reached",
-                          description: "You can compare up to four schools at a time.",
-                          variant: "warning",
+                        const addResult = addSchool({
+                          urn: school.urn,
+                          name: school.name,
+                          phase: school.phase,
+                          type: school.type,
+                          postcode: school.postcode,
+                          distanceMiles: school.distance_miles,
+                          source: "search",
                         });
-                      }
-                    }}
-                  >
-                    {selected ? "Remove" : count >= 4 ? "Compare full" : "Add"}
-                  </Button>
+                        if (addResult === "limit") {
+                          toast({
+                            title: "Compare limit reached",
+                            description: "You can compare up to four schools at a time.",
+                            variant: "warning",
+                          });
+                        }
+                      }}
+                    >
+                      {selected ? "Remove" : count >= 4 ? "Compare full" : "Add"}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             );
@@ -299,6 +319,8 @@ function ResultsCards({
   result,
   phases,
   sort,
+  savedStateByUrn,
+  onSavedStateChange,
   activeSchoolId,
   onSchoolHover,
   onPreviewSchool,
@@ -306,6 +328,8 @@ function ResultsCards({
   result: PostcodeSearchResult;
   phases: readonly SearchPhaseFilter[];
   sort: SearchSortMode;
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
+  onSavedStateChange: (urn: string, savedState: SavedSchoolStateVM) => void;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
@@ -323,6 +347,8 @@ function ResultsCards({
     <div className="space-y-3">
       {result.schools.map((school) => {
         const selected = hasSchool(school.urn);
+        const savedState =
+          savedStateByUrn[school.urn] ?? mapSavedSchoolState(school.saved_state);
         return (
           <Panel
             key={school.urn}
@@ -399,36 +425,45 @@ function ResultsCards({
               <p className="text-xs text-secondary">
                 {selected ? "Included in compare" : `Add up to ${Math.max(0, 4 - count)} more`}
               </p>
-              <Button
-                type="button"
-                variant={selected ? "ghost" : "secondary"}
-                size="sm"
-                onClick={() => {
-                  if (selected) {
-                    removeSchool(school.urn);
-                    return;
-                  }
+              <div className="flex items-center gap-2">
+                <SaveSchoolButton
+                  schoolUrn={school.urn}
+                  savedState={savedState}
+                  onSavedStateChange={(nextState) => {
+                    onSavedStateChange(school.urn, nextState);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant={selected ? "ghost" : "secondary"}
+                  size="sm"
+                  onClick={() => {
+                    if (selected) {
+                      removeSchool(school.urn);
+                      return;
+                    }
 
-                  const addResult = addSchool({
-                    urn: school.urn,
-                    name: school.name,
-                    phase: school.phase,
-                    type: school.type,
-                    postcode: school.postcode,
-                    distanceMiles: school.distance_miles,
-                    source: "search",
-                  });
-                  if (addResult === "limit") {
-                    toast({
-                      title: "Compare limit reached",
-                      description: "You can compare up to four schools at a time.",
-                      variant: "warning",
+                    const addResult = addSchool({
+                      urn: school.urn,
+                      name: school.name,
+                      phase: school.phase,
+                      type: school.type,
+                      postcode: school.postcode,
+                      distanceMiles: school.distance_miles,
+                      source: "search",
                     });
-                  }
-                }}
-              >
-                {selected ? "Remove" : "Add to compare"}
-              </Button>
+                    if (addResult === "limit") {
+                      toast({
+                        title: "Compare limit reached",
+                        description: "You can compare up to four schools at a time.",
+                        variant: "warning",
+                      });
+                    }
+                  }}
+                >
+                  {selected ? "Remove" : "Add to compare"}
+                </Button>
+              </div>
             </div>
           </Panel>
         );
@@ -441,11 +476,13 @@ export function ResultsOverlay({
   open,
   status,
   result,
+  savedStateByUrn,
   errorMessage,
   phases,
   sort,
   onClose,
   onRetry,
+  onSavedStateChange,
   onPhasesChange,
   onSortChange,
   activeSchoolId,
@@ -645,6 +682,8 @@ export function ResultsOverlay({
                   result={result}
                   phases={phases}
                   sort={sort}
+                  savedStateByUrn={savedStateByUrn}
+                  onSavedStateChange={onSavedStateChange}
                   activeSchoolId={activeSchoolId}
                   onSchoolHover={onSchoolHover}
                   onPreviewSchool={onPreviewSchool}
@@ -654,6 +693,8 @@ export function ResultsOverlay({
                   result={result}
                   phases={phases}
                   sort={sort}
+                  savedStateByUrn={savedStateByUrn}
+                  onSavedStateChange={onSavedStateChange}
                   activeSchoolId={activeSchoolId}
                   onSchoolHover={onSchoolHover}
                   onPreviewSchool={onPreviewSchool}

@@ -33,6 +33,15 @@ export type AccountAccessResponse =
 export type AccountEntitlementResponse =
   components["schemas"]["AccountEntitlementResponse"];
 
+export type AccountFavouritesResponse =
+  components["schemas"]["AccountFavouritesResponse"];
+
+export type AccountFavouriteSchoolResponse =
+  components["schemas"]["AccountFavouriteSchoolResponse"];
+
+export type SavedSchoolStateResponse =
+  components["schemas"]["SavedSchoolStateResponse"];
+
 export type SessionResponse = components["schemas"]["SessionResponse"];
 
 export type SessionUser = components["schemas"]["SessionUserResponse"];

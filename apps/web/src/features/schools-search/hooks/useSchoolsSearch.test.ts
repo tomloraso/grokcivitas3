@@ -16,6 +16,12 @@ vi.mock("../../../api/client", async (importOriginal) => {
 
 const searchSchoolsMock = vi.mocked(searchSchools);
 const searchSchoolsByNameMock = vi.mocked(searchSchoolsByName);
+const notSavedState = {
+  status: "not_saved" as const,
+  saved_at: null,
+  capability_key: null,
+  reason_code: null,
+};
 
 const postcodeResponse: SchoolsSearchResponse = {
   query: {
@@ -51,7 +57,8 @@ const postcodeResponse: SchoolsSearchResponse = {
         display_value: "67%",
         sort_value: 67,
         availability: "published"
-      }
+      },
+      saved_state: notSavedState
     }
   ]
 };
@@ -67,7 +74,8 @@ const nameResponse: SchoolNameSearchResponse = {
       postcode: "CW12 4NS",
       lat: 53.4628,
       lng: -2.2406,
-      distance_miles: 0
+      distance_miles: 0,
+      saved_state: notSavedState
     }
   ]
 };

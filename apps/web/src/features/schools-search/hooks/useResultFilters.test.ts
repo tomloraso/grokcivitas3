@@ -14,6 +14,25 @@ function makeSchool(overrides: Partial<SchoolSearchListItem> = {}): SchoolSearch
     lat: 51.5,
     lng: -0.1,
     distance_miles: 1.0,
+    pupil_count: 300,
+    latest_ofsted: {
+      label: "Good",
+      sort_rank: 2,
+      availability: "published"
+    },
+    academic_metric: {
+      metric_key: "ks2_combined_expected_pct",
+      label: "KS2 expected standard",
+      display_value: "67%",
+      sort_value: 67,
+      availability: "published"
+    },
+    saved_state: {
+      status: "not_saved",
+      saved_at: null,
+      capability_key: null,
+      reason_code: null
+    },
     ...overrides,
   };
 }

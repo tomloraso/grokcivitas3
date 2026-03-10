@@ -25,6 +25,7 @@ Phase 14 should extend the existing React ownership model rather than scatter sa
 
 - Save actions should appear where users already shortlist schools:
   - postcode results
+  - name-search results
   - school profile header
 - The account library should support:
   - latest saved first ordering
@@ -94,7 +95,10 @@ Do not infer saved state from the current button label or from stale local compo
 
 - Keep ownership in `features/schools-search/`.
 - Inject the save control through `ResultCard.actions`; do not teach the shared `ResultCard` primitive about favourites directly.
-- Use the `saved_state` returned by the postcode search response as the initial state for each card.
+- Use the `saved_state` returned by both search response types as the initial state for each card:
+  - postcode search via `GET /api/v1/schools`
+  - name search via `GET /api/v1/schools/search`
+- Keep the save-control behavior consistent across both search modes because they share the same result-card surface.
 
 ### Profile
 
@@ -156,6 +160,7 @@ This is simpler and safer than trying to hand-edit cached profile payloads acros
 ## Acceptance Criteria
 
 - Users can save and unsave schools from the intended entry points.
+- Users can save and unsave schools from postcode results, name-search results, and profile pages.
 - The account library reflects backend truth after refresh, sign-in, and sign-out.
 - Locked favourites states, if configured, render clearly and consistently.
-- Search cards, profile headers, and the account library all agree on the same saved-state contract.
+- Postcode search cards, name-search cards, profile headers, and the account library all agree on the same saved-state contract.

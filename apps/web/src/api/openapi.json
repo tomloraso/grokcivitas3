@@ -128,6 +128,109 @@
         }
       }
     },
+    "/api/v1/account/favourites": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get Account Favourites",
+        "operationId": "get_account_favourites_api_v1_account_favourites_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountFavouritesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/account/favourites/{urn}": {
+      "put": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Save Account Favourite",
+        "operationId": "save_account_favourite_api_v1_account_favourites__urn__put",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Urn"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSchoolStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Remove Account Favourite",
+        "operationId": "remove_account_favourite_api_v1_account_favourites__urn__delete",
+        "parameters": [
+          {
+            "name": "urn",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Urn"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSchoolStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/products": {
       "get": {
         "tags": [
@@ -867,6 +970,110 @@
         ],
         "title": "AccountEntitlementResponse"
       },
+      "AccountFavouriteSchoolResponse": {
+        "properties": {
+          "urn": {
+            "type": "string",
+            "title": "Urn"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase"
+          },
+          "postcode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postcode"
+          },
+          "pupil_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pupil Count"
+          },
+          "latest_ofsted": {
+            "$ref": "#/components/schemas/FavouriteSearchLatestOfstedResponse"
+          },
+          "academic_metric": {
+            "$ref": "#/components/schemas/FavouriteSearchAcademicMetricResponse"
+          },
+          "saved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Saved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "urn",
+          "name",
+          "type",
+          "phase",
+          "postcode",
+          "pupil_count",
+          "latest_ofsted",
+          "academic_metric",
+          "saved_at"
+        ],
+        "title": "AccountFavouriteSchoolResponse"
+      },
+      "AccountFavouritesResponse": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/SectionAccessResponse"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "schools": {
+            "items": {
+              "$ref": "#/components/schemas/AccountFavouriteSchoolResponse"
+            },
+            "type": "array",
+            "title": "Schools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access",
+          "count"
+        ],
+        "title": "AccountFavouritesResponse"
+      },
       "AuthStartRequest": {
         "properties": {
           "email": {
@@ -1260,6 +1467,104 @@
         ],
         "title": "CheckoutSessionStatusResponse"
       },
+      "FavouriteSearchAcademicMetricResponse": {
+        "properties": {
+          "metric_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric Key"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "display_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Value"
+          },
+          "sort_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Value"
+          },
+          "availability": {
+            "type": "string",
+            "title": "Availability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metric_key",
+          "label",
+          "display_value",
+          "sort_value",
+          "availability"
+        ],
+        "title": "FavouriteSearchAcademicMetricResponse"
+      },
+      "FavouriteSearchLatestOfstedResponse": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "sort_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Rank"
+          },
+          "availability": {
+            "type": "string",
+            "title": "Availability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "sort_rank",
+          "availability"
+        ],
+        "title": "FavouriteSearchLatestOfstedResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1344,6 +1649,9 @@
           },
           "academic_metric": {
             "$ref": "#/components/schemas/SchoolSearchAcademicMetricResponse"
+          },
+          "saved_state": {
+            "$ref": "#/components/schemas/SavedSchoolStateResponse"
           }
         },
         "type": "object",
@@ -1358,9 +1666,75 @@
           "distance_miles",
           "pupil_count",
           "latest_ofsted",
-          "academic_metric"
+          "academic_metric",
+          "saved_state"
         ],
         "title": "PostcodeSchoolSearchItemResponse"
+      },
+      "SavedSchoolStateResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "not_saved",
+              "requires_auth",
+              "locked"
+            ],
+            "title": "Status"
+          },
+          "saved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved At"
+          },
+          "capability_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capability Key"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "free_baseline",
+                  "premium_capability_missing",
+                  "anonymous_user",
+                  "artefact_not_published",
+                  "artefact_not_supported",
+                  "entitlement_expired",
+                  "entitlement_revoked"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "saved_at",
+          "capability_key",
+          "reason_code"
+        ],
+        "title": "SavedSchoolStateResponse"
       },
       "SchoolCompareBenchmarkResponse": {
         "properties": {
@@ -3911,6 +4285,9 @@
           "neighbourhood": {
             "$ref": "#/components/schemas/SchoolProfileNeighbourhoodSectionResponse"
           },
+          "saved_state": {
+            "$ref": "#/components/schemas/SavedSchoolStateResponse"
+          },
           "benchmarks": {
             "$ref": "#/components/schemas/SchoolProfileBenchmarksResponse"
           },
@@ -3932,6 +4309,7 @@
           "ofsted_latest",
           "ofsted_timeline",
           "neighbourhood",
+          "saved_state",
           "completeness"
         ],
         "title": "SchoolProfileResponse"
@@ -4682,6 +5060,9 @@
           "distance_miles": {
             "type": "number",
             "title": "Distance Miles"
+          },
+          "saved_state": {
+            "$ref": "#/components/schemas/SavedSchoolStateResponse"
           }
         },
         "type": "object",
@@ -4693,7 +5074,8 @@
           "postcode",
           "lat",
           "lng",
-          "distance_miles"
+          "distance_miles",
+          "saved_state"
         ],
         "title": "SchoolSearchItemResponse"
       },

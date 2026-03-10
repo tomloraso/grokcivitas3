@@ -4,6 +4,7 @@ from civitas.application.schools.dto import (
     PostcodeSchoolSearchAcademicMetricDto,
     PostcodeSchoolSearchItemDto,
     PostcodeSchoolSearchLatestOfstedDto,
+    SchoolNameSearchItemDto,
 )
 from civitas.application.schools.errors import InvalidSchoolSearchParametersError
 from civitas.application.schools.use_cases import (
@@ -11,7 +12,7 @@ from civitas.application.schools.use_cases import (
     DEFAULT_SORT,
     SearchSchoolsByPostcodeUseCase,
 )
-from civitas.domain.schools.models import PostcodeCoordinates, SchoolSearchResult
+from civitas.domain.schools.models import PostcodeCoordinates
 
 
 class FakePostcodeResolver:
@@ -28,7 +29,7 @@ class FakeSchoolSearchRepository:
     def __init__(
         self,
         postcode_results: list[PostcodeSchoolSearchItemDto] | None = None,
-        name_results: list[SchoolSearchResult] | None = None,
+        name_results: list[SchoolNameSearchItemDto] | None = None,
     ) -> None:
         self._postcode_results = postcode_results or []
         self._name_results = name_results or []
@@ -51,7 +52,7 @@ class FakeSchoolSearchRepository:
         *,
         name: str,
         limit: int,
-    ) -> list[SchoolSearchResult]:
+    ) -> list[SchoolNameSearchItemDto]:
         return list(self._name_results)
 
 

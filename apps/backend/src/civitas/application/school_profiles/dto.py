@@ -3,6 +3,10 @@ from datetime import date, datetime
 from typing import Literal
 
 from civitas.application.access.dto import SectionAccessDto
+from civitas.application.favourites.dto import (
+    SavedSchoolStateDto,
+    anonymous_saved_school_state,
+)
 
 SectionCompletenessStatus = Literal["available", "partial", "unavailable"]
 SectionCompletenessReasonCode = Literal[
@@ -407,6 +411,7 @@ class SchoolProfileResponseDto:
     ofsted_timeline: SchoolOfstedTimelineDto | None
     neighbourhood: SchoolProfileNeighbourhoodSectionDto
     completeness: SchoolProfileCompletenessDto
+    saved_state: SavedSchoolStateDto = field(default_factory=anonymous_saved_school_state)
     benchmarks: SchoolProfileBenchmarksDto = field(
         default_factory=lambda: SchoolProfileBenchmarksDto(metrics=())
     )

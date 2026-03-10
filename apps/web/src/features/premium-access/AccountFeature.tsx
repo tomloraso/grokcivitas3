@@ -156,6 +156,21 @@ export function AccountFeature(): JSX.Element {
           <Panel className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="space-y-1">
+                <h2 className="text-xl font-semibold text-primary">Saved schools</h2>
+                <p className="text-sm text-secondary">
+                  Open your saved research library to revisit schools you have shortlisted across search and profile pages.
+                </p>
+              </div>
+
+              <Button asChild variant="secondary">
+                <Link to={paths.accountFavourites}>Open saved schools</Link>
+              </Button>
+            </div>
+          </Panel>
+
+          <Panel className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-1">
                 <h2 className="text-xl font-semibold text-primary">Current entitlements</h2>
                 <p className="text-sm text-secondary">
                   Active, pending, expired, and revoked grants are listed from the access slice.

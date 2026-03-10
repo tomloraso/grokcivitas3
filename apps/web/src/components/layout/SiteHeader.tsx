@@ -131,6 +131,9 @@ export function SiteHeader({
                 </Link>
               ) : null}
               <Button asChild variant="ghost" size="sm">
+                <Link to={paths.accountFavourites}>Saved</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
                 <Link to={paths.account}>Account</Link>
               </Button>
               <Button

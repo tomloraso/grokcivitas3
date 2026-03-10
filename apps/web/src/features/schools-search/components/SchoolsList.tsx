@@ -11,6 +11,9 @@ import { useToast } from "../../../components/ui/ToastContext";
 import { useCompareSelection } from "../../../shared/context/CompareSelectionContext";
 import { paths } from "../../../shared/routing/paths";
 import type { SearchRestoreState } from "../../../shared/search/searchState";
+import { SaveSchoolButton } from "../../favourites/components/SaveSchoolButton";
+import { mapSavedSchoolState } from "../../favourites/mappers";
+import type { SavedSchoolStateVM } from "../../favourites/types";
 import type { SchoolsSearchStatus, SchoolSearchListItem } from "../types";
 
 interface PhaseGroup {
@@ -21,8 +24,10 @@ interface PhaseGroup {
 interface SchoolsListProps {
   status: SchoolsSearchStatus;
   schools: SchoolSearchListItem[];
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
   errorMessage: string | null;
   onRetry: () => Promise<void>;
+  onSavedStateChange: (urn: string, savedState: SavedSchoolStateVM) => void;
   searchContext?: SearchRestoreState;
   activeSchoolId?: string | null;
   onSchoolHover?: (id: string | null) => void;
@@ -94,6 +99,7 @@ function PhaseGroupSection({
   onPreviewSchool,
   globalIndex,
   isNameSearch,
+  savedStateByUrn,
   renderCompareAction,
 }: {
   group: PhaseGroup;
@@ -103,7 +109,11 @@ function PhaseGroupSection({
   onPreviewSchool?: (schoolId: string) => void;
   globalIndex: number;
   isNameSearch?: boolean;
-  renderCompareAction: (school: SchoolSearchListItem) => JSX.Element;
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
+  renderCompareAction: (
+    school: SchoolSearchListItem,
+    savedState: SavedSchoolStateVM
+  ) => JSX.Element;
 }): JSX.Element {
   const [expanded, setExpanded] = useState(true);
 
@@ -147,7 +157,10 @@ function PhaseGroupSection({
               isActive={activeSchoolId === school.urn}
               onHover={onSchoolHover}
               onNavigateIntent={onPreviewSchool}
-              actions={renderCompareAction(school)}
+              actions={renderCompareAction(
+                school,
+                savedStateByUrn[school.urn] ?? mapSavedSchoolState(school.saved_state)
+              )}
             />
           ))}
         </div>
@@ -163,6 +176,7 @@ function ResultsList({
   onSchoolHover,
   onPreviewSchool,
   isNameSearch,
+  savedStateByUrn,
   renderCompareAction,
 }: {
   schools: SchoolSearchListItem[];
@@ -171,7 +185,11 @@ function ResultsList({
   onSchoolHover?: (id: string | null) => void;
   onPreviewSchool?: (schoolId: string) => void;
   isNameSearch?: boolean;
-  renderCompareAction: (school: SchoolSearchListItem) => JSX.Element;
+  savedStateByUrn: Record<string, SavedSchoolStateVM>;
+  renderCompareAction: (
+    school: SchoolSearchListItem,
+    savedState: SavedSchoolStateVM
+  ) => JSX.Element;
 }): JSX.Element {
   const groups = useMemo(() => groupByPhase(schools), [schools]);
 
@@ -194,7 +212,10 @@ function ResultsList({
             isActive={activeSchoolId === school.urn}
             onHover={onSchoolHover}
             onNavigateIntent={onPreviewSchool}
-            actions={renderCompareAction(school)}
+            actions={renderCompareAction(
+              school,
+              savedStateByUrn[school.urn] ?? mapSavedSchoolState(school.saved_state)
+            )}
           />
         ))}
       </>
@@ -217,6 +238,7 @@ function ResultsList({
             onPreviewSchool={onPreviewSchool}
             globalIndex={startIndex}
             isNameSearch={isNameSearch}
+            savedStateByUrn={savedStateByUrn}
             renderCompareAction={renderCompareAction}
           />
         );
@@ -228,8 +250,10 @@ function ResultsList({
 export function SchoolsList({
   status,
   schools,
+  savedStateByUrn,
   errorMessage,
   onRetry,
+  onSavedStateChange,
   searchContext,
   activeSchoolId,
   onSchoolHover,
@@ -240,7 +264,10 @@ export function SchoolsList({
   const { toast } = useToast();
   const { addSchool, count, hasSchool, removeSchool } = useCompareSelection();
 
-  const renderCompareAction = (school: SchoolSearchListItem) => {
+  const renderCompareAction = (
+    school: SchoolSearchListItem,
+    savedState: SavedSchoolStateVM
+  ) => {
     const selected = hasSchool(school.urn);
 
     return (
@@ -248,28 +275,37 @@ export function SchoolsList({
         <p className="text-xs text-secondary">
           {selected ? "Included in compare" : `Add up to ${4 - count} more`}
         </p>
-        <Button
-          type="button"
-          variant={selected ? "ghost" : "secondary"}
-          size="sm"
-          onClick={() => {
-            if (selected) {
-              removeSchool(school.urn);
-              return;
-            }
+        <div className="flex items-center gap-2">
+          <SaveSchoolButton
+            schoolUrn={school.urn}
+            savedState={savedState}
+            onSavedStateChange={(nextState) => {
+              onSavedStateChange(school.urn, nextState);
+            }}
+          />
+          <Button
+            type="button"
+            variant={selected ? "ghost" : "secondary"}
+            size="sm"
+            onClick={() => {
+              if (selected) {
+                removeSchool(school.urn);
+                return;
+              }
 
-            const result = addSchool(toCompareSelectionItem(school));
-            if (result === "limit") {
-              toast({
-                title: "Compare limit reached",
-                description: "You can compare up to four schools at a time.",
-                variant: "warning",
-              });
-            }
-          }}
-        >
-          {selected ? "Remove" : "Add to compare"}
-        </Button>
+              const result = addSchool(toCompareSelectionItem(school));
+              if (result === "limit") {
+                toast({
+                  title: "Compare limit reached",
+                  description: "You can compare up to four schools at a time.",
+                  variant: "warning",
+                });
+              }
+            }}
+          >
+            {selected ? "Remove" : "Add to compare"}
+          </Button>
+        </div>
       </>
     );
   };
@@ -305,6 +341,7 @@ export function SchoolsList({
           onSchoolHover={onSchoolHover}
           onPreviewSchool={onPreviewSchool}
           isNameSearch={isNameSearch}
+          savedStateByUrn={savedStateByUrn}
           renderCompareAction={renderCompareAction}
         />
       </>
@@ -354,6 +391,7 @@ export function SchoolsList({
         onSchoolHover={onSchoolHover}
         onPreviewSchool={onPreviewSchool}
         isNameSearch={isNameSearch}
+        savedStateByUrn={savedStateByUrn}
         renderCompareAction={renderCompareAction}
       />
     );

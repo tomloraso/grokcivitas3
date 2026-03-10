@@ -1,5 +1,6 @@
 import type {
   AccountAccessResponse,
+  AccountFavouritesResponse,
   BillingPortalSessionCreateRequest,
   BillingPortalSessionCreateResponse,
   BillingProductsResponse,
@@ -15,6 +16,7 @@ import type {
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse,
   SearchSchoolsQuery,
+  SavedSchoolStateResponse,
   SessionResponse,
   SchoolsSearchResponse,
   Task
@@ -223,6 +225,32 @@ export async function signOut(): Promise<SessionResponse> {
 
 export async function getAccountAccess(): Promise<AccountAccessResponse> {
   return request<AccountAccessResponse>("/api/v1/account/access");
+}
+
+export async function getAccountFavourites(): Promise<AccountFavouritesResponse> {
+  return request<AccountFavouritesResponse>("/api/v1/account/favourites");
+}
+
+export async function saveAccountFavourite(
+  urn: string
+): Promise<SavedSchoolStateResponse> {
+  return request<SavedSchoolStateResponse>(
+    `/api/v1/account/favourites/${encodeURIComponent(urn)}`,
+    {
+      method: "PUT"
+    }
+  );
+}
+
+export async function removeAccountFavourite(
+  urn: string
+): Promise<SavedSchoolStateResponse> {
+  return request<SavedSchoolStateResponse>(
+    `/api/v1/account/favourites/${encodeURIComponent(urn)}`,
+    {
+      method: "DELETE"
+    }
+  );
 }
 
 export async function listBillingProducts(): Promise<BillingProductsResponse> {

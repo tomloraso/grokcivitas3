@@ -4,6 +4,7 @@ import { useLocation, useSearchParams } from "react-router-dom";
 import { prefetchSchoolProfile } from "../../api/client";
 import { MapOverlayLayout } from "../../components/layout/MapOverlayLayout";
 import { useSearchContext } from "../../shared/context/SearchContext";
+import type { SavedSchoolStateVM } from "../favourites/types";
 import {
   DEFAULT_SEARCH_SORT_MODE,
   normalizeSearchPhaseFilters,
@@ -72,6 +73,9 @@ export function SchoolsSearchFeature(): JSX.Element {
   );
   const { setSearch, clearSearch } = useSearchContext();
   const [activeSchoolId, setActiveSchoolId] = useState<string | null>(null);
+  const [savedStateByUrn, setSavedStateByUrn] = useState<
+    Record<string, SavedSchoolStateVM>
+  >({});
   const handleSchoolHover = useCallback((id: string | null) => setActiveSchoolId(id), []);
   const handlePreviewSchool = useCallback((schoolId: string) => {
     prefetchSchoolProfile(schoolId);
@@ -118,6 +122,10 @@ export function SchoolsSearchFeature(): JSX.Element {
     resultsPhases,
     resultsSort,
   ]);
+
+  useEffect(() => {
+    setSavedStateByUrn({});
+  }, [state.result]);
 
   useEffect(() => {
     if (state.status === "success" && resultPostcode) {
@@ -304,8 +312,15 @@ export function SchoolsSearchFeature(): JSX.Element {
           <SchoolsList
             status={state.status}
             schools={filteredSchools}
+            savedStateByUrn={savedStateByUrn}
             errorMessage={state.errorMessage}
             onRetry={submitSearch}
+            onSavedStateChange={(urn, savedState) => {
+              setSavedStateByUrn((current) => ({
+                ...current,
+                [urn]: savedState
+              }));
+            }}
             searchContext={
               postcodeResult
                 ? {
@@ -328,11 +343,18 @@ export function SchoolsSearchFeature(): JSX.Element {
         open={activeView === "results"}
         status={resultsMode.status}
         result={resultsMode.result}
+        savedStateByUrn={savedStateByUrn}
         errorMessage={resultsMode.errorMessage}
         phases={resultsPhases}
         sort={resultsSort}
         onClose={handleCloseResults}
         onRetry={resultsMode.retry}
+        onSavedStateChange={(urn, savedState) => {
+          setSavedStateByUrn((current) => ({
+            ...current,
+            [urn]: savedState
+          }));
+        }}
         onPhasesChange={handleResultsPhasesChange}
         onSortChange={handleResultsSortChange}
         activeSchoolId={activeSchoolId}

@@ -16,6 +16,7 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "ofsted_latest",
         "ofsted_timeline",
         "neighbourhood",
+        "saved_state",
         "benchmarks",
         "completeness",
     }
@@ -23,6 +24,20 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
 REQUIRED_SCHOOL_COMPARE_PROPERTIES = frozenset({"access", "schools", "sections"})
 REQUIRED_SCHOOL_COMPARE_SECTION_PROPERTIES = frozenset({"key", "label", "rows"})
 REQUIRED_SCHOOL_COMPARE_ROW_PROPERTIES = frozenset({"metric_key", "label", "unit", "cells"})
+REQUIRED_ACCOUNT_FAVOURITES_PROPERTIES = frozenset({"access", "count", "schools"})
+REQUIRED_ACCOUNT_FAVOURITE_SCHOOL_PROPERTIES = frozenset(
+    {
+        "urn",
+        "name",
+        "type",
+        "phase",
+        "postcode",
+        "pupil_count",
+        "latest_ofsted",
+        "academic_metric",
+        "saved_at",
+    }
+)
 REQUIRED_SCHOOLS_SEARCH_PROPERTIES = frozenset({"query", "center", "count", "schools"})
 REQUIRED_SCHOOLS_SEARCH_QUERY_PROPERTIES = frozenset({"postcode", "radius_miles", "phases", "sort"})
 REQUIRED_POSTCODE_SEARCH_ITEM_PROPERTIES = frozenset(
@@ -38,19 +53,75 @@ REQUIRED_POSTCODE_SEARCH_ITEM_PROPERTIES = frozenset(
         "pupil_count",
         "latest_ofsted",
         "academic_metric",
+        "saved_state",
     }
+)
+REQUIRED_SCHOOL_NAME_SEARCH_PROPERTIES = frozenset({"count", "schools"})
+REQUIRED_NAME_SEARCH_ITEM_PROPERTIES = frozenset(
+    {
+        "urn",
+        "name",
+        "type",
+        "phase",
+        "postcode",
+        "lat",
+        "lng",
+        "distance_miles",
+        "saved_state",
+    }
+)
+REQUIRED_SAVED_SCHOOL_STATE_PROPERTIES = frozenset(
+    {"status", "saved_at", "capability_key", "reason_code"}
 )
 REQUIRED_SEARCH_OFSTED_PROPERTIES = frozenset({"label", "sort_rank", "availability"})
 REQUIRED_SEARCH_ACADEMIC_METRIC_PROPERTIES = frozenset(
+    {"metric_key", "label", "display_value", "sort_value", "availability"}
+)
+REQUIRED_FAVOURITE_OFSTED_PROPERTIES = frozenset({"label", "sort_rank", "availability"})
+REQUIRED_FAVOURITE_ACADEMIC_METRIC_PROPERTIES = frozenset(
     {"metric_key", "label", "display_value", "sort_value", "availability"}
 )
 
 
 def validate_app_contracts(app: FastAPI) -> None:
     openapi_schema = app.openapi()
+    validate_account_favourites_response_contract(openapi_schema)
     validate_school_profile_response_contract(openapi_schema)
     validate_school_compare_response_contract(openapi_schema)
     validate_schools_search_response_contract(openapi_schema)
+
+
+def validate_account_favourites_response_contract(openapi_schema: Mapping[str, object]) -> None:
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="AccountFavouritesResponse",
+        required_properties=REQUIRED_ACCOUNT_FAVOURITES_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="AccountFavouriteSchoolResponse",
+        required_properties=REQUIRED_ACCOUNT_FAVOURITE_SCHOOL_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="FavouriteSearchLatestOfstedResponse",
+        required_properties=REQUIRED_FAVOURITE_OFSTED_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="FavouriteSearchAcademicMetricResponse",
+        required_properties=REQUIRED_FAVOURITE_ACADEMIC_METRIC_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SavedSchoolStateResponse",
+        required_properties=REQUIRED_SAVED_SCHOOL_STATE_PROPERTIES,
+        validate_required_list=True,
+    )
 
 
 def validate_school_profile_response_contract(openapi_schema: Mapping[str, object]) -> None:
@@ -100,6 +171,24 @@ def validate_schools_search_response_contract(openapi_schema: Mapping[str, objec
         openapi_schema,
         schema_name="PostcodeSchoolSearchItemResponse",
         required_properties=REQUIRED_POSTCODE_SEARCH_ITEM_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolNameSearchResponse",
+        required_properties=REQUIRED_SCHOOL_NAME_SEARCH_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SchoolSearchItemResponse",
+        required_properties=REQUIRED_NAME_SEARCH_ITEM_PROPERTIES,
+        validate_required_list=True,
+    )
+    _validate_required_properties(
+        openapi_schema,
+        schema_name="SavedSchoolStateResponse",
+        required_properties=REQUIRED_SAVED_SCHOOL_STATE_PROPERTIES,
         validate_required_list=True,
     )
     _validate_required_properties(

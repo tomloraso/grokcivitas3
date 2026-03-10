@@ -13,6 +13,7 @@ Define the evidence required before favourites and saved research are considered
   - `PUT /api/v1/account/favourites/{urn}`
   - `DELETE /api/v1/account/favourites/{urn}`
   - viewer-aware `saved_state` on `GET /api/v1/schools`
+  - viewer-aware `saved_state` on `GET /api/v1/schools/search`
   - viewer-aware `saved_state` on `GET /api/v1/schools/{urn}`
 - access-evaluation tests if favourites are premium-scoped
 - migration test or upgrade rehearsal proving the favourites schema applies cleanly from the current head
@@ -27,7 +28,7 @@ Recommended backend assertions:
 
 ## Frontend Verification
 
-- component coverage for save or unsave actions on search and profile surfaces
+- component coverage for save or unsave actions on postcode search, name-search, and profile surfaces
 - route or feature tests for the account library in:
   - empty
   - loading
@@ -42,6 +43,7 @@ Recommended backend assertions:
 
 - sign in
 - save a school from postcode results
+- save a school from name-search results
 - confirm the same school renders as saved on its profile
 - confirm it appears in the account library
 - remove it from the account library

@@ -8,6 +8,13 @@ from civitas.application.access.policies import (
     get_access_requirement,
 )
 from civitas.application.access.use_cases import EvaluateAccessUseCase
+from civitas.application.favourites.dto import (
+    SavedSchoolStateDto,
+    anonymous_saved_school_state,
+)
+from civitas.application.favourites.ports.saved_school_state_resolver import (
+    SavedSchoolStateResolver,
+)
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
@@ -71,6 +78,7 @@ class GetSchoolProfileUseCase:
         school_trends_repository: SchoolTrendsRepository | None = None,
         summary_repository: SummaryRepository | None = None,
         evaluate_access_use_case: EvaluateAccessUseCase | None = None,
+        saved_school_state_resolver: SavedSchoolStateResolver | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
         self._refresh_school_profile_repository = refresh_school_profile_repository
@@ -78,6 +86,7 @@ class GetSchoolProfileUseCase:
         self._school_trends_repository = school_trends_repository
         self._summary_repository = summary_repository
         self._evaluate_access_use_case = evaluate_access_use_case
+        self._saved_school_state_resolver = saved_school_state_resolver
 
     def execute(
         self,
@@ -490,6 +499,11 @@ class GetSchoolProfileUseCase:
             viewer_user_id=viewer_user_id,
             evaluate_access_use_case=self._evaluate_access_use_case,
         )
+        saved_state = _resolve_saved_school_state(
+            school_urn=normalized_urn,
+            viewer_user_id=viewer_user_id,
+            saved_school_state_resolver=self._saved_school_state_resolver,
+        )
 
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
@@ -546,6 +560,7 @@ class GetSchoolProfileUseCase:
             ofsted_latest=ofsted_latest,
             ofsted_timeline=ofsted_timeline,
             neighbourhood=neighbourhood,
+            saved_state=saved_state,
             benchmarks=benchmarks,
             completeness=completeness,
         )
@@ -817,3 +832,25 @@ def _truncate_text(value: str, *, limit: int) -> str:
     if len(value) <= limit:
         return value
     return f"{value[: limit - 3].rstrip()}..."
+
+
+def _resolve_saved_school_state(
+    *,
+    school_urn: str,
+    viewer_user_id: UUID | None,
+    saved_school_state_resolver: SavedSchoolStateResolver | None,
+) -> SavedSchoolStateDto:
+    if saved_school_state_resolver is None:
+        if viewer_user_id is None:
+            return anonymous_saved_school_state()
+        return SavedSchoolStateDto(
+            status="not_saved",
+            saved_at=None,
+            capability_key=None,
+            reason_code=None,
+        )
+
+    return saved_school_state_resolver.execute(
+        user_id=viewer_user_id,
+        school_urns=(school_urn,),
+    ).get(school_urn, anonymous_saved_school_state())

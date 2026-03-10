@@ -1,8 +1,10 @@
 from collections.abc import Sequence
 from typing import Protocol
 
-from civitas.application.schools.dto import PostcodeSchoolSearchItemDto
-from civitas.domain.schools.models import SchoolSearchResult
+from civitas.application.schools.dto import (
+    PostcodeSchoolSearchItemDto,
+    SchoolNameSearchItemDto,
+)
 
 
 class SchoolSearchRepository(Protocol):
@@ -21,4 +23,4 @@ class SchoolSearchRepository(Protocol):
         *,
         name: str,
         limit: int,
-    ) -> Sequence[SchoolSearchResult]: ...
+    ) -> Sequence[SchoolNameSearchItemDto]: ...

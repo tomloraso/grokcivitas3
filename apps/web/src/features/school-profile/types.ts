@@ -1,5 +1,6 @@
 import type { MetricSectionKey, MetricUnit } from "./metricCatalog";
 import type { SectionAccessVM } from "../premium-access/types";
+import type { SavedSchoolStateVM } from "../favourites/types";
 
 export interface SchoolIdentityVM {
   urn: string;
@@ -408,6 +409,7 @@ export interface NeighbourhoodSectionVM {
 
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
+  savedState: SavedSchoolStateVM;
   overviewText: string | null;
   analyst: AnalystSectionVM;
   demographics: DemographicsVM | null;

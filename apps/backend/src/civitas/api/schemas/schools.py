@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from civitas.api.schemas.favourites import SavedSchoolStateResponse
+
 
 class SchoolsSearchQueryResponse(BaseModel):
     postcode: str
@@ -22,6 +24,7 @@ class SchoolSearchItemResponse(BaseModel):
     lat: float
     lng: float
     distance_miles: float
+    saved_state: SavedSchoolStateResponse
 
 
 class SchoolSearchLatestOfstedResponse(BaseModel):
@@ -50,6 +53,7 @@ class PostcodeSchoolSearchItemResponse(BaseModel):
     pupil_count: int | None
     latest_ofsted: SchoolSearchLatestOfstedResponse
     academic_metric: SchoolSearchAcademicMetricResponse
+    saved_state: SavedSchoolStateResponse
 
 
 class SchoolsSearchResponse(BaseModel):

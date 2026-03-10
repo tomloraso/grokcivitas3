@@ -13,6 +13,13 @@ from civitas.application.billing.use_cases import (
     GetCheckoutStatusUseCase,
     ReconcilePaymentEventUseCase,
 )
+from civitas.application.favourites.use_cases import (
+    GetFavouritesAccessUseCase,
+    GetSavedSchoolStatesUseCase,
+    ListSavedSchoolsUseCase,
+    RemoveSavedSchoolUseCase,
+    SaveSchoolUseCase,
+)
 from civitas.application.identity.ports.identity_provider import IdentityProvider
 from civitas.application.identity.use_cases import (
     CompleteAuthCallbackUseCase,
@@ -75,6 +82,12 @@ from civitas.infrastructure.persistence.postgres_data_quality_repository import 
 )
 from civitas.infrastructure.persistence.postgres_entitlement_repository import (
     PostgresEntitlementRepository,
+)
+from civitas.infrastructure.persistence.postgres_favourite_event_repository import (
+    PostgresFavouriteEventRepository,
+)
+from civitas.infrastructure.persistence.postgres_favourite_repository import (
+    PostgresFavouriteRepository,
 )
 from civitas.infrastructure.persistence.postgres_postcode_cache_repository import (
     PostgresPostcodeCacheRepository,
@@ -189,6 +202,18 @@ def billing_state_repository() -> PostgresBillingStateRepository:
 
 
 @lru_cache(maxsize=1)
+def favourite_repository() -> PostgresFavouriteRepository:
+    settings = app_settings()
+    return PostgresFavouriteRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def favourite_event_repository() -> PostgresFavouriteEventRepository:
+    settings = app_settings()
+    return PostgresFavouriteEventRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
 def billing_provider_gateway():
     return build_billing_provider_gateway(app_settings())
 
@@ -297,6 +322,41 @@ def sign_out_use_case() -> SignOutUseCase:
 
 
 @lru_cache(maxsize=1)
+def get_favourites_access_use_case() -> GetFavouritesAccessUseCase:
+    return GetFavouritesAccessUseCase()
+
+
+def get_saved_school_states_use_case() -> GetSavedSchoolStatesUseCase:
+    return GetSavedSchoolStatesUseCase(
+        favourite_repository=favourite_repository(),
+        favourites_access_resolver=get_favourites_access_use_case(),
+    )
+
+
+def list_saved_schools_use_case() -> ListSavedSchoolsUseCase:
+    return ListSavedSchoolsUseCase(
+        favourite_repository=favourite_repository(),
+        favourites_access_resolver=get_favourites_access_use_case(),
+    )
+
+
+def save_school_use_case() -> SaveSchoolUseCase:
+    return SaveSchoolUseCase(
+        favourite_repository=favourite_repository(),
+        favourite_event_repository=favourite_event_repository(),
+        favourites_access_resolver=get_favourites_access_use_case(),
+    )
+
+
+def remove_saved_school_use_case() -> RemoveSavedSchoolUseCase:
+    return RemoveSavedSchoolUseCase(
+        favourite_repository=favourite_repository(),
+        favourite_event_repository=favourite_event_repository(),
+        favourites_access_resolver=get_favourites_access_use_case(),
+    )
+
+
+@lru_cache(maxsize=1)
 def school_search_repository() -> PostgresSchoolSearchRepository:
     settings = app_settings()
     return PostgresSchoolSearchRepository(engine=db_engine(settings.database.url))
@@ -394,12 +454,14 @@ def search_schools_by_postcode_use_case() -> SearchSchoolsByPostcodeUseCase:
     return SearchSchoolsByPostcodeUseCase(
         school_search_repository=school_search_repository(),
         postcode_resolver=postcode_resolver(),
+        saved_school_state_resolver=get_saved_school_states_use_case(),
     )
 
 
 def search_schools_by_name_use_case() -> SearchSchoolsByNameUseCase:
     return SearchSchoolsByNameUseCase(
         school_search_repository=school_search_repository(),
+        saved_school_state_resolver=get_saved_school_states_use_case(),
     )
 
 
@@ -417,6 +479,7 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
         school_trends_repository=school_trends_repository(),
         summary_repository=summary_repository(),
         evaluate_access_use_case=evaluate_access_use_case(),
+        saved_school_state_resolver=get_saved_school_states_use_case(),
     )
 
 

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from civitas.api.dependencies import get_current_session_use_case, get_school_profile_use_case
 from civitas.api.main import app
 from civitas.application.access.dto import SectionAccessDto
+from civitas.application.favourites.dto import SavedSchoolStateDto
 from civitas.application.identity.dto import CurrentSessionDto
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextCoverageDto,
@@ -387,6 +388,12 @@ def _profile_response() -> SchoolProfileResponseDto:
                 years_available=None,
             ),
         ),
+        saved_state=SavedSchoolStateDto(
+            status="requires_auth",
+            saved_at=None,
+            capability_key=None,
+            reason_code="anonymous_user",
+        ),
     )
 
 
@@ -416,6 +423,12 @@ def test_get_school_profile_returns_expected_contract() -> None:
     }
     assert payload["neighbourhood"]["access"]["state"] == "available"
     assert payload["neighbourhood"]["area_context"]["coverage"]["has_deprivation"] is True
+    assert payload["saved_state"] == {
+        "status": "requires_auth",
+        "saved_at": None,
+        "capability_key": None,
+        "reason_code": "anonymous_user",
+    }
     assert payload["benchmarks"] == {"metrics": []}
     assert payload["completeness"]["performance"]["years_available"] == ["2023/24", "2024/25"]
     assert fake_use_case.calls == [("123456", None)]
@@ -455,6 +468,12 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             ),
         ),
         completeness=result.completeness,
+        saved_state=SavedSchoolStateDto(
+            status="not_saved",
+            saved_at=None,
+            capability_key=None,
+            reason_code=None,
+        ),
     )
     fake_use_case = FakeGetSchoolProfileUseCase(result=result)
     app.dependency_overrides[get_school_profile_use_case] = lambda: fake_use_case
@@ -487,6 +506,12 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
         },
         "area_context": None,
         "teaser_text": None,
+    }
+    assert payload["saved_state"] == {
+        "status": "not_saved",
+        "saved_at": None,
+        "capability_key": None,
+        "reason_code": None,
     }
 
 

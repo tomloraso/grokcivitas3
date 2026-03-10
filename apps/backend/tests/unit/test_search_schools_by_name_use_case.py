@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from civitas.application.schools.dto import SchoolNameSearchResponseDto
+from civitas.application.schools.dto import SchoolNameSearchItemDto, SchoolNameSearchResponseDto
 from civitas.application.schools.errors import InvalidSchoolSearchParametersError
 from civitas.application.schools.use_cases import SearchSchoolsByNameUseCase
-from civitas.domain.schools.models import SchoolSearchResult
 
 
 class FakeSchoolSearchRepository:
-    def __init__(self, results: list[SchoolSearchResult]) -> None:
+    def __init__(self, results: list[SchoolNameSearchItemDto]) -> None:
         self._results = results
         self.name_queries: list[tuple[str, int]] = []
 
@@ -17,16 +16,16 @@ class FakeSchoolSearchRepository:
         center_lat: float,
         center_lng: float,
         radius_miles: float,
-    ) -> list[SchoolSearchResult]:
+    ) -> list[SchoolNameSearchItemDto]:
         raise NotImplementedError("should not be called for name search")
 
-    def search_by_name(self, *, name: str, limit: int) -> list[SchoolSearchResult]:
+    def search_by_name(self, *, name: str, limit: int) -> list[SchoolNameSearchItemDto]:
         self.name_queries.append((name, limit))
         return list(self._results)
 
 
-def _make_school(urn: str, name: str, phase: str = "Primary") -> SchoolSearchResult:
-    return SchoolSearchResult(
+def _make_school(urn: str, name: str, phase: str = "Primary") -> SchoolNameSearchItemDto:
+    return SchoolNameSearchItemDto(
         urn=urn,
         name=name,
         school_type="Community school",

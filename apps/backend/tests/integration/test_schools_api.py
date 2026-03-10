@@ -1,9 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from uuid import UUID
+
 from fastapi.testclient import TestClient
 
-from civitas.api.dependencies import get_search_schools_by_postcode_use_case
+from civitas.api.dependencies import (
+    get_current_session_use_case,
+    get_search_schools_by_postcode_use_case,
+)
 from civitas.api.main import app
+from civitas.application.favourites.dto import SavedSchoolStateDto
+from civitas.application.identity.dto import CurrentSessionDto, SessionUserDto
 from civitas.application.schools.dto import (
     PostcodeSchoolSearchAcademicMetricDto,
     PostcodeSchoolSearchItemDto,
@@ -27,7 +35,9 @@ class FakeSearchSchoolsByPostcodeUseCase:
     ) -> None:
         self._result = result
         self._error = error
-        self.calls: list[tuple[str, float | None, tuple[str, ...] | None, str | None]] = []
+        self.calls: list[
+            tuple[str, float | None, tuple[str, ...] | None, str | None, UUID | None]
+        ] = []
 
     def execute(
         self,
@@ -36,8 +46,9 @@ class FakeSearchSchoolsByPostcodeUseCase:
         radius_miles: float | None = None,
         phases: tuple[str, ...] | None = None,
         sort: str | None = None,
+        viewer_user_id: UUID | None = None,
     ) -> SchoolsSearchResponseDto:
-        self.calls.append((postcode, radius_miles, phases, sort))
+        self.calls.append((postcode, radius_miles, phases, sort, viewer_user_id))
         if self._error is not None:
             raise self._error
         if self._result is None:
@@ -47,8 +58,25 @@ class FakeSearchSchoolsByPostcodeUseCase:
         return self._result
 
 
+class FakeAnonymousSessionUseCase:
+    def execute(self, *, session_token: str | None) -> CurrentSessionDto:
+        return CurrentSessionDto.anonymous(reason="missing")
+
+
+class FakeAuthenticatedSessionUseCase:
+    def __init__(self, user: SessionUserDto) -> None:
+        self._user = user
+
+    def execute(self, *, session_token: str | None) -> CurrentSessionDto:
+        return CurrentSessionDto.authenticated(
+            user=self._user,
+            expires_at=datetime(2026, 3, 10, 12, 0, tzinfo=timezone.utc),
+        )
+
+
 def setup_function() -> None:
     app.dependency_overrides.clear()
+    app.dependency_overrides[get_current_session_use_case] = lambda: FakeAnonymousSessionUseCase()
 
 
 def teardown_function() -> None:
@@ -87,6 +115,12 @@ def test_search_schools_returns_expected_contract() -> None:
                         display_value="0.42",
                         sort_value=0.42,
                         availability="published",
+                    ),
+                    saved_state=SavedSchoolStateDto(
+                        status="requires_auth",
+                        saved_at=None,
+                        capability_key=None,
+                        reason_code="anonymous_user",
                     ),
                 ),
             ),
@@ -137,10 +171,16 @@ def test_search_schools_returns_expected_contract() -> None:
                     "sort_value": 0.42,
                     "availability": "published",
                 },
+                "saved_state": {
+                    "status": "requires_auth",
+                    "saved_at": None,
+                    "capability_key": None,
+                    "reason_code": "anonymous_user",
+                },
             }
         ],
     }
-    assert fake_use_case.calls == [("sw1a1aa", 5.0, ("secondary",), "ofsted")]
+    assert fake_use_case.calls == [("sw1a1aa", 5.0, ("secondary",), "ofsted", None)]
 
 
 def test_search_schools_returns_400_for_invalid_input() -> None:
@@ -209,3 +249,31 @@ def test_search_schools_returns_503_when_resolver_is_unavailable() -> None:
 
     assert response.status_code == 503
     assert response.json() == {"detail": "Postcode resolver is unavailable."}
+
+
+def test_search_schools_passes_authenticated_viewer_to_use_case() -> None:
+    user = SessionUserDto(
+        id=UUID("a32d5bf0-0ec5-4dc9-bd40-636264a6fb96"),
+        email="viewer@example.com",
+    )
+    fake_use_case = FakeSearchSchoolsByPostcodeUseCase(
+        result=SchoolsSearchResponseDto(
+            query=SchoolSearchQueryDto(
+                postcode="SW1A 1AA",
+                radius_miles=5.0,
+                phases=(),
+                sort="closest",
+            ),
+            center=SearchCenterDto(lat=51.501009, lng=-0.141588),
+            schools=(),
+        )
+    )
+    app.dependency_overrides[get_current_session_use_case] = lambda: (
+        FakeAuthenticatedSessionUseCase(user)
+    )
+    app.dependency_overrides[get_search_schools_by_postcode_use_case] = lambda: fake_use_case
+
+    response = client.get("/api/v1/schools", params={"postcode": "SW1A 1AA"})
+
+    assert response.status_code == 200
+    assert fake_use_case.calls == [("SW1A 1AA", None, None, None, user.id)]

@@ -115,6 +115,8 @@ Recommended read-contract additions:
 
 - `GET /api/v1/schools`
   - each result row carries a `saved_state` block
+- `GET /api/v1/schools/search`
+  - each result row carries the same `saved_state` block
 - `GET /api/v1/schools/{urn}`
   - the profile response carries the same `saved_state` block for that school
 
@@ -137,6 +139,7 @@ Recommended backend additions:
 - resolve the current session through the existing session cookie and `GetCurrentSessionUseCase`
 - pass `viewer_user_id: UUID | None` into:
   - `SearchSchoolsByPostcodeUseCase.execute(...)`
+  - `SearchSchoolsByNameUseCase.execute(...)`
   - `GetSchoolProfileUseCase.execute(...)`
 
 Do not duplicate session resolution logic inside each route handler.
@@ -148,6 +151,12 @@ Do not duplicate session resolution logic inside each route handler.
 - Extend the postcode search repository query with an optional left join from `school_search_summary` to `saved_schools` filtered by `viewer_user_id`.
 - Keep the search route public and readable; anonymous viewers should get `saved_state.status=requires_auth`.
 - Do not add an N+1 follow-up repository call per school card.
+
+### Name search
+
+- Extend the name-search read path so `GET /api/v1/schools/search` returns the same `saved_state` contract as postcode search.
+- Keep the route public and readable; anonymous viewers should get `saved_state.status=requires_auth`.
+- Avoid an N+1 favourite-state lookup per returned school row.
 
 ### Profile
 
@@ -204,5 +213,6 @@ The implementation is expected to touch these existing seams:
 
 - Backend can save, list, and remove favourites deterministically through explicit idempotent actions.
 - Search and profile contracts expose the same viewer-specific saved-state model.
+- Postcode search and name-search results expose the same viewer-specific saved-state model.
 - The account library is backed by a lightweight summary read path rather than full profile loading.
 - Access policy for favourites can change later without redesigning persistence or API shape.

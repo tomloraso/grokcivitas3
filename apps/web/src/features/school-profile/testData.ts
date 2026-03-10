@@ -48,6 +48,12 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     lat: 51.5424,
     lng: -0.1418
   },
+  saved_state: {
+    status: "not_saved",
+    saved_at: null,
+    capability_key: null,
+    reason_code: null
+  },
   overview_text:
     "Camden Bridge Primary School is an open academy in Camden serving pupils aged 4 to 11. The latest published profile shows a mixed intake, nursery provision, and a setting in an urban major conurbation. Recent demographics indicate moderate disadvantage and SEND levels, with a relatively low EHCP share and a modest proportion of pupils with English as an additional language. Attendance is strong against national patterns, while behaviour measures remain low. The latest Ofsted outcome is Good, and the school sits in a more deprived local area by IMD decile, which provides useful context for its published outcomes. Overall, the current dataset describes a mainstream primary school with stable profile indicators, a clear local catchment, and a broadly balanced intake.",
   analyst: {

@@ -1,5 +1,11 @@
 from collections.abc import Sequence
+from dataclasses import replace
+from uuid import UUID
 
+from civitas.application.favourites.dto import SavedSchoolStateDto, anonymous_saved_school_state
+from civitas.application.favourites.ports.saved_school_state_resolver import (
+    SavedSchoolStateResolver,
+)
 from civitas.application.schools.dto import (
     SchoolNameSearchResponseDto,
     SchoolSearchQueryDto,
@@ -28,9 +34,11 @@ class SearchSchoolsByPostcodeUseCase:
         self,
         school_search_repository: SchoolSearchRepository,
         postcode_resolver: PostcodeResolver,
+        saved_school_state_resolver: SavedSchoolStateResolver | None = None,
     ) -> None:
         self._school_search_repository = school_search_repository
         self._postcode_resolver = postcode_resolver
+        self._saved_school_state_resolver = saved_school_state_resolver
 
     def execute(
         self,
@@ -39,6 +47,7 @@ class SearchSchoolsByPostcodeUseCase:
         radius_miles: float | None = None,
         phases: Sequence[str] | None = None,
         sort: str | None = None,
+        viewer_user_id: UUID | None = None,
     ) -> SchoolsSearchResponseDto:
         normalized_postcode = _validate_and_normalize_postcode(postcode)
         resolved_radius = _validate_radius(radius_miles)
@@ -53,6 +62,11 @@ class SearchSchoolsByPostcodeUseCase:
                 phase_filters=resolved_phases,
                 sort=resolved_sort,
             )
+        )
+        schools = _apply_saved_school_states(
+            schools=schools,
+            viewer_user_id=viewer_user_id,
+            saved_school_state_resolver=self._saved_school_state_resolver,
         )
         return SchoolsSearchResponseDto(
             query=SchoolSearchQueryDto(
@@ -121,23 +135,31 @@ class SearchSchoolsByNameUseCase:
     def __init__(
         self,
         school_search_repository: SchoolSearchRepository,
+        saved_school_state_resolver: SavedSchoolStateResolver | None = None,
     ) -> None:
         self._school_search_repository = school_search_repository
+        self._saved_school_state_resolver = saved_school_state_resolver
 
     def execute(
         self,
         *,
         name: str,
         limit: int = DEFAULT_NAME_SEARCH_LIMIT,
+        viewer_user_id: UUID | None = None,
     ) -> SchoolNameSearchResponseDto:
         stripped = name.strip()
         if len(stripped) < MIN_NAME_LENGTH:
             raise InvalidSchoolSearchParametersError("name must be at least 3 characters.")
-        schools = list(
+        schools = tuple(
             self._school_search_repository.search_by_name(
                 name=stripped,
                 limit=limit,
             )
+        )
+        schools = _apply_saved_school_states(
+            schools=schools,
+            viewer_user_id=viewer_user_id,
+            saved_school_state_resolver=self._saved_school_state_resolver,
         )
         return SchoolNameSearchResponseDto(schools=tuple(schools))
 
@@ -151,3 +173,37 @@ class MaterializeSchoolSearchSummariesUseCase:
 
     def execute(self) -> int:
         return self._school_search_summary_materializer.materialize_all_search_summaries()
+
+
+def _apply_saved_school_states(
+    *,
+    schools,
+    viewer_user_id,
+    saved_school_state_resolver: SavedSchoolStateResolver | None,
+):
+    if len(schools) == 0:
+        return schools
+    if saved_school_state_resolver is None:
+        default_state = (
+            anonymous_saved_school_state()
+            if viewer_user_id is None
+            else SavedSchoolStateDto(
+                status="not_saved",
+                saved_at=None,
+                capability_key=None,
+                reason_code=None,
+            )
+        )
+        return tuple(replace(school, saved_state=default_state) for school in schools)
+
+    states = saved_school_state_resolver.execute(
+        user_id=viewer_user_id,
+        school_urns=tuple(school.urn for school in schools),
+    )
+    return tuple(
+        replace(
+            school,
+            saved_state=states.get(school.urn, anonymous_saved_school_state()),
+        )
+        for school in schools
+    )

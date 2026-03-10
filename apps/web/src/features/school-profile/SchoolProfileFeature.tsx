@@ -41,6 +41,7 @@
  *   Every "CIVITAS" string has been replaced with "[BRAND]" across SiteHeader, SiteFooter,
  *   and all aria-labels in this file.
  */
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
@@ -49,6 +50,8 @@ import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
+import { SaveSchoolButton } from "../favourites/components/SaveSchoolButton";
+import type { SavedSchoolStateVM } from "../favourites/types";
 import { CompareActionButton } from "../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { paths } from "../../shared/routing/paths";
@@ -111,7 +114,14 @@ export function SchoolProfileFeature(): JSX.Element {
   const { toast } = useToast();
   const { addSchool, hasSchool, items, removeSchool } = useCompareSelection();
   const { status, profile, errorMessage, retry } = useSchoolProfile(urn);
+  const [savedStateOverride, setSavedStateOverride] =
+    useState<SavedSchoolStateVM | null>(null);
   const selected = profile ? hasSchool(profile.school.urn) : false;
+  const savedState = savedStateOverride ?? profile?.savedState ?? null;
+
+  useEffect(() => {
+    setSavedStateOverride(null);
+  }, [urn]);
 
   return (
     <PageContainer>
@@ -185,6 +195,14 @@ export function SchoolProfileFeature(): JSX.Element {
               areaContext={profile.neighbourhood.areaContext}
               actions={
                 <>
+                  {savedState ? (
+                    <SaveSchoolButton
+                      schoolUrn={profile.school.urn}
+                      savedState={savedState}
+                      size="default"
+                      onSavedStateChange={setSavedStateOverride}
+                    />
+                  ) : null}
                   <Button
                     type="button"
                     variant="compare"

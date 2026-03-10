@@ -5,6 +5,7 @@ import type {
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse
 } from "../../../api/types";
+import { mapSavedSchoolState } from "../../favourites/mappers";
 import { mapSectionAccess } from "../../premium-access/mappers";
 import { mapCompletenessReasonToMessageKey } from "../../../shared/completeness";
 import {
@@ -815,6 +816,7 @@ export function mapProfileToVM(
 ): SchoolProfileVM {
   return {
     school: mapSchool(profile),
+    savedState: mapSavedSchoolState(profile.saved_state),
     overviewText: toOptionalText(profile.overview_text),
     analyst: mapAnalystSection(profile.analyst),
     demographics: mapDemographics(profile),

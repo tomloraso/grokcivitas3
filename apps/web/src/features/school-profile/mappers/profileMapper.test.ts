@@ -51,6 +51,7 @@ describe("mapProfileToVM", () => {
     const vm = mapProfileToVM(PROFILE_RESPONSE, TRENDS_RESPONSE, DASHBOARD_RESPONSE);
 
     expect(vm.school.name).toBe("Camden Bridge Primary School");
+    expect(vm.savedState.status).toBe("not_saved");
     expect(vm.overviewText).toMatch(/open academy in Camden/i);
     expect(vm.analyst.text).toMatch(/more stability than volatility/i);
     expect(vm.demographics?.coverage.fsm6Supported).toBe(true);

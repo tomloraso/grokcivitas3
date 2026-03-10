@@ -1,6 +1,7 @@
 import pytest
 
 from civitas.api.contract_checks import (
+    validate_account_favourites_response_contract,
     validate_school_compare_response_contract,
     validate_school_profile_response_contract,
     validate_schools_search_response_contract,
@@ -61,6 +62,40 @@ def _openapi_with_search_properties(properties: dict[str, object]) -> dict[str, 
         "openapi": "3.1.0",
         "components": {
             "schemas": {
+                "AccountFavouritesResponse": {
+                    "type": "object",
+                    "properties": {
+                        "access": {},
+                        "count": {},
+                        "schools": {},
+                    },
+                    "required": ["access", "count", "schools"],
+                },
+                "AccountFavouriteSchoolResponse": {
+                    "type": "object",
+                    "properties": {
+                        "urn": {},
+                        "name": {},
+                        "type": {},
+                        "phase": {},
+                        "postcode": {},
+                        "pupil_count": {},
+                        "latest_ofsted": {},
+                        "academic_metric": {},
+                        "saved_at": {},
+                    },
+                    "required": [
+                        "urn",
+                        "name",
+                        "type",
+                        "phase",
+                        "postcode",
+                        "pupil_count",
+                        "latest_ofsted",
+                        "academic_metric",
+                        "saved_at",
+                    ],
+                },
                 "SchoolsSearchResponse": {
                     "type": "object",
                     "properties": properties,
@@ -90,6 +125,7 @@ def _openapi_with_search_properties(properties: dict[str, object]) -> dict[str, 
                         "pupil_count": {},
                         "latest_ofsted": {},
                         "academic_metric": {},
+                        "saved_state": {},
                     },
                     "required": [
                         "urn",
@@ -103,6 +139,76 @@ def _openapi_with_search_properties(properties: dict[str, object]) -> dict[str, 
                         "pupil_count",
                         "latest_ofsted",
                         "academic_metric",
+                        "saved_state",
+                    ],
+                },
+                "SchoolNameSearchResponse": {
+                    "type": "object",
+                    "properties": {
+                        "count": {},
+                        "schools": {},
+                    },
+                    "required": ["count", "schools"],
+                },
+                "SchoolSearchItemResponse": {
+                    "type": "object",
+                    "properties": {
+                        "urn": {},
+                        "name": {},
+                        "type": {},
+                        "phase": {},
+                        "postcode": {},
+                        "lat": {},
+                        "lng": {},
+                        "distance_miles": {},
+                        "saved_state": {},
+                    },
+                    "required": [
+                        "urn",
+                        "name",
+                        "type",
+                        "phase",
+                        "postcode",
+                        "lat",
+                        "lng",
+                        "distance_miles",
+                        "saved_state",
+                    ],
+                },
+                "SavedSchoolStateResponse": {
+                    "type": "object",
+                    "properties": {
+                        "status": {},
+                        "saved_at": {},
+                        "capability_key": {},
+                        "reason_code": {},
+                    },
+                    "required": ["status", "saved_at", "capability_key", "reason_code"],
+                },
+                "FavouriteSearchLatestOfstedResponse": {
+                    "type": "object",
+                    "properties": {
+                        "label": {},
+                        "sort_rank": {},
+                        "availability": {},
+                    },
+                    "required": ["label", "sort_rank", "availability"],
+                },
+                "FavouriteSearchAcademicMetricResponse": {
+                    "type": "object",
+                    "properties": {
+                        "metric_key": {},
+                        "label": {},
+                        "display_value": {},
+                        "sort_value": {},
+                        "availability": {},
+                    },
+                    "required": [
+                        "metric_key",
+                        "label",
+                        "display_value",
+                        "sort_value",
+                        "availability",
                     ],
                 },
                 "SchoolSearchLatestOfstedResponse": {
@@ -136,6 +242,39 @@ def _openapi_with_search_properties(properties: dict[str, object]) -> dict[str, 
     }
 
 
+def test_validate_account_favourites_response_contract_accepts_required_properties() -> None:
+    openapi_schema = _openapi_with_search_properties(
+        {
+            "query": {},
+            "center": {},
+            "count": {},
+            "schools": {},
+        }
+    )
+
+    validate_account_favourites_response_contract(openapi_schema)
+
+
+def test_validate_account_favourites_response_contract_rejects_missing_school_property() -> None:
+    openapi_schema = _openapi_with_search_properties(
+        {
+            "query": {},
+            "center": {},
+            "count": {},
+            "schools": {},
+        }
+    )
+    favourite_item = openapi_schema["components"]["schemas"]["AccountFavouriteSchoolResponse"]
+    favourite_item["properties"].pop("saved_at")
+    favourite_item["required"].remove("saved_at")
+
+    with pytest.raises(
+        RuntimeError,
+        match="AccountFavouriteSchoolResponse missing required properties: saved_at",
+    ):
+        validate_account_favourites_response_contract(openapi_schema)
+
+
 def test_validate_school_profile_response_contract_accepts_required_properties() -> None:
     openapi_schema = _openapi_with_profile_properties(
         {
@@ -151,6 +290,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
             "ofsted_latest": {},
             "ofsted_timeline": {},
             "neighbourhood": {},
+            "saved_state": {},
             "benchmarks": {},
             "completeness": {},
         }
@@ -177,8 +317,7 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
         match=(
             "SchoolProfileResponse missing required properties: "
             "attendance_latest, behaviour_latest, leadership_snapshot, "
-            "neighbourhood, "
-            "ofsted_timeline, performance, workforce_latest"
+            "neighbourhood, ofsted_timeline, performance, saved_state, workforce_latest"
         ),
     ):
         validate_school_profile_response_contract(openapi_schema)
@@ -199,6 +338,7 @@ def test_validate_school_profile_response_contract_does_not_require_required_lis
             "ofsted_latest": {},
             "ofsted_timeline": {},
             "neighbourhood": {},
+            "saved_state": {},
             "benchmarks": {},
             "completeness": {},
         }
@@ -300,5 +440,25 @@ def test_validate_schools_search_response_contract_rejects_missing_properties() 
     with pytest.raises(
         RuntimeError,
         match="SchoolsSearchResponse missing required properties: center",
+    ):
+        validate_schools_search_response_contract(openapi_schema)
+
+
+def test_validate_schools_search_response_contract_rejects_missing_saved_state() -> None:
+    openapi_schema = _openapi_with_search_properties(
+        {
+            "query": {},
+            "center": {},
+            "count": {},
+            "schools": {},
+        }
+    )
+    postcode_item = openapi_schema["components"]["schemas"]["PostcodeSchoolSearchItemResponse"]
+    postcode_item["properties"].pop("saved_state")
+    postcode_item["required"].remove("saved_state")
+
+    with pytest.raises(
+        RuntimeError,
+        match="PostcodeSchoolSearchItemResponse missing required properties: saved_state",
     ):
         validate_schools_search_response_contract(openapi_schema)

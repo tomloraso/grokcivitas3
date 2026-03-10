@@ -89,6 +89,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/favourites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Account Favourites */
+        get: operations["get_account_favourites_api_v1_account_favourites_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/favourites/{urn}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Account Favourite */
+        put: operations["save_account_favourite_api_v1_account_favourites__urn__put"];
+        post?: never;
+        /** Remove Account Favourite */
+        delete: operations["remove_account_favourite_api_v1_account_favourites__urn__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/billing/products": {
         parameters: {
             query?: never;
@@ -359,6 +394,36 @@ export interface components {
             /** Revoked Reason Code */
             revoked_reason_code: string | null;
         };
+        /** AccountFavouriteSchoolResponse */
+        AccountFavouriteSchoolResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Pupil Count */
+            pupil_count: number | null;
+            latest_ofsted: components["schemas"]["FavouriteSearchLatestOfstedResponse"];
+            academic_metric: components["schemas"]["FavouriteSearchAcademicMetricResponse"];
+            /**
+             * Saved At
+             * Format: date-time
+             */
+            saved_at: string;
+        };
+        /** AccountFavouritesResponse */
+        AccountFavouritesResponse: {
+            access: components["schemas"]["SectionAccessResponse"];
+            /** Count */
+            count: number;
+            /** Schools */
+            schools?: components["schemas"]["AccountFavouriteSchoolResponse"][];
+        };
         /** AuthStartRequest */
         AuthStartRequest: {
             /** Email */
@@ -471,6 +536,28 @@ export interface components {
              */
             account_access_state: "anonymous" | "free" | "pending" | "premium";
         };
+        /** FavouriteSearchAcademicMetricResponse */
+        FavouriteSearchAcademicMetricResponse: {
+            /** Metric Key */
+            metric_key: string | null;
+            /** Label */
+            label: string | null;
+            /** Display Value */
+            display_value: string | null;
+            /** Sort Value */
+            sort_value: number | null;
+            /** Availability */
+            availability: string;
+        };
+        /** FavouriteSearchLatestOfstedResponse */
+        FavouriteSearchLatestOfstedResponse: {
+            /** Label */
+            label: string | null;
+            /** Sort Rank */
+            sort_rank: number | null;
+            /** Availability */
+            availability: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -498,6 +585,21 @@ export interface components {
             pupil_count: number | null;
             latest_ofsted: components["schemas"]["SchoolSearchLatestOfstedResponse"];
             academic_metric: components["schemas"]["SchoolSearchAcademicMetricResponse"];
+            saved_state: components["schemas"]["SavedSchoolStateResponse"];
+        };
+        /** SavedSchoolStateResponse */
+        SavedSchoolStateResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "saved" | "not_saved" | "requires_auth" | "locked";
+            /** Saved At */
+            saved_at: string | null;
+            /** Capability Key */
+            capability_key: string | null;
+            /** Reason Code */
+            reason_code: ("free_baseline" | "premium_capability_missing" | "anonymous_user" | "artefact_not_published" | "artefact_not_supported" | "entitlement_expired" | "entitlement_revoked") | null;
         };
         /** SchoolCompareBenchmarkResponse */
         SchoolCompareBenchmarkResponse: {
@@ -1080,6 +1182,7 @@ export interface components {
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
             ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
             neighbourhood: components["schemas"]["SchoolProfileNeighbourhoodSectionResponse"];
+            saved_state: components["schemas"]["SavedSchoolStateResponse"];
             benchmarks?: components["schemas"]["SchoolProfileBenchmarksResponse"];
             completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
         };
@@ -1230,6 +1333,7 @@ export interface components {
             lng: number;
             /** Distance Miles */
             distance_miles: number;
+            saved_state: components["schemas"]["SavedSchoolStateResponse"];
         };
         /** SchoolSearchLatestOfstedResponse */
         SchoolSearchLatestOfstedResponse: {
@@ -1680,6 +1784,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountAccessResponse"];
+                };
+            };
+        };
+    };
+    get_account_favourites_api_v1_account_favourites_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountFavouritesResponse"];
+                };
+            };
+        };
+    };
+    save_account_favourite_api_v1_account_favourites__urn__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSchoolStateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_account_favourite_api_v1_account_favourites__urn__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedSchoolStateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

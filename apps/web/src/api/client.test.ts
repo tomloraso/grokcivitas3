@@ -4,10 +4,13 @@ import {
   __resetApiRequestCacheForTests,
   __setApiAccessEpochForTests,
   ApiClientError,
+  getAccountFavourites,
   getSchoolProfile,
   getSchoolTrendDashboard,
   getSchoolTrends,
   prefetchSchoolProfile,
+  removeAccountFavourite,
+  saveAccountFavourite,
   searchSchools
 } from "./client";
 import type {
@@ -192,5 +195,51 @@ describe("api client school endpoint cache", () => {
     expect(url).toBe(
       "/api/v1/schools?postcode=SW1A+1AA&radius=5&phase=primary&phase=secondary&sort=ofsted"
     );
+  });
+
+  it("requests the account favourites library from the account endpoint", async () => {
+    const payload = {
+      access: {
+        state: "available",
+        capability_key: null,
+        reason_code: null,
+        product_codes: [],
+        requires_auth: false,
+        requires_purchase: false,
+        school_name: null
+      },
+      count: 0,
+      schools: []
+    };
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(payload));
+
+    await expect(getAccountFavourites()).resolves.toEqual(payload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/v1/account/favourites");
+  });
+
+  it("uses PUT and DELETE for favourite mutations", async () => {
+    const payload = {
+      status: "saved",
+      saved_at: "2026-03-10T10:15:00Z",
+      capability_key: null,
+      reason_code: null
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => jsonResponse(payload));
+
+    await expect(saveAccountFavourite(URN)).resolves.toEqual(payload);
+    await expect(removeAccountFavourite(URN)).resolves.toEqual(payload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [saveUrl, saveInit] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const [removeUrl, removeInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(saveUrl).toBe(`/api/v1/account/favourites/${URN}`);
+    expect(saveInit.method).toBe("PUT");
+    expect(removeUrl).toBe(`/api/v1/account/favourites/${URN}`);
+    expect(removeInit.method).toBe("DELETE");
   });
 });

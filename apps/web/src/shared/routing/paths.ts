@@ -13,6 +13,7 @@ import {
 export const paths = {
   home: "/",
   account: "/account",
+  accountFavourites: "/account/favourites",
   homeSearch: ({
     view = "map",
     resultsPhases = [],
