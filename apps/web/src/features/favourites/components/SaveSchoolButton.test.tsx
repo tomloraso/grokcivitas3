@@ -108,7 +108,7 @@ describe("SaveSchoolButton", () => {
       onSavedStateChange
     });
 
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save for later" }));
 
     await waitFor(() => {
       expect(saveAccountFavouriteMock).toHaveBeenCalledWith("100001");

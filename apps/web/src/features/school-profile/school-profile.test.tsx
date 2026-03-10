@@ -77,7 +77,7 @@ describe("SchoolProfileFeature", () => {
       expect(
         await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
       ).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+      expect(screen.getAllByRole("button", { name: "Save for later" })[0]).toBeInTheDocument();
 
       expect(screen.getByRole("heading", { name: "Pupil Demographics" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "School Overview" })).toBeInTheDocument();

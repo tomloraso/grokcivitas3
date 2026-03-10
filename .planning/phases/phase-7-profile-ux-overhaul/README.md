@@ -79,6 +79,18 @@ SchoolProfileFeature
 | P11 | `P11-trend-indicator-direction-triangles.md` | Complete (2026-03-10) |
 | P12 | Demographics benchmark wiring | Complete (2026-03-10) |
 | P13 | Compare page rebuild | Complete (2026-03-10) |
+| P13.1 | Compare accordion refactor | Complete (2026-03-10) |
+| P13.2 | Compare visual polish | Complete (2026-03-10) |
+| P13.3 | Compare row readability | Complete (2026-03-10) |
+| P13.4 | Compare strip-to-table alignment | Complete (2026-03-10) |
+| P13.5 | Fixed 4-slot layout with ghost cards | Complete (2026-03-10) |
+| P13.6 | Accordion header visual hierarchy | Complete (2026-03-10) |
+| P13.7 | Accordion header background tint | Complete (2026-03-10) |
+| P13.8 | Mobile-first accordion content | Complete (2026-03-10) |
+| P13.9 | Section heading alignment with profile | Complete (2026-03-10) |
+| P14 | Profile action bar redesign | Complete (2026-03-10) |
+| P14.1 | Button animation standardisation | Complete (2026-03-10) |
+| P14.2 | Site-wide button variant standardisation | Complete (2026-03-10) |
 
 ## Execution Sequence
 
@@ -106,6 +118,70 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-10 (P14.2 — Site-wide button variant standardisation):
+  - **`SchoolProfileFeature.tsx`** — all four `variant="compare" size="none"` button call sites replaced with `variant="primary" size="default"`: header "Add to compare" button, header `CompareActionButton` ("Open compare"), mobile sticky bar compare toggle, and mobile sticky bar `CompareActionButton`. "Remove from compare" remains `variant="secondary"` (correct for secondary action). Manual `text-sm` removed from mobile bar (redundant — included in `size="default"`). Manual `px-4` removed from mobile `CompareActionButton` (included in `size="default"`).
+  - **`apps/web/README.md`** — new "Button system" section added documenting all four variants, sizes, animation base, and rules (no raw buttons for actions, no inline animation overrides, variant assignments for profile header states).
+  - **Audit result**: Compare page buttons (Share/Back/Clear all/Browse) already use correct standard variants (`secondary`/`ghost`/`primary`). `SaveSchoolButton` uses `secondary`/`ghost` correctly. `CompareActionButton` passes through variant prop correctly. No manual animation overrides found anywhere.
+
+- 2026-03-10 (P14.1 — Button animation standardisation):
+  - **`Button.tsx`** — base `cva` string standardised from `transition-colors duration-base` to `transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]`. All variants (primary, secondary, ghost, compare) now inherit unified micro-animation.
+  - **`Button.tsx` compare variant** — replaced `"btn-compare focus-visible:ring-0"` class reference with Tailwind-only: `rounded-xl border border-brand/25 bg-[rgba(10,20,40,0.65)] text-primary/90 backdrop-blur-sm hover:border-brand/50 hover:bg-brand/10 hover:text-primary hover:shadow-[0_0_18px_rgba(0,212,200,0.25)]`. No external CSS dependency.
+  - **`tokens.css`** — deleted ~100-line `.btn-compare` CSS block (base styles, `::before` gradient border ring pseudo-element, hover/active/focus-visible states, light theme overrides). All styling now lives in `cva` variant.
+  - **`ui-primitives.test.tsx`** — compare variant assertion updated from `btn-compare` class check to `rounded-xl` + `border-brand/25`.
+
+- 2026-03-10 (P14 — Profile action bar redesign):
+  - **`SchoolProfileFeature.tsx`** — extracted `handleCompareToggle` callback to deduplicate compare add/remove logic (was copy-pasted in header actions + mobile sticky bar). Header actions now context-aware: when not in compare → teal "Add to compare (N/4)" primary + "Save for later" secondary; when in compare → outline "Remove from compare" + teal "Open compare (N)". Mobile sticky bar mirrors the same two-button layout with `flex gap-2`.
+  - **`SaveSchoolButton.tsx`** — icon changed from `Bookmark` to `Heart` (filled when saved). Label changed from "Save" to "Save for later". Added hover tooltip: "Save to your list for alerts, exports & easy re-access" (only shown in `not_saved` state, hidden for saved/locked/auth states).
+  - **`CompareActionButton.tsx`** — added `className` prop passthrough to all internal `Button` renders.
+  - **`ProfileHeader.tsx`** — actions container gap tightened from `gap-3` to `gap-2` for connected-bar feel.
+  - **Tests** — `"Save"` → `"Save for later"` in profile + favourites test assertions; `getByRole` → `getAllByRole[0]` for dual mobile+desktop rendering.
+
+- 2026-03-10 (P13.9 — Section heading alignment with profile):
+  - **`compareMapper.ts`** — added `SECTION_LABEL_MAP` mapping backend keys to profile-matching labels: `inspection` → "Ofsted Profile", `performance` → "Results & Progress", `attendance`/`behaviour` → "Day-to-Day at School", `demographics` → "Pupil Demographics", `workforce` → "Teachers & Staff", `area` → "Neighbourhood Context". Added `SECTION_ORDER` for canonical profile order. New `relabelMergeAndOrder()` merges sections sharing the same label (attendance + behaviour → "Day-to-Day at School") and sorts by profile order.
+  - **`school-compare.test.tsx`** — assertions updated for dual mobile+desktop rendering (`getByText` → `getAllByText[0]`) and renamed section labels (`"Demographics"` → `"Pupil Demographics"`).
+
+- 2026-03-10 (P13.8 — Mobile-first accordion content):
+  - **`CompareMobileContent.tsx`** (new) — mobile-only vertical card layout for `< sm` (640px). Each metric row renders as: teal-accented metric label header → stacked school value cards. Origin school gets `border-l-2 border-l-brand/30` tint. Muted cells use `text-disabled/50` (lighter than desktop). Detail labels suppressed on mobile to reduce density.
+  - **`CompareAccordionContent.tsx`** — wraps desktop table in `hidden sm:block`, renders `CompareMobileContent` in `sm:hidden`. Desktop table unchanged.
+  - **`CompareSchoolStrip.tsx`** — mobile: 2×2 grid layout (`grid grid-cols-2 gap-2`), desktop: unchanged horizontal strip. Remove button touch target increased to `p-1.5` on mobile. Ghost card min-height `60px` mobile / `72px` desktop.
+  - **`compareMapper.ts`** — suppressed `partial_metric_coverage` completeness label at cell level (section-level noise).
+  - Removed "Metric" label from table header and URN numbers from strip cards and table headers.
+
+- 2026-03-10 (P13.7 — Accordion header background tint):
+  - **`CompareAccordionSections.tsx`** — header background changed from `bg-surface/70` to `bg-brand/[0.04]` for a subtle teal-tinted glass effect. Differentiates headers from content panel (`bg-surface/40`) while staying on-brand. All other styling unchanged.
+
+- 2026-03-10 (P13.6 — Accordion header visual hierarchy):
+  - **`CompareAccordionSections.tsx`** — accent bar strengthened from `border-l-brand/60` to `border-l-brand` (full opacity teal). Header font bumped from `text-sm` to `text-base` for clearer visual hierarchy. Padding, metric count badge styling, hover/open states unchanged.
+
+- 2026-03-10 (P13.5 — Fixed 4-slot layout with ghost cards):
+  - **`CompareSchoolStrip.tsx`** — now exports `CompareSlot` type (`CompareSchoolColumnVM | null`) and `padToSlots()` helper. Always renders 4 fixed slots: `FilledCard` for real schools, `GhostCard` (dashed border, `+ Add school` link to home) for empty slots. Props changed from `schools` to `slots`.
+  - **`CompareAccordionContent.tsx`** — accepts `slots: CompareSlot[]` instead of `schools`. Fixed `minWidth` to `LABEL_COL_WIDTH + TOTAL_SLOTS * SCHOOL_COL_WIDTH` (always 4 columns). Empty slots render blank `<th>`/`<td>` cells with subtle zebra tint `bg-surface/[0.04]`.
+  - **`CompareAccordionSections.tsx`** — prop changed from `schools` to `slots: CompareSlot[]`, passed through to `CompareAccordionContent`.
+  - **`SchoolCompareFeature.tsx`** — imports `padToSlots`, creates `paddedSlots` memo, passes to both `CompareSchoolStrip` and `CompareAccordionSections`.
+  - **`school-compare.test.tsx`** — fixed "Not applicable" assertion to match em-dash prefixed muted cell text (`— Not applicable`).
+
+- 2026-03-10 (P13.4 — Compare strip-to-table alignment):
+  - **`CompareSchoolStrip.tsx`** — rewritten for column alignment. Uses same 200px label spacer + 180px school columns as accordion table. Cards compacted: `p-2` padding, `text-xs` name, `text-[9px]` badges/URN with `px-1 py-0` and `h-2.5 w-2.5` icons. Age range + distance collapsed to inline `text-[9px]` text (removed `StatCard` mini). Remove button shrunk to `p-0.5` + `h-3 w-3`. School name truncated with `truncate`.
+  - Removed `StatCard` import — no longer used in strip.
+
+- 2026-03-10 (P13.3 — Compare row readability polish):
+  - **`CompareAccordionContent.tsx`** — removed "Origin" badge from first school column header. Added zebra striping: even rows `bg-surface/[0.06]` (cells) / `bg-surface/[0.08]` (sticky label). Row hover changed from `hover:bg-brand/[0.03]` to `hover:bg-surface/50` for better cross-column tracking. Row dividers strengthened from `border-border-subtle/15` to `/25`. Origin column tint retained without badge.
+
+- 2026-03-10 (P13.2 — Compare visual polish):
+  - **`CompareAccordionSections.tsx`** — teal left accent bar (`border-l-2 border-l-brand/60`) on accordion headers, increased padding (`px-5 py-3.5`), `p-1` inner padding on content panel. Hover intensifies accent. Passes `originUrn` through to content.
+  - **`CompareAccordionContent.tsx`** — "This school" column highlight: origin URN gets `border-l-2 border-l-brand/30 bg-brand/[0.02]` on every cell + header. Softer unavailable: muted cells use `text-disabled/60` with em-dash prefix, detail labels `text-disabled/70`. Increased row padding `py-3.5`, softer dividers `border-border-subtle/15`. Lighter availability tinting: `unsupported` → `bg-surface/30`, `unavailable` → `bg-surface/20`. Header row gets bottom border for separation.
+  - **`SchoolCompareFeature.tsx`** — passes `originUrn={effectiveUrns?.[0]}` to `CompareAccordionSections`.
+  - **`apps/web/README.md`** — added "This school" highlight, unavailable treatment, and visual polish docs.
+
+- 2026-03-10 (P13.1 — Compare accordion refactor):
+  - **`CompareAccordionSections.tsx`** (new) — replaces flat table with collapsible accordion per section. First 3 sections default open, rest collapsed. Toggle button styled as `rounded-xl bg-surface/70` with chevron, teal accent bar, and metric count badge. No external dependency — pure React state.
+  - **`CompareAccordionContent.tsx`** (new) — metric rows inside each accordion. Sticky label column (`left-0 z-10 bg-surface/95 backdrop-blur`), school value cells with availability tinting, `overflow-x-auto` for horizontal scroll. Extracted `CompareCell`, `cellBgClass`, `unitLabel` from old `CompareMetricTable`.
+  - **`SchoolCompareFeature.tsx`** — swapped `CompareMetricTable` import for `CompareAccordionSections`. All state/reducer/URL logic unchanged.
+  - **`CompareMetricTable.tsx`** — superseded by accordion layout (kept in repo for reference; no longer imported).
+  - **`CompareTableHeader.tsx`** — superseded; header now inline in `CompareAccordionContent`.
+  - **`school-compare.test.tsx`** — updated table query to `getAllByRole("table")` (one table per open accordion section).
+  - **`apps/web/README.md`** — updated P13 section to P13.1 with accordion pattern docs.
 
 - 2026-03-10 (Phase 14 compat fix):
   - **`favourites/mappers.ts`** — `mapSavedSchoolState()` now accepts `undefined | null` and returns a default `not_saved` state. Phase 14 added `saved_state` to search result types but the backend doesn't always include it; calling the mapper on `undefined` crashed the search page with `Cannot read properties of undefined (reading 'status')`.

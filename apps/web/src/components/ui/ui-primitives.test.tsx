@@ -125,7 +125,8 @@ describe("UI primitives", () => {
     );
 
     const button = screen.getByRole("button", { name: "Compare" });
-    expect(button.className).toContain("btn-compare");
+    expect(button.className).toContain("rounded-xl");
+    expect(button.className).toContain("border-brand/25");
     expect(button.className).not.toContain("h-11");
   });
 

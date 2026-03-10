@@ -93,7 +93,7 @@ describe("SchoolCompareFeature", () => {
     expect(
       await screen.findByRole("heading", { name: "Add one more school to compare" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Primary Example")).toBeInTheDocument();
+    expect(screen.getAllByText("Primary Example")[0]).toBeInTheDocument();
     expect(compareMock).not.toHaveBeenCalled();
   });
 
@@ -115,13 +115,13 @@ describe("SchoolCompareFeature", () => {
       }),
     ]);
 
-    expect(await screen.findByText("Demographics")).toBeInTheDocument();
+    expect(await screen.findByText("Pupil Demographics")).toBeInTheDocument();
     expect(
-      screen.getByRole("table", { name: "School comparison table" })
+      screen.getAllByRole("table", { name: "School comparison table" })[0]
     ).toBeInTheDocument();
     expect(compareMock).toHaveBeenCalledWith(["100001", "200002"]);
-    expect(screen.getByText("England 18.0% | Westminster 19.2%")).toBeInTheDocument();
-    expect(screen.getByText("Not applicable")).toBeInTheDocument();
+    expect(screen.getAllByText("England 18.0% | Westminster 19.2%")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("— Not applicable")[0]).toBeInTheDocument();
     expect(
       screen.getAllByText(
         "The source currently has limited coverage for this information."
@@ -129,13 +129,13 @@ describe("SchoolCompareFeature", () => {
     ).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "Remove Primary Example from compare" })
+      screen.getAllByRole("button", { name: "Remove Primary Example from compare" })[0]
     );
 
     expect(
       await screen.findByRole("heading", { name: "Add one more school to compare" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Secondary Example")).toBeInTheDocument();
+    expect(screen.getAllByText("Secondary Example")[0]).toBeInTheDocument();
     expect(compareMock).toHaveBeenCalledTimes(1);
   });
 

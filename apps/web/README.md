@@ -50,6 +50,27 @@ npm run generate:types
 
 `panel-surface` is a CSS utility in `theme.css`: glass gradient background, 1px border at `--color-border-default`, `backdrop-filter: blur(18px)`.
 
+### Button system (`src/components/ui/Button.tsx`)
+
+shadcn/ui `cva`-based button with unified micro-animation on every variant.
+
+**Base animation:** `transition-all duration-200 ease-out hover:scale-[1.02] active:scale-[0.98]`
+
+| Variant | Use case | Visual |
+|---------|----------|--------|
+| `primary` | Main CTAs: "Add to compare", "Open compare", "Browse schools" | Solid teal fill (`bg-brand-solid`) |
+| `secondary` | Secondary actions: "Remove from compare", "Save for later", "Share", "Back to search" | Outline with subtle border (`border-border bg-elevated`) |
+| `ghost` | Tertiary / destructive: "Clear all" | Transparent, text-only hover |
+| `compare` | Reserved — glass-card look for specialised compare contexts | Backdrop-blur glass with teal border accents |
+
+**Sizes:** `default` (h-11 px-4 text-sm), `sm` (h-9 px-3 text-xs), `none` (no sizing — for custom layout).
+
+**Rules:**
+- Always use the shadcn `Button` component — no raw `<button>` for action buttons.
+- Never add inline `hover:scale` or `transition-all` overrides; the cva base handles all animation.
+- Profile header uses `primary` for the main CTA and `secondary` for the secondary action in both "not in compare" and "in compare" states.
+- Mobile sticky bar mirrors desktop variant assignments with `min-h-[52px]` touch targets.
+
 ### School profile layout (`src/features/school-profile/SchoolProfileFeature.tsx`)
 
 **Mobile (`< 1024px`)**
@@ -191,7 +212,7 @@ Cards were over-padded on mobile, creating an "old people mode" feel. Tightened 
 
 All interactive elements retain ≥ 44px touch targets.
 
-### Compare page — design system (P13, 2026-03-10)
+### Compare page — design system (P13.1–P13.5, 2026-03-10)
 
 **Canonical location:** `src/features/school-compare/`
 
@@ -200,22 +221,60 @@ The Compare page uses the same Loira Voss design system as the school profile. K
 | Component | File | Role |
 |---|---|---|
 | `SchoolCompareFeature` | `SchoolCompareFeature.tsx` | Main page: data fetching, URL sync, layout orchestration |
-| `CompareSchoolStrip` | `CompareSchoolStrip.tsx` | Horizontal scrollable school cards with badges and remove button |
-| `CompareMetricTable` | `CompareMetricTable.tsx` | Core comparison grid: sections → rows → cells, sticky label column |
-| `CompareTableHeader` | `CompareTableHeader.tsx` | Sticky header row with school names + URNs |
+| `CompareSchoolStrip` | `CompareSchoolStrip.tsx` | Fixed 4-slot strip: `FilledCard` for schools, `GhostCard` for empty slots |
+| `CompareAccordionSections` | `CompareAccordionSections.tsx` | Collapsible accordion per section; first 3 default open |
+| `CompareAccordionContent` | `CompareAccordionContent.tsx` | Metric rows inside each accordion: sticky label column + school cells |
+
+**Accordion pattern:**
+- Each section (Inspection, Demographics, Attendance, etc.) is a collapsible accordion
+- First 3 sections default open; rest collapsed — reduces scroll fatigue
+- Toggle button: `border-l-2 border-l-brand` full-opacity teal left accent bar, `text-base font-semibold`, `px-5 py-3.5` breathing room, `bg-brand/[0.04]` subtle teal-tinted glass
+- Open state: `rounded-b-none border-b-transparent` with `p-1` padded content panel below
+- Metric count badge (`text-[10px] text-disabled`) shown in each accordion header
+- Hover: `hover:border-l-brand hover:border-brand/30` — accent bar intensifies
+
+**"This school" highlight:**
+- The first URN in the URL is treated as the origin school
+- Its column gets `border-l-2 border-l-brand/30 bg-brand/[0.02]` on every cell + header
 
 **Layout rules:**
 - Metric label column: sticky `left-0`, 200px wide, `bg-surface/95 backdrop-blur`
-- School columns: 200px min each, `overflow-x-auto` for horizontal scroll
-- Section dividers: teal-accented centred label between horizontal rules (`bg-brand/20`)
-- Row hover: `hover:bg-brand/[0.03]` — subtle teal tint on interaction
+- School columns: 180px min each, `overflow-x-auto` for horizontal scroll within each accordion
+- Row padding: `py-3.5` with `border-b border-border-subtle/25` between rows
+- Zebra striping: even rows get `bg-surface/[0.06]` (cells) / `bg-surface/[0.08]` (sticky label)
+- Row hover: `hover:bg-surface/50` — visible neutral hover for tracking across columns
 - Share button: copies current URL to clipboard with "Link copied" feedback
+
+**Unavailable treatment:**
+- Muted cells: `font-medium text-disabled/60` with em-dash prefix (`— Not applicable`)
+- Detail labels: `text-disabled/70` (softer than secondary)
+- Availability backgrounds: `unsupported` → `bg-surface/30`, `unavailable` → `bg-surface/20` (lighter than before)
 
 **Premium gate:**
 - Slim `Panel` banner with `Sparkles` icon, title, description, CTA button
 - Dev premium bypass: inline `isDevUnlocked` check (same pattern as profile)
 
-**Mobile (375px):**
-- School strip: `snap-x snap-mandatory scroll-smooth`, `snap-start` per card
-- Metric table: `overflow-x-auto`, sticky label column remains visible during scroll
+**Fixed 4-slot layout (P13.5):**
+- Always render exactly 4 columns in both strip and accordion table, regardless of school count
+- `padToSlots(schools)` pads the array with `null` to 4 entries; exported from `CompareSchoolStrip`
+- `CompareSlot = CompareSchoolColumnVM | null` — shared type for both strip and accordion
+- Empty slots: strip shows `GhostCard` (dashed border, `+ Add school` link), table shows blank cells
+- `LABEL_COL_WIDTH = 200`, `SCHOOL_COL_WIDTH = 180`, `TOTAL_SLOTS = 4` — constants in strip and content
+
+**School strip–table column alignment:**
+- Strip uses the same column widths as accordion content: 200px label spacer + 180px per school
+- Cards are compact: `p-2` padding, `text-xs` name, `text-[9px]` badges/URN/metadata
+- Age range + distance rendered as inline `text-[9px]` text (no StatCard) to save height
+
+**Mobile (< 640px / P13.8):**
+- School strip: 2×2 grid (`grid-cols-2 gap-2`) replaces wide horizontal strip
+- Inside each accordion: `CompareMobileContent` renders vertical stacked cards (metric label header → school value cards). Desktop table hidden via `hidden sm:block`
+- Metric label: teal left accent bar (`border-l-2 border-l-brand/60`) above school cards
+- School value cards: `rounded-lg bg-surface/60`, school name left + value right, origin school tinted
+- Muted cells: `text-disabled/50` (lighter than desktop), detail labels suppressed for density
+- Touch targets: remove button `p-1.5`, ghost card `min-h-[60px]`, accordion triggers already `min-h-[48px]`
+
+**Desktop (≥ 640px):**
+- School strip: `snap-x snap-mandatory scroll-smooth`, `snap-start` per card, aligned with table columns
+- Inside each accordion: `overflow-x-auto` table with sticky metric label column
 - Unit labels: `text-[10px]` compact size

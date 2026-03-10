@@ -13,6 +13,7 @@ interface CompareActionButtonProps {
   ariaLabel?: string;
   variant?: ButtonProps["variant"];
   size?: ButtonProps["size"];
+  className?: string;
 }
 
 export function CompareActionButton({
@@ -22,6 +23,7 @@ export function CompareActionButton({
   ariaLabel,
   variant = "secondary",
   size = "default",
+  className,
 }: CompareActionButtonProps): JSX.Element {
   const { session } = useAuth();
   const compareHref = paths.compare(urns);
@@ -32,6 +34,7 @@ export function CompareActionButton({
         type="button"
         variant={variant}
         size={size}
+        className={className}
         disabled
         aria-label={ariaLabel}
       >
@@ -42,7 +45,7 @@ export function CompareActionButton({
 
   if (session.capabilityKeys.includes(COMPARE_CAPABILITY_KEY)) {
     return (
-      <Button asChild variant={variant} size={size}>
+      <Button asChild variant={variant} size={size} className={className}>
         <Link to={compareHref} aria-label={ariaLabel}>
           {label}
         </Link>
@@ -64,7 +67,7 @@ export function CompareActionButton({
         );
 
   return (
-    <Button asChild variant={variant} size={size}>
+    <Button asChild variant={variant} size={size} className={className}>
       <Link to={upgradeHref} aria-label={ariaLabel}>
         <LockKeyhole className="mr-1.5 h-3.5 w-3.5" aria-hidden />
         {lockedLabel ?? label}

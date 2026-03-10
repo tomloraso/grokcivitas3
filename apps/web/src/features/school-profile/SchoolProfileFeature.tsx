@@ -41,7 +41,7 @@
  *   Every "CIVITAS" string has been replaced with "[BRAND]" across SiteHeader, SiteFooter,
  *   and all aria-labels in this file.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
@@ -121,6 +121,29 @@ export function SchoolProfileFeature(): JSX.Element {
   const selected = profile ? hasSchool(profile.school.urn) : false;
   const savedState = savedStateOverride ?? profile?.savedState ?? null;
 
+  const handleCompareToggle = useCallback(() => {
+    if (!profile) return;
+    if (selected) {
+      removeSchool(profile.school.urn);
+      return;
+    }
+    const result = addSchool({
+      urn: profile.school.urn,
+      name: profile.school.name,
+      phase: profile.school.phase,
+      type: profile.school.type,
+      postcode: profile.school.postcode,
+      source: "profile",
+    });
+    if (result === "limit") {
+      toast({
+        title: "Compare limit reached",
+        description: "You can compare up to four schools at a time.",
+        variant: "warning",
+      });
+    }
+  }, [profile, selected, addSchool, removeSchool, toast]);
+
   useEffect(() => {
     setSavedStateOverride(null);
   }, [urn]);
@@ -196,54 +219,46 @@ export function SchoolProfileFeature(): JSX.Element {
               demographics={profile.demographics}
               areaContext={profile.neighbourhood.areaContext}
               actions={
-                <>
-                  {savedState ? (
-                    <SaveSchoolButton
-                      schoolUrn={profile.school.urn}
-                      savedState={savedState}
+                selected ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="secondary"
                       size="default"
-                      onSavedStateChange={setSavedStateOverride}
-                    />
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="compare"
-                    size="none"
-                    onClick={() => {
-                      if (selected) {
-                        removeSchool(profile.school.urn);
-                        return;
-                      }
-
-                      const result = addSchool({
-                        urn: profile.school.urn,
-                        name: profile.school.name,
-                        phase: profile.school.phase,
-                        type: profile.school.type,
-                        postcode: profile.school.postcode,
-                        source: "profile",
-                      });
-                      if (result === "limit") {
-                        toast({
-                          title: "Compare limit reached",
-                          description: "You can compare up to four schools at a time.",
-                          variant: "warning",
-                        });
-                      }
-                    }}
-                  >
-                    {selected ? "Remove from compare" : "Add to compare"}
-                  </Button>
-                  {items.length >= 2 ? (
-                    <CompareActionButton
-                      urns={items.map((item) => item.urn)}
-                      label="Open compare"
-                      lockedLabel="Unlock compare"
-                      variant="compare"
-                      size="none"
-                    />
-                  ) : null}
-                </>
+                      onClick={handleCompareToggle}
+                    >
+                      Remove from compare
+                    </Button>
+                    {items.length >= 2 ? (
+                      <CompareActionButton
+                        urns={items.map((item) => item.urn)}
+                        label={`Open compare (${items.length})`}
+                        lockedLabel="Unlock compare"
+                        variant="primary"
+                        size="default"
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="default"
+                      onClick={handleCompareToggle}
+                    >
+                      Add to compare{items.length > 0 ? ` (${items.length}/4)` : ""}
+                    </Button>
+                    {savedState ? (
+                      <SaveSchoolButton
+                        schoolUrn={profile.school.urn}
+                        savedState={savedState}
+                        size="default"
+                        onSavedStateChange={setSavedStateOverride}
+                      />
+                    ) : null}
+                  </>
+                )
               }
             />
           </div>
@@ -355,39 +370,39 @@ export function SchoolProfileFeature(): JSX.Element {
 
           <div className="fixed bottom-0 left-0 right-0 z-nav lg:hidden">
             <div
-              className="border-t border-border-subtle/60 bg-canvas/95 px-4 pt-3 backdrop-blur-xl"
+              className="flex gap-2 border-t border-border-subtle/60 bg-canvas/95 px-4 pt-3 backdrop-blur-xl"
               style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
             >
               <Button
                 type="button"
-                variant="compare"
-                size="none"
-                className="min-h-[52px] w-full justify-center text-sm font-semibold"
-                onClick={() => {
-                  if (selected) {
-                    removeSchool(profile.school.urn);
-                    return;
-                  }
-
-                  const result = addSchool({
-                    urn: profile.school.urn,
-                    name: profile.school.name,
-                    phase: profile.school.phase,
-                    type: profile.school.type,
-                    postcode: profile.school.postcode,
-                    source: "profile",
-                  });
-                  if (result === "limit") {
-                    toast({
-                      title: "Compare limit reached",
-                      description: "You can compare up to four schools at a time.",
-                      variant: "warning",
-                    });
-                  }
-                }}
+                variant={selected ? "secondary" : "primary"}
+                size="default"
+                className="min-h-[52px] flex-1 justify-center font-semibold"
+                onClick={handleCompareToggle}
               >
-                {selected ? "Remove from compare" : "Add to compare"}
+                {selected
+                  ? "Remove from compare"
+                  : `Add to compare${items.length > 0 ? ` (${items.length}/4)` : ""}`}
               </Button>
+              {savedState && !selected ? (
+                <SaveSchoolButton
+                  schoolUrn={profile.school.urn}
+                  savedState={savedState}
+                  size="default"
+                  className="min-h-[52px] shrink-0"
+                  onSavedStateChange={setSavedStateOverride}
+                />
+              ) : null}
+              {selected && items.length >= 2 ? (
+                <CompareActionButton
+                  urns={items.map((item) => item.urn)}
+                  label={`Compare (${items.length})`}
+                  lockedLabel="Unlock"
+                  variant="primary"
+                  size="default"
+                  className="min-h-[52px] shrink-0"
+                />
+              ) : null}
             </div>
           </div>
         </>

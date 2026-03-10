@@ -1,4 +1,4 @@
-import { Bookmark, LockKeyhole } from "lucide-react";
+import { Heart, LockKeyhole } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
@@ -42,7 +42,7 @@ function buttonLabel(
       return "Unlock save";
     case "not_saved":
     default:
-      return "Save";
+      return "Save for later";
   }
 }
 
@@ -128,23 +128,39 @@ export function SaveSchoolButton({
   }
 
   return (
-    <Button
-      type="button"
-      variant={isSaved ? "ghost" : "secondary"}
-      size={size}
-      className={className}
-      onClick={() => {
-        void handleClick();
-      }}
-      disabled={pendingAction !== null}
-      aria-pressed={isSaved}
-    >
-      {isLocked ? (
-        <LockKeyhole className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-      ) : (
-        <Bookmark className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-      )}
-      {buttonLabel(savedState, pendingAction)}
-    </Button>
+    <div className="group relative">
+      <Button
+        type="button"
+        variant={isSaved ? "ghost" : "secondary"}
+        size={size}
+        className={className}
+        onClick={() => {
+          void handleClick();
+        }}
+        disabled={pendingAction !== null}
+        aria-pressed={isSaved}
+        aria-describedby={`save-tooltip-${schoolUrn}`}
+      >
+        {isLocked ? (
+          <LockKeyhole className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+        ) : (
+          <Heart
+            className="mr-1.5 h-3.5 w-3.5"
+            aria-hidden
+            fill={isSaved ? "currentColor" : "none"}
+          />
+        )}
+        {buttonLabel(savedState, pendingAction)}
+      </Button>
+      {!isSaved && !isLocked && !isRequiresAuth && pendingAction === null ? (
+        <span
+          id={`save-tooltip-${schoolUrn}`}
+          role="tooltip"
+          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-elevated px-2.5 py-1.5 text-[11px] text-secondary shadow-lg opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          Save to your list for alerts, exports &amp; easy re-access
+        </span>
+      ) : null}
+    </div>
   );
 }

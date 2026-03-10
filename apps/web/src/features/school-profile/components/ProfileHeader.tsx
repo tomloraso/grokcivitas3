@@ -297,7 +297,7 @@ export function ProfileHeader({
           </p>
         ) : null}
 
-        {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
 
       {/* ── Signal strip ─────────────────────────────── */}

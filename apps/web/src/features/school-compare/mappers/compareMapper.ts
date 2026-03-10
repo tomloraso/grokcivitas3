@@ -11,8 +11,34 @@ import { mapSectionAccess } from "../../premium-access/mappers";
 import type {
   CompareCellVM,
   ComparePageVM,
+  CompareSectionVM,
   CompareSchoolColumnVM
 } from "../types";
+
+/* ------------------------------------------------------------------ */
+/* Section relabelling & ordering — align with school profile          */
+/* ------------------------------------------------------------------ */
+
+/** Map backend section keys → profile-matching display labels */
+const SECTION_LABEL_MAP: Record<string, string> = {
+  inspection: "Ofsted Profile",
+  performance: "Results & Progress",
+  attendance: "Day-to-Day at School",
+  behaviour: "Day-to-Day at School",
+  demographics: "Pupil Demographics",
+  workforce: "Teachers & Staff",
+  area: "Neighbourhood Context",
+};
+
+/** Canonical section order matching the school profile layout */
+const SECTION_ORDER: string[] = [
+  "Ofsted Profile",
+  "Results & Progress",
+  "Day-to-Day at School",
+  "Pupil Demographics",
+  "Teachers & Staff",
+  "Neighbourhood Context",
+];
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -31,17 +57,46 @@ export function mapCompareToVM(
     schools: (response.schools ?? []).map((school) =>
       mapSchoolColumnToVM(school, selectionByUrn.get(school.urn), compareHref)
     ),
-    sections: (response.sections ?? []).map((section) => ({
-      key: section.key,
-      label: section.label,
-      rows: (section.rows ?? []).map((row) => ({
-        metricKey: row.metric_key,
-        label: row.label,
-        unit: row.unit,
-        cells: (row.cells ?? []).map((cell) => mapCellToVM(cell, row.unit))
+    sections: relabelMergeAndOrder(
+      (response.sections ?? []).map((section) => ({
+        key: section.key,
+        label: SECTION_LABEL_MAP[section.key] ?? section.label,
+        rows: (section.rows ?? []).map((row) => ({
+          metricKey: row.metric_key,
+          label: row.label,
+          unit: row.unit,
+          cells: (row.cells ?? []).map((cell) => mapCellToVM(cell, row.unit))
+        }))
       }))
-    }))
+    )
   };
+}
+
+/**
+ * Merge sections that share the same label (e.g. attendance + behaviour
+ * → "Day-to-Day at School") and enforce canonical profile order.
+ */
+function relabelMergeAndOrder(sections: CompareSectionVM[]): CompareSectionVM[] {
+  // Merge sections with the same label
+  const merged = new Map<string, CompareSectionVM>();
+  for (const section of sections) {
+    const existing = merged.get(section.label);
+    if (existing) {
+      existing.rows.push(...section.rows);
+    } else {
+      merged.set(section.label, { ...section, rows: [...section.rows] });
+    }
+  }
+
+  // Sort by SECTION_ORDER, unknown sections go to the end
+  const result = [...merged.values()];
+  result.sort((a, b) => {
+    const ai = SECTION_ORDER.indexOf(a.label);
+    const bi = SECTION_ORDER.indexOf(b.label);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+
+  return result;
 }
 
 function mapSchoolColumnToVM(
@@ -137,6 +192,14 @@ function buildCompletenessLabel(cell: SchoolCompareCell): string | null {
   if (
     cell.availability === "unsupported" &&
     cell.completeness_reason_code === "not_applicable"
+  ) {
+    return null;
+  }
+
+  // Section-level concerns — noisy when repeated in every cell
+  if (
+    cell.completeness_reason_code === "partial_metric_coverage" ||
+    cell.completeness_reason_code === "insufficient_years_published"
   ) {
     return null;
   }

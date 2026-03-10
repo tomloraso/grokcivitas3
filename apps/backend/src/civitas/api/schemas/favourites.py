@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from civitas.api.schemas.access import SectionAccessResponse
 
@@ -55,4 +55,4 @@ class AccountFavouriteSchoolResponse(BaseModel):
 class AccountFavouritesResponse(BaseModel):
     access: SectionAccessResponse
     count: int
-    schools: list[AccountFavouriteSchoolResponse] = Field(default_factory=list)
+    schools: list[AccountFavouriteSchoolResponse]

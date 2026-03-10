@@ -24,7 +24,8 @@ import { readCompareUrlState } from "../../shared/routing/compareUrns";
 import { paths } from "../../shared/routing/paths";
 import { buildAccessActionHref, getPremiumPaywallCopy } from "../premium-access/copy";
 import { CompareSchoolStrip } from "./CompareSchoolStrip";
-import { CompareMetricTable } from "./CompareMetricTable";
+import { padToSlots } from "./compareSlots";
+import { CompareAccordionSections } from "./CompareAccordionSections";
 import { mapCompareToVM } from "./mappers/compareMapper";
 import type { CompareSchoolColumnVM } from "./types";
 
@@ -150,6 +151,7 @@ export function SchoolCompareFeature(): JSX.Element {
     0
   );
   const requestSeqRef = useRef(0);
+  const skipUrlSyncRef = useRef(false);
   const { items, isHydrated, removeSchool, clearSchools, replaceSchools } =
     useCompareSelection();
 
@@ -184,6 +186,15 @@ export function SchoolCompareFeature(): JSX.Element {
   }, [hasExplicitUrnsParam, isHydrated, navigate, selectionUrns]);
 
   useEffect(() => {
+    // Skip URL→selection sync when an explicit clear is in progress.
+    // React Router's navigate uses startTransition, so clearSchools() can
+    // take effect (items=[]) before the URL updates — without this guard
+    // the effect sees the mismatch and repopulates the selection.
+    if (skipUrlSyncRef.current) {
+      skipUrlSyncRef.current = false;
+      return;
+    }
+
     if (
       !isHydrated ||
       !hasExplicitUrnsParam ||
@@ -260,6 +271,7 @@ export function SchoolCompareFeature(): JSX.Element {
     return mapCompareToVM(state.response, selectionByUrn, compareHref);
   }, [compareHref, selectionByUrn, state.response]);
   const visibleSchools = compareVm?.schools ?? fallbackSchools;
+  const paddedSlots = useMemo(() => padToSlots(visibleSchools), [visibleSchools]);
 
   // Dev premium bypass check
   const isDevUnlocked =
@@ -307,8 +319,9 @@ export function SchoolCompareFeature(): JSX.Element {
                 type="button"
                 variant="ghost"
                 onClick={() => {
+                  skipUrlSyncRef.current = true;
                   clearSchools();
-                  navigate(paths.compare());
+                  navigate("/compare?urns=", { replace: true });
                 }}
               >
                 Clear all
@@ -345,7 +358,7 @@ export function SchoolCompareFeature(): JSX.Element {
       {/* Single school */}
       {effectiveUrns !== null && effectiveUrns.length === 1 ? (
         <div className="space-y-4">
-          <CompareSchoolStrip schools={visibleSchools} onRemoveSchool={handleRemove} />
+          <CompareSchoolStrip slots={paddedSlots} onRemoveSchool={handleRemove} />
           <Panel className="space-y-3">
             <h2 className="text-base font-semibold text-primary">
               Add one more school to compare
@@ -374,16 +387,16 @@ export function SchoolCompareFeature(): JSX.Element {
             onRetry={bumpReloadToken}
           />
           {visibleSchools.length > 0 ? (
-            <CompareSchoolStrip schools={visibleSchools} onRemoveSchool={handleRemove} />
+            <CompareSchoolStrip slots={paddedSlots} onRemoveSchool={handleRemove} />
           ) : null}
         </div>
       ) : null}
 
       {/* Success */}
-      {compareVm && state.status === "success" ? (
+      {compareVm && state.status === "success" && effectiveUrns !== null && effectiveUrns.length >= 2 ? (
         <div className="space-y-5">
           <CompareSchoolStrip
-            schools={compareVm.schools}
+            slots={paddedSlots}
             onRemoveSchool={handleRemove}
           />
 
@@ -393,9 +406,10 @@ export function SchoolCompareFeature(): JSX.Element {
               currentHref={`${location.pathname}${location.search}`}
             />
           ) : (
-            <CompareMetricTable
-              schools={compareVm.schools}
+            <CompareAccordionSections
+              slots={paddedSlots}
               sections={compareVm.sections}
+              originUrn={effectiveUrns?.[0] ?? null}
             />
           )}
         </div>
