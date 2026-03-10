@@ -21,6 +21,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 10. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
 11. **For auth/session foundation work, read `docs/runbooks/auth-development-provider.md` and `.agents/auth.md`.** Keep the development provider local/test-only and keep origin/cookie guardrails documented.
 12. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved. Keep benchmark cache materialization (`metric_benchmarks_yearly`) on the post-promote/manual workflow, not on the web request path.
+13. **For premium-access or billing workflow changes, read `docs/runbooks/local-development.md`, `docs/runbooks/premium-access-release.md`, and `.agents/documentation.md`.** Keep local entitlement-seeding guidance, Stripe test-mode rehearsal steps, and rollback notes current.
 
 ## Agent guides
 

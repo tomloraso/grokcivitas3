@@ -15,6 +15,9 @@
    keep the request path read-only, and update `.agents/pipelines.md` alongside
    `docs/runbooks/pipelines.md`.
 6. For auth/session foundation changes, update `docs/runbooks/auth-development-provider.md` and keep local/test provider guardrails current.
+7. For premium-access or billing workflow changes, update `docs/runbooks/local-development.md`
+   for local entitlement-seeding guidance and `docs/runbooks/premium-access-release.md`
+   for Stripe test-mode rehearsal and release behavior.
 
 ## Required pages
 
@@ -29,3 +32,4 @@
 ## Task-specific pages
 
 - Auth/session foundation: `docs/runbooks/auth-development-provider.md`
+- Premium access and billing: `docs/runbooks/local-development.md`, `docs/runbooks/premium-access-release.md`

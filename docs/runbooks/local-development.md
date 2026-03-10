@@ -154,6 +154,146 @@ CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET=<stripe-test-webhook-secret>
 The full premium staging checklist, webhook replay drill, and rollback notes live in
 [Premium Access Release Runbook](./premium-access-release.md).
 
+## Local Premium Testing
+
+Use one of these two paths depending on what you are testing:
+
+- Access and paywall UI behavior without Stripe: keep `CIVITAS_BILLING_ENABLED=false` and seed an active `premium_launch` entitlement for your local user.
+- End-to-end checkout and webhook reconciliation: enable Stripe test mode and follow [Premium Access Release Runbook](./premium-access-release.md).
+
+When billing is disabled, the upgrade page can still render Premium plans, but checkout and billing-portal actions return `503 Billing is not enabled.` by design. No local browser flow will auto-upgrade the account while billing stays disabled.
+
+### Seed a local Premium entitlement
+
+Use this when you want to verify locked vs unlocked profile, compare, neighbourhood, and account-access states without wiring Stripe.
+
+Prerequisites:
+
+1. Run backend migrations: `uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade head`
+2. Sign in locally at least once so the target user row exists in `users`
+
+PowerShell example from the repo root:
+
+```powershell
+@'
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import create_engine, text
+
+from civitas.infrastructure.config.settings import get_settings
+
+EMAIL = "person@example.com"
+PRODUCT_CODE = "premium_launch"
+
+settings = get_settings()
+engine = create_engine(settings.database.url)
+now = datetime.now(timezone.utc)
+
+with engine.begin() as conn:
+    user = conn.execute(
+        text("SELECT id FROM users WHERE lower(email) = lower(:email)"),
+        {"email": EMAIL},
+    ).mappings().first()
+    if user is None:
+        raise SystemExit(f"User not found: {EMAIL}. Sign in locally first.")
+
+    entitlement_id = uuid4()
+    event_id = uuid4()
+
+    conn.execute(
+        text(
+            """
+            INSERT INTO entitlements (
+                id,
+                user_id,
+                product_code,
+                status,
+                starts_at,
+                ends_at,
+                revoked_at,
+                revoked_reason_code,
+                created_at,
+                updated_at
+            ) VALUES (
+                :id,
+                :user_id,
+                :product_code,
+                'active',
+                :starts_at,
+                NULL,
+                NULL,
+                NULL,
+                :created_at,
+                :updated_at
+            )
+            """
+        ),
+        {
+            "id": entitlement_id,
+            "user_id": user["id"],
+            "product_code": PRODUCT_CODE,
+            "starts_at": now,
+            "created_at": now,
+            "updated_at": now,
+        },
+    )
+
+    conn.execute(
+        text(
+            """
+            INSERT INTO entitlement_events (
+                id,
+                entitlement_id,
+                user_id,
+                product_code,
+                event_type,
+                occurred_at,
+                reason_code,
+                provider_name,
+                provider_event_id,
+                correlation_id
+            ) VALUES (
+                :id,
+                :entitlement_id,
+                :user_id,
+                :product_code,
+                'grant_activated',
+                :occurred_at,
+                'manual_dev_seed',
+                NULL,
+                NULL,
+                :correlation_id
+            )
+            """
+        ),
+        {
+            "id": event_id,
+            "entitlement_id": entitlement_id,
+            "user_id": user["id"],
+            "product_code": PRODUCT_CODE,
+            "occurred_at": now,
+            "correlation_id": f"manual-dev-seed:{now.isoformat()}",
+        },
+    )
+
+print(f"Seeded {PRODUCT_CODE} for {EMAIL}")
+'@ | uv run --project apps/backend python -
+```
+
+Expected result:
+
+- `GET /api/v1/session` and `GET /api/v1/account/access` resolve the account as `premium`
+- profile analyst and neighbourhood sections unlock
+- compare unlocks for the same account
+- checkout remains unavailable until Stripe test mode is enabled
+
+If the browser session was already open, refresh the page or sign out and back in so the latest account-access state is fetched.
+
+### Revoke a local Premium entitlement
+
+To relock the account, either delete the manually-seeded entitlement row and its matching event row, or mark the grant revoked in the database and refresh the session.
+
 ## Daily commands
 
 ```bash
