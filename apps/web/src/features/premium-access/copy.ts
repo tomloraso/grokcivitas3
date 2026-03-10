@@ -82,6 +82,19 @@ export function getPremiumPaywallCopy({
   }
 }
 
+export function getCapabilityDisplayLabel(capabilityKey: string): string {
+  switch (capabilityKey) {
+    case ANALYST_CAPABILITY_KEY:
+      return "AI analyst view";
+    case NEIGHBOURHOOD_CAPABILITY_KEY:
+      return "Neighbourhood context";
+    case COMPARE_CAPABILITY_KEY:
+      return "School comparison";
+    default:
+      return capabilityKey;
+  }
+}
+
 export function buildAccessActionHref({
   access,
   returnTo,

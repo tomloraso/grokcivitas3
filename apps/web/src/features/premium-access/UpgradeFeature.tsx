@@ -17,7 +17,7 @@ import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
 import { paths } from "../../shared/routing/paths";
 import { useAuth } from "../auth/useAuth";
-import { getPremiumPaywallCopy } from "./copy";
+import { getCapabilityDisplayLabel, getPremiumPaywallCopy } from "./copy";
 import { useAccountAccess } from "./hooks/useAccountAccess";
 
 type ProductsState =
@@ -376,7 +376,9 @@ export function UpgradeFeature(): JSX.Element {
               <div className="grid gap-3 sm:grid-cols-2">
                 {selectedProduct.capability_keys.map((capabilityKey) => (
                   <Card key={capabilityKey} className="border-brand/20 bg-brand/5">
-                    <p className="text-sm font-medium text-primary">{capabilityKey}</p>
+                    <p className="text-sm font-medium text-primary">
+                      {getCapabilityDisplayLabel(capabilityKey)}
+                    </p>
                   </Card>
                 ))}
               </div>

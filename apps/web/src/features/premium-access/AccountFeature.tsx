@@ -11,6 +11,7 @@ import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
 import { paths } from "../../shared/routing/paths";
 import { useAuth } from "../auth/useAuth";
+import { getCapabilityDisplayLabel } from "./copy";
 import { useAccountAccess } from "./hooks/useAccountAccess";
 
 function formatDateTime(iso: string | null): string | null {
@@ -217,7 +218,13 @@ export function AccountFeature(): JSX.Element {
                       <div>
                         <p className="text-xs text-disabled">Capabilities</p>
                         <p className="text-sm font-medium text-primary">
-                          {entitlement.capabilityKeys.join(", ") || "None"}
+                          {entitlement.capabilityKeys.length > 0
+                            ? entitlement.capabilityKeys
+                                .map((capabilityKey) =>
+                                  getCapabilityDisplayLabel(capabilityKey)
+                                )
+                                .join(", ")
+                            : "None"}
                         </p>
                       </div>
                     </div>
