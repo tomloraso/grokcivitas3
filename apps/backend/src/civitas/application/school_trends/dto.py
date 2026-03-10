@@ -79,6 +79,23 @@ class SchoolTrendsSeriesDto:
     staff_costs_pct_of_expenditure: tuple[SchoolTrendPointDto, ...]
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
+    teacher_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_fte_total: tuple[SchoolTrendPointDto, ...] = ()
+    support_staff_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
+    support_staff_fte_total: tuple[SchoolTrendPointDto, ...] = ()
+    leadership_share_of_teachers: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_average_mean_salary_gbp: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_average_median_salary_gbp: tuple[SchoolTrendPointDto, ...] = ()
+    teachers_on_leadership_pay_range_pct: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_absence_pct: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_absence_days_total: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_absence_days_average: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_absence_days_average_all_teachers: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_vacancy_count: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_vacancy_rate: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_tempfilled_vacancy_count: tuple[SchoolTrendPointDto, ...] = ()
+    teacher_tempfilled_vacancy_rate: tuple[SchoolTrendPointDto, ...] = ()
+    third_party_support_staff_headcount: tuple[SchoolTrendPointDto, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -112,6 +129,23 @@ class SchoolTrendsBenchmarksDto:
     staff_costs_pct_of_expenditure: tuple[SchoolTrendBenchmarkPointDto, ...]
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
+    teacher_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_fte_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    support_staff_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    support_staff_fte_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    leadership_share_of_teachers: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_average_mean_salary_gbp: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_average_median_salary_gbp: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teachers_on_leadership_pay_range_pct: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_absence_pct: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_absence_days_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_absence_days_average: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_absence_days_average_all_teachers: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_vacancy_count: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_vacancy_rate: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_tempfilled_vacancy_count: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    teacher_tempfilled_vacancy_rate: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    third_party_support_staff_headcount: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
 
 
 @dataclass(frozen=True)

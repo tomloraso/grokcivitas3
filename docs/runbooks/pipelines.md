@@ -50,7 +50,7 @@ Non-canonical Bronze roots are rejected by default. An alternate root is only al
 
 - Uses temporary run-scoped staging tables in `staging` schema.
 - Tables are recreated per run and dropped after promote.
-- Applies contract normalization and collects rejected records in `pipeline_rejections`.
+- Applies contract normalization and collects rejection diagnostics in `pipeline_rejections`.
 
 ## Gold
 
@@ -144,7 +144,9 @@ uv run --project apps/backend civitas pipeline run --source school_financial_ben
 - `dfe_characteristics` promote writes summary demographics to `school_demographics_yearly` and ethnicity group rows to `school_ethnicity_yearly`.
 - `dfe_attendance` promotes yearly school attendance and persistent-absence metrics into `school_attendance_yearly`.
 - `dfe_behaviour` promotes yearly school suspensions and exclusions metrics into `school_behaviour_yearly`.
-- `dfe_workforce` promotes yearly workforce rows into `school_workforce_yearly` and latest leadership attributes into `school_leadership_snapshot`.
+- `dfe_workforce` promotes yearly workforce summary rows into `school_workforce_yearly`, teacher characteristic breakdowns into `school_teacher_characteristics_yearly`, support-staff breakdowns into `school_support_staff_yearly`, and latest leadership attributes into `school_leadership_snapshot`.
+- `dfe_workforce` preserves source-limited workforce completeness explicitly: fields that are not published for a given school/year remain null with source-status metadata rather than being backfilled with inferred zeroes.
+- `dfe_workforce` full refreshes now prefilter off-window academic years before Silver load, use Postgres COPY-backed staging when available, and persist aggregated rejection counts with bounded samples instead of one row per rejected record.
 - `school_financial_benchmarks` promotes academy finance rows into `school_financials_yearly`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
 - `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.

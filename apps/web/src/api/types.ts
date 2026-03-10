@@ -80,8 +80,76 @@ export type SearchSchoolsQuery =
 /* School profile + trends (Phase 1D / 1E)                             */
 /* ------------------------------------------------------------------ */
 
+type SchoolProfileWorkforceBreakdownItemContract =
+  components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"];
+
+type SchoolTrendPointContract =
+  components["schemas"]["SchoolTrendPointResponse"];
+
+type SchoolTrendBenchmarkPointContract =
+  components["schemas"]["SchoolTrendBenchmarkPointResponse"];
+
+type WorkforceDepthProfileFields = {
+  teacher_headcount_total: number | null;
+  teacher_fte_total: number | null;
+  support_staff_headcount_total: number | null;
+  support_staff_fte_total: number | null;
+  leadership_headcount: number | null;
+  teacher_average_mean_salary_gbp: number | null;
+  teacher_absence_pct: number | null;
+  teacher_vacancy_rate: number | null;
+  third_party_support_staff_headcount: number | null;
+  teacher_sex_breakdown: SchoolProfileWorkforceBreakdownItemContract[];
+  teacher_age_breakdown: SchoolProfileWorkforceBreakdownItemContract[];
+  teacher_ethnicity_breakdown: SchoolProfileWorkforceBreakdownItemContract[];
+  teacher_qualification_breakdown: SchoolProfileWorkforceBreakdownItemContract[];
+  support_staff_post_mix: SchoolProfileWorkforceBreakdownItemContract[];
+};
+
+type WorkforceDepthTrendSeriesFields = {
+  teacher_headcount_total: SchoolTrendPointContract[];
+  teacher_fte_total: SchoolTrendPointContract[];
+  support_staff_headcount_total: SchoolTrendPointContract[];
+  support_staff_fte_total: SchoolTrendPointContract[];
+  leadership_share_of_teachers: SchoolTrendPointContract[];
+  teacher_average_mean_salary_gbp: SchoolTrendPointContract[];
+  teacher_average_median_salary_gbp: SchoolTrendPointContract[];
+  teachers_on_leadership_pay_range_pct: SchoolTrendPointContract[];
+  teacher_absence_pct: SchoolTrendPointContract[];
+  teacher_absence_days_total: SchoolTrendPointContract[];
+  teacher_absence_days_average: SchoolTrendPointContract[];
+  teacher_absence_days_average_all_teachers: SchoolTrendPointContract[];
+  teacher_vacancy_count: SchoolTrendPointContract[];
+  teacher_vacancy_rate: SchoolTrendPointContract[];
+  teacher_tempfilled_vacancy_count: SchoolTrendPointContract[];
+  teacher_tempfilled_vacancy_rate: SchoolTrendPointContract[];
+  third_party_support_staff_headcount: SchoolTrendPointContract[];
+};
+
+type WorkforceDepthTrendBenchmarkFields = {
+  teacher_headcount_total: SchoolTrendBenchmarkPointContract[];
+  teacher_fte_total: SchoolTrendBenchmarkPointContract[];
+  support_staff_headcount_total: SchoolTrendBenchmarkPointContract[];
+  support_staff_fte_total: SchoolTrendBenchmarkPointContract[];
+  leadership_share_of_teachers: SchoolTrendBenchmarkPointContract[];
+  teacher_average_mean_salary_gbp: SchoolTrendBenchmarkPointContract[];
+  teacher_average_median_salary_gbp: SchoolTrendBenchmarkPointContract[];
+  teachers_on_leadership_pay_range_pct: SchoolTrendBenchmarkPointContract[];
+  teacher_absence_pct: SchoolTrendBenchmarkPointContract[];
+  teacher_absence_days_total: SchoolTrendBenchmarkPointContract[];
+  teacher_absence_days_average: SchoolTrendBenchmarkPointContract[];
+  teacher_absence_days_average_all_teachers: SchoolTrendBenchmarkPointContract[];
+  teacher_vacancy_count: SchoolTrendBenchmarkPointContract[];
+  teacher_vacancy_rate: SchoolTrendBenchmarkPointContract[];
+  teacher_tempfilled_vacancy_count: SchoolTrendBenchmarkPointContract[];
+  teacher_tempfilled_vacancy_rate: SchoolTrendBenchmarkPointContract[];
+  third_party_support_staff_headcount: SchoolTrendBenchmarkPointContract[];
+};
+
 export type SchoolProfileResponse =
-  components["schemas"]["SchoolProfileResponse"];
+  Omit<components["schemas"]["SchoolProfileResponse"], "workforce_latest"> & {
+    workforce_latest: SchoolProfileWorkforceLatest | null;
+  };
 
 export type SchoolProfileSchool =
   components["schemas"]["SchoolProfileSchoolResponse"];
@@ -102,7 +170,11 @@ export type SchoolProfileBehaviourLatest =
   components["schemas"]["SchoolProfileBehaviourLatestResponse"];
 
 export type SchoolProfileWorkforceLatest =
-  components["schemas"]["SchoolProfileWorkforceLatestResponse"];
+  components["schemas"]["SchoolProfileWorkforceLatestResponse"] &
+    WorkforceDepthProfileFields;
+
+export type SchoolProfileWorkforceBreakdownItem =
+  SchoolProfileWorkforceBreakdownItemContract;
 
 export type SchoolProfileLeadershipSnapshot =
   components["schemas"]["SchoolProfileLeadershipSnapshotResponse"];
@@ -144,10 +216,18 @@ export type SchoolCompareBenchmark =
   components["schemas"]["SchoolCompareBenchmarkResponse"];
 
 export type SchoolTrendsResponse =
-  components["schemas"]["SchoolTrendsResponse"];
+  Omit<components["schemas"]["SchoolTrendsResponse"], "series" | "benchmarks"> & {
+    series: SchoolTrendsSeries;
+    benchmarks: SchoolTrendsBenchmarks;
+  };
 
 export type SchoolTrendsSeries =
-  components["schemas"]["SchoolTrendsSeriesResponse"];
+  components["schemas"]["SchoolTrendsSeriesResponse"] &
+    WorkforceDepthTrendSeriesFields;
+
+export type SchoolTrendsBenchmarks =
+  components["schemas"]["SchoolTrendsBenchmarksResponse"] &
+    WorkforceDepthTrendBenchmarkFields;
 
 export type SchoolTrendPoint =
   components["schemas"]["SchoolTrendPointResponse"];

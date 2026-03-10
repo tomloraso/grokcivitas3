@@ -123,6 +123,15 @@ class SchoolProfileBehaviourLatestResponse(BaseModel):
     permanent_exclusions_rate: float | None
 
 
+class SchoolProfileWorkforceBreakdownItemResponse(BaseModel):
+    key: str
+    label: str
+    headcount: float | None
+    fte: float | None = None
+    headcount_pct: float | None = None
+    fte_pct: float | None = None
+
+
 class SchoolProfileWorkforceLatestResponse(BaseModel):
     academic_year: str
     pupil_teacher_ratio: float | None
@@ -131,6 +140,20 @@ class SchoolProfileWorkforceLatestResponse(BaseModel):
     teacher_turnover_pct: float | None
     qts_pct: float | None
     qualifications_level6_plus_pct: float | None
+    teacher_headcount_total: float | None
+    teacher_fte_total: float | None
+    support_staff_headcount_total: float | None
+    support_staff_fte_total: float | None
+    leadership_headcount: float | None
+    teacher_average_mean_salary_gbp: float | None
+    teacher_absence_pct: float | None
+    teacher_vacancy_rate: float | None
+    third_party_support_staff_headcount: float | None
+    teacher_sex_breakdown: list[SchoolProfileWorkforceBreakdownItemResponse]
+    teacher_age_breakdown: list[SchoolProfileWorkforceBreakdownItemResponse]
+    teacher_ethnicity_breakdown: list[SchoolProfileWorkforceBreakdownItemResponse]
+    teacher_qualification_breakdown: list[SchoolProfileWorkforceBreakdownItemResponse]
+    support_staff_post_mix: list[SchoolProfileWorkforceBreakdownItemResponse]
 
 
 class SchoolProfileLeadershipSnapshotResponse(BaseModel):

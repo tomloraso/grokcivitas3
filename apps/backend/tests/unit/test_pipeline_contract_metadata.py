@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import zipfile
 from datetime import datetime, timezone
@@ -368,18 +369,65 @@ def test_dfe_behaviour_download_writes_contract_version_to_manifest(tmp_path: Pa
 
 
 def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    def build_zip_payload(entries: dict[str, str]) -> bytes:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for name, payload in entries.items():
+                archive.writestr(name, payload)
+        return buffer.getvalue()
+
     release_html = (
         '<html><script id="__NEXT_DATA__" type="application/json">'
         '{"props":{"pageProps":{"releaseVersion":{"id":"workforce-rv-1","downloadFiles":[{"id":"workforce-file-1","name":"School level workforce data"}]}}}}'
         "</script></html>"
     )
-    csv_payload = (
+    legacy_csv_payload = (
         "school_urn,time_period,geographic_level,pupil_teacher_ratio,supply_teacher_pct\n"
         "100001,202324,School,16.3,2.4\n"
     )
+    teacher_characteristics_zip = build_zip_payload(
+        {
+            "teacher_characteristics.csv": (
+                "school_urn,time_period,characteristic_group,characteristic\n"
+                "100001,202324,sex,Male\n"
+            )
+        }
+    )
+    support_staff_zip = build_zip_payload(
+        {
+            "support_staff.csv": (
+                "school_urn,time_period,post,sex,ethnicity_major\n"
+                "100001,202324,Teaching assistant,Female,White\n"
+            )
+        }
+    )
+    teacher_pay_csv = (
+        "school_urn,time_period,teacher_headcount_all,teacher_average_mean_salary_gbp\n"
+        "100001,202324,12,42350\n"
+    )
+    teacher_absence_csv = (
+        "school_urn,time_period,teacher_absence_pct,teacher_absence_days_total\n"
+        "100001,202324,3.2,27\n"
+    )
+    teacher_vacancies_csv = (
+        "school_urn,time_period,teacher_vacancy_count,teacher_vacancy_rate\n100001,202324,1,4.1\n"
+    )
+    third_party_support_csv = (
+        "school_urn,time_period,post,headcount\n100001,202324,Education welfare officer,2\n"
+    )
+    empty_csv_payload = "school_urn,time_period\n"
+    source_catalog_release_version_id = "workforce-catalog-rv-1"
     responses = {
         "https://explore-education-statistics.service.gov.uk/find-statistics/school-workforce-in-england/2024": release_html,
-        "https://content.explore-education-statistics.service.gov.uk/api/releases/workforce-rv-1/files/workforce-file-1": csv_payload,
+        "https://content.explore-education-statistics.service.gov.uk/api/releases/workforce-rv-1/files/workforce-file-1": legacy_csv_payload,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/43ec3624-b83f-47e4-8941-2fd2fd6bfd3f": teacher_characteristics_zip,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/89cc4c08-611b-4dd6-a370-184a205fe9d6": support_staff_zip,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/05001215-c1c7-4210-f9db-08dd8e3a5799": teacher_pay_csv,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/9be449b9-57cf-4199-9410-08dd97c8935b": teacher_absence_csv,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/0edf6802-1d84-4a9d-f9bd-08dd8e3a5799": teacher_vacancies_csv,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/d9fbbe2a-8106-452f-f9a7-08dd8e3a5799": third_party_support_csv,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/ed1c5650-9e67-453d-0d91-08ddcde6ffdc": empty_csv_payload,
+        f"https://content.explore-education-statistics.service.gov.uk/api/releases/{source_catalog_release_version_id}/files/8aab402f-9fc3-44bf-c16d-08ddd67d4d79": empty_csv_payload,
     }
 
     def fetcher(url: str) -> str:
@@ -393,6 +441,8 @@ def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Pa
         release_slugs=("2024",),
         lookback_years=1,
         fetcher=fetcher,
+        source_catalog_release_slug="2024",
+        source_catalog_release_version_id=source_catalog_release_version_id,
     )
     context = _context(PipelineSource.DFE_WORKFORCE, tmp_path / "bronze")
 
@@ -401,7 +451,21 @@ def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Pa
     manifest_path = context.bronze_source_path / DFE_WORKFORCE_MANIFEST_FILE_NAME
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert payload["normalization_contract_version"] == workforce_contract.CONTRACT_VERSION
-    assert len(payload["assets"]) == 1
+    assert len(payload["assets"]) == 9
+    assert {asset["asset_kind"] for asset in payload["assets"]} == {
+        "legacy_workforce",
+        "support_staff_characteristics",
+        "teacher_absence",
+        "teacher_characteristics",
+        "teacher_pay",
+        "teacher_turnover",
+        "teacher_vacancies",
+        "third_party_support",
+        "workforce_size",
+    }
+    asset_statuses = {asset["asset_kind"]: asset["source_status"] for asset in payload["assets"]}
+    assert asset_statuses["teacher_turnover"] == "empty"
+    assert asset_statuses["workforce_size"] == "empty"
 
 
 def test_school_financial_benchmarks_download_writes_contract_version_to_manifest(

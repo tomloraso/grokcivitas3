@@ -47,6 +47,7 @@ from civitas.application.school_profiles.dto import (
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
     SchoolProfileSectionCompletenessDto,
+    SchoolWorkforceBreakdownItemDto,
     SchoolWorkforceLatestDto,
 )
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
@@ -190,6 +191,74 @@ class GetSchoolProfileUseCase:
                 qts_pct=profile.workforce_latest.qts_pct,
                 qualifications_level6_plus_pct=(
                     profile.workforce_latest.qualifications_level6_plus_pct
+                ),
+                teacher_headcount_total=profile.workforce_latest.teacher_headcount_total,
+                teacher_fte_total=profile.workforce_latest.teacher_fte_total,
+                support_staff_headcount_total=profile.workforce_latest.support_staff_headcount_total,
+                support_staff_fte_total=profile.workforce_latest.support_staff_fte_total,
+                leadership_headcount=profile.workforce_latest.leadership_headcount,
+                teacher_average_mean_salary_gbp=(
+                    profile.workforce_latest.teacher_average_mean_salary_gbp
+                ),
+                teacher_absence_pct=profile.workforce_latest.teacher_absence_pct,
+                teacher_vacancy_rate=profile.workforce_latest.teacher_vacancy_rate,
+                third_party_support_staff_headcount=(
+                    profile.workforce_latest.third_party_support_staff_headcount
+                ),
+                teacher_sex_breakdown=tuple(
+                    SchoolWorkforceBreakdownItemDto(
+                        key=item.key,
+                        label=item.label,
+                        headcount=item.headcount,
+                        fte=item.fte,
+                        headcount_pct=item.headcount_pct,
+                        fte_pct=item.fte_pct,
+                    )
+                    for item in profile.workforce_latest.teacher_sex_breakdown
+                ),
+                teacher_age_breakdown=tuple(
+                    SchoolWorkforceBreakdownItemDto(
+                        key=item.key,
+                        label=item.label,
+                        headcount=item.headcount,
+                        fte=item.fte,
+                        headcount_pct=item.headcount_pct,
+                        fte_pct=item.fte_pct,
+                    )
+                    for item in profile.workforce_latest.teacher_age_breakdown
+                ),
+                teacher_ethnicity_breakdown=tuple(
+                    SchoolWorkforceBreakdownItemDto(
+                        key=item.key,
+                        label=item.label,
+                        headcount=item.headcount,
+                        fte=item.fte,
+                        headcount_pct=item.headcount_pct,
+                        fte_pct=item.fte_pct,
+                    )
+                    for item in profile.workforce_latest.teacher_ethnicity_breakdown
+                ),
+                teacher_qualification_breakdown=tuple(
+                    SchoolWorkforceBreakdownItemDto(
+                        key=item.key,
+                        label=item.label,
+                        headcount=item.headcount,
+                        fte=item.fte,
+                        headcount_pct=item.headcount_pct,
+                        fte_pct=item.fte_pct,
+                    )
+                    for item in profile.workforce_latest.teacher_qualification_breakdown
+                ),
+                support_staff_post_mix=tuple(
+                    SchoolWorkforceBreakdownItemDto(
+                        key=item.key,
+                        label=item.label,
+                        headcount=item.headcount,
+                        fte=item.fte,
+                        headcount_pct=item.headcount_pct,
+                        fte_pct=item.fte_pct,
+                    )
+                    for item in profile.workforce_latest.support_staff_post_mix
                 ),
             )
 

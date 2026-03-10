@@ -214,6 +214,23 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                                 teacher_turnover_pct,
                                 qts_pct,
                                 qualifications_level6_plus_pct,
+                                teacher_headcount_total,
+                                teacher_fte_total,
+                                support_staff_headcount_total,
+                                support_staff_fte_total,
+                                leadership_share_of_teachers,
+                                teacher_average_mean_salary_gbp,
+                                teacher_average_median_salary_gbp,
+                                teachers_on_leadership_pay_range_pct,
+                                teacher_absence_pct,
+                                teacher_absence_days_total,
+                                teacher_absence_days_average,
+                                teacher_absence_days_average_all_teachers,
+                                teacher_vacancy_count,
+                                teacher_vacancy_rate,
+                                teacher_tempfilled_vacancy_count,
+                                teacher_tempfilled_vacancy_rate,
+                                third_party_support_staff_headcount,
                                 updated_at
                             FROM school_workforce_yearly
                             WHERE urn = :urn
@@ -244,6 +261,45 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                     qts_pct=_to_optional_float(row["qts_pct"]),
                     qualifications_level6_plus_pct=_to_optional_float(
                         row["qualifications_level6_plus_pct"]
+                    ),
+                    teacher_headcount_total=_to_optional_float(row["teacher_headcount_total"]),
+                    teacher_fte_total=_to_optional_float(row["teacher_fte_total"]),
+                    support_staff_headcount_total=_to_optional_float(
+                        row["support_staff_headcount_total"]
+                    ),
+                    support_staff_fte_total=_to_optional_float(row["support_staff_fte_total"]),
+                    leadership_share_of_teachers=_to_optional_float(
+                        row["leadership_share_of_teachers"]
+                    ),
+                    teacher_average_mean_salary_gbp=_to_optional_float(
+                        row["teacher_average_mean_salary_gbp"]
+                    ),
+                    teacher_average_median_salary_gbp=_to_optional_float(
+                        row["teacher_average_median_salary_gbp"]
+                    ),
+                    teachers_on_leadership_pay_range_pct=_to_optional_float(
+                        row["teachers_on_leadership_pay_range_pct"]
+                    ),
+                    teacher_absence_pct=_to_optional_float(row["teacher_absence_pct"]),
+                    teacher_absence_days_total=_to_optional_float(
+                        row["teacher_absence_days_total"]
+                    ),
+                    teacher_absence_days_average=_to_optional_float(
+                        row["teacher_absence_days_average"]
+                    ),
+                    teacher_absence_days_average_all_teachers=_to_optional_float(
+                        row["teacher_absence_days_average_all_teachers"]
+                    ),
+                    teacher_vacancy_count=_to_optional_float(row["teacher_vacancy_count"]),
+                    teacher_vacancy_rate=_to_optional_float(row["teacher_vacancy_rate"]),
+                    teacher_tempfilled_vacancy_count=_to_optional_float(
+                        row["teacher_tempfilled_vacancy_count"]
+                    ),
+                    teacher_tempfilled_vacancy_rate=_to_optional_float(
+                        row["teacher_tempfilled_vacancy_rate"]
+                    ),
+                    third_party_support_staff_headcount=_to_optional_float(
+                        row["third_party_support_staff_headcount"]
                     ),
                 )
                 for row in rows
@@ -642,6 +698,59 @@ def _get_metric_benchmark_rows_from_cache(
                             (
                                 'qualifications_level6_plus_pct',
                                 workforce.qualifications_level6_plus_pct::double precision
+                            ),
+                            (
+                                'teacher_headcount_total',
+                                workforce.teacher_headcount_total::double precision
+                            ),
+                            ('teacher_fte_total', workforce.teacher_fte_total::double precision),
+                            (
+                                'support_staff_headcount_total',
+                                workforce.support_staff_headcount_total::double precision
+                            ),
+                            ('support_staff_fte_total', workforce.support_staff_fte_total::double precision),
+                            (
+                                'leadership_share_of_teachers',
+                                workforce.leadership_share_of_teachers::double precision
+                            ),
+                            (
+                                'teacher_average_mean_salary_gbp',
+                                workforce.teacher_average_mean_salary_gbp::double precision
+                            ),
+                            (
+                                'teacher_average_median_salary_gbp',
+                                workforce.teacher_average_median_salary_gbp::double precision
+                            ),
+                            (
+                                'teachers_on_leadership_pay_range_pct',
+                                workforce.teachers_on_leadership_pay_range_pct::double precision
+                            ),
+                            ('teacher_absence_pct', workforce.teacher_absence_pct::double precision),
+                            (
+                                'teacher_absence_days_total',
+                                workforce.teacher_absence_days_total::double precision
+                            ),
+                            (
+                                'teacher_absence_days_average',
+                                workforce.teacher_absence_days_average::double precision
+                            ),
+                            (
+                                'teacher_absence_days_average_all_teachers',
+                                workforce.teacher_absence_days_average_all_teachers::double precision
+                            ),
+                            ('teacher_vacancy_count', workforce.teacher_vacancy_count::double precision),
+                            ('teacher_vacancy_rate', workforce.teacher_vacancy_rate::double precision),
+                            (
+                                'teacher_tempfilled_vacancy_count',
+                                workforce.teacher_tempfilled_vacancy_count::double precision
+                            ),
+                            (
+                                'teacher_tempfilled_vacancy_rate',
+                                workforce.teacher_tempfilled_vacancy_rate::double precision
+                            ),
+                            (
+                                'third_party_support_staff_headcount',
+                                workforce.third_party_support_staff_headcount::double precision
                             )
                     ) AS metric(metric_key, metric_value)
                     WHERE workforce.urn = :urn
@@ -989,6 +1098,59 @@ def _compute_metric_benchmark_rows(
                             (
                                 'qualifications_level6_plus_pct',
                                 workforce.qualifications_level6_plus_pct::double precision
+                            ),
+                            (
+                                'teacher_headcount_total',
+                                workforce.teacher_headcount_total::double precision
+                            ),
+                            ('teacher_fte_total', workforce.teacher_fte_total::double precision),
+                            (
+                                'support_staff_headcount_total',
+                                workforce.support_staff_headcount_total::double precision
+                            ),
+                            ('support_staff_fte_total', workforce.support_staff_fte_total::double precision),
+                            (
+                                'leadership_share_of_teachers',
+                                workforce.leadership_share_of_teachers::double precision
+                            ),
+                            (
+                                'teacher_average_mean_salary_gbp',
+                                workforce.teacher_average_mean_salary_gbp::double precision
+                            ),
+                            (
+                                'teacher_average_median_salary_gbp',
+                                workforce.teacher_average_median_salary_gbp::double precision
+                            ),
+                            (
+                                'teachers_on_leadership_pay_range_pct',
+                                workforce.teachers_on_leadership_pay_range_pct::double precision
+                            ),
+                            ('teacher_absence_pct', workforce.teacher_absence_pct::double precision),
+                            (
+                                'teacher_absence_days_total',
+                                workforce.teacher_absence_days_total::double precision
+                            ),
+                            (
+                                'teacher_absence_days_average',
+                                workforce.teacher_absence_days_average::double precision
+                            ),
+                            (
+                                'teacher_absence_days_average_all_teachers',
+                                workforce.teacher_absence_days_average_all_teachers::double precision
+                            ),
+                            ('teacher_vacancy_count', workforce.teacher_vacancy_count::double precision),
+                            ('teacher_vacancy_rate', workforce.teacher_vacancy_rate::double precision),
+                            (
+                                'teacher_tempfilled_vacancy_count',
+                                workforce.teacher_tempfilled_vacancy_count::double precision
+                            ),
+                            (
+                                'teacher_tempfilled_vacancy_rate',
+                                workforce.teacher_tempfilled_vacancy_rate::double precision
+                            ),
+                            (
+                                'third_party_support_staff_headcount',
+                                workforce.third_party_support_staff_headcount::double precision
                             )
                     ) AS metric(metric_key, metric_value)
 
@@ -1489,6 +1651,71 @@ def _rebuild_metric_benchmark_rows(connection: Connection) -> int:
                         (
                             'qualifications_level6_plus_pct',
                             workforce.qualifications_level6_plus_pct::double precision
+                        ),
+                        (
+                            'teacher_headcount_total',
+                            workforce.teacher_headcount_total::double precision
+                        ),
+                        ('teacher_fte_total', workforce.teacher_fte_total::double precision),
+                        (
+                            'support_staff_headcount_total',
+                            workforce.support_staff_headcount_total::double precision
+                        ),
+                        (
+                            'support_staff_fte_total',
+                            workforce.support_staff_fte_total::double precision
+                        ),
+                        (
+                            'leadership_share_of_teachers',
+                            workforce.leadership_share_of_teachers::double precision
+                        ),
+                        (
+                            'teacher_average_mean_salary_gbp',
+                            workforce.teacher_average_mean_salary_gbp::double precision
+                        ),
+                        (
+                            'teacher_average_median_salary_gbp',
+                            workforce.teacher_average_median_salary_gbp::double precision
+                        ),
+                        (
+                            'teachers_on_leadership_pay_range_pct',
+                            workforce.teachers_on_leadership_pay_range_pct::double precision
+                        ),
+                        (
+                            'teacher_absence_pct',
+                            workforce.teacher_absence_pct::double precision
+                        ),
+                        (
+                            'teacher_absence_days_total',
+                            workforce.teacher_absence_days_total::double precision
+                        ),
+                        (
+                            'teacher_absence_days_average',
+                            workforce.teacher_absence_days_average::double precision
+                        ),
+                        (
+                            'teacher_absence_days_average_all_teachers',
+                            workforce.teacher_absence_days_average_all_teachers::double precision
+                        ),
+                        (
+                            'teacher_vacancy_count',
+                            workforce.teacher_vacancy_count::double precision
+                        ),
+                        (
+                            'teacher_vacancy_rate',
+                            workforce.teacher_vacancy_rate::double precision
+                        ),
+                        (
+                            'teacher_tempfilled_vacancy_count',
+                            workforce.teacher_tempfilled_vacancy_count::double precision
+                        ),
+                        (
+                            'teacher_tempfilled_vacancy_rate',
+                            workforce.teacher_tempfilled_vacancy_rate::double precision
+                        ),
+                        (
+                            'third_party_support_staff_headcount',
+                            workforce.third_party_support_staff_headcount::double precision
                         )
                 ) AS metric(metric_key, metric_value)
 

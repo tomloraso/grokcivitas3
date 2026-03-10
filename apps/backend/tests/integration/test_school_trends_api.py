@@ -280,6 +280,142 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                teacher_headcount_total=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=42.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_fte_total=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=39.5,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                support_staff_headcount_total=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=28.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                support_staff_fte_total=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=22.4,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                leadership_share_of_teachers=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=9.5,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_average_mean_salary_gbp=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=46850.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_average_median_salary_gbp=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=45200.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teachers_on_leadership_pay_range_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=7.1,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_absence_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=8.6,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_absence_days_total=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=198.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_absence_days_average=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=5.5,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_absence_days_average_all_teachers=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=4.7,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_vacancy_count=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_vacancy_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1.7,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_tempfilled_vacancy_count=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=2.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teacher_tempfilled_vacancy_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=3.4,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                third_party_support_staff_headcount=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=3.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
                 income_per_pupil_gbp=(
                     SchoolTrendPointDto(
                         academic_year="2023/24",
@@ -363,6 +499,58 @@ def test_get_school_trends_returns_expected_contract() -> None:
                 teacher_turnover_pct=(),
                 qts_pct=(),
                 qualifications_level6_plus_pct=(),
+                teacher_headcount_total=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=42.0,
+                        national_value=40.8,
+                        local_value=41.5,
+                        school_vs_national_delta=1.2,
+                        school_vs_local_delta=0.5,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                teacher_average_mean_salary_gbp=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=46850.0,
+                        national_value=45210.0,
+                        local_value=46000.0,
+                        school_vs_national_delta=1640.0,
+                        school_vs_local_delta=850.0,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                teacher_vacancy_rate=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=1.7,
+                        national_value=1.9,
+                        local_value=1.8,
+                        school_vs_national_delta=-0.2,
+                        school_vs_local_delta=-0.1,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                third_party_support_staff_headcount=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=3.0,
+                        national_value=1.8,
+                        local_value=2.2,
+                        school_vs_national_delta=1.2,
+                        school_vs_local_delta=0.8,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
                 income_per_pupil_gbp=(
                     SchoolTrendBenchmarkPointDto(
                         academic_year="2023/24",
@@ -431,10 +619,19 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["years_available"] == ["2023/24", "2024/25"]
     assert payload["history_quality"]["years_count"] == 2
     assert payload["series"]["fsm_pct"][0]["value"] == 16.9
+    assert payload["series"]["teacher_headcount_total"][0]["value"] == 42.0
+    assert payload["series"]["teacher_average_mean_salary_gbp"][0]["value"] == 46850.0
+    assert payload["series"]["teacher_vacancy_rate"][0]["value"] == 1.7
+    assert payload["series"]["third_party_support_staff_headcount"][0]["value"] == 3.0
     assert payload["series"]["income_per_pupil_gbp"][0]["value"] == 6634.62
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
     assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"
+    assert payload["benchmarks"]["teacher_headcount_total"][0]["school_value"] == 42.0
+    assert payload["benchmarks"]["teacher_average_mean_salary_gbp"][0][
+        "school_vs_national_delta"
+    ] == pytest.approx(1640.0)
+    assert payload["benchmarks"]["teacher_vacancy_rate"][0]["local_value"] == pytest.approx(1.8)
     assert payload["benchmarks"]["fsm_pct"][0]["school_vs_national_delta"] == pytest.approx(1.8)
     assert payload["benchmarks"]["income_per_pupil_gbp"][0][
         "school_vs_local_delta"

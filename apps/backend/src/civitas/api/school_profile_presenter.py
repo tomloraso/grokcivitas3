@@ -34,6 +34,7 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileResponse,
     SchoolProfileSchoolResponse,
     SchoolProfileSectionCompletenessResponse,
+    SchoolProfileWorkforceBreakdownItemResponse,
     SchoolProfileWorkforceLatestResponse,
 )
 from civitas.application.access.dto import SectionAccessDto
@@ -130,6 +131,72 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             teacher_turnover_pct=result.workforce_latest.teacher_turnover_pct,
             qts_pct=result.workforce_latest.qts_pct,
             qualifications_level6_plus_pct=result.workforce_latest.qualifications_level6_plus_pct,
+            teacher_headcount_total=result.workforce_latest.teacher_headcount_total,
+            teacher_fte_total=result.workforce_latest.teacher_fte_total,
+            support_staff_headcount_total=result.workforce_latest.support_staff_headcount_total,
+            support_staff_fte_total=result.workforce_latest.support_staff_fte_total,
+            leadership_headcount=result.workforce_latest.leadership_headcount,
+            teacher_average_mean_salary_gbp=result.workforce_latest.teacher_average_mean_salary_gbp,
+            teacher_absence_pct=result.workforce_latest.teacher_absence_pct,
+            teacher_vacancy_rate=result.workforce_latest.teacher_vacancy_rate,
+            third_party_support_staff_headcount=(
+                result.workforce_latest.third_party_support_staff_headcount
+            ),
+            teacher_sex_breakdown=[
+                SchoolProfileWorkforceBreakdownItemResponse(
+                    key=item.key,
+                    label=item.label,
+                    headcount=item.headcount,
+                    fte=item.fte,
+                    headcount_pct=item.headcount_pct,
+                    fte_pct=item.fte_pct,
+                )
+                for item in result.workforce_latest.teacher_sex_breakdown
+            ],
+            teacher_age_breakdown=[
+                SchoolProfileWorkforceBreakdownItemResponse(
+                    key=item.key,
+                    label=item.label,
+                    headcount=item.headcount,
+                    fte=item.fte,
+                    headcount_pct=item.headcount_pct,
+                    fte_pct=item.fte_pct,
+                )
+                for item in result.workforce_latest.teacher_age_breakdown
+            ],
+            teacher_ethnicity_breakdown=[
+                SchoolProfileWorkforceBreakdownItemResponse(
+                    key=item.key,
+                    label=item.label,
+                    headcount=item.headcount,
+                    fte=item.fte,
+                    headcount_pct=item.headcount_pct,
+                    fte_pct=item.fte_pct,
+                )
+                for item in result.workforce_latest.teacher_ethnicity_breakdown
+            ],
+            teacher_qualification_breakdown=[
+                SchoolProfileWorkforceBreakdownItemResponse(
+                    key=item.key,
+                    label=item.label,
+                    headcount=item.headcount,
+                    fte=item.fte,
+                    headcount_pct=item.headcount_pct,
+                    fte_pct=item.fte_pct,
+                )
+                for item in result.workforce_latest.teacher_qualification_breakdown
+            ],
+            support_staff_post_mix=[
+                SchoolProfileWorkforceBreakdownItemResponse(
+                    key=item.key,
+                    label=item.label,
+                    headcount=item.headcount,
+                    fte=item.fte,
+                    headcount_pct=item.headcount_pct,
+                    fte_pct=item.fte_pct,
+                )
+                for item in result.workforce_latest.support_staff_post_mix
+            ],
         )
 
     finance_latest = None

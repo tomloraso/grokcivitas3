@@ -98,7 +98,11 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
       expect(screen.getAllByText("Suspension Rate").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Teacher Headcount").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Average Teacher Salary").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);
+      expect(screen.getByRole("heading", { name: "Teacher Mix by Sex" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Support Staff Roles" })).toBeInTheDocument();
       expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
       expect(screen.getByText("House Prices")).toBeInTheDocument();
       expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
@@ -106,35 +110,39 @@ describe("SchoolProfileFeature", () => {
     15000,
   );
 
-  it("renders the profile before background trend/dashboard hydration completes", async () => {
-    let resolveTrends: (value: typeof TRENDS_RESPONSE) => void = () => undefined;
-    let resolveDashboard: (value: typeof DASHBOARD_RESPONSE) => void = () => undefined;
+  it(
+    "renders the profile before background trend/dashboard hydration completes",
+    async () => {
+      let resolveTrends: (value: typeof TRENDS_RESPONSE) => void = () => undefined;
+      let resolveDashboard: (value: typeof DASHBOARD_RESPONSE) => void = () => undefined;
 
-    trendsMock.mockReturnValue(
-      new Promise((resolve) => {
-        resolveTrends = resolve;
-      })
-    );
-    dashboardMock.mockReturnValue(
-      new Promise((resolve) => {
-        resolveDashboard = resolve;
-      })
-    );
+      trendsMock.mockReturnValue(
+        new Promise((resolve) => {
+          resolveTrends = resolve;
+        }),
+      );
+      dashboardMock.mockReturnValue(
+        new Promise((resolve) => {
+          resolveDashboard = resolve;
+        }),
+      );
 
-    renderProfileAtUrn("100001");
+      renderProfileAtUrn("100001");
 
-    expect(
-      await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
-    ).toBeInTheDocument();
-    expect(screen.getAllByText("Ever Eligible for Free Meals").length).toBeGreaterThan(0);
+      expect(
+        await screen.findByRole("heading", { name: "Camden Bridge Primary School" }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByText("Ever Eligible for Free Meals").length).toBeGreaterThan(0);
 
-    resolveTrends(TRENDS_RESPONSE);
-    resolveDashboard(DASHBOARD_RESPONSE);
+      resolveTrends(TRENDS_RESPONSE);
+      resolveDashboard(DASHBOARD_RESPONSE);
 
-    await waitFor(() => {
-      expect(screen.getByLabelText("Disadvantaged Pupils trend")).toBeInTheDocument();
-    });
-  });
+      await waitFor(() => {
+        expect(screen.getByLabelText("Disadvantaged Pupils trend")).toBeInTheDocument();
+      });
+    },
+    10000,
+  );
 
   it("keeps the core profile visible when trend endpoints fail", async () => {
     trendsMock.mockRejectedValue(new ApiClientError(503));

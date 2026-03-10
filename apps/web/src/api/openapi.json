@@ -1070,8 +1070,7 @@
         "type": "object",
         "required": [
           "access",
-          "count",
-          "schools"
+          "count"
         ],
         "title": "AccountFavouritesResponse"
       },
@@ -4985,6 +4984,69 @@
         ],
         "title": "SchoolProfileSectionCompletenessResponse"
       },
+      "SchoolProfileWorkforceBreakdownItemResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "headcount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headcount"
+          },
+          "fte": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fte"
+          },
+          "headcount_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headcount Pct"
+          },
+          "fte_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fte Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "headcount"
+        ],
+        "title": "SchoolProfileWorkforceBreakdownItemResponse"
+      },
       "SchoolProfileWorkforceLatestResponse": {
         "properties": {
           "academic_year": {
@@ -5056,6 +5118,140 @@
               }
             ],
             "title": "Qualifications Level6 Plus Pct"
+          },
+          "teacher_headcount_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Headcount Total"
+          },
+          "teacher_fte_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Fte Total"
+          },
+          "support_staff_headcount_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Staff Headcount Total"
+          },
+          "support_staff_fte_total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Support Staff Fte Total"
+          },
+          "leadership_headcount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leadership Headcount"
+          },
+          "teacher_average_mean_salary_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Average Mean Salary Gbp"
+          },
+          "teacher_absence_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Absence Pct"
+          },
+          "teacher_vacancy_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Vacancy Rate"
+          },
+          "third_party_support_staff_headcount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Third Party Support Staff Headcount"
+          },
+          "teacher_sex_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileWorkforceBreakdownItemResponse"
+            },
+            "type": "array",
+            "title": "Teacher Sex Breakdown"
+          },
+          "teacher_age_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileWorkforceBreakdownItemResponse"
+            },
+            "type": "array",
+            "title": "Teacher Age Breakdown"
+          },
+          "teacher_ethnicity_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileWorkforceBreakdownItemResponse"
+            },
+            "type": "array",
+            "title": "Teacher Ethnicity Breakdown"
+          },
+          "teacher_qualification_breakdown": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileWorkforceBreakdownItemResponse"
+            },
+            "type": "array",
+            "title": "Teacher Qualification Breakdown"
+          },
+          "support_staff_post_mix": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolProfileWorkforceBreakdownItemResponse"
+            },
+            "type": "array",
+            "title": "Support Staff Post Mix"
           }
         },
         "type": "object",
@@ -5066,7 +5262,21 @@
           "teachers_3plus_years_pct",
           "teacher_turnover_pct",
           "qts_pct",
-          "qualifications_level6_plus_pct"
+          "qualifications_level6_plus_pct",
+          "teacher_headcount_total",
+          "teacher_fte_total",
+          "support_staff_headcount_total",
+          "support_staff_fte_total",
+          "leadership_headcount",
+          "teacher_average_mean_salary_gbp",
+          "teacher_absence_pct",
+          "teacher_vacancy_rate",
+          "third_party_support_staff_headcount",
+          "teacher_sex_breakdown",
+          "teacher_age_breakdown",
+          "teacher_ethnicity_breakdown",
+          "teacher_qualification_breakdown",
+          "support_staff_post_mix"
         ],
         "title": "SchoolProfileWorkforceLatestResponse"
       },
@@ -5657,6 +5867,125 @@
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
           },
+          "teacher_headcount_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Headcount Total"
+          },
+          "teacher_fte_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Fte Total"
+          },
+          "support_staff_headcount_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Support Staff Headcount Total"
+          },
+          "support_staff_fte_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Support Staff Fte Total"
+          },
+          "leadership_share_of_teachers": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Leadership Share Of Teachers"
+          },
+          "teacher_average_mean_salary_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Average Mean Salary Gbp"
+          },
+          "teacher_average_median_salary_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Average Median Salary Gbp"
+          },
+          "teachers_on_leadership_pay_range_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teachers On Leadership Pay Range Pct"
+          },
+          "teacher_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Pct"
+          },
+          "teacher_absence_days_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Total"
+          },
+          "teacher_absence_days_average": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Average"
+          },
+          "teacher_absence_days_average_all_teachers": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Average All Teachers"
+          },
+          "teacher_vacancy_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Vacancy Count"
+          },
+          "teacher_vacancy_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Vacancy Rate"
+          },
+          "teacher_tempfilled_vacancy_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Tempfilled Vacancy Count"
+          },
+          "teacher_tempfilled_vacancy_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Tempfilled Vacancy Rate"
+          },
+          "third_party_support_staff_headcount": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Third Party Support Staff Headcount"
+          },
           "income_per_pupil_gbp": {
             "items": {
               "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
@@ -5719,6 +6048,23 @@
           "teacher_turnover_pct",
           "qts_pct",
           "qualifications_level6_plus_pct",
+          "teacher_headcount_total",
+          "teacher_fte_total",
+          "support_staff_headcount_total",
+          "support_staff_fte_total",
+          "leadership_share_of_teachers",
+          "teacher_average_mean_salary_gbp",
+          "teacher_average_median_salary_gbp",
+          "teachers_on_leadership_pay_range_pct",
+          "teacher_absence_pct",
+          "teacher_absence_days_total",
+          "teacher_absence_days_average",
+          "teacher_absence_days_average_all_teachers",
+          "teacher_vacancy_count",
+          "teacher_vacancy_rate",
+          "teacher_tempfilled_vacancy_count",
+          "teacher_tempfilled_vacancy_rate",
+          "third_party_support_staff_headcount",
           "income_per_pupil_gbp",
           "expenditure_per_pupil_gbp",
           "staff_costs_pct_of_expenditure",
@@ -6059,6 +6405,125 @@
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
           },
+          "teacher_headcount_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Headcount Total"
+          },
+          "teacher_fte_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Fte Total"
+          },
+          "support_staff_headcount_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Support Staff Headcount Total"
+          },
+          "support_staff_fte_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Support Staff Fte Total"
+          },
+          "leadership_share_of_teachers": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Leadership Share Of Teachers"
+          },
+          "teacher_average_mean_salary_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Average Mean Salary Gbp"
+          },
+          "teacher_average_median_salary_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Average Median Salary Gbp"
+          },
+          "teachers_on_leadership_pay_range_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teachers On Leadership Pay Range Pct"
+          },
+          "teacher_absence_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Pct"
+          },
+          "teacher_absence_days_total": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Total"
+          },
+          "teacher_absence_days_average": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Average"
+          },
+          "teacher_absence_days_average_all_teachers": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Absence Days Average All Teachers"
+          },
+          "teacher_vacancy_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Vacancy Count"
+          },
+          "teacher_vacancy_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Vacancy Rate"
+          },
+          "teacher_tempfilled_vacancy_count": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Tempfilled Vacancy Count"
+          },
+          "teacher_tempfilled_vacancy_rate": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teacher Tempfilled Vacancy Rate"
+          },
+          "third_party_support_staff_headcount": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Third Party Support Staff Headcount"
+          },
           "income_per_pupil_gbp": {
             "items": {
               "$ref": "#/components/schemas/SchoolTrendPointResponse"
@@ -6121,6 +6586,23 @@
           "teacher_turnover_pct",
           "qts_pct",
           "qualifications_level6_plus_pct",
+          "teacher_headcount_total",
+          "teacher_fte_total",
+          "support_staff_headcount_total",
+          "support_staff_fte_total",
+          "leadership_share_of_teachers",
+          "teacher_average_mean_salary_gbp",
+          "teacher_average_median_salary_gbp",
+          "teachers_on_leadership_pay_range_pct",
+          "teacher_absence_pct",
+          "teacher_absence_days_total",
+          "teacher_absence_days_average",
+          "teacher_absence_days_average_all_teachers",
+          "teacher_vacancy_count",
+          "teacher_vacancy_rate",
+          "teacher_tempfilled_vacancy_count",
+          "teacher_tempfilled_vacancy_rate",
+          "third_party_support_staff_headcount",
           "income_per_pupil_gbp",
           "expenditure_per_pupil_gbp",
           "staff_costs_pct_of_expenditure",

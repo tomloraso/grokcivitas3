@@ -82,6 +82,23 @@ class SchoolWorkforceYearlyRow:
     teacher_turnover_pct: float | None
     qts_pct: float | None
     qualifications_level6_plus_pct: float | None
+    teacher_headcount_total: float | None = None
+    teacher_fte_total: float | None = None
+    support_staff_headcount_total: float | None = None
+    support_staff_fte_total: float | None = None
+    leadership_share_of_teachers: float | None = None
+    teacher_average_mean_salary_gbp: float | None = None
+    teacher_average_median_salary_gbp: float | None = None
+    teachers_on_leadership_pay_range_pct: float | None = None
+    teacher_absence_pct: float | None = None
+    teacher_absence_days_total: float | None = None
+    teacher_absence_days_average: float | None = None
+    teacher_absence_days_average_all_teachers: float | None = None
+    teacher_vacancy_count: float | None = None
+    teacher_vacancy_rate: float | None = None
+    teacher_tempfilled_vacancy_count: float | None = None
+    teacher_tempfilled_vacancy_rate: float | None = None
+    third_party_support_staff_headcount: float | None = None
 
 
 @dataclass(frozen=True)

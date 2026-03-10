@@ -146,6 +146,16 @@ class SchoolBehaviourLatestDto:
 
 
 @dataclass(frozen=True)
+class SchoolWorkforceBreakdownItemDto:
+    key: str
+    label: str
+    headcount: float | None
+    fte: float | None = None
+    headcount_pct: float | None = None
+    fte_pct: float | None = None
+
+
+@dataclass(frozen=True)
 class SchoolWorkforceLatestDto:
     academic_year: str
     pupil_teacher_ratio: float | None
@@ -154,6 +164,20 @@ class SchoolWorkforceLatestDto:
     teacher_turnover_pct: float | None
     qts_pct: float | None
     qualifications_level6_plus_pct: float | None
+    teacher_headcount_total: float | None = None
+    teacher_fte_total: float | None = None
+    support_staff_headcount_total: float | None = None
+    support_staff_fte_total: float | None = None
+    leadership_headcount: float | None = None
+    teacher_average_mean_salary_gbp: float | None = None
+    teacher_absence_pct: float | None = None
+    teacher_vacancy_rate: float | None = None
+    third_party_support_staff_headcount: float | None = None
+    teacher_sex_breakdown: tuple[SchoolWorkforceBreakdownItemDto, ...] = ()
+    teacher_age_breakdown: tuple[SchoolWorkforceBreakdownItemDto, ...] = ()
+    teacher_ethnicity_breakdown: tuple[SchoolWorkforceBreakdownItemDto, ...] = ()
+    teacher_qualification_breakdown: tuple[SchoolWorkforceBreakdownItemDto, ...] = ()
+    support_staff_post_mix: tuple[SchoolWorkforceBreakdownItemDto, ...] = ()
 
 
 @dataclass(frozen=True)

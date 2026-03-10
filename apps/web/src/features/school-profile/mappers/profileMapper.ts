@@ -45,6 +45,7 @@ import type {
   UnsupportedMetricVM,
   AttendanceLatestVM,
   AnalystSectionVM,
+  WorkforceBreakdownItemVM,
   WorkforceLatestVM
 } from "../types";
 
@@ -337,6 +338,19 @@ function mapBehaviour(profile: SchoolProfileResponse): BehaviourLatestVM | null 
   };
 }
 
+function mapWorkforceBreakdownItems(
+  items: NonNullable<SchoolProfileResponse["workforce_latest"]>["teacher_sex_breakdown"]
+): WorkforceBreakdownItemVM[] {
+  return (items ?? []).map((item) => ({
+    key: item.key,
+    label: item.label,
+    headcount: item.headcount,
+    fte: item.fte ?? null,
+    headcountPct: item.headcount_pct ?? null,
+    ftePct: item.fte_pct ?? null
+  }));
+}
+
 function mapWorkforce(profile: SchoolProfileResponse): WorkforceLatestVM | null {
   const workforce = profile.workforce_latest;
   if (!workforce) {
@@ -350,7 +364,23 @@ function mapWorkforce(profile: SchoolProfileResponse): WorkforceLatestVM | null 
     teachers3plusYearsPct: workforce.teachers_3plus_years_pct,
     teacherTurnoverPct: workforce.teacher_turnover_pct,
     qtsPct: workforce.qts_pct,
-    qualificationsLevel6PlusPct: workforce.qualifications_level6_plus_pct
+    qualificationsLevel6PlusPct: workforce.qualifications_level6_plus_pct,
+    teacherHeadcountTotal: workforce.teacher_headcount_total,
+    teacherFteTotal: workforce.teacher_fte_total,
+    supportStaffHeadcountTotal: workforce.support_staff_headcount_total,
+    supportStaffFteTotal: workforce.support_staff_fte_total,
+    leadershipHeadcount: workforce.leadership_headcount,
+    teacherAverageMeanSalaryGbp: workforce.teacher_average_mean_salary_gbp,
+    teacherAbsencePct: workforce.teacher_absence_pct,
+    teacherVacancyRate: workforce.teacher_vacancy_rate,
+    thirdPartySupportStaffHeadcount: workforce.third_party_support_staff_headcount,
+    teacherSexBreakdown: mapWorkforceBreakdownItems(workforce.teacher_sex_breakdown),
+    teacherAgeBreakdown: mapWorkforceBreakdownItems(workforce.teacher_age_breakdown),
+    teacherEthnicityBreakdown: mapWorkforceBreakdownItems(workforce.teacher_ethnicity_breakdown),
+    teacherQualificationBreakdown: mapWorkforceBreakdownItems(
+      workforce.teacher_qualification_breakdown
+    ),
+    supportStaffPostMix: mapWorkforceBreakdownItems(workforce.support_staff_post_mix)
   };
 }
 

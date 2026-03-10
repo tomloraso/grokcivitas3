@@ -651,6 +651,91 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        for statement in (
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_headcount_total double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_fte_total double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS support_staff_headcount_total double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS support_staff_fte_total double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS leadership_headcount double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS leadership_share_of_teachers double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_average_mean_salary_gbp double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_average_median_salary_gbp double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teachers_on_leadership_pay_range_pct double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_absence_pct double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_absence_days_total double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_absence_days_average double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_absence_days_average_all_teachers double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_vacancy_count double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_vacancy_rate double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_tempfilled_vacancy_count double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teacher_tempfilled_vacancy_rate double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS third_party_support_staff_headcount double precision NULL",
+        ):
+            connection.execute(text(statement))
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_teacher_characteristics_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    characteristic_group text NOT NULL,
+                    characteristic text NOT NULL,
+                    grade text NULL,
+                    sex text NULL,
+                    age_group text NULL,
+                    working_pattern text NULL,
+                    qts_status text NULL,
+                    on_route text NULL,
+                    ethnicity_major text NULL,
+                    teacher_headcount double precision NULL,
+                    teacher_fte double precision NULL,
+                    teacher_headcount_pct double precision NULL,
+                    teacher_fte_pct double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, characteristic_group, characteristic)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_support_staff_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    post text NOT NULL,
+                    sex text NOT NULL,
+                    ethnicity_major text NOT NULL,
+                    support_staff_headcount double precision NULL,
+                    support_staff_fte double precision NULL,
+                    source_dataset_id text NOT NULL,
+                    source_dataset_version text NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, post, sex, ethnicity_major)
+                )
+                """
+            )
+        )
         connection.execute(
             text(
                 """
@@ -1181,6 +1266,23 @@ def _seed_data(engine: Engine) -> None:
                     teacher_turnover_pct,
                     qts_pct,
                     qualifications_level6_plus_pct,
+                    teacher_headcount_total,
+                    teacher_fte_total,
+                    support_staff_headcount_total,
+                    support_staff_fte_total,
+                    leadership_headcount,
+                    teacher_average_mean_salary_gbp,
+                    teacher_average_median_salary_gbp,
+                    teachers_on_leadership_pay_range_pct,
+                    teacher_absence_pct,
+                    teacher_absence_days_total,
+                    teacher_absence_days_average,
+                    teacher_absence_days_average_all_teachers,
+                    teacher_vacancy_count,
+                    teacher_vacancy_rate,
+                    teacher_tempfilled_vacancy_count,
+                    teacher_tempfilled_vacancy_rate,
+                    third_party_support_staff_headcount,
                     source_dataset_id,
                     source_dataset_version
                 ) VALUES
@@ -1193,6 +1295,23 @@ def _seed_data(engine: Engine) -> None:
                     10.2,
                     95.1,
                     80.3,
+                    41.0,
+                    38.7,
+                    27.0,
+                    21.0,
+                    4.0,
+                    45800.0,
+                    44250.0,
+                    6.8,
+                    9.1,
+                    214.0,
+                    5.8,
+                    5.2,
+                    1.0,
+                    2.0,
+                    2.0,
+                    4.0,
+                    2.0,
                     'workforce:rv-2024',
                     'workforce:file-2024'
                 ),
@@ -1205,6 +1324,23 @@ def _seed_data(engine: Engine) -> None:
                     9.8,
                     95.2,
                     81.1,
+                    42.0,
+                    39.5,
+                    28.0,
+                    22.4,
+                    4.0,
+                    46850.0,
+                    45200.0,
+                    7.1,
+                    8.6,
+                    198.0,
+                    5.5,
+                    4.7,
+                    1.0,
+                    1.7,
+                    2.0,
+                    3.4,
+                    3.0,
                     'workforce:rv-2025',
                     'workforce:file-2025'
                 )
@@ -1215,8 +1351,72 @@ def _seed_data(engine: Engine) -> None:
                     teacher_turnover_pct = EXCLUDED.teacher_turnover_pct,
                     qts_pct = EXCLUDED.qts_pct,
                     qualifications_level6_plus_pct = EXCLUDED.qualifications_level6_plus_pct,
+                    teacher_headcount_total = EXCLUDED.teacher_headcount_total,
+                    teacher_fte_total = EXCLUDED.teacher_fte_total,
+                    support_staff_headcount_total = EXCLUDED.support_staff_headcount_total,
+                    support_staff_fte_total = EXCLUDED.support_staff_fte_total,
+                    leadership_headcount = EXCLUDED.leadership_headcount,
+                    teacher_average_mean_salary_gbp = EXCLUDED.teacher_average_mean_salary_gbp,
+                    teacher_average_median_salary_gbp = EXCLUDED.teacher_average_median_salary_gbp,
+                    teachers_on_leadership_pay_range_pct = EXCLUDED.teachers_on_leadership_pay_range_pct,
+                    teacher_absence_pct = EXCLUDED.teacher_absence_pct,
+                    teacher_absence_days_total = EXCLUDED.teacher_absence_days_total,
+                    teacher_absence_days_average = EXCLUDED.teacher_absence_days_average,
+                    teacher_absence_days_average_all_teachers = EXCLUDED.teacher_absence_days_average_all_teachers,
+                    teacher_vacancy_count = EXCLUDED.teacher_vacancy_count,
+                    teacher_vacancy_rate = EXCLUDED.teacher_vacancy_rate,
+                    teacher_tempfilled_vacancy_count = EXCLUDED.teacher_tempfilled_vacancy_count,
+                    teacher_tempfilled_vacancy_rate = EXCLUDED.teacher_tempfilled_vacancy_rate,
+                    third_party_support_staff_headcount = EXCLUDED.third_party_support_staff_headcount,
                     source_dataset_id = EXCLUDED.source_dataset_id,
                     source_dataset_version = EXCLUDED.source_dataset_version
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_teacher_characteristics_yearly (
+                    urn,
+                    academic_year,
+                    characteristic_group,
+                    characteristic,
+                    teacher_headcount,
+                    teacher_fte,
+                    teacher_headcount_pct,
+                    teacher_fte_pct,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES
+                ('910001', '2024/25', 'Sex', 'Female', 28.0, 25.8, 66.7, 65.3, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Sex', 'Male', 14.0, 13.7, 33.3, 34.7, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Age group', '30 to 39', 18.0, 17.0, 42.9, 43.0, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Age group', '40 to 49', 11.0, 10.5, 26.2, 26.6, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Ethnicity major', 'Asian', 6.0, 5.7, 14.3, 14.4, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Ethnicity major', 'White', 31.0, 29.0, 73.8, 73.4, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'QTS status', 'No qualified teacher status', 2.0, 1.6, 4.8, 4.0, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'QTS status', 'Qualified teacher status', 40.0, 37.9, 95.2, 96.0, 'workforce:rv-2025', 'workforce:file-2025')
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_support_staff_yearly (
+                    urn,
+                    academic_year,
+                    post,
+                    sex,
+                    ethnicity_major,
+                    support_staff_headcount,
+                    support_staff_fte,
+                    source_dataset_id,
+                    source_dataset_version
+                ) VALUES
+                ('910001', '2024/25', 'Teaching assistant', 'Total', 'Total', 11.0, 8.5, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Administrative / clerical', 'Total', 'Total', 6.0, 5.2, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Auxiliary staff', 'Total', 'Total', 5.0, 4.1, 'workforce:rv-2025', 'workforce:file-2025'),
+                ('910001', '2024/25', 'Total', 'Total', 'Total', 28.0, 22.4, 'workforce:rv-2025', 'workforce:file-2025')
                 """
             )
         )
@@ -1790,6 +1990,15 @@ def _cleanup_data(engine: Engine) -> None:
             text("DELETE FROM school_leadership_snapshot WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
+            text("DELETE FROM school_support_staff_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_teacher_characteristics_yearly "
+                "WHERE urn IN ('910001', '910002')"
+            )
+        )
+        connection.execute(
             text("DELETE FROM school_workforce_yearly WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
@@ -1867,6 +2076,36 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.workforce_latest.teacher_turnover_pct == 9.8
     assert result.workforce_latest.qts_pct == 95.2
     assert result.workforce_latest.qualifications_level6_plus_pct == 81.1
+    assert result.workforce_latest.teacher_headcount_total == pytest.approx(42.0)
+    assert result.workforce_latest.teacher_fte_total == pytest.approx(39.5)
+    assert result.workforce_latest.support_staff_headcount_total == pytest.approx(28.0)
+    assert result.workforce_latest.support_staff_fte_total == pytest.approx(22.4)
+    assert result.workforce_latest.leadership_headcount == pytest.approx(4.0)
+    assert result.workforce_latest.teacher_average_mean_salary_gbp == pytest.approx(46850.0)
+    assert result.workforce_latest.teacher_absence_pct == pytest.approx(8.6)
+    assert result.workforce_latest.teacher_vacancy_rate == pytest.approx(1.7)
+    assert result.workforce_latest.third_party_support_staff_headcount == pytest.approx(3.0)
+    assert tuple(item.key for item in result.workforce_latest.teacher_sex_breakdown) == (
+        "female",
+        "male",
+    )
+    assert tuple(item.key for item in result.workforce_latest.teacher_age_breakdown) == (
+        "30_to_39",
+        "40_to_49",
+    )
+    assert tuple(item.key for item in result.workforce_latest.teacher_ethnicity_breakdown) == (
+        "white",
+        "asian",
+    )
+    assert tuple(item.key for item in result.workforce_latest.teacher_qualification_breakdown) == (
+        "qualified_teacher_status",
+        "no_qualified_teacher_status",
+    )
+    assert tuple(item.key for item in result.workforce_latest.support_staff_post_mix) == (
+        "teaching_assistant",
+        "administrative_clerical",
+        "auxiliary_staff",
+    )
     assert result.finance_latest is not None
     assert result.finance_latest.academic_year == "2023/24"
     assert result.finance_latest.total_income_gbp == pytest.approx(2070000.0)

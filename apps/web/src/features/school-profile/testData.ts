@@ -141,10 +141,117 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     academic_year: "2024/25",
     pupil_teacher_ratio: 16.7,
     supply_staff_pct: 5.2,
-    teachers_3plus_years_pct: null,
-    teacher_turnover_pct: null,
+    teachers_3plus_years_pct: 76.5,
+    teacher_turnover_pct: 9.8,
     qts_pct: 91.3,
-    qualifications_level6_plus_pct: null
+    qualifications_level6_plus_pct: 81.1,
+    teacher_headcount_total: 42.0,
+    teacher_fte_total: 39.5,
+    support_staff_headcount_total: 28.0,
+    support_staff_fte_total: 22.4,
+    leadership_headcount: 4.0,
+    teacher_average_mean_salary_gbp: 46850,
+    teacher_absence_pct: 8.6,
+    teacher_vacancy_rate: 1.7,
+    third_party_support_staff_headcount: 3.0,
+    teacher_sex_breakdown: [
+      {
+        key: "female",
+        label: "Female",
+        headcount: 31,
+        fte: 29.1,
+        headcount_pct: 73.8,
+        fte_pct: 73.7
+      },
+      {
+        key: "male",
+        label: "Male",
+        headcount: 11,
+        fte: 10.4,
+        headcount_pct: 26.2,
+        fte_pct: 26.3
+      }
+    ],
+    teacher_age_breakdown: [
+      {
+        key: "30_to_39",
+        label: "30 to 39",
+        headcount: 18,
+        fte: 17.0,
+        headcount_pct: 42.9,
+        fte_pct: 43.0
+      },
+      {
+        key: "40_to_49",
+        label: "40 to 49",
+        headcount: 13,
+        fte: 12.2,
+        headcount_pct: 31.0,
+        fte_pct: 30.9
+      }
+    ],
+    teacher_ethnicity_breakdown: [
+      {
+        key: "white",
+        label: "White",
+        headcount: 27,
+        fte: 25.5,
+        headcount_pct: 64.3,
+        fte_pct: 64.6
+      },
+      {
+        key: "asian",
+        label: "Asian",
+        headcount: 9,
+        fte: 8.4,
+        headcount_pct: 21.4,
+        fte_pct: 21.3
+      }
+    ],
+    teacher_qualification_breakdown: [
+      {
+        key: "qualified_teacher_status",
+        label: "Qualified teacher status",
+        headcount: 40,
+        fte: 37.9,
+        headcount_pct: 95.2,
+        fte_pct: 96.0
+      },
+      {
+        key: "no_qualified_teacher_status",
+        label: "No qualified teacher status",
+        headcount: 2,
+        fte: 1.6,
+        headcount_pct: 4.8,
+        fte_pct: 4.0
+      }
+    ],
+    support_staff_post_mix: [
+      {
+        key: "teaching_assistant",
+        label: "Teaching assistant",
+        headcount: 11,
+        fte: 8.5,
+        headcount_pct: null,
+        fte_pct: null
+      },
+      {
+        key: "administrative_clerical",
+        label: "Administrative / clerical",
+        headcount: 6,
+        fte: 5.2,
+        headcount_pct: null,
+        fte_pct: null
+      },
+      {
+        key: "auxiliary_staff",
+        label: "Auxiliary staff",
+        headcount: 5,
+        fte: 4.1,
+        headcount_pct: null,
+        fte_pct: null
+      }
+    ]
   },
   finance_latest: {
     academic_year: "2023/24",
@@ -449,6 +556,66 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
         local_area_label: "Camden"
       },
       {
+        metric_key: "teacher_headcount_total",
+        academic_year: "2024/25",
+        school_value: 42,
+        national_value: 39,
+        local_value: 40,
+        school_vs_national_delta: 3,
+        school_vs_local_delta: 2,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "leadership_share_of_teachers",
+        academic_year: "2024/25",
+        school_value: 9.5,
+        national_value: 10.2,
+        local_value: 9.8,
+        school_vs_national_delta: -0.7,
+        school_vs_local_delta: -0.3,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "teacher_average_mean_salary_gbp",
+        academic_year: "2024/25",
+        school_value: 46850,
+        national_value: 45200,
+        local_value: 46100,
+        school_vs_national_delta: 1650,
+        school_vs_local_delta: 750,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "teacher_vacancy_rate",
+        academic_year: "2024/25",
+        school_value: 1.7,
+        national_value: 1.2,
+        local_value: 1.5,
+        school_vs_national_delta: 0.5,
+        school_vs_local_delta: 0.2,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "third_party_support_staff_headcount",
+        academic_year: "2024/25",
+        school_value: 3,
+        national_value: 1,
+        local_value: 2,
+        school_vs_national_delta: 2,
+        school_vs_local_delta: 1,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
         metric_key: "income_per_pupil_gbp",
         academic_year: "2023/24",
         school_value: 10350,
@@ -693,13 +860,90 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       { academic_year: "2023/24", value: 4.8, delta: null, direction: null },
       { academic_year: "2024/25", value: 5.2, delta: 0.4, direction: "up" }
     ],
-    teachers_3plus_years_pct: EMPTY_SERIES,
-    teacher_turnover_pct: EMPTY_SERIES,
+    teacher_headcount_total: [
+      { academic_year: "2023/24", value: 40, delta: null, direction: null },
+      { academic_year: "2024/25", value: 42, delta: 2, direction: "up" }
+    ],
+    teacher_fte_total: [
+      { academic_year: "2023/24", value: 38.7, delta: null, direction: null },
+      { academic_year: "2024/25", value: 39.5, delta: 0.8, direction: "up" }
+    ],
+    support_staff_headcount_total: [
+      { academic_year: "2023/24", value: 27, delta: null, direction: null },
+      { academic_year: "2024/25", value: 28, delta: 1, direction: "up" }
+    ],
+    support_staff_fte_total: [
+      { academic_year: "2023/24", value: 21.8, delta: null, direction: null },
+      { academic_year: "2024/25", value: 22.4, delta: 0.6, direction: "up" }
+    ],
+    teachers_3plus_years_pct: [
+      { academic_year: "2023/24", value: 75.2, delta: null, direction: null },
+      { academic_year: "2024/25", value: 76.5, delta: 1.3, direction: "up" }
+    ],
+    teacher_turnover_pct: [
+      { academic_year: "2023/24", value: 9.2, delta: null, direction: null },
+      { academic_year: "2024/25", value: 9.8, delta: 0.6, direction: "up" }
+    ],
     qts_pct: [
       { academic_year: "2023/24", value: 90.8, delta: null, direction: null },
       { academic_year: "2024/25", value: 91.3, delta: 0.5, direction: "up" }
     ],
-    qualifications_level6_plus_pct: EMPTY_SERIES,
+    qualifications_level6_plus_pct: [
+      { academic_year: "2023/24", value: 80.4, delta: null, direction: null },
+      { academic_year: "2024/25", value: 81.1, delta: 0.7, direction: "up" }
+    ],
+    leadership_share_of_teachers: [
+      { academic_year: "2023/24", value: 9.0, delta: null, direction: null },
+      { academic_year: "2024/25", value: 9.5, delta: 0.5, direction: "up" }
+    ],
+    teacher_average_mean_salary_gbp: [
+      { academic_year: "2023/24", value: 46200, delta: null, direction: null },
+      { academic_year: "2024/25", value: 46850, delta: 650, direction: "up" }
+    ],
+    teacher_average_median_salary_gbp: [
+      { academic_year: "2023/24", value: 44800, delta: null, direction: null },
+      { academic_year: "2024/25", value: 45200, delta: 400, direction: "up" }
+    ],
+    teachers_on_leadership_pay_range_pct: [
+      { academic_year: "2023/24", value: 6.7, delta: null, direction: null },
+      { academic_year: "2024/25", value: 7.1, delta: 0.4, direction: "up" }
+    ],
+    teacher_absence_pct: [
+      { academic_year: "2023/24", value: 8.1, delta: null, direction: null },
+      { academic_year: "2024/25", value: 8.6, delta: 0.5, direction: "up" }
+    ],
+    teacher_absence_days_total: [
+      { academic_year: "2023/24", value: 186, delta: null, direction: null },
+      { academic_year: "2024/25", value: 198, delta: 12, direction: "up" }
+    ],
+    teacher_absence_days_average: [
+      { academic_year: "2023/24", value: 5.2, delta: null, direction: null },
+      { academic_year: "2024/25", value: 5.5, delta: 0.3, direction: "up" }
+    ],
+    teacher_absence_days_average_all_teachers: [
+      { academic_year: "2023/24", value: 4.3, delta: null, direction: null },
+      { academic_year: "2024/25", value: 4.7, delta: 0.4, direction: "up" }
+    ],
+    teacher_vacancy_count: [
+      { academic_year: "2023/24", value: 1, delta: null, direction: null },
+      { academic_year: "2024/25", value: 1, delta: 0, direction: "flat" }
+    ],
+    teacher_vacancy_rate: [
+      { academic_year: "2023/24", value: 1.5, delta: null, direction: null },
+      { academic_year: "2024/25", value: 1.7, delta: 0.2, direction: "up" }
+    ],
+    teacher_tempfilled_vacancy_count: [
+      { academic_year: "2023/24", value: 1, delta: null, direction: null },
+      { academic_year: "2024/25", value: 2, delta: 1, direction: "up" }
+    ],
+    teacher_tempfilled_vacancy_rate: [
+      { academic_year: "2023/24", value: 2.5, delta: null, direction: null },
+      { academic_year: "2024/25", value: 3.4, delta: 0.9, direction: "up" }
+    ],
+    third_party_support_staff_headcount: [
+      { academic_year: "2023/24", value: 2, delta: null, direction: null },
+      { academic_year: "2024/25", value: 3, delta: 1, direction: "up" }
+    ],
     income_per_pupil_gbp: [
       { academic_year: "2023/24", value: 10350, delta: null, direction: null }
     ],
@@ -759,12 +1003,101 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
     suspensions_rate: EMPTY_BENCHMARKS,
     permanent_exclusions_count: EMPTY_BENCHMARKS,
     permanent_exclusions_rate: EMPTY_BENCHMARKS,
-    pupil_teacher_ratio: EMPTY_BENCHMARKS,
+    pupil_teacher_ratio: [
+      {
+        academic_year: "2024/25",
+        school_value: 16.7,
+        national_value: 17.3,
+        local_value: 16.9,
+        school_vs_national_delta: -0.6,
+        school_vs_local_delta: -0.2,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
     supply_staff_pct: EMPTY_BENCHMARKS,
+    teacher_headcount_total: [
+      {
+        academic_year: "2024/25",
+        school_value: 42,
+        national_value: 39,
+        local_value: 40,
+        school_vs_national_delta: 3,
+        school_vs_local_delta: 2,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    teacher_fte_total: EMPTY_BENCHMARKS,
+    support_staff_headcount_total: EMPTY_BENCHMARKS,
+    support_staff_fte_total: EMPTY_BENCHMARKS,
     teachers_3plus_years_pct: EMPTY_BENCHMARKS,
     teacher_turnover_pct: EMPTY_BENCHMARKS,
     qts_pct: EMPTY_BENCHMARKS,
     qualifications_level6_plus_pct: EMPTY_BENCHMARKS,
+    leadership_share_of_teachers: [
+      {
+        academic_year: "2024/25",
+        school_value: 9.5,
+        national_value: 10.2,
+        local_value: 9.8,
+        school_vs_national_delta: -0.7,
+        school_vs_local_delta: -0.3,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    teacher_average_mean_salary_gbp: [
+      {
+        academic_year: "2024/25",
+        school_value: 46850,
+        national_value: 45200,
+        local_value: 46100,
+        school_vs_national_delta: 1650,
+        school_vs_local_delta: 750,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    teacher_average_median_salary_gbp: EMPTY_BENCHMARKS,
+    teachers_on_leadership_pay_range_pct: EMPTY_BENCHMARKS,
+    teacher_absence_pct: EMPTY_BENCHMARKS,
+    teacher_absence_days_total: EMPTY_BENCHMARKS,
+    teacher_absence_days_average: EMPTY_BENCHMARKS,
+    teacher_absence_days_average_all_teachers: EMPTY_BENCHMARKS,
+    teacher_vacancy_count: EMPTY_BENCHMARKS,
+    teacher_vacancy_rate: [
+      {
+        academic_year: "2024/25",
+        school_value: 1.7,
+        national_value: 1.2,
+        local_value: 1.5,
+        school_vs_national_delta: 0.5,
+        school_vs_local_delta: 0.2,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    teacher_tempfilled_vacancy_count: EMPTY_BENCHMARKS,
+    teacher_tempfilled_vacancy_rate: EMPTY_BENCHMARKS,
+    third_party_support_staff_headcount: [
+      {
+        academic_year: "2024/25",
+        school_value: 3,
+        national_value: 1,
+        local_value: 2,
+        school_vs_national_delta: 2,
+        school_vs_local_delta: 1,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
     income_per_pupil_gbp: [
       {
         academic_year: "2023/24",
@@ -1098,6 +1431,151 @@ export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
               local_value: 16.9,
               school_vs_national_delta: -0.6,
               school_vs_local_delta: -0.2,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "teacher_headcount_total",
+          label: "Teacher Headcount",
+          unit: "count",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 40,
+              national_value: 38,
+              local_value: 39,
+              school_vs_national_delta: 2,
+              school_vs_local_delta: 1,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 42,
+              national_value: 39,
+              local_value: 40,
+              school_vs_national_delta: 3,
+              school_vs_local_delta: 2,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "leadership_share_of_teachers",
+          label: "Leadership Share of Teachers",
+          unit: "percent",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 9.0,
+              national_value: 9.9,
+              local_value: 9.5,
+              school_vs_national_delta: -0.9,
+              school_vs_local_delta: -0.5,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 9.5,
+              national_value: 10.2,
+              local_value: 9.8,
+              school_vs_national_delta: -0.7,
+              school_vs_local_delta: -0.3,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "teacher_average_mean_salary_gbp",
+          label: "Average Teacher Salary",
+          unit: "currency",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 46200,
+              national_value: 44850,
+              local_value: 45500,
+              school_vs_national_delta: 1350,
+              school_vs_local_delta: 700,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 46850,
+              national_value: 45200,
+              local_value: 46100,
+              school_vs_national_delta: 1650,
+              school_vs_local_delta: 750,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "teacher_vacancy_rate",
+          label: "Teacher Vacancy Rate",
+          unit: "percent",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 1.5,
+              national_value: 1.1,
+              local_value: 1.3,
+              school_vs_national_delta: 0.4,
+              school_vs_local_delta: 0.2,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 1.7,
+              national_value: 1.2,
+              local_value: 1.5,
+              school_vs_national_delta: 0.5,
+              school_vs_local_delta: 0.2,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "third_party_support_staff_headcount",
+          label: "Third-party Support Staff",
+          unit: "count",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 2,
+              national_value: 1,
+              local_value: 2,
+              school_vs_national_delta: 1,
+              school_vs_local_delta: 0,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 3,
+              national_value: 1,
+              local_value: 2,
+              school_vs_national_delta: 2,
+              school_vs_local_delta: 1,
               local_scope: "local_authority_district",
               local_area_code: "E09000007",
               local_area_label: "Camden"

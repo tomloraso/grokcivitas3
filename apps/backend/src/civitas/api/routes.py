@@ -54,6 +54,13 @@ from civitas.application.school_profiles.errors import (
     SchoolProfileNotFoundError,
 )
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.application.school_trends.dto import (
+    SchoolTrendBenchmarkPointDto,
+    SchoolTrendPointDto,
+    SchoolTrendsBenchmarksDto,
+    SchoolTrendsCompletenessDto,
+    SchoolTrendsSeriesDto,
+)
 from civitas.application.school_trends.errors import (
     SchoolTrendsDataUnavailableError,
     SchoolTrendsNotFoundError,
@@ -300,448 +307,23 @@ def get_school_trends(
             min_years_for_delta=result.history_quality.min_years_for_delta,
             years_count=result.history_quality.years_count,
         ),
-        series=SchoolTrendsSeriesResponse(
-            disadvantaged_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.disadvantaged_pct
-            ],
-            fsm_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.fsm_pct
-            ],
-            fsm6_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.fsm6_pct
-            ],
-            sen_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.sen_pct
-            ],
-            ehcp_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.ehcp_pct
-            ],
-            eal_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.eal_pct
-            ],
-            first_language_english_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.first_language_english_pct
-            ],
-            first_language_unclassified_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.first_language_unclassified_pct
-            ],
-            male_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.male_pct
-            ],
-            female_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.female_pct
-            ],
-            pupil_mobility_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.pupil_mobility_pct
-            ],
-            overall_attendance_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.overall_attendance_pct
-            ],
-            overall_absence_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.overall_absence_pct
-            ],
-            persistent_absence_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.persistent_absence_pct
-            ],
-            suspensions_count=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.suspensions_count
-            ],
-            suspensions_rate=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.suspensions_rate
-            ],
-            permanent_exclusions_count=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.permanent_exclusions_count
-            ],
-            permanent_exclusions_rate=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.permanent_exclusions_rate
-            ],
-            pupil_teacher_ratio=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.pupil_teacher_ratio
-            ],
-            supply_staff_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.supply_staff_pct
-            ],
-            teachers_3plus_years_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.teachers_3plus_years_pct
-            ],
-            teacher_turnover_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.teacher_turnover_pct
-            ],
-            qts_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.qts_pct
-            ],
-            qualifications_level6_plus_pct=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.qualifications_level6_plus_pct
-            ],
-            income_per_pupil_gbp=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.income_per_pupil_gbp
-            ],
-            expenditure_per_pupil_gbp=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.expenditure_per_pupil_gbp
-            ],
-            staff_costs_pct_of_expenditure=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.staff_costs_pct_of_expenditure
-            ],
-            revenue_reserve_per_pupil_gbp=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.revenue_reserve_per_pupil_gbp
-            ],
-            teaching_staff_costs_per_pupil_gbp=[
-                SchoolTrendPointResponse(
-                    academic_year=point.academic_year,
-                    value=point.value,
-                    delta=point.delta,
-                    direction=point.direction,
-                )
-                for point in result.series.teaching_staff_costs_per_pupil_gbp
-            ],
-        ),
-        benchmarks=SchoolTrendsBenchmarksResponse(
-            disadvantaged_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.disadvantaged_pct
-            ],
-            fsm_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.fsm_pct
-            ],
-            fsm6_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.fsm6_pct
-            ],
-            sen_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.sen_pct
-            ],
-            ehcp_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.ehcp_pct
-            ],
-            eal_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.eal_pct
-            ],
-            first_language_english_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.first_language_english_pct
-            ],
-            first_language_unclassified_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.first_language_unclassified_pct
-            ],
-            male_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.male_pct
-            ],
-            female_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.female_pct
-            ],
-            pupil_mobility_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.pupil_mobility_pct
-            ],
-            overall_attendance_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.overall_attendance_pct
-            ],
-            overall_absence_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.overall_absence_pct
-            ],
-            persistent_absence_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.persistent_absence_pct
-            ],
-            suspensions_count=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.suspensions_count
-            ],
-            suspensions_rate=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.suspensions_rate
-            ],
-            permanent_exclusions_count=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.permanent_exclusions_count
-            ],
-            permanent_exclusions_rate=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.permanent_exclusions_rate
-            ],
-            pupil_teacher_ratio=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.pupil_teacher_ratio
-            ],
-            supply_staff_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.supply_staff_pct
-            ],
-            teachers_3plus_years_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.teachers_3plus_years_pct
-            ],
-            teacher_turnover_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.teacher_turnover_pct
-            ],
-            qts_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.qts_pct
-            ],
-            qualifications_level6_plus_pct=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.qualifications_level6_plus_pct
-            ],
-            income_per_pupil_gbp=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.income_per_pupil_gbp
-            ],
-            expenditure_per_pupil_gbp=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.expenditure_per_pupil_gbp
-            ],
-            staff_costs_pct_of_expenditure=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.staff_costs_pct_of_expenditure
-            ],
-            revenue_reserve_per_pupil_gbp=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.revenue_reserve_per_pupil_gbp
-            ],
-            teaching_staff_costs_per_pupil_gbp=[
-                SchoolTrendBenchmarkPointResponse(**point.__dict__)
-                for point in result.benchmarks.teaching_staff_costs_per_pupil_gbp
-            ],
-        ),
-        completeness=SchoolTrendsCompletenessResponse(
-            status=result.completeness.status,
-            reason_code=result.completeness.reason_code,
-            last_updated_at=result.completeness.last_updated_at,
-            years_available=(
-                list(result.completeness.years_available)
-                if result.completeness.years_available is not None
-                else None
-            ),
-        ),
+        series=_to_school_trends_series_response(result.series),
+        benchmarks=_to_school_trends_benchmarks_response(result.benchmarks),
+        completeness=_to_school_trends_completeness_response(result.completeness),
         section_completeness=SchoolTrendsSectionCompletenessResponse(
-            demographics=SchoolTrendsCompletenessResponse(
-                status=result.section_completeness.demographics.status,
-                reason_code=result.section_completeness.demographics.reason_code,
-                last_updated_at=result.section_completeness.demographics.last_updated_at,
-                years_available=(
-                    list(result.section_completeness.demographics.years_available)
-                    if result.section_completeness.demographics.years_available is not None
-                    else None
-                ),
+            demographics=_to_school_trends_completeness_response(
+                result.section_completeness.demographics
             ),
-            attendance=SchoolTrendsCompletenessResponse(
-                status=result.section_completeness.attendance.status,
-                reason_code=result.section_completeness.attendance.reason_code,
-                last_updated_at=result.section_completeness.attendance.last_updated_at,
-                years_available=(
-                    list(result.section_completeness.attendance.years_available)
-                    if result.section_completeness.attendance.years_available is not None
-                    else None
-                ),
+            attendance=_to_school_trends_completeness_response(
+                result.section_completeness.attendance
             ),
-            behaviour=SchoolTrendsCompletenessResponse(
-                status=result.section_completeness.behaviour.status,
-                reason_code=result.section_completeness.behaviour.reason_code,
-                last_updated_at=result.section_completeness.behaviour.last_updated_at,
-                years_available=(
-                    list(result.section_completeness.behaviour.years_available)
-                    if result.section_completeness.behaviour.years_available is not None
-                    else None
-                ),
+            behaviour=_to_school_trends_completeness_response(
+                result.section_completeness.behaviour
             ),
-            workforce=SchoolTrendsCompletenessResponse(
-                status=result.section_completeness.workforce.status,
-                reason_code=result.section_completeness.workforce.reason_code,
-                last_updated_at=result.section_completeness.workforce.last_updated_at,
-                years_available=(
-                    list(result.section_completeness.workforce.years_available)
-                    if result.section_completeness.workforce.years_available is not None
-                    else None
-                ),
+            workforce=_to_school_trends_completeness_response(
+                result.section_completeness.workforce
             ),
-            finance=SchoolTrendsCompletenessResponse(
-                status=result.section_completeness.finance.status,
-                reason_code=result.section_completeness.finance.reason_code,
-                last_updated_at=result.section_completeness.finance.last_updated_at,
-                years_available=(
-                    list(result.section_completeness.finance.years_available)
-                    if result.section_completeness.finance.years_available is not None
-                    else None
-                ),
-            ),
+            finance=_to_school_trends_completeness_response(result.section_completeness.finance),
         ),
     )
 
@@ -797,4 +379,56 @@ def get_school_trend_dashboard(
                 else None
             ),
         ),
+    )
+
+
+def _to_school_trend_point_response(point: SchoolTrendPointDto) -> SchoolTrendPointResponse:
+    return SchoolTrendPointResponse(
+        academic_year=point.academic_year,
+        value=point.value,
+        delta=point.delta,
+        direction=point.direction,
+    )
+
+
+def _to_school_trend_benchmark_point_response(
+    point: SchoolTrendBenchmarkPointDto,
+) -> SchoolTrendBenchmarkPointResponse:
+    return SchoolTrendBenchmarkPointResponse(**point.__dict__)
+
+
+def _to_school_trends_series_response(series: SchoolTrendsSeriesDto) -> SchoolTrendsSeriesResponse:
+    return SchoolTrendsSeriesResponse(
+        **{
+            field_name: [
+                _to_school_trend_point_response(point) for point in getattr(series, field_name)
+            ]
+            for field_name in SchoolTrendsSeriesResponse.model_fields
+        }
+    )
+
+
+def _to_school_trends_benchmarks_response(
+    benchmarks: SchoolTrendsBenchmarksDto,
+) -> SchoolTrendsBenchmarksResponse:
+    return SchoolTrendsBenchmarksResponse(
+        **{
+            field_name: [
+                _to_school_trend_benchmark_point_response(point)
+                for point in getattr(benchmarks, field_name)
+            ]
+            for field_name in SchoolTrendsBenchmarksResponse.model_fields
+        }
+    )
+
+
+def _to_school_trends_completeness_response(
+    completeness: SchoolTrendsCompletenessDto,
+) -> SchoolTrendsCompletenessResponse:
+    years_available = completeness.years_available
+    return SchoolTrendsCompletenessResponse(
+        status=completeness.status,
+        reason_code=completeness.reason_code,
+        last_updated_at=completeness.last_updated_at,
+        years_available=list(years_available) if years_available is not None else None,
     )

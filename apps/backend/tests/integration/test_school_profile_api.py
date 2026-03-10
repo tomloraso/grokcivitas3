@@ -32,6 +32,7 @@ from civitas.application.school_profiles.dto import (
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
     SchoolProfileSectionCompletenessDto,
+    SchoolWorkforceBreakdownItemDto,
     SchoolWorkforceLatestDto,
 )
 from civitas.application.school_profiles.errors import (
@@ -196,6 +197,77 @@ def _profile_response() -> SchoolProfileResponseDto:
             teacher_turnover_pct=9.8,
             qts_pct=95.2,
             qualifications_level6_plus_pct=81.1,
+            teacher_headcount_total=42.0,
+            teacher_fte_total=39.5,
+            support_staff_headcount_total=28.0,
+            support_staff_fte_total=22.4,
+            leadership_headcount=4.0,
+            teacher_average_mean_salary_gbp=46850.0,
+            teacher_absence_pct=8.6,
+            teacher_vacancy_rate=1.7,
+            third_party_support_staff_headcount=3.0,
+            teacher_sex_breakdown=(
+                SchoolWorkforceBreakdownItemDto(
+                    key="female",
+                    label="Female",
+                    headcount=28.0,
+                    fte=25.8,
+                    headcount_pct=66.7,
+                    fte_pct=65.3,
+                ),
+                SchoolWorkforceBreakdownItemDto(
+                    key="male",
+                    label="Male",
+                    headcount=14.0,
+                    fte=13.7,
+                    headcount_pct=33.3,
+                    fte_pct=34.7,
+                ),
+            ),
+            teacher_age_breakdown=(
+                SchoolWorkforceBreakdownItemDto(
+                    key="30_to_39",
+                    label="30 to 39",
+                    headcount=18.0,
+                    fte=17.0,
+                    headcount_pct=42.9,
+                    fte_pct=43.0,
+                ),
+            ),
+            teacher_ethnicity_breakdown=(
+                SchoolWorkforceBreakdownItemDto(
+                    key="white",
+                    label="White",
+                    headcount=31.0,
+                    fte=29.0,
+                    headcount_pct=73.8,
+                    fte_pct=73.4,
+                ),
+            ),
+            teacher_qualification_breakdown=(
+                SchoolWorkforceBreakdownItemDto(
+                    key="qualified_teacher_status",
+                    label="Qualified teacher status",
+                    headcount=40.0,
+                    fte=37.9,
+                    headcount_pct=95.2,
+                    fte_pct=96.0,
+                ),
+            ),
+            support_staff_post_mix=(
+                SchoolWorkforceBreakdownItemDto(
+                    key="teaching_assistant",
+                    label="Teaching assistant",
+                    headcount=11.0,
+                    fte=8.5,
+                ),
+                SchoolWorkforceBreakdownItemDto(
+                    key="administrative_clerical",
+                    label="Administrative / clerical",
+                    headcount=6.0,
+                    fte=5.2,
+                ),
+            ),
         ),
         finance_latest=SchoolFinanceLatestDto(
             academic_year="2023/24",
@@ -447,6 +519,16 @@ def test_get_school_profile_returns_expected_contract() -> None:
         "capability_key": None,
         "reason_code": "anonymous_user",
     }
+    assert payload["workforce_latest"]["teacher_headcount_total"] == 42.0
+    assert payload["workforce_latest"]["teacher_average_mean_salary_gbp"] == 46850.0
+    assert payload["workforce_latest"]["teacher_absence_pct"] == 8.6
+    assert payload["workforce_latest"]["teacher_vacancy_rate"] == 1.7
+    assert payload["workforce_latest"]["third_party_support_staff_headcount"] == 3.0
+    assert payload["workforce_latest"]["teacher_sex_breakdown"][0]["key"] == "female"
+    assert payload["workforce_latest"]["teacher_age_breakdown"][0]["label"] == "30 to 39"
+    assert payload["workforce_latest"]["teacher_ethnicity_breakdown"][0]["label"] == "White"
+    assert payload["workforce_latest"]["teacher_qualification_breakdown"][0]["headcount"] == 40.0
+    assert payload["workforce_latest"]["support_staff_post_mix"][0]["label"] == "Teaching assistant"
     assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
     assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
     assert payload["benchmarks"] == {"metrics": []}

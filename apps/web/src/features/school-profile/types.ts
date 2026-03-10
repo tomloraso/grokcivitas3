@@ -98,6 +98,15 @@ export interface BehaviourLatestVM {
   permanentExclusionsRate: number | null;
 }
 
+export interface WorkforceBreakdownItemVM {
+  key: string;
+  label: string;
+  headcount: number | null;
+  fte: number | null;
+  headcountPct: number | null;
+  ftePct: number | null;
+}
+
 export interface WorkforceLatestVM {
   academicYear: string;
   pupilTeacherRatio: number | null;
@@ -106,6 +115,20 @@ export interface WorkforceLatestVM {
   teacherTurnoverPct: number | null;
   qtsPct: number | null;
   qualificationsLevel6PlusPct: number | null;
+  teacherHeadcountTotal: number | null;
+  teacherFteTotal: number | null;
+  supportStaffHeadcountTotal: number | null;
+  supportStaffFteTotal: number | null;
+  leadershipHeadcount: number | null;
+  teacherAverageMeanSalaryGbp: number | null;
+  teacherAbsencePct: number | null;
+  teacherVacancyRate: number | null;
+  thirdPartySupportStaffHeadcount: number | null;
+  teacherSexBreakdown: WorkforceBreakdownItemVM[];
+  teacherAgeBreakdown: WorkforceBreakdownItemVM[];
+  teacherEthnicityBreakdown: WorkforceBreakdownItemVM[];
+  teacherQualificationBreakdown: WorkforceBreakdownItemVM[];
+  supportStaffPostMix: WorkforceBreakdownItemVM[];
 }
 
 export interface FinanceLatestVM {

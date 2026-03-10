@@ -243,6 +243,136 @@ export const METRIC_CATALOG: Record<string, MetricCatalogEntry> = {
     section: "workforce",
     unit: "percent"
   },
+  leadership_headcount: {
+    key: "leadership_headcount",
+    label: "Leadership Headcount",
+    description: "Teachers in headteacher, deputy headteacher, and assistant headteacher posts in the latest published workforce census.",
+    section: "workforce",
+    unit: "count"
+  },
+  teacher_headcount_total: {
+    key: "teacher_headcount_total",
+    label: "Teacher Headcount",
+    description: "Total teacher headcount recorded for the school in the latest workforce census.",
+    section: "workforce",
+    unit: "count"
+  },
+  teacher_fte_total: {
+    key: "teacher_fte_total",
+    label: "Teacher FTE",
+    description: "Full-time equivalent teaching staff, which adjusts part-time contracts onto a comparable basis.",
+    section: "workforce",
+    unit: "count",
+    decimals: 1
+  },
+  support_staff_headcount_total: {
+    key: "support_staff_headcount_total",
+    label: "Support Staff Headcount",
+    description: "Total support staff headcount across teaching assistants, admin, auxiliary, and other support roles.",
+    section: "workforce",
+    unit: "count"
+  },
+  support_staff_fte_total: {
+    key: "support_staff_fte_total",
+    label: "Support Staff FTE",
+    description: "Full-time equivalent support staff, adjusting for part-time and fractional contracts.",
+    section: "workforce",
+    unit: "count",
+    decimals: 1
+  },
+  leadership_share_of_teachers: {
+    key: "leadership_share_of_teachers",
+    label: "Leadership Share of Teachers",
+    description: "The share of teachers working in headteacher, deputy, or assistant headteacher posts.",
+    section: "workforce",
+    unit: "percent"
+  },
+  teacher_average_mean_salary_gbp: {
+    key: "teacher_average_mean_salary_gbp",
+    label: "Average Teacher Salary",
+    description: "Mean salary for teachers in the school, based on the latest published teacher pay return.",
+    section: "workforce",
+    unit: "currency"
+  },
+  teacher_average_median_salary_gbp: {
+    key: "teacher_average_median_salary_gbp",
+    label: "Median Teacher Salary",
+    description: "Median teacher salary, which is less affected by a small number of very high salaries.",
+    section: "workforce",
+    unit: "currency"
+  },
+  teachers_on_leadership_pay_range_pct: {
+    key: "teachers_on_leadership_pay_range_pct",
+    label: "Leadership Pay Range",
+    description: "Teachers paid on the leadership pay range as a share of the teaching workforce.",
+    section: "workforce",
+    unit: "percent"
+  },
+  teacher_absence_pct: {
+    key: "teacher_absence_pct",
+    label: "Teachers Taking Absence",
+    description: "The share of teachers who took at least one period of recorded absence in the year.",
+    section: "workforce",
+    unit: "percent"
+  },
+  teacher_absence_days_total: {
+    key: "teacher_absence_days_total",
+    label: "Teacher Absence Days",
+    description: "Total teacher working days lost to recorded absence in the year.",
+    section: "workforce",
+    unit: "count"
+  },
+  teacher_absence_days_average: {
+    key: "teacher_absence_days_average",
+    label: "Avg Absence Days (Affected Teachers)",
+    description: "Average days lost among teachers who took absence.",
+    section: "workforce",
+    unit: "count",
+    decimals: 1
+  },
+  teacher_absence_days_average_all_teachers: {
+    key: "teacher_absence_days_average_all_teachers",
+    label: "Avg Absence Days (All Teachers)",
+    description: "Average days lost across the whole teaching workforce, including teachers with no recorded absence.",
+    section: "workforce",
+    unit: "count",
+    decimals: 1
+  },
+  teacher_vacancy_count: {
+    key: "teacher_vacancy_count",
+    label: "Teacher Vacancies",
+    description: "The number of unfilled teacher vacancies recorded at the census point.",
+    section: "workforce",
+    unit: "count"
+  },
+  teacher_vacancy_rate: {
+    key: "teacher_vacancy_rate",
+    label: "Teacher Vacancy Rate",
+    description: "Teacher vacancies as a share of the teaching workforce.",
+    section: "workforce",
+    unit: "percent"
+  },
+  teacher_tempfilled_vacancy_count: {
+    key: "teacher_tempfilled_vacancy_count",
+    label: "Temp-filled Vacancies",
+    description: "Teacher vacancies being covered temporarily rather than filled permanently.",
+    section: "workforce",
+    unit: "count"
+  },
+  teacher_tempfilled_vacancy_rate: {
+    key: "teacher_tempfilled_vacancy_rate",
+    label: "Temp-filled Vacancy Rate",
+    description: "Temp-filled teacher vacancies as a share of the teaching workforce.",
+    section: "workforce",
+    unit: "percent"
+  },
+  third_party_support_staff_headcount: {
+    key: "third_party_support_staff_headcount",
+    label: "Third-party Support Staff",
+    description: "Support staff working in school but employed by third-party organisations.",
+    section: "workforce",
+    unit: "count"
+  },
   attainment8_average: {
     key: "attainment8_average",
     label: "Attainment 8",
@@ -427,11 +557,29 @@ export const BEHAVIOUR_METRIC_KEYS = [
 
 export const WORKFORCE_METRIC_KEYS = [
   "pupil_teacher_ratio",
+  "teacher_headcount_total",
+  "teacher_fte_total",
+  "support_staff_headcount_total",
+  "support_staff_fte_total",
+  "leadership_headcount",
   "supply_staff_pct",
+  "third_party_support_staff_headcount",
   "teachers_3plus_years_pct",
   "teacher_turnover_pct",
   "qts_pct",
-  "qualifications_level6_plus_pct"
+  "qualifications_level6_plus_pct",
+  "leadership_share_of_teachers",
+  "teacher_average_mean_salary_gbp",
+  "teacher_average_median_salary_gbp",
+  "teachers_on_leadership_pay_range_pct",
+  "teacher_absence_pct",
+  "teacher_absence_days_total",
+  "teacher_absence_days_average",
+  "teacher_absence_days_average_all_teachers",
+  "teacher_vacancy_count",
+  "teacher_vacancy_rate",
+  "teacher_tempfilled_vacancy_count",
+  "teacher_tempfilled_vacancy_rate"
 ];
 
 export function getMetricCatalogEntry(metricKey: string): MetricCatalogEntry | null {
@@ -449,7 +597,12 @@ export function formatMetricValue(
 
   switch (unit) {
     case "count":
-      return Math.round(value).toLocaleString("en-GB");
+      return value.toLocaleString("en-GB", {
+        minimumFractionDigits:
+          decimalsOverride ?? (Number.isInteger(value) ? 0 : 1),
+        maximumFractionDigits:
+          decimalsOverride ?? (Number.isInteger(value) ? 0 : 1)
+      });
     case "currency":
       if (value >= 1_000_000) return `£${(value / 1_000_000).toFixed(1)}m`;
       if (value >= 1_000) return `£${Math.round(value / 1_000)}k`;
@@ -479,7 +632,10 @@ export function formatMetricDelta(value: number | null, unit: MetricUnit): strin
     case "currency":
       return `${prefix}${formatMetricValue(value, unit)}`;
     case "count":
-      return `${prefix}${Math.round(value).toLocaleString("en-GB")}`;
+      return `${prefix}${value.toLocaleString("en-GB", {
+        minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+        maximumFractionDigits: Number.isInteger(value) ? 0 : 1
+      })}`;
     case "ratio":
       return `${prefix}${value.toFixed(1)}`;
     case "rate":

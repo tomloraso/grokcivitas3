@@ -422,7 +422,7 @@ export interface components {
             /** Count */
             count: number;
             /** Schools */
-            schools: components["schemas"]["AccountFavouriteSchoolResponse"][];
+            schools?: components["schemas"]["AccountFavouriteSchoolResponse"][];
         };
         /** AuthStartRequest */
         AuthStartRequest: {
@@ -1308,6 +1308,21 @@ export interface components {
             /** Years Available */
             years_available?: string[] | null;
         };
+        /** SchoolProfileWorkforceBreakdownItemResponse */
+        SchoolProfileWorkforceBreakdownItemResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Headcount */
+            headcount: number | null;
+            /** Fte */
+            fte?: number | null;
+            /** Headcount Pct */
+            headcount_pct?: number | null;
+            /** Fte Pct */
+            fte_pct?: number | null;
+        };
         /** SchoolProfileWorkforceLatestResponse */
         SchoolProfileWorkforceLatestResponse: {
             /** Academic Year */
@@ -1324,6 +1339,34 @@ export interface components {
             qts_pct: number | null;
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: number | null;
+            /** Teacher Headcount Total */
+            teacher_headcount_total?: number | null;
+            /** Teacher Fte Total */
+            teacher_fte_total?: number | null;
+            /** Support Staff Headcount Total */
+            support_staff_headcount_total?: number | null;
+            /** Support Staff Fte Total */
+            support_staff_fte_total?: number | null;
+            /** Leadership Headcount */
+            leadership_headcount?: number | null;
+            /** Teacher Average Mean Salary Gbp */
+            teacher_average_mean_salary_gbp?: number | null;
+            /** Teacher Absence Pct */
+            teacher_absence_pct?: number | null;
+            /** Teacher Vacancy Rate */
+            teacher_vacancy_rate?: number | null;
+            /** Third Party Support Staff Headcount */
+            third_party_support_staff_headcount?: number | null;
+            /** Teacher Sex Breakdown */
+            teacher_sex_breakdown?: components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"][];
+            /** Teacher Age Breakdown */
+            teacher_age_breakdown?: components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"][];
+            /** Teacher Ethnicity Breakdown */
+            teacher_ethnicity_breakdown?: components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"][];
+            /** Teacher Qualification Breakdown */
+            teacher_qualification_breakdown?: components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"][];
+            /** Support Staff Post Mix */
+            support_staff_post_mix?: components["schemas"]["SchoolProfileWorkforceBreakdownItemResponse"][];
         };
         /** SchoolSearchAcademicMetricResponse */
         SchoolSearchAcademicMetricResponse: {
@@ -1483,6 +1526,40 @@ export interface components {
             qts_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Headcount Total */
+            teacher_headcount_total?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Fte Total */
+            teacher_fte_total?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Support Staff Headcount Total */
+            support_staff_headcount_total?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Support Staff Fte Total */
+            support_staff_fte_total?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Leadership Share Of Teachers */
+            leadership_share_of_teachers?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Average Mean Salary Gbp */
+            teacher_average_mean_salary_gbp?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Average Median Salary Gbp */
+            teacher_average_median_salary_gbp?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teachers On Leadership Pay Range Pct */
+            teachers_on_leadership_pay_range_pct?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Absence Pct */
+            teacher_absence_pct?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Absence Days Total */
+            teacher_absence_days_total?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Absence Days Average */
+            teacher_absence_days_average?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Absence Days Average All Teachers */
+            teacher_absence_days_average_all_teachers?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Vacancy Count */
+            teacher_vacancy_count?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Vacancy Rate */
+            teacher_vacancy_rate?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Tempfilled Vacancy Count */
+            teacher_tempfilled_vacancy_count?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Tempfilled Vacancy Rate */
+            teacher_tempfilled_vacancy_rate?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Third Party Support Staff Headcount */
+            third_party_support_staff_headcount?: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
             /** Income Per Pupil Gbp */
             income_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
             /** Expenditure Per Pupil Gbp */
@@ -1587,6 +1664,40 @@ export interface components {
             qts_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Headcount Total */
+            teacher_headcount_total?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Fte Total */
+            teacher_fte_total?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Support Staff Headcount Total */
+            support_staff_headcount_total?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Support Staff Fte Total */
+            support_staff_fte_total?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Leadership Share Of Teachers */
+            leadership_share_of_teachers?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Average Mean Salary Gbp */
+            teacher_average_mean_salary_gbp?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Average Median Salary Gbp */
+            teacher_average_median_salary_gbp?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teachers On Leadership Pay Range Pct */
+            teachers_on_leadership_pay_range_pct?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Absence Pct */
+            teacher_absence_pct?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Absence Days Total */
+            teacher_absence_days_total?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Absence Days Average */
+            teacher_absence_days_average?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Absence Days Average All Teachers */
+            teacher_absence_days_average_all_teachers?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Vacancy Count */
+            teacher_vacancy_count?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Vacancy Rate */
+            teacher_vacancy_rate?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Tempfilled Vacancy Count */
+            teacher_tempfilled_vacancy_count?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Tempfilled Vacancy Rate */
+            teacher_tempfilled_vacancy_rate?: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Third Party Support Staff Headcount */
+            third_party_support_staff_headcount?: components["schemas"]["SchoolTrendPointResponse"][];
             /** Income Per Pupil Gbp */
             income_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
             /** Expenditure Per Pupil Gbp */

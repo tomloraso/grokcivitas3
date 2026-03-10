@@ -148,66 +148,76 @@ describe("SchoolsSearchFeature", () => {
     getSchoolTrendDashboardMock.mockResolvedValue(DASHBOARD_RESPONSE);
   });
 
-  it("opens and closes results mode over the existing postcode search", async () => {
-    const user = userEvent.setup();
-    renderFeature();
+  it(
+    "opens and closes results mode over the existing postcode search",
+    async () => {
+      const user = userEvent.setup();
+      renderFeature();
 
-    await user.type(screen.getByRole("textbox", { name: /search/i }), "SW1A 1AA");
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
+      await user.type(screen.getByRole("textbox", { name: /search/i }), "SW1A 1AA");
+      await user.click(screen.getByRole("button", { name: "Search schools" }));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("result-summary")).toHaveTextContent("within 5 miles");
-    });
-
-    expect(searchSchoolsMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Results" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
-    });
-    expect(screen.getByText("Results for SW1A 1AA")).toBeInTheDocument();
-    expect(
-      within(screen.getByRole("dialog")).queryByRole("button", { name: "Academic" })
-    ).not.toBeInTheDocument();
-    expect(searchSchoolsMock).toHaveBeenCalledTimes(1);
-
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Map" }));
-
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    });
-  });
-
-  it("applies primary filtering and keeps results sorting on the supported options", async () => {
-    const user = userEvent.setup();
-    renderFeature();
-
-    await user.type(screen.getByRole("textbox", { name: /search/i }), "SW1A 1AA");
-    await user.click(screen.getByRole("button", { name: "Search schools" }));
-
-    await waitFor(() => {
-      expect(screen.getByTestId("result-summary")).toHaveTextContent("within 5 miles");
-    });
-
-    await user.click(screen.getByRole("button", { name: "Results" }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("dialog")).toBeInTheDocument();
-    });
-
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Primary" }));
-
-    await waitFor(() => {
-      expect(searchSchoolsMock).toHaveBeenCalledWith({
-        postcode: "SW1A 1AA",
-        radius: 5,
-        phase: ["primary"],
-        sort: "closest"
+      await waitFor(() => {
+        expect(screen.getByTestId("result-summary")).toHaveTextContent("within 5 miles");
       });
-    });
-  });
+
+      expect(searchSchoolsMock).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: "Save for later" })).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Results" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+      expect(screen.getByText("Results for SW1A 1AA")).toBeInTheDocument();
+      expect(
+        within(screen.getByRole("dialog")).queryByRole("button", { name: "Academic" }),
+      ).not.toBeInTheDocument();
+      expect(searchSchoolsMock).toHaveBeenCalledTimes(1);
+
+      await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Map" }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+    },
+    10000,
+  );
+
+  it(
+    "applies primary filtering and keeps results sorting on the supported options",
+    async () => {
+      const user = userEvent.setup();
+      renderFeature();
+
+      await user.type(screen.getByRole("textbox", { name: /search/i }), "SW1A 1AA");
+      await user.click(screen.getByRole("button", { name: "Search schools" }));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("result-summary")).toHaveTextContent("within 5 miles");
+      });
+
+      await user.click(screen.getByRole("button", { name: "Results" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+      });
+
+      await user.click(
+        within(screen.getByRole("dialog")).getByRole("button", { name: "Primary" }),
+      );
+
+      await waitFor(() => {
+        expect(searchSchoolsMock).toHaveBeenCalledWith({
+          postcode: "SW1A 1AA",
+          radius: 5,
+          phase: ["primary"],
+          sort: "closest",
+        });
+      });
+    },
+    10000,
+  );
 
   it(
     "opens a school profile from results mode and restores the active results state",

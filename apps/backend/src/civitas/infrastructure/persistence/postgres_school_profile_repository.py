@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 from typing import Literal, Mapping, Sequence, cast
 
@@ -39,6 +40,7 @@ from civitas.domain.school_profiles.models import (
     SchoolProfileCompleteness,
     SchoolProfileSchool,
     SchoolProfileSectionCompleteness,
+    SchoolWorkforceBreakdownItem,
     SchoolWorkforceLatest,
 )
 
@@ -460,6 +462,15 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 teacher_turnover_pct,
                                 qts_pct,
                                 qualifications_level6_plus_pct,
+                                teacher_headcount_total,
+                                teacher_fte_total,
+                                support_staff_headcount_total,
+                                support_staff_fte_total,
+                                leadership_headcount,
+                                teacher_average_mean_salary_gbp,
+                                teacher_absence_pct,
+                                teacher_vacancy_rate,
+                                third_party_support_staff_headcount,
                                 updated_at
                             FROM school_workforce_yearly
                             WHERE urn = :urn
@@ -521,6 +532,95 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     .mappings()
                     .first()
                 )
+                teacher_breakdown_rows_by_group: dict[str, list[dict[str, object]]] = {}
+                support_staff_mix_rows: list[dict[str, object]] = []
+                workforce_academic_year = (
+                    _to_optional_str(workforce_row["academic_year"])
+                    if workforce_row is not None
+                    else None
+                )
+                if workforce_academic_year is not None:
+                    teacher_breakdown_rows = [
+                        dict(raw_row)
+                        for raw_row in connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    characteristic_group,
+                                    characteristic,
+                                    teacher_headcount,
+                                    teacher_fte,
+                                    teacher_headcount_pct,
+                                    teacher_fte_pct
+                                FROM school_teacher_characteristics_yearly
+                                WHERE urn = :urn
+                                  AND academic_year = :academic_year
+                                  AND lower(characteristic_group) IN (
+                                      'sex',
+                                      'age group',
+                                      'ethnicity major',
+                                      'qts status'
+                                  )
+                                  AND (
+                                      teacher_headcount IS NOT NULL
+                                      OR teacher_fte IS NOT NULL
+                                      OR teacher_headcount_pct IS NOT NULL
+                                      OR teacher_fte_pct IS NOT NULL
+                                  )
+                                ORDER BY
+                                    CASE lower(characteristic_group)
+                                        WHEN 'sex' THEN 1
+                                        WHEN 'qts status' THEN 2
+                                        WHEN 'age group' THEN 3
+                                        WHEN 'ethnicity major' THEN 4
+                                        ELSE 5
+                                    END,
+                                    teacher_headcount_pct DESC NULLS LAST,
+                                    teacher_headcount DESC NULLS LAST,
+                                    characteristic ASC
+                                """
+                            ),
+                            {"urn": urn, "academic_year": workforce_academic_year},
+                        )
+                        .mappings()
+                        .all()
+                    ]
+                    for raw_row in teacher_breakdown_rows:
+                        group = _to_optional_str(raw_row["characteristic_group"])
+                        if group is None:
+                            continue
+                        teacher_breakdown_rows_by_group.setdefault(group.casefold(), []).append(
+                            raw_row
+                        )
+
+                    support_staff_mix_rows = [
+                        dict(raw_row)
+                        for raw_row in connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    post,
+                                    sum(support_staff_headcount) AS support_staff_headcount,
+                                    sum(support_staff_fte) AS support_staff_fte
+                                FROM school_support_staff_yearly
+                                WHERE urn = :urn
+                                  AND academic_year = :academic_year
+                                  AND lower(post) <> 'total'
+                                GROUP BY post
+                                HAVING
+                                    bool_or(support_staff_headcount IS NOT NULL)
+                                    OR bool_or(support_staff_fte IS NOT NULL)
+                                ORDER BY
+                                    sum(support_staff_headcount) DESC NULLS LAST,
+                                    sum(support_staff_fte) DESC NULLS LAST,
+                                    post ASC
+                                """
+                            ),
+                            {"urn": urn, "academic_year": workforce_academic_year},
+                        )
+                        .mappings()
+                        .all()
+                    ]
                 send_primary_need_rows: list[dict[str, object]] = []
                 home_language_rows: list[dict[str, object]] = []
                 demographics_academic_year = (
@@ -965,6 +1065,38 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 qualifications_level6_plus_pct=_to_optional_float(
                     workforce_row["qualifications_level6_plus_pct"]
                 ),
+                teacher_headcount_total=_to_optional_float(
+                    workforce_row["teacher_headcount_total"]
+                ),
+                teacher_fte_total=_to_optional_float(workforce_row["teacher_fte_total"]),
+                support_staff_headcount_total=_to_optional_float(
+                    workforce_row["support_staff_headcount_total"]
+                ),
+                support_staff_fte_total=_to_optional_float(
+                    workforce_row["support_staff_fte_total"]
+                ),
+                leadership_headcount=_to_optional_float(workforce_row["leadership_headcount"]),
+                teacher_average_mean_salary_gbp=_to_optional_float(
+                    workforce_row["teacher_average_mean_salary_gbp"]
+                ),
+                teacher_absence_pct=_to_optional_float(workforce_row["teacher_absence_pct"]),
+                teacher_vacancy_rate=_to_optional_float(workforce_row["teacher_vacancy_rate"]),
+                third_party_support_staff_headcount=_to_optional_float(
+                    workforce_row["third_party_support_staff_headcount"]
+                ),
+                teacher_sex_breakdown=_build_teacher_breakdown_items(
+                    teacher_breakdown_rows_by_group.get("sex", ())
+                ),
+                teacher_age_breakdown=_build_teacher_breakdown_items(
+                    teacher_breakdown_rows_by_group.get("age group", ())
+                ),
+                teacher_ethnicity_breakdown=_build_teacher_breakdown_items(
+                    teacher_breakdown_rows_by_group.get("ethnicity major", ())
+                ),
+                teacher_qualification_breakdown=_build_teacher_breakdown_items(
+                    teacher_breakdown_rows_by_group.get("qts status", ())
+                ),
+                support_staff_post_mix=_build_support_staff_breakdown_items(support_staff_mix_rows),
             )
 
         finance_latest = None
@@ -1519,6 +1651,50 @@ def _to_optional_str(value: object) -> str | None:
     return str(value)
 
 
+def _build_teacher_breakdown_items(
+    rows: Sequence[Mapping[str, object]],
+) -> tuple[SchoolWorkforceBreakdownItem, ...]:
+    items: list[SchoolWorkforceBreakdownItem] = []
+    for row in rows:
+        label = _to_optional_str(row.get("characteristic"))
+        if label is None:
+            continue
+        items.append(
+            SchoolWorkforceBreakdownItem(
+                key=_to_breakdown_key(label),
+                label=label,
+                headcount=_to_optional_float(row.get("teacher_headcount")),
+                fte=_to_optional_float(row.get("teacher_fte")),
+                headcount_pct=_to_optional_float(row.get("teacher_headcount_pct")),
+                fte_pct=_to_optional_float(row.get("teacher_fte_pct")),
+            )
+        )
+    return tuple(items)
+
+
+def _build_support_staff_breakdown_items(
+    rows: Sequence[Mapping[str, object]],
+) -> tuple[SchoolWorkforceBreakdownItem, ...]:
+    items: list[SchoolWorkforceBreakdownItem] = []
+    for row in rows:
+        label = _to_optional_str(row.get("post"))
+        if label is None:
+            continue
+        items.append(
+            SchoolWorkforceBreakdownItem(
+                key=_to_breakdown_key(label),
+                label=label,
+                headcount=_to_optional_float(row.get("support_staff_headcount")),
+                fte=_to_optional_float(row.get("support_staff_fte")),
+            )
+        )
+    return tuple(items)
+
+
+def _to_breakdown_key(label: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", label.strip().casefold()).strip("_")
+
+
 def _to_optional_datetime(value: object) -> datetime | None:
     if value is None:
         return None
@@ -1773,15 +1949,51 @@ def _build_workforce_completeness(
         for value in (
             workforce_latest.pupil_teacher_ratio,
             workforce_latest.supply_staff_pct,
-            workforce_latest.teachers_3plus_years_pct,
-            workforce_latest.teacher_turnover_pct,
             workforce_latest.qts_pct,
             workforce_latest.qualifications_level6_plus_pct,
+            workforce_latest.teacher_headcount_total,
+            workforce_latest.teacher_fte_total,
+            workforce_latest.support_staff_headcount_total,
+            workforce_latest.support_staff_fte_total,
+            workforce_latest.leadership_headcount,
+            workforce_latest.teacher_average_mean_salary_gbp,
+            workforce_latest.teacher_absence_pct,
+            workforce_latest.teacher_vacancy_rate,
+            workforce_latest.third_party_support_staff_headcount,
         )
     ):
         return _section_completeness(
             status="partial",
             reason_code="partial_metric_coverage",
+            last_updated_at=workforce_updated_at,
+        )
+
+    if any(
+        len(items) == 0
+        for items in (
+            workforce_latest.teacher_sex_breakdown,
+            workforce_latest.teacher_age_breakdown,
+            workforce_latest.teacher_ethnicity_breakdown,
+            workforce_latest.teacher_qualification_breakdown,
+            workforce_latest.support_staff_post_mix,
+        )
+    ):
+        return _section_completeness(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=workforce_updated_at,
+        )
+
+    if any(
+        value is None
+        for value in (
+            workforce_latest.teachers_3plus_years_pct,
+            workforce_latest.teacher_turnover_pct,
+        )
+    ):
+        return _section_completeness(
+            status="partial",
+            reason_code="source_not_provided",
             last_updated_at=workforce_updated_at,
         )
 

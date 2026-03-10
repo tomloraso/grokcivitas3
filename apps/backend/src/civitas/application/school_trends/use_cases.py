@@ -127,6 +127,63 @@ DASHBOARD_METRIC_CATALOG: tuple[tuple[str, str, str, str], ...] = (
         "Level 6+ Qualifications (%)",
         "percent",
     ),
+    ("workforce", "teacher_headcount_total", "Teacher Headcount", "count"),
+    ("workforce", "teacher_fte_total", "Teacher FTE", "count"),
+    ("workforce", "support_staff_headcount_total", "Support Staff Headcount", "count"),
+    ("workforce", "support_staff_fte_total", "Support Staff FTE", "count"),
+    (
+        "workforce",
+        "leadership_share_of_teachers",
+        "Leadership Share of Teachers (%)",
+        "percent",
+    ),
+    (
+        "workforce",
+        "teacher_average_mean_salary_gbp",
+        "Average Teacher Salary",
+        "currency",
+    ),
+    (
+        "workforce",
+        "teacher_average_median_salary_gbp",
+        "Median Teacher Salary",
+        "currency",
+    ),
+    (
+        "workforce",
+        "teachers_on_leadership_pay_range_pct",
+        "Leadership Pay Range (%)",
+        "percent",
+    ),
+    ("workforce", "teacher_absence_pct", "Teachers Taking Absence (%)", "percent"),
+    ("workforce", "teacher_absence_days_total", "Teacher Absence Days", "count"),
+    ("workforce", "teacher_absence_days_average", "Average Absence Days", "count"),
+    (
+        "workforce",
+        "teacher_absence_days_average_all_teachers",
+        "Average Days Lost Across All Teachers",
+        "count",
+    ),
+    ("workforce", "teacher_vacancy_count", "Teacher Vacancies", "count"),
+    ("workforce", "teacher_vacancy_rate", "Teacher Vacancy Rate", "percent"),
+    (
+        "workforce",
+        "teacher_tempfilled_vacancy_count",
+        "Temp-Filled Teacher Vacancies",
+        "count",
+    ),
+    (
+        "workforce",
+        "teacher_tempfilled_vacancy_rate",
+        "Temp-Filled Vacancy Rate",
+        "percent",
+    ),
+    (
+        "workforce",
+        "third_party_support_staff_headcount",
+        "Third-Party Support Staff",
+        "count",
+    ),
     ("performance", "attainment8_average", "Attainment 8", "score"),
     ("performance", "progress8_average", "Progress 8", "score"),
     (
@@ -214,6 +271,7 @@ class GetSchoolTrendsUseCase:
             years_available=tuple(row.academic_year for row in workforce_rows),
             last_updated_at=workforce_series.latest_updated_at,
             has_partial_metric_coverage=_has_partial_metric_coverage_workforce(workforce_rows),
+            has_source_not_provided=_has_source_not_provided_workforce(workforce_rows),
         )
         finance_completeness = _build_finance_completeness(finance_series)
         benchmark_rows_by_metric = _group_benchmark_rows_by_metric(benchmark_series.rows)
@@ -322,6 +380,74 @@ class GetSchoolTrendsUseCase:
                 qualifications_level6_plus_pct=_build_metric_series(
                     rows=workforce_rows,
                     metric_value=lambda row: row.qualifications_level6_plus_pct,
+                ),
+                teacher_headcount_total=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_headcount_total,
+                ),
+                teacher_fte_total=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_fte_total,
+                ),
+                support_staff_headcount_total=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.support_staff_headcount_total,
+                ),
+                support_staff_fte_total=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.support_staff_fte_total,
+                ),
+                leadership_share_of_teachers=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.leadership_share_of_teachers,
+                ),
+                teacher_average_mean_salary_gbp=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_average_mean_salary_gbp,
+                ),
+                teacher_average_median_salary_gbp=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_average_median_salary_gbp,
+                ),
+                teachers_on_leadership_pay_range_pct=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teachers_on_leadership_pay_range_pct,
+                ),
+                teacher_absence_pct=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_absence_pct,
+                ),
+                teacher_absence_days_total=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_absence_days_total,
+                ),
+                teacher_absence_days_average=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_absence_days_average,
+                ),
+                teacher_absence_days_average_all_teachers=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_absence_days_average_all_teachers,
+                ),
+                teacher_vacancy_count=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_vacancy_count,
+                ),
+                teacher_vacancy_rate=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_vacancy_rate,
+                ),
+                teacher_tempfilled_vacancy_count=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_tempfilled_vacancy_count,
+                ),
+                teacher_tempfilled_vacancy_rate=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.teacher_tempfilled_vacancy_rate,
+                ),
+                third_party_support_staff_headcount=_build_metric_series(
+                    rows=workforce_rows,
+                    metric_value=lambda row: row.third_party_support_staff_headcount,
                 ),
                 income_per_pupil_gbp=_build_metric_series(
                     rows=finance_rows,
@@ -440,6 +566,74 @@ class GetSchoolTrendsUseCase:
                 qualifications_level6_plus_pct=_build_metric_benchmark_series(
                     rows_by_metric=benchmark_rows_by_metric,
                     metric_key="qualifications_level6_plus_pct",
+                ),
+                teacher_headcount_total=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_headcount_total",
+                ),
+                teacher_fte_total=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_fte_total",
+                ),
+                support_staff_headcount_total=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="support_staff_headcount_total",
+                ),
+                support_staff_fte_total=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="support_staff_fte_total",
+                ),
+                leadership_share_of_teachers=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="leadership_share_of_teachers",
+                ),
+                teacher_average_mean_salary_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_average_mean_salary_gbp",
+                ),
+                teacher_average_median_salary_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_average_median_salary_gbp",
+                ),
+                teachers_on_leadership_pay_range_pct=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teachers_on_leadership_pay_range_pct",
+                ),
+                teacher_absence_pct=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_absence_pct",
+                ),
+                teacher_absence_days_total=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_absence_days_total",
+                ),
+                teacher_absence_days_average=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_absence_days_average",
+                ),
+                teacher_absence_days_average_all_teachers=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_absence_days_average_all_teachers",
+                ),
+                teacher_vacancy_count=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_vacancy_count",
+                ),
+                teacher_vacancy_rate=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_vacancy_rate",
+                ),
+                teacher_tempfilled_vacancy_count=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_tempfilled_vacancy_count",
+                ),
+                teacher_tempfilled_vacancy_rate=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="teacher_tempfilled_vacancy_rate",
+                ),
+                third_party_support_staff_headcount=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="third_party_support_staff_headcount",
                 ),
                 income_per_pupil_gbp=_build_metric_benchmark_series(
                     rows_by_metric=benchmark_rows_by_metric,
@@ -646,6 +840,7 @@ def _build_completeness(
     years_available: tuple[str, ...],
     last_updated_at: datetime | None,
     has_partial_metric_coverage: bool,
+    has_source_not_provided: bool = False,
 ) -> SchoolTrendsCompletenessDto:
     if years_count == 0:
         return SchoolTrendsCompletenessDto(
@@ -665,6 +860,13 @@ def _build_completeness(
         return SchoolTrendsCompletenessDto(
             status="partial",
             reason_code="partial_metric_coverage",
+            last_updated_at=last_updated_at,
+            years_available=years_available,
+        )
+    if has_source_not_provided:
+        return SchoolTrendsCompletenessDto(
+            status="partial",
+            reason_code="source_not_provided",
             last_updated_at=last_updated_at,
             years_available=years_available,
         )
@@ -799,10 +1001,38 @@ def _has_partial_metric_coverage_workforce(rows: Sequence[SchoolWorkforceYearlyR
             for value in (
                 row.pupil_teacher_ratio,
                 row.supply_staff_pct,
-                row.teachers_3plus_years_pct,
-                row.teacher_turnover_pct,
                 row.qts_pct,
                 row.qualifications_level6_plus_pct,
+                row.teacher_headcount_total,
+                row.teacher_fte_total,
+                row.support_staff_headcount_total,
+                row.support_staff_fte_total,
+                row.leadership_share_of_teachers,
+                row.teacher_average_mean_salary_gbp,
+                row.teacher_average_median_salary_gbp,
+                row.teachers_on_leadership_pay_range_pct,
+                row.teacher_absence_pct,
+                row.teacher_absence_days_total,
+                row.teacher_absence_days_average,
+                row.teacher_absence_days_average_all_teachers,
+                row.teacher_vacancy_count,
+                row.teacher_vacancy_rate,
+                row.teacher_tempfilled_vacancy_count,
+                row.teacher_tempfilled_vacancy_rate,
+                row.third_party_support_staff_headcount,
+            )
+        ):
+            return True
+    return False
+
+
+def _has_source_not_provided_workforce(rows: Sequence[SchoolWorkforceYearlyRow]) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.teachers_3plus_years_pct,
+                row.teacher_turnover_pct,
             )
         ):
             return True
