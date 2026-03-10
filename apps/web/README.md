@@ -22,6 +22,20 @@ npm run generate:types
 
 ---
 
+## Design System
+
+The central design system & UX guide lives at **[`docs/architecture/design-system.md`](../../docs/architecture/design-system.md)**. It covers:
+
+- Colour palette, typography, and spacing tokens
+- Every UI primitive (Button, Card, StatCard, MetricGrid, TrendIndicator, Sparkline, etc.) with props and usage
+- Step-by-step cookbook for building new sections and pages
+- Layout patterns (profile, compare, mobile sticky bars)
+- Anti-patterns and rules
+
+**Read it before building any UI.** The sections below are kept for historical context but the central guide is the source of truth.
+
+---
+
 ## School Profile UI — Loira Voss design system (P9, 2026-03-09)
 
 ### Colour palette
