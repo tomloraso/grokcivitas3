@@ -17,7 +17,7 @@ The goal is to expose finance metrics as first-class school evidence, not as a s
 - profile latest values
 - finance trend series
 - benchmark materialization
-- compare-ready metric registration
+- stable metric keys compatible with later compare registration
 
 ## Why This Phase Exists
 
@@ -57,6 +57,7 @@ Out of scope:
 
 - maintained-school CFR parity without a verified school-level source contract
 - trust-level finance rollups beyond school-level facts needed for a school profile
+- school compare API or UI expansion for finance metrics in this phase
 - request-time workbook reads or ad hoc spreadsheet parsing in the API layer
 
 ## Definition Of Done

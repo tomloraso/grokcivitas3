@@ -14,12 +14,14 @@ Implement the Bronze ingest, Silver normalization, and Gold promotion path for a
 ## Bronze -> Silver -> Gold Flow
 
 1. Bronze:
-   - download raw annual workbook into `data/bronze/school_financial_benchmarks/<academic_year>/`
+   - download raw annual workbook into canonical `data/bronze/school_financial_benchmarks/<run-date>/`
+   - keep academic year in the raw filename and manifest metadata, not in the Bronze directory shape
    - write manifest with workbook URL, downloaded timestamp, checksum, sheet names, and parsed row counts
 2. Silver:
    - normalize `Academies` worksheet rows into `school_financials_aar_stage`
    - coerce numeric money fields and published percentages
    - reject rows with invalid URN or missing school name
+   - preserve blank or suppressed numeric cells as `null`
 3. Gold:
    - upsert into `school_financials_yearly`
    - compute derived per-pupil and ratio metrics into persisted Gold columns
@@ -112,4 +114,5 @@ Tests to add:
 1. Pipeline reruns are idempotent for the same workbook URL.
 2. Gold rows only upsert for schools with valid URNs.
 3. Derived metrics are deterministic and null-safe.
-4. Finance source freshness is queryable through existing operational patterns.
+4. Bronze layout remains compliant with the canonical run-date pipeline root.
+5. Finance source freshness is queryable through existing operational patterns.

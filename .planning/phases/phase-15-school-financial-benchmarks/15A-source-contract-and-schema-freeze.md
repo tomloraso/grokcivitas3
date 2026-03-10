@@ -135,8 +135,9 @@ Create `school_financials_aar_stage` keyed by `(run_id, academic_year, urn)` wit
 1. Ignore rows without a valid numeric `URN`.
 2. Preserve workbook values before derivation; do not overwrite published totals with recomputed totals.
 3. Convert percentage fields to numeric percentages in the same scale as source values.
-4. Capture workbook year in manifest metadata and normalize `academic_year` as `2023/2024`.
-5. Do not ingest `Central Services` in this phase.
+4. Normalize blank, suppressed, or unpublished numeric cells to `null` in Silver rather than rejecting the row.
+5. Capture workbook year in manifest metadata and normalize `academic_year` as `2023/2024`.
+6. Do not ingest `Central Services` in this phase.
 
 ## Repository Implementation Plan
 
@@ -154,4 +155,5 @@ Create `school_financials_aar_stage` keyed by `(run_id, academic_year, urn)` wit
 
 1. Source workbook URL and sheet contract are frozen in code and tests.
 2. Column-level parsing rules are deterministic and documented.
-3. Non-academy or trust-only data is not silently mixed into school-level rows.
+3. Blank or suppressed workbook cells are normalized predictably without being mistaken for zero.
+4. Non-academy or trust-only data is not silently mixed into school-level rows.
