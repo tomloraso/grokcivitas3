@@ -12,6 +12,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 1. **Read `docs/architecture.md`** before any non-trivial change. Follow layering and dependency rules.
 2. **Read `docs/architecture/backend-conventions.md`** for backend model/contract/port/mapping conventions before implementing backend features.
 3. **Read `docs/architecture/frontend-conventions.md`** for frontend layering, contract, and API-boundary conventions before implementing web features.
+3b. **Read `docs/architecture/design-system.md`** before building any UI — it codifies the Loira Voss visual language, button variants, StatCard rules, trend indicator neutrality, mobile-first breakpoints, and anti-patterns. Every new page, feature, or data stat must follow these standards.
 4. **Keep documentation in sync.** Update `docs/` when behavior changes and add new pages to `docs/index.md`.
 5. **Run commands from repo root.** Use canonical commands in `.agents/tooling.md`.
 6. **Use shared settings, not ad hoc env parsing.** Runtime code, CLI entrypoints, scripts, and test fixtures must read env-backed config through `civitas.infrastructure.config.settings`. Fix settings/bootstrap issues there; do not rely on shell-session exports or fixture-local dotenv parsing.
@@ -28,6 +29,7 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 | Topic | Guide |
 |------|-------|
 | Architecture | [.agents/architecture.md](.agents/architecture.md) |
+| Design System | [docs/architecture/design-system.md](docs/architecture/design-system.md) |
 | Workflow | [.agents/workflow.md](.agents/workflow.md) |
 | Auth | [.agents/auth.md](.agents/auth.md) |
 | Tooling | [.agents/tooling.md](.agents/tooling.md) |
