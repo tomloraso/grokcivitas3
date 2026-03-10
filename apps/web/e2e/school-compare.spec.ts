@@ -172,7 +172,7 @@ test("search entry builds a compare set and keeps compare context on profile nav
   await registerCompareRoutes(page);
 
   await gotoRoute(page, "/");
-  await page.getByLabel("Search*").fill("SW1A 1AA");
+  await page.getByRole("textbox", { name: "Search" }).fill("SW1A 1AA");
   await page.getByRole("button", { name: "Search schools" }).click();
 
   await expect(page.getByText("Primary Example")).toBeVisible();
@@ -181,7 +181,7 @@ test("search entry builds a compare set and keeps compare context on profile nav
   await page.getByRole("button", { name: "Add to compare" }).first().click();
   await page.getByRole("button", { name: "Add to compare" }).first().click();
 
-  await page.getByRole("link", { name: /Compare 2\/4 selected/ }).click();
+  await page.getByRole("link", { name: "Compare 2/4 selected" }).click();
 
   await expect(
     page.getByRole("heading", { name: "Compare schools side by side" })

@@ -271,7 +271,7 @@ test("search page shows header and suppresses footer for map-first layout", asyn
   await gotoRoute(page, "/");
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
-  await expect(page.getByLabel("Civitas - return to home")).toBeVisible();
+  await expect(page.getByLabel("[BRAND] - return to home")).toBeVisible();
 });
 
 test("click result navigates to school profile route with premium sections locked", async ({
@@ -291,8 +291,12 @@ test("click result navigates to school profile route with premium sections locke
   await expect(
     page.getByRole("heading", { name: "Camden Bridge Primary School", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Pupil Demographics")).toBeVisible();
-  await expect(page.getByText("Ofsted Profile")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Pupil Demographics", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Ofsted Profile", exact: true }),
+  ).toBeVisible();
   await expect(page.getByText("Analyst Preview")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Neighbourhood Context", exact: true }),
@@ -317,7 +321,7 @@ test("header brand link navigates back to search route", async ({ page }) => {
   await registerProfileRoutes(page);
 
   await gotoRoute(page, "/schools/100001");
-  await page.getByLabel("Civitas - return to home").click();
+  await page.getByLabel("[BRAND] - return to home").click();
   await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
 });

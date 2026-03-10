@@ -54,6 +54,7 @@
   --ref-color-brand-500: #00D4C8;
   --ref-color-brand-400: #33DDD8;
   --ref-color-brand-600: #00A89D;
+  --ref-color-brand-700: #00756E;
   --ref-color-accent-400: #22d3ee;
   --ref-color-accent-500: #06b6d4;
   --ref-color-phase-secondary: #E879F9;
@@ -151,8 +152,8 @@
   --color-border-subtle: var(--ref-color-border-subtle);
   --color-action-primary: var(--ref-color-brand-500);
   --color-action-primary-hover: var(--ref-color-brand-400);
-  --color-action-primary-solid: var(--ref-color-brand-600);
-  --color-action-primary-solid-hover: var(--ref-color-brand-500);
+  --color-action-primary-solid: var(--ref-color-brand-700);
+  --color-action-primary-solid-hover: var(--ref-color-brand-600);
   --color-action-secondary: var(--ref-color-accent-500);
   --color-state-success: var(--ref-color-success-500);
   --color-state-warning: var(--ref-color-warning-500);
@@ -229,8 +230,8 @@
   --color-border-subtle: var(--ref-color-border-subtle);
   --color-action-primary: var(--ref-color-brand-600);
   --color-action-primary-hover: var(--ref-color-brand-500);
-  --color-action-primary-solid: var(--ref-color-brand-600);
-  --color-action-primary-solid-hover: var(--ref-color-brand-500);
+  --color-action-primary-solid: var(--ref-color-brand-700);
+  --color-action-primary-solid-hover: var(--ref-color-brand-600);
   --color-action-secondary: var(--ref-color-accent-500);
   --color-state-success: var(--ref-color-success-500);
   --color-state-warning: var(--ref-color-warning-500);
