@@ -236,6 +236,71 @@ Wait ~5 minutes for the TTL to expire, or restart the API server to clear the in
 
 ---
 
+## BUG-007 - Compare "Clear all" does not persist — browse page shows stale selection count
+
+**Status:** FIXED
+**Severity:** Medium
+**Detected:** 2026-03-10
+**Files:**
+- `apps/web/src/features/school-compare/SchoolCompareFeature.tsx`
+
+### Root cause
+
+React Router's `navigate()` uses `startTransition` internally, making URL updates lower priority than `setItems([])` from `clearSchools()`. During the intermediate render, the URL→selection sync effect reads the stale URL (still containing URNs) and repopulates the cleared items before navigation completes.
+
+### Fix implemented
+
+Added `skipUrlSyncRef` — a ref-based flag that the "Clear all" handler sets to `true` before calling `clearSchools()` + `navigate()`. The URL→selection sync effect checks this flag and skips one cycle, preventing the stale URL from repopulating items.
+
+### Verification
+
+Manual testing confirms cleared state persists when navigating to browse schools.
+
+---
+
+## BUG-008 - Noisy "limited published years" label repeats per-cell in Compare Results & Progress
+
+**Status:** FIXED
+**Severity:** Low (cosmetic — clutters compare cells with section-level concern)
+**Detected:** 2026-03-10
+**Files:**
+- `apps/web/src/features/school-compare/mappers/compareMapper.ts`
+
+### Root cause
+
+`buildCompletenessLabel` in the compare mapper only suppressed `partial_metric_coverage` but not `insufficient_years_published`. Both are section-level concerns that create noise when repeated in every cell.
+
+### Fix implemented
+
+Added `insufficient_years_published` to the suppression list in `buildCompletenessLabel`, matching the existing `partial_metric_coverage` pattern.
+
+---
+
+## BUG-009 - "Save for later" returns "Not found" error toast
+
+**Status:** Open
+**Severity:** Medium
+**Detected:** 2026-03-10
+**Files:**
+- `apps/web/src/features/favourites/components/SaveSchoolButton.tsx`
+- `apps/backend/src/civitas/infrastructure/persistence/postgres_favourite_repository.py`
+
+### Symptoms
+
+Clicking "Save for later" on a school profile shows error toast: "Could not save school, Not found". The 404 originates from the backend `create_saved_school` method which checks `SELECT 1 FROM schools WHERE urn = :school_urn` before inserting.
+
+### Possible causes
+
+1. Database migration not applied — `saved_schools` table or FK constraint missing
+2. Proxy port mismatch — Vite proxy targets port 8001 but backend may be running on 8000
+3. School URN not present in `schools` table (data inconsistency)
+
+### Workaround
+
+None currently. Logged as known bug for investigation.
+
+---
+
 ## Tracker Notes
 
 - `make lint` passed on 2026-03-10 after the cache invalidation + cache bypass fixes.
