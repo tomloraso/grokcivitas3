@@ -15,7 +15,11 @@ from civitas.infrastructure.pipelines.base import (
     PipelineStep,
     StageResult,
 )
-from civitas.infrastructure.pipelines.runner import PipelineRetryPolicy, PipelineRunner
+from civitas.infrastructure.pipelines.runner import (
+    PipelineRetryPolicy,
+    PipelineRunCleanupResult,
+    PipelineRunner,
+)
 
 
 @dataclass
@@ -108,6 +112,17 @@ class _RecordingRunStore:
             if context.source == source:
                 return context
         return None
+
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        started_before: datetime,
+        finished_at: datetime,
+        source: PipelineSource | None = None,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult:
+        _ = started_before, finished_at, source, dry_run
+        return PipelineRunCleanupResult()
 
 
 class _RetryAwarePipeline:

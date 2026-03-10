@@ -4,6 +4,7 @@ from typer.testing import CliRunner
 from civitas.application.school_summaries.dto import SummaryGenerationResultDto
 from civitas.cli.main import app
 from civitas.infrastructure.pipelines.base import PipelineResult, PipelineRunStatus, PipelineSource
+from civitas.infrastructure.pipelines.runner import PipelineRunCleanupResult
 
 
 class FakePipelineRunner:
@@ -15,6 +16,9 @@ class FakePipelineRunner:
         self.ran_run_id: str | None = None
         self.ran_all = False
         self.ran_all_force_refresh = False
+        self.cleanup_source: str | None = None
+        self.cleanup_older_than_hours: float | None = None
+        self.cleanup_dry_run = False
 
     def run_source(
         self,
@@ -52,6 +56,22 @@ class FakePipelineRunner:
     def resume_run(self, run_id: str) -> tuple[PipelineSource, PipelineResult]:
         self.ran_run_id = run_id
         return PipelineSource.GIAS, self._result
+
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        source: str | None = None,
+        older_than_hours: float = 1.0,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult:
+        self.cleanup_source = source
+        self.cleanup_older_than_hours = older_than_hours
+        self.cleanup_dry_run = dry_run
+        return PipelineRunCleanupResult(
+            inspected_runs=4,
+            cleaned_runs=3,
+            cleaned_by_source=(("gias", 2), ("dfe_workforce", 1)),
+        )
 
 
 class FakeGenerateSchoolSummariesUseCase:
@@ -349,6 +369,23 @@ def test_pipeline_resume_command(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.exit_code == 0
     assert fake_runner.ran_run_id == run_id
     assert "gias: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_cleanup_runs_command(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    result = CliRunner().invoke(
+        app,
+        ["pipeline", "cleanup-runs", "--source", "GIAS", "--older-than-hours", "2", "--dry-run"],
+    )
+
+    assert result.exit_code == 0
+    assert fake_runner.cleanup_source == "gias"
+    assert fake_runner.cleanup_older_than_hours == 2.0
+    assert fake_runner.cleanup_dry_run is True
+    assert "would mark 3 orphaned running pipeline runs older than 2h" in result.stdout.lower()
+    assert "gias: 2" in result.stdout.lower()
 
 
 def test_pipeline_materialize_benchmarks_for_all(monkeypatch: pytest.MonkeyPatch) -> None:

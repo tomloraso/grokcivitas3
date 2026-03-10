@@ -82,6 +82,17 @@ def _sqlite_store_with_pipeline_runs() -> SqlPipelineRunStore:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE pipeline_source_locks (
+                    source text PRIMARY KEY,
+                    run_id text NOT NULL REFERENCES pipeline_runs(run_id),
+                    acquired_at text NOT NULL
+                )
+                """
+            )
+        )
     return SqlPipelineRunStore(engine=engine)
 
 
@@ -226,3 +237,185 @@ def test_record_finished_does_not_update_school_profile_cache_version_on_failure
         ).fetchone()
 
     assert row is None
+
+
+def test_cleanup_orphaned_runs_marks_old_lockless_runs_failed() -> None:
+    store = _sqlite_store_with_pipeline_runs()
+    stale_run_id = str(uuid4())
+    protected_run_id = str(uuid4())
+    recent_run_id = str(uuid4())
+
+    with store._engine.begin() as connection:  # noqa: SLF001 - test setup path
+        connection.execute(
+            text(
+                """
+                INSERT INTO pipeline_runs (
+                    run_id,
+                    source,
+                    status,
+                    started_at,
+                    finished_at,
+                    bronze_path,
+                    downloaded_rows,
+                    staged_rows,
+                    promoted_rows,
+                    rejected_rows,
+                    error_message
+                ) VALUES (
+                    :run_id,
+                    :source,
+                    :status,
+                    :started_at,
+                    NULL,
+                    :bronze_path,
+                    0,
+                    0,
+                    0,
+                    0,
+                    NULL
+                )
+                """
+            ),
+            [
+                {
+                    "run_id": stale_run_id,
+                    "source": PipelineSource.GIAS.value,
+                    "status": PipelineRunStatus.RUNNING.value,
+                    "started_at": "2026-03-04T12:00:00+00:00",
+                    "bronze_path": "data/bronze/gias/2026-03-04",
+                },
+                {
+                    "run_id": protected_run_id,
+                    "source": PipelineSource.DFE_WORKFORCE.value,
+                    "status": PipelineRunStatus.RUNNING.value,
+                    "started_at": "2026-03-04T12:00:00+00:00",
+                    "bronze_path": "data/bronze/dfe_workforce/2026-03-04",
+                },
+                {
+                    "run_id": recent_run_id,
+                    "source": PipelineSource.OFSTED_LATEST.value,
+                    "status": PipelineRunStatus.RUNNING.value,
+                    "started_at": "2026-03-10T11:30:00+00:00",
+                    "bronze_path": "data/bronze/ofsted_latest/2026-03-10",
+                },
+            ],
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO pipeline_source_locks (source, run_id, acquired_at)
+                VALUES (:source, :run_id, :acquired_at)
+                """
+            ),
+            {
+                "source": PipelineSource.DFE_WORKFORCE.value,
+                "run_id": protected_run_id,
+                "acquired_at": "2026-03-04T12:01:00+00:00",
+            },
+        )
+
+    result = store.cleanup_orphaned_runs(
+        started_before=datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc),
+        finished_at=datetime(2026, 3, 10, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert result.inspected_runs == 3
+    assert result.cleaned_runs == 1
+    assert result.cleaned_by_source == ((PipelineSource.GIAS.value, 1),)
+
+    with store._engine.begin() as connection:  # noqa: SLF001 - assertion path
+        stale_row = connection.execute(
+            text(
+                """
+                SELECT status, finished_at, error_message
+                FROM pipeline_runs
+                WHERE run_id = :run_id
+                """
+            ),
+            {"run_id": stale_run_id},
+        ).one()
+        protected_row = connection.execute(
+            text(
+                """
+                SELECT status, finished_at
+                FROM pipeline_runs
+                WHERE run_id = :run_id
+                """
+            ),
+            {"run_id": protected_run_id},
+        ).one()
+
+    assert stale_row[0] == PipelineRunStatus.FAILED.value
+    assert stale_row[1] is not None
+    assert stale_row[2] == "maintenance_id=orphaned_run_cleanup source=gias"
+    assert protected_row[0] == PipelineRunStatus.RUNNING.value
+    assert protected_row[1] is None
+
+
+def test_cleanup_orphaned_runs_dry_run_leaves_rows_unchanged() -> None:
+    store = _sqlite_store_with_pipeline_runs()
+    stale_run_id = str(uuid4())
+
+    with store._engine.begin() as connection:  # noqa: SLF001 - test setup path
+        connection.execute(
+            text(
+                """
+                INSERT INTO pipeline_runs (
+                    run_id,
+                    source,
+                    status,
+                    started_at,
+                    finished_at,
+                    bronze_path,
+                    downloaded_rows,
+                    staged_rows,
+                    promoted_rows,
+                    rejected_rows,
+                    error_message
+                ) VALUES (
+                    :run_id,
+                    :source,
+                    :status,
+                    :started_at,
+                    NULL,
+                    :bronze_path,
+                    0,
+                    0,
+                    0,
+                    0,
+                    NULL
+                )
+                """
+            ),
+            {
+                "run_id": stale_run_id,
+                "source": PipelineSource.GIAS.value,
+                "status": PipelineRunStatus.RUNNING.value,
+                "started_at": "2026-03-04T12:00:00+00:00",
+                "bronze_path": "data/bronze/gias/2026-03-04",
+            },
+        )
+
+    result = store.cleanup_orphaned_runs(
+        started_before=datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc),
+        finished_at=datetime(2026, 3, 10, 12, 0, tzinfo=timezone.utc),
+        dry_run=True,
+    )
+
+    assert result.cleaned_runs == 1
+
+    with store._engine.begin() as connection:  # noqa: SLF001 - assertion path
+        row = connection.execute(
+            text(
+                """
+                SELECT status, finished_at, error_message
+                FROM pipeline_runs
+                WHERE run_id = :run_id
+                """
+            ),
+            {"run_id": stale_run_id},
+        ).one()
+
+    assert row[0] == PipelineRunStatus.RUNNING.value
+    assert row[1] is None
+    assert row[2] is None

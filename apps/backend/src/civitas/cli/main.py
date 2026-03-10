@@ -225,6 +225,38 @@ def resume_pipeline(run_id: str = typer.Option(..., "--run-id")) -> None:
         raise typer.Exit(code=1)
 
 
+@pipeline_app.command("cleanup-runs")
+def cleanup_pipeline_runs(
+    source: str | None = typer.Option(None, "--source", case_sensitive=False),
+    older_than_hours: float = typer.Option(1.0, "--older-than-hours"),
+    dry_run: bool = typer.Option(False, "--dry-run"),
+) -> None:
+    normalized_source = source.strip().lower() if source is not None else None
+    if older_than_hours <= 0:
+        raise typer.BadParameter("--older-than-hours must be greater than 0.")
+
+    runner = pipeline_runner()
+    available_sources = set(runner.available_sources())
+    if normalized_source is not None and normalized_source not in available_sources:
+        available = ", ".join(sorted(available_sources))
+        raise typer.BadParameter(
+            f"Unsupported source '{normalized_source}'. Expected one of: {available}."
+        )
+
+    result = runner.cleanup_orphaned_runs(
+        source=normalized_source,
+        older_than_hours=older_than_hours,
+        dry_run=dry_run,
+    )
+    action = "would mark" if dry_run else "marked"
+    typer.echo(
+        f"{action} {result.cleaned_runs} orphaned running pipeline runs "
+        f"older than {older_than_hours:g}h after inspecting {result.inspected_runs} candidate runs."
+    )
+    for result_source, cleaned_runs in result.cleaned_by_source:
+        typer.echo(f"  {result_source}: {cleaned_runs}")
+
+
 @pipeline_app.command("materialize-benchmarks")
 def materialize_benchmarks(
     urn: list[str] | None = MATERIALIZE_BENCHMARKS_URN_OPTION,

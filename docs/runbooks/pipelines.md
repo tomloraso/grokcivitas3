@@ -98,6 +98,7 @@ Common commands:
 - `uv run --project apps/backend civitas pipeline run --all`
 - `uv run --project apps/backend civitas pipeline run --source gias --resume`
 - `uv run --project apps/backend civitas pipeline resume --run-id <pipeline-run-id>`
+- `uv run --project apps/backend civitas pipeline cleanup-runs --older-than-hours 1`
 - `uv run --project apps/backend civitas pipeline materialize-benchmarks --all`
 - `uv run --project apps/backend civitas pipeline materialize-benchmarks --urn 105448 --urn 106015`
 - `uv run --project apps/backend civitas generate-summaries`
@@ -160,4 +161,5 @@ uv run --project apps/backend civitas pipeline run --source school_financial_ben
   full in-process TTL. Use `--urn` to reseed specific schools only.
 - When `CIVITAS_AI_ENABLED=true`, `pipeline run --all` submits overview-generation batches after successful promote and exits without waiting for provider completion.
 - Final AI persistence happens through a separate `poll-summary-batches` pass; this should be run by an operator or external scheduler until all pending batch items are finalized.
+- Use `civitas pipeline cleanup-runs` to mark orphaned `running` rows as failed when a prior session crashed after creating a `pipeline_runs` row but before normal completion. The cleanup only targets rows older than the supplied age cutoff and without a matching live source lock.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

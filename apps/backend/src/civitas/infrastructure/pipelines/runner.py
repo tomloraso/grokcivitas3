@@ -8,7 +8,8 @@ import time
 import urllib.error
 from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Protocol
 from uuid import UUID, uuid4
@@ -68,9 +69,26 @@ class PipelineRunStore(Protocol):
 
     def latest_resumable_context(self, *, source: PipelineSource) -> PipelineRunContext | None: ...
 
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        started_before: datetime,
+        finished_at: datetime,
+        source: PipelineSource | None = None,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult: ...
+
+
+@dataclass(frozen=True)
+class PipelineRunCleanupResult:
+    inspected_runs: int = 0
+    cleaned_runs: int = 0
+    cleaned_by_source: tuple[tuple[str, int], ...] = ()
+
 
 class SqlPipelineRunStore:
     _SCHOOL_PROFILE_CACHE_KEY = "school_profile"
+    _ORPHANED_RUN_CLEANUP_REASON = "maintenance_id=orphaned_run_cleanup"
 
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
@@ -650,6 +668,100 @@ class SqlPipelineRunStore:
         resolved_run_id = run_id_raw if isinstance(run_id_raw, UUID) else UUID(str(run_id_raw))
         return self.load_run_context(run_id=resolved_run_id)
 
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        started_before: datetime,
+        finished_at: datetime,
+        source: PipelineSource | None = None,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult:
+        with self._engine.begin() as connection:
+            if not _table_exists(connection, "pipeline_runs"):
+                return PipelineRunCleanupResult()
+
+            query = """
+                SELECT run_id, source, started_at
+                FROM pipeline_runs
+                WHERE status = :status
+                  AND finished_at IS NULL
+            """
+            params: dict[str, object] = {"status": PipelineRunStatus.RUNNING.value}
+            if source is not None:
+                query += " AND source = :source"
+                params["source"] = source.value
+
+            running_rows = connection.execute(text(query), params).all()
+            lock_by_source: dict[str, str] = {}
+            if _table_exists(connection, "pipeline_source_locks"):
+                for row in connection.execute(
+                    text(
+                        """
+                        SELECT source, run_id
+                        FROM pipeline_source_locks
+                        """
+                    )
+                ):
+                    source_raw = row[0]
+                    run_id_raw = row[1]
+                    if not isinstance(source_raw, str) or run_id_raw is None:
+                        continue
+                    lock_by_source[source_raw] = str(run_id_raw)
+
+            cleaned_by_source: dict[str, int] = {}
+            cleanup_rows: list[dict[str, object]] = []
+            for row in running_rows:
+                run_id_raw = row[0]
+                source_raw = row[1]
+                started_at_raw = row[2]
+                if not isinstance(source_raw, str):
+                    continue
+                started_at_value = _coerce_datetime(started_at_raw)
+                if started_at_value is None or started_at_value >= started_before:
+                    continue
+                if lock_by_source.get(source_raw) == str(run_id_raw):
+                    continue
+
+                cleanup_rows.append(
+                    {
+                        "run_id": str(run_id_raw),
+                        "status": PipelineRunStatus.FAILED.value,
+                        "running_status": PipelineRunStatus.RUNNING.value,
+                        "finished_at": finished_at,
+                        "error_message": (
+                            f"{self._ORPHANED_RUN_CLEANUP_REASON} source={source_raw}"
+                        ),
+                    }
+                )
+                cleaned_by_source[source_raw] = cleaned_by_source.get(source_raw, 0) + 1
+
+            if cleanup_rows and not dry_run:
+                connection.execute(
+                    text(
+                        """
+                        UPDATE pipeline_runs
+                        SET
+                            status = :status,
+                            finished_at = :finished_at,
+                            error_message = CASE
+                                WHEN error_message IS NULL OR error_message = ''
+                                THEN :error_message
+                                ELSE error_message
+                            END
+                        WHERE run_id = :run_id
+                          AND status = :running_status
+                          AND finished_at IS NULL
+                        """
+                    ),
+                    cleanup_rows,
+                )
+
+        return PipelineRunCleanupResult(
+            inspected_runs=len(running_rows),
+            cleaned_runs=len(cleanup_rows),
+            cleaned_by_source=tuple(sorted(cleaned_by_source.items())),
+        )
+
 
 class PipelineRunner:
     def __init__(
@@ -919,6 +1031,25 @@ class PipelineRunner:
                 unordered_results[source] = future.result()
         return {source: unordered_results[source] for source in ordered_sources}
 
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        older_than_hours: float = 1.0,
+        source: PipelineSource | str | None = None,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult:
+        if older_than_hours <= 0:
+            raise ValueError("older_than_hours must be greater than 0.")
+        resolved_source = PipelineSource(source) if isinstance(source, str) else source
+        finished_at = utc_now()
+        started_before = finished_at - timedelta(hours=older_than_hours)
+        return self._run_store.cleanup_orphaned_runs(
+            started_before=started_before,
+            finished_at=finished_at,
+            source=resolved_source,
+            dry_run=dry_run,
+        )
+
     def _assert_context_bronze_root(self, context: PipelineRunContext) -> None:
         if _normalize_pipeline_path(context.bronze_root) == self._bronze_root_key:
             return
@@ -1101,6 +1232,18 @@ def _decode_payload(raw_payload: object) -> dict[str, object]:
         if isinstance(parsed, dict):
             return {str(key): value for key, value in parsed.items()}
     return {}
+
+
+def _coerce_datetime(value: object) -> datetime | None:
+    if isinstance(value, datetime):
+        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, str):
+        try:
+            parsed = datetime.fromisoformat(value.strip())
+        except ValueError:
+            return None
+        return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=timezone.utc)
+    return None
 
 
 def _derive_bronze_root(bronze_source_path: Path) -> Path:

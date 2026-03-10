@@ -16,7 +16,7 @@ from civitas.infrastructure.pipelines.base import (
     StageResult,
     utc_now,
 )
-from civitas.infrastructure.pipelines.runner import PipelineRunner
+from civitas.infrastructure.pipelines.runner import PipelineRunCleanupResult, PipelineRunner
 
 
 class RecordingRunStore:
@@ -32,6 +32,10 @@ class RecordingRunStore:
         self.previous_successful_bronze_path = previous_successful_bronze_path
         self.loaded_context = loaded_context
         self.latest_context = latest_context
+        self.cleanup_started_before: datetime | None = None
+        self.cleanup_finished_at: datetime | None = None
+        self.cleanup_source: PipelineSource | None = None
+        self.cleanup_dry_run: bool | None = None
 
     def record_started(self, context: PipelineRunContext) -> None:
         self.started.append(context)
@@ -83,6 +87,20 @@ class RecordingRunStore:
         if self.latest_context is None:
             return None
         return self.latest_context if self.latest_context.source == source else None
+
+    def cleanup_orphaned_runs(
+        self,
+        *,
+        started_before: datetime,
+        finished_at: datetime,
+        source: PipelineSource | None = None,
+        dry_run: bool = False,
+    ) -> PipelineRunCleanupResult:
+        self.cleanup_started_before = started_before
+        self.cleanup_finished_at = finished_at
+        self.cleanup_source = source
+        self.cleanup_dry_run = dry_run
+        return PipelineRunCleanupResult(inspected_runs=3, cleaned_runs=2)
 
 
 class StubPipeline:
@@ -475,3 +493,26 @@ def test_pipeline_runner_run_all_executes_registered_sources(tmp_path: Path) -> 
 
     assert list(results.keys()) == [PipelineSource.GIAS]
     assert results[PipelineSource.GIAS].status == PipelineRunStatus.SUCCEEDED
+
+
+def test_pipeline_runner_cleanup_orphaned_runs_delegates_to_store(tmp_path: Path) -> None:
+    store = RecordingRunStore()
+    runner = PipelineRunner(
+        pipelines={PipelineSource.GIAS: StubPipeline()},
+        run_store=store,
+        bronze_root=tmp_path,
+        quality_config_by_source=_quality(),
+    )
+
+    result = runner.cleanup_orphaned_runs(
+        source="gias",
+        older_than_hours=2.5,
+        dry_run=True,
+    )
+
+    assert result.cleaned_runs == 2
+    assert store.cleanup_source == PipelineSource.GIAS
+    assert store.cleanup_dry_run is True
+    assert store.cleanup_finished_at is not None
+    assert store.cleanup_started_before is not None
+    assert store.cleanup_finished_at > store.cleanup_started_before
