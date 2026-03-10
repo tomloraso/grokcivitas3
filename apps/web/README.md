@@ -120,6 +120,8 @@ Pass `tooltip` (preferred) to show an expandable ⓘ paragraph when tapped. `des
 
 `BenchmarkSlot` interface and benchmark bar rendering are internal to `stat-card.tsx`. Import `BenchmarkSlot` type from `components/ui/stat-card` (or the shim).
 
+**Benchmark delta neutrality rule:** Regional and national delta values (e.g. "+5.77%", "-2.7%") always render in neutral gray (`#94A3B8`) — never conditionally coloured by sign. The platform presents facts, not judgements.
+
 #### `trendDirection` prop (P11, 2026-03-10)
 
 ```tsx
@@ -136,7 +138,9 @@ Renders a solid ▲ or ▼ immediately before the value number in brand teal (`t
 
 Period label short form: `X-yr trend` (e.g. `3-yr trend`, `6-yr trend`). Never use `flex justify-between` for sparkline + indicator — it collapses the sparkline in narrow cards.
 
-**Title min-height rule:** The label container inside `StatCard` has `min-h-[40px]`. This ensures the main value always starts at the same vertical position across a grid row, regardless of whether the title wraps to 1 or 2 lines. Never remove this — without it, long labels like "EDUCATION HEALTH & CARE PLAN" push values down and break grid alignment.
+**Title case rule:** All StatCard titles use Title Case (e.g. "Free School Meals", "English as Additional Language") for superior readability and premium feel. The `uppercase` CSS class has been removed; labels render in their natural Title Case from the metric catalog. Never re-add `text-transform: uppercase`.
+
+**Title min-height rule:** The label container inside `StatCard` has `min-h-[40px]`. This ensures the main value always starts at the same vertical position across a grid row, regardless of whether the title wraps to 1 or 2 lines. Never remove this — without it, long labels like "Education Health & Care Plan" push values down and break grid alignment.
 
 ---
 
@@ -186,3 +190,32 @@ Cards were over-padded on mobile, creating an "old people mode" feel. Tightened 
 | Bottom guard | `pb-24` | `pb-20` | `lg:pb-0` unchanged |
 
 All interactive elements retain ≥ 44px touch targets.
+
+### Compare page — design system (P13, 2026-03-10)
+
+**Canonical location:** `src/features/school-compare/`
+
+The Compare page uses the same Loira Voss design system as the school profile. Key components:
+
+| Component | File | Role |
+|---|---|---|
+| `SchoolCompareFeature` | `SchoolCompareFeature.tsx` | Main page: data fetching, URL sync, layout orchestration |
+| `CompareSchoolStrip` | `CompareSchoolStrip.tsx` | Horizontal scrollable school cards with badges and remove button |
+| `CompareMetricTable` | `CompareMetricTable.tsx` | Core comparison grid: sections → rows → cells, sticky label column |
+| `CompareTableHeader` | `CompareTableHeader.tsx` | Sticky header row with school names + URNs |
+
+**Layout rules:**
+- Metric label column: sticky `left-0`, 200px wide, `bg-surface/95 backdrop-blur`
+- School columns: 200px min each, `overflow-x-auto` for horizontal scroll
+- Section dividers: teal-accented centred label between horizontal rules (`bg-brand/20`)
+- Row hover: `hover:bg-brand/[0.03]` — subtle teal tint on interaction
+- Share button: copies current URL to clipboard with "Link copied" feedback
+
+**Premium gate:**
+- Slim `Panel` banner with `Sparkles` icon, title, description, CTA button
+- Dev premium bypass: inline `isDevUnlocked` check (same pattern as profile)
+
+**Mobile (375px):**
+- School strip: `snap-x snap-mandatory scroll-smooth`, `snap-start` per card
+- Metric table: `overflow-x-auto`, sticky label column remains visible during scroll
+- Unit labels: `text-[10px]` compact size

@@ -9,9 +9,17 @@ import type {
   SavedSchoolStateVM
 } from "./types";
 
+const DEFAULT_SAVED_STATE: SavedSchoolStateVM = {
+  status: "not_saved",
+  savedAt: null,
+  capabilityKey: null,
+  reasonCode: null,
+};
+
 export function mapSavedSchoolState(
-  savedState: SavedSchoolStateResponse
+  savedState: SavedSchoolStateResponse | undefined | null
 ): SavedSchoolStateVM {
+  if (!savedState) return DEFAULT_SAVED_STATE;
   return {
     status: savedState.status,
     savedAt: savedState.saved_at,

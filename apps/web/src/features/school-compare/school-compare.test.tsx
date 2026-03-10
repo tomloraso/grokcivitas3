@@ -115,9 +115,9 @@ describe("SchoolCompareFeature", () => {
       }),
     ]);
 
-    expect(await screen.findByRole("heading", { name: "Demographics" })).toBeInTheDocument();
+    expect(await screen.findByText("Demographics")).toBeInTheDocument();
     expect(
-      screen.getByRole("table", { name: "Demographics comparison table" })
+      screen.getByRole("table", { name: "School comparison table" })
     ).toBeInTheDocument();
     expect(compareMock).toHaveBeenCalledWith(["100001", "200002"]);
     expect(screen.getByText("England 18.0% | Westminster 19.2%")).toBeInTheDocument();
@@ -227,9 +227,7 @@ describe("SchoolCompareFeature", () => {
     ]);
 
     expect(
-      await screen.findByRole("heading", {
-        name: "Compare schools side by side with Premium",
-      })
+      await screen.findByText("Compare schools side by side with Premium")
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View Premium plans" })).toHaveAttribute(
       "href",
