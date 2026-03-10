@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning index
-- Last updated: 2026-03-09
+- Last updated: 2026-03-10
 - Scope: Full-stack delivery sequencing across backend, web, data pipelines, and AI summary generation
 
 ## How To Use This Document
@@ -355,7 +355,7 @@
 - Coordination notes:
   - `school_laestab` and establishment-number persistence are hard prerequisites before any admissions normalization work lands.
   - The verified source already contains both `school_urn` and `school_laestab_as_used`; the GIAS join-key work is still required to make the school dimension deterministic across releases.
-  - Keep derived oversubscription and offer-rate logic in Silver or Gold, not in the API layer.
+  - Keep derived oversubscription and offer-rate logic in the Gold promotion path, not in the API layer.
 
 ### Phase 18 - Leaver destinations
 

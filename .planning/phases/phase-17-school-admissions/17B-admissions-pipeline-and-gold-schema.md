@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-09
+- Last updated: 2026-03-10
 - Depends on:
   - `.planning/phases/phase-17-school-admissions/17A-join-key-foundation-and-source-contract.md`
 
@@ -19,10 +19,11 @@ Implement the Bronze -> Silver -> Gold admissions ingest and derived metrics.
 2. Silver:
    - normalize one row per source row into `school_admissions_stage`
    - parse numeric preference and offer counts
+   - preserve published source ratio columns for auditability and cross-checking
    - preserve source descriptor fields for cohorting and completeness
 3. Gold:
    - upsert yearly rows into `school_admissions_yearly`
-   - calculate derived oversubscription and offer-rate metrics
+   - calculate derived oversubscription and offer-rate metrics into persisted Gold columns
 
 ## Gold Schema
 
@@ -63,6 +64,7 @@ Create `school_admissions_yearly` keyed by `(urn, academic_year)` with:
 2. `first_preference_offer_rate = first_preference_offers / applications_first_preference`
 3. `any_preference_offer_rate = preferred_offers_total / applications_any_preference`
 4. Preserve source ratios where published and store them alongside derived ratios for cross-checking.
+5. Published source ratio columns are staged in Silver and copied to Gold without recomputation.
 
 ## Repository File Plan
 

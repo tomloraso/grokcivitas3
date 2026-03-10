@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-09
+- Last updated: 2026-03-10
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Legacy workstream IDs: `17A` through `17D`
@@ -36,7 +36,7 @@ The verified live publication is:
 
 1. `school_laestab` persistence is a prerequisite slice, not a nice-to-have.
 2. Bronze keeps the raw school-level CSV download and manifest metadata.
-3. Silver derives oversubscription and offer-rate metrics before Gold.
+3. Silver preserves published counts and source ratio columns; Gold derives oversubscription and offer-rate metrics before serving.
 4. Gold stores admissions facts at `(urn, academic_year)` grain.
 5. Benchmarks continue to use the post-promote materialization path.
 
