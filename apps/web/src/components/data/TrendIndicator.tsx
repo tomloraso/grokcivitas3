@@ -1,4 +1,3 @@
-import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 import type { HTMLAttributes } from "react";
 
 import { cn } from "../../shared/utils/cn";
@@ -7,7 +6,7 @@ type TrendDirection = "up" | "down" | "flat";
 type TrendUnit = "%" | "pp";
 
 interface TrendIndicatorProps extends HTMLAttributes<HTMLSpanElement> {
-  /** Delta value to display (e.g. +2.3, -1.5) */
+  /** Delta value to display (absolute value rendered; triangle conveys direction). */
   delta: number;
   /** Explicit direction override. Auto-derived from delta sign when omitted. */
   direction?: TrendDirection;
@@ -15,11 +14,18 @@ interface TrendIndicatorProps extends HTMLAttributes<HTMLSpanElement> {
   unit?: TrendUnit;
   /** @deprecated Use `unit` instead. */
   asPercentage?: boolean;
-  /** Size of the icon in pixels (default: 14) */
-  iconSize?: number;
-  /** Time span label appended to the delta, e.g. "3yr" → "+2.1% · 3yr" */
+  /**
+   * Period label rendered on its own line below the delta value.
+   * Use short form: "3-yr trend", "6-yr trend".
+   */
   period?: string;
 }
+
+const TRIANGLE: Record<TrendDirection, string> = {
+  up: "▲",
+  down: "▼",
+  flat: "—",
+};
 
 function resolveDirection(delta: number, explicit?: TrendDirection): TrendDirection {
   if (explicit) return explicit;
@@ -28,42 +34,49 @@ function resolveDirection(delta: number, explicit?: TrendDirection): TrendDirect
   return "flat";
 }
 
-const directionConfig: Record<
-  TrendDirection,
-  { icon: typeof TrendingUp; colorClass: string; label: string }
-> = {
-  up: { icon: TrendingUp, colorClass: "text-trend-up", label: "Trending up" },
-  down: { icon: TrendingDown, colorClass: "text-trend-down", label: "Trending down" },
-  flat: { icon: Minus, colorClass: "text-trend-flat", label: "No change" }
-};
-
 export function TrendIndicator({
   delta,
   direction: directionProp,
   unit = "%",
   asPercentage,
-  iconSize = 14,
   period,
   className,
   ...props
 }: TrendIndicatorProps): JSX.Element {
   const dir = resolveDirection(delta, directionProp);
-  const { icon: Icon, colorClass, label } = directionConfig[dir];
-  const prefix = delta > 0 ? "+" : "";
+  const triangle = TRIANGLE[dir];
+
+  // Always show absolute value — triangle conveys direction
+  const absDelta = Math.abs(delta);
   const formatted =
     asPercentage === false
-      ? `${prefix}${delta}`
-      : `${prefix}${delta.toFixed(1)}${unit}`;
-  const display = period ? `${formatted} · ${period}` : formatted;
+      ? `${absDelta}`
+      : `${absDelta.toFixed(1)}${unit}`;
+
+  const ariaLabel =
+    dir === "flat"
+      ? `No change: ${formatted}${period ? `, ${period}` : ""}`
+      : `${dir === "up" ? "Up" : "Down"}: ${formatted}${period ? `, ${period}` : ""}`;
 
   return (
     <span
-      className={cn("inline-flex items-center gap-1 text-xs font-medium", colorClass, className)}
-      aria-label={`${label}: ${display}`}
+      className={cn(
+        "inline-flex flex-col text-xs font-medium",
+        dir === "flat" ? "text-disabled" : "text-brand",
+        className
+      )}
+      aria-label={ariaLabel}
       {...props}
     >
-      <Icon size={iconSize} aria-hidden />
-      <span>{display}</span>
+      {/* Triangle + value on one line */}
+      <span className="inline-flex items-center gap-0.5 whitespace-nowrap">
+        <span aria-hidden>{triangle}</span>
+        <span>{formatted}</span>
+      </span>
+      {/* Period on its own line in muted colour */}
+      {period ? (
+        <span className="text-[10px] text-disabled">{period}</span>
+      ) : null}
     </span>
   );
 }

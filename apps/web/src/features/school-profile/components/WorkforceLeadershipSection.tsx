@@ -63,15 +63,15 @@ function renderTrendFooter(series: TrendSeriesVM | undefined) {
     .map((point) => point.value)
     .filter((value): value is number => value !== null);
   const isPercent = series.unit === "percent";
-  const period = sparkData.length > 1 ? `${sparkData.length}-year trend` : undefined;
+  const period = sparkData.length > 1 ? `${sparkData.length}-yr trend` : undefined;
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="space-y-1.5">
       {sparkData.length > 1 ? (
         <Sparkline
           data={sparkData}
-          width={92}
           height={30}
+          className="w-full"
           aria-label={`${series.label} trend`}
         />
       ) : null}

@@ -3,14 +3,19 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
+import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
 import { Card } from "../../../components/ui/Card";
 import {
   DEMOGRAPHICS_METRIC_KEYS,
+  formatMetricDelta,
+  formatMetricValue,
   getMetricCatalogEntry
 } from "../metricCatalog";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type {
+  BenchmarkDashboardVM,
+  BenchmarkMetricVM,
   DemographicMetricVM,
   DemographicsCategoryVM,
   DemographicsVM,
@@ -24,6 +29,31 @@ interface DemographicsAndTrendsPanelProps {
   trends: TrendsVM | null;
   demographicsCompleteness: SectionCompletenessVM;
   trendsCompleteness: SectionCompletenessVM;
+  benchmarkDashboard: BenchmarkDashboardVM | null;
+}
+
+function barDecimals(unit: BenchmarkMetricVM["unit"]): number {
+  if (unit === "count" || unit === "currency") return 0;
+  if (unit === "ratio") return 1;
+  return 2;
+}
+
+function toBenchmarkSlot(metric: BenchmarkMetricVM): BenchmarkSlot {
+  return {
+    localLabel: metric.localAreaLabel,
+    schoolRaw: metric.schoolValue,
+    localRaw: metric.localValue,
+    nationalRaw: metric.nationalValue,
+    isPercent: metric.unit === "percent",
+    displayDecimals: barDecimals(metric.unit),
+    schoolValueFormatted: formatMetricValue(metric.schoolValue, metric.unit),
+    localValueFormatted: formatMetricValue(metric.localValue, metric.unit),
+    nationalValueFormatted: formatMetricValue(metric.nationalValue, metric.unit),
+    schoolVsLocalDelta: metric.schoolVsLocalDelta,
+    schoolVsNationalDelta: metric.schoolVsNationalDelta,
+    schoolVsLocalDeltaFormatted: formatMetricDelta(metric.schoolVsLocalDelta, metric.unit),
+    schoolVsNationalDeltaFormatted: formatMetricDelta(metric.schoolVsNationalDelta, metric.unit),
+  };
 }
 
 function toSparkData(series: TrendSeriesVM | undefined): number[] {
@@ -42,14 +72,14 @@ function renderTrendFooter(metric: DemographicMetricVM, series: TrendSeriesVM | 
   }
 
   const sparkData = toSparkData(series);
-  const period = sparkData.length > 1 ? `${sparkData.length}-year trend` : undefined;
+  const period = sparkData.length > 1 ? `${sparkData.length}-yr trend` : undefined;
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="space-y-1.5">
       {sparkData.length > 1 ? (
         <Sparkline
           data={sparkData}
-          width={92}
           height={30}
+          className="w-full"
           aria-label={`${metric.label} trend`}
         />
       ) : null}
@@ -111,13 +141,17 @@ export function DemographicsAndTrendsPanel({
   demographics,
   trends,
   demographicsCompleteness,
-  trendsCompleteness
+  trendsCompleteness,
+  benchmarkDashboard,
 }: DemographicsAndTrendsPanelProps): JSX.Element {
   const metricLookup = new Map(
     demographics?.metrics.map((metric) => [metric.metricKey, metric] as const) ?? []
   );
   const trendLookup = new Map(
     trends?.series.map((series) => [series.metricKey, series] as const) ?? []
+  );
+  const benchmarkLookup = new Map<string, BenchmarkMetricVM>(
+    benchmarkDashboard?.sections.flatMap((s) => s.metrics.map((m) => [m.metricKey, m] as const)) ?? []
   );
   const yearRange =
     trends && trends.yearsAvailable.length > 1
@@ -168,6 +202,8 @@ export function DemographicsAndTrendsPanel({
               return [];
             }
 
+            const bm = benchmarkLookup.get(metricKey);
+
             return (
               <StatCard
                 key={metricKey}
@@ -175,6 +211,7 @@ export function DemographicsAndTrendsPanel({
                 description={catalog.description}
                 value={metric.value}
                 footer={renderTrendFooter(metric, trendLookup.get(metricKey))}
+                benchmark={bm ? toBenchmarkSlot(bm) : undefined}
               />
             );
           })}

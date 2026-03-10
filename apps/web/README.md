@@ -74,6 +74,104 @@ Every user-facing `"CIVITAS"` string replaced with `"[BRAND]"` in:
 
 Hero section is illustration-free. Any decorative SVG watermarks must not be reintroduced.
 
+### StatCard primitive — design system rule (P10, 2026-03-09)
+
+**Canonical location:** `src/components/ui/stat-card.tsx`
+
+`StatCard` is the single source of truth for all numeric stat display across the school profile. It uses `cva` for variant and size control.
+
+#### Variants
+
+| Variant | When to use | Chrome |
+|---|---|---|
+| `default` | Standalone metric in a `MetricGrid` | `Card` wrapper, `p-4 sm:p-5`, hover lift |
+| `hero` | Most important metric in a section | `Card` + teal glow border |
+| `mini` | Embedded inside an existing section card | Plain `div`, zero padding, zero border |
+
+**Rule: never use `variant="default"` or `variant="hero"` inside another `Card`. Always use `variant="mini"` for nested stats.** This prevents the double-padding bug that caused desktop overflow.
+
+#### Size prop
+
+| Size | `default` / `hero` value | `mini` value |
+|---|---|---|
+| `sm` | `text-2xl sm:text-3xl` | `text-xl` |
+| `md` _(default)_ | `text-3xl sm:text-4xl` | `text-2xl` |
+| `lg` | `text-4xl sm:text-5xl` | `text-2xl sm:text-3xl` |
+| _(hero md)_ | `text-4xl sm:text-5xl` | — |
+| _(hero lg)_ | `text-5xl sm:text-6xl` | — |
+
+`size` replaces ad-hoc `valueClassName` overrides entirely. Use `valueClassName` only as a one-off escape hatch.
+
+#### Overflow protection (built in)
+
+- Label container: `min-w-0 leading-tight` — long labels wrap cleanly inside grid cells.
+- Value: `tabular-nums break-all` — numeric strings never overflow their container.
+- Outer wrapper: `overflow-hidden` — nothing escapes the card boundary.
+
+#### Tooltip / info text
+
+Pass `tooltip` (preferred) to show an expandable ⓘ paragraph when tapped. `description` is accepted as a legacy alias and behaves identically.
+
+#### Shim
+
+`src/components/data/StatCard.tsx` is a re-export shim — existing section components continue to work without modification. New code should import from `components/ui/stat-card` directly.
+
+#### BenchmarkSlot
+
+`BenchmarkSlot` interface and benchmark bar rendering are internal to `stat-card.tsx`. Import `BenchmarkSlot` type from `components/ui/stat-card` (or the shim).
+
+#### `trendDirection` prop (P11, 2026-03-10)
+
+```tsx
+<StatCard trendDirection="up" ... />   // ▲ teal inline after value
+<StatCard trendDirection="down" ... /> // ▼ teal inline after value
+```
+
+Renders a solid ▲ or ▼ immediately before the value number in brand teal (`text-brand`). Use this when you want direction without a delta number. When you also need a sparkline or delta number, continue using the `footer` prop with `<TrendIndicator>`.
+
+**Trend footer layout rule — always use a vertical column (`space-y-1.5`), never a horizontal row:**
+1. Sparkline full-width on top: `<Sparkline className="w-full" height={30} />`
+2. `▼ 1.2%` — triangle immediately before the value, `whitespace-nowrap` (never splits)
+3. `3-yr trend` — period label on its own line in `text-disabled`
+
+Period label short form: `X-yr trend` (e.g. `3-yr trend`, `6-yr trend`). Never use `flex justify-between` for sparkline + indicator — it collapses the sparkline in narrow cards.
+
+**Title min-height rule:** The label container inside `StatCard` has `min-h-[40px]`. This ensures the main value always starts at the same vertical position across a grid row, regardless of whether the title wraps to 1 or 2 lines. Never remove this — without it, long labels like "EDUCATION HEALTH & CARE PLAN" push values down and break grid alignment.
+
+---
+
+### Trend indicators — design system rule (P11, 2026-03-10)
+
+**Canonical location:** `src/components/data/TrendIndicator.tsx`
+
+All trend indicators across the school profile use solid direction triangles:
+
+| Direction | Symbol | Colour |
+|---|---|---|
+| Up | ▲ | `text-brand` (teal `#00D4C8`) |
+| Down | ▼ | `text-brand` (teal `#00D4C8`) |
+| Flat | — | `text-disabled` |
+
+**Rule: triangles are always teal, never red. Direction only — no implied good/bad.** Whether a number going up is good (attendance) or bad (absence rate) is left to the reader. The platform presents facts, not judgements.
+
+Delta values are rendered as absolute numbers — the triangle already conveys sign. Example output: `▲ 2.1% · 3yr`, `▼ 0.8% · 5-year trend`.
+
+The `TrendingUp` / `TrendingDown` lucide icons and `text-trend-up` / `text-trend-down` conditional colours have been removed from `TrendIndicator`. The `period` prop is unchanged. The `asPercentage` prop is kept for backward compatibility.
+
+---
+
+### Neighbourhood desktop polish (P9 iterations 6–9 → superseded by P10)
+
+Neighbourhood Context mini-stats now use `<StatCard variant="mini" size="sm">` inside each section card's light-bordered container. This eliminates the double-padding root cause. Domain decile labels use `min-w-0 leading-tight tracking-[0.04em]` to wrap long strings cleanly. Neighbourhood grid: `xl:grid-cols-3 xl:items-stretch`.
+
+### Sparkline sizing (P9 iteration 5, 2026-03-09)
+
+`Sparkline.tsx` now renders `width="100%"` + `preserveAspectRatio="none"` on all SVG paths. The `width` prop is viewBox coordinate space only — it no longer controls rendered pixel width. Pass `className="w-full"` at the call site inside an `overflow-hidden` container.
+
+### Benchmark bars (P9 iteration 4, 2026-03-09)
+
+`BenchmarkBlock` in `StatCard.tsx` renders bars at all breakpoints. The `hidden sm:block` / `sm:hidden` split has been removed. Bar height: `h-2` (8px) mobile, `h-[5px]` sm+. `TextRow` component deleted.
+
 ### Mobile density (P9 iteration 3, 2026-03-09)
 
 Cards were over-padded on mobile, creating an "old people mode" feel. Tightened without touching desktop:

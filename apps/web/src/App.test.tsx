@@ -70,8 +70,8 @@ describe("App", () => {
   it("renders site header with Civitas brand on all routes", async () => {
     await renderAppAtRoute("/");
 
-    expect(screen.getAllByLabelText("Civitas - return to home").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("CIVITAS").length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText("[BRAND] - return to home").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("[BRAND]").length).toBeGreaterThan(0);
   });
 
   it("hides site footer on the search/map page", async () => {
@@ -84,7 +84,7 @@ describe("App", () => {
     await renderAppAtRoute("/schools/100001");
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
-    expect(screen.getByText(/CIVITAS. All data sourced/)).toBeInTheDocument();
+    expect(screen.getByText(/\[BRAND\]. All data sourced/)).toBeInTheDocument();
   });
 
   it("skip-to-content link is the first focusable element", async () => {

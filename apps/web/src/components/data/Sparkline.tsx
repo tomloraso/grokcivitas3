@@ -5,9 +5,9 @@ import { cn } from "../../shared/utils/cn";
 interface SparklineProps extends Omit<HTMLAttributes<SVGSVGElement>, "children"> {
   /** Numeric data points (minimum 1). Rendered left-to-right. */
   data: number[];
-  /** Total SVG width in pixels (default: 80) */
+  /** ViewBox width in pixels — used for coordinate calculations only (default: 80) */
   width?: number;
-  /** Total SVG height in pixels (default: 28) */
+  /** SVG height in pixels (default: 28) */
   height?: number;
   /** Stroke colour. Accepts any CSS colour or a Tailwind token var. Default: brand accent */
   strokeColor?: string;
@@ -32,10 +32,11 @@ export function Sparkline({
   if (data.length === 0) {
     return (
       <svg
-        width={width}
+        width="100%"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className={cn("inline-block", className)}
+        preserveAspectRatio="none"
+        className={cn("block", className)}
         role="img"
         aria-label={ariaLabel ?? "No trend data"}
         {...props}
@@ -48,10 +49,11 @@ export function Sparkline({
     const cy = height / 2;
     return (
       <svg
-        width={width}
+        width="100%"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        className={cn("inline-block", className)}
+        preserveAspectRatio="none"
+        className={cn("block", className)}
         role="img"
         aria-label={ariaLabel ?? `Single data point: ${data[0]}`}
         {...props}
@@ -85,10 +87,11 @@ export function Sparkline({
 
   return (
     <svg
-      width={width}
+      width="100%"
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      className={cn("inline-block", className)}
+      preserveAspectRatio="none"
+      className={cn("block", className)}
       role="img"
       aria-label={ariaLabel ?? `Trend: ${data.join(", ")}`}
       {...props}

@@ -290,7 +290,7 @@ export function OfstedProfileSection({
                           href={providerPageUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 hover:text-purple-800 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:text-brand/80 hover:underline"
                         >
                           View report
                           <ExternalLink className="h-3 w-3" aria-hidden />

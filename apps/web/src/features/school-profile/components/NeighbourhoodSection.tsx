@@ -2,10 +2,9 @@ import { ChevronDown, ChevronUp, Home, MapPin, Shield } from "lucide-react";
 import { useState } from "react";
 
 import { GlossaryTerm } from "../../../components/data/GlossaryTerm";
-import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
-import { StatCard } from "../../../components/data/StatCard";
+import { StatCard } from "../../../components/ui/stat-card";
 import { Card } from "../../../components/ui/Card";
 import { formatMetricValue } from "../metricCatalog";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
@@ -125,7 +124,8 @@ export function NeighbourhoodSection({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3 xl:items-stretch">
+        {/* ── Area Deprivation ───────────────────────────────────── */}
         <Card className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-brand" aria-hidden />
@@ -154,24 +154,22 @@ export function NeighbourhoodSection({
               ) : null}
 
               {deprivation.domains.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
                   {deprivation.domains.map((domain) => (
                     <div
                       key={domain.key}
-                      className="flex items-start gap-2 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
                     >
-                      <span
-                        className={`mt-1 h-2 w-2 shrink-0 rounded-full ${domainDotClass(domain.decile)}`}
-                        aria-hidden
-                      />
-                      <div>
-                        <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-disabled">
-                          {domain.label}
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-primary">
-                          {domain.decile !== null ? `Decile ${domain.decile} / 10` : "n/a"}
-                        </p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${domainDotClass(domain.decile)}`}
+                          aria-hidden
+                        />
+                        <p className="text-sm text-primary leading-tight">{domain.label}</p>
                       </div>
+                      <p className="shrink-0 text-sm font-semibold text-primary">
+                        {domain.decile !== null ? `${domain.decile} / 10` : "n/a"}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -187,6 +185,7 @@ export function NeighbourhoodSection({
           )}
         </Card>
 
+        {/* ── Area Crime ─────────────────────────────────────────── */}
         <Card className="space-y-4">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-brand" aria-hidden />
@@ -197,28 +196,36 @@ export function NeighbourhoodSection({
           {crime ? (
             <>
               <p className="text-xs text-secondary">
-                Within {crime.radiusMiles} mile radius · Latest {crime.latestMonth}
+                Within {crime.radiusMiles} mile radius · 12 months to {crime.latestMonth}
               </p>
-              <MetricGrid columns={2}>
+
+              {/* Headline stats */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-danger/30 bg-danger/5 px-3 py-2.5">
                 <StatCard
+                  variant="mini"
+                  size="sm"
                   label="Incidents"
                   value={crime.totalIncidents.toLocaleString("en-GB")}
+                  valueClassName="text-primary"
                 />
                 <StatCard
+                  variant="mini"
+                  size="sm"
                   label="Per 1,000"
                   value={formatMetricValue(crime.incidentsPer1000, "rate") ?? "n/a"}
+                  valueClassName="text-primary"
                 />
-              </MetricGrid>
+              </div>
 
               {crimeRateSparkline.length > 1 ? (
-                <div className="space-y-2 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-3">
-                  <p className="text-xs font-medium uppercase tracking-[0.06em] text-disabled">
+                <div className="space-y-2 overflow-hidden rounded-md border border-danger/20 bg-danger/5 px-3 py-3">
+                  <p className="text-xs font-medium uppercase tracking-[0.06em] text-danger/70">
                     Annual Rate Trend
                   </p>
                   <Sparkline
                     data={crimeRateSparkline}
-                    width={220}
                     height={44}
+                    className="w-full"
                     aria-label="Annual crime incidents per 1,000 trend"
                   />
                 </div>
@@ -227,17 +234,28 @@ export function NeighbourhoodSection({
               <div className="space-y-2">
                 {crime.categories
                   .slice(0, crimeExpanded ? undefined : 4)
-                  .map((category) => (
-                    <div
-                      key={category.category}
-                      className="flex items-center justify-between rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
-                    >
-                      <span className="text-sm text-primary">{category.category}</span>
-                      <span className="text-sm font-medium text-secondary">
-                        {category.incidentCount.toLocaleString("en-GB")}
-                      </span>
-                    </div>
-                  ))}
+                  .map((category) => {
+                    const pct = Math.round((category.incidentCount / crime.totalIncidents) * 100);
+                    return (
+                      <div
+                        key={category.category}
+                        className="space-y-1.5 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 text-sm text-primary leading-tight">{category.category}</span>
+                          <span className="shrink-0 text-sm font-semibold text-primary">
+                            {category.incidentCount.toLocaleString("en-GB")}
+                          </span>
+                        </div>
+                        <div className="relative h-1 w-full overflow-hidden rounded-full bg-danger/10">
+                          <div
+                            className="absolute inset-y-0 left-0 rounded-full bg-danger/50"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 {crime.categories.length > 4 ? (
                   <button
                     type="button"
@@ -264,6 +282,7 @@ export function NeighbourhoodSection({
           )}
         </Card>
 
+        {/* ── House Prices ───────────────────────────────────────── */}
         <Card className="space-y-4">
           <div className="flex items-center gap-2">
             <Home className="h-4 w-4 text-brand" aria-hidden />
@@ -279,41 +298,50 @@ export function NeighbourhoodSection({
               <p className="text-xs text-secondary">
                 {housePrices.areaName} · Latest {housePrices.latestMonth}
               </p>
-              <MetricGrid columns={2}>
+
+              {/* Mini stats — all four in one unified grid, no nested Card padding */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-2.5">
                 <StatCard
-                  label="Average Price"
+                  variant="mini"
+                  size="sm"
+                  label="Avg. Price"
                   value={formatMetricValue(housePrices.averagePrice, "currency") ?? "n/a"}
                 />
                 <StatCard
+                  variant="mini"
+                  size="sm"
                   label="Annual Change"
                   value={formatMetricValue(housePrices.annualChangePct, "percent") ?? "n/a"}
                 />
-              </MetricGrid>
-              <MetricGrid columns={2}>
                 <StatCard
+                  variant="mini"
+                  size="sm"
                   label="Monthly Change"
                   value={formatMetricValue(housePrices.monthlyChangePct, "percent") ?? "n/a"}
                 />
                 <StatCard
-                  label="Three-Year Change"
+                  variant="mini"
+                  size="sm"
+                  label="3-Year Change"
                   value={formatMetricValue(housePrices.threeYearChangePct, "percent") ?? "n/a"}
                 />
-              </MetricGrid>
+              </div>
 
               {housePriceSparkline.length > 1 ? (
-                <div className="space-y-2 rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-3">
+                <div className="space-y-2 overflow-hidden rounded-md border border-border-subtle/60 bg-surface/50 px-3 py-3">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium uppercase tracking-[0.06em] text-disabled">
                       Price Trend
                     </p>
                     <p className="text-[10px] text-disabled">
-                      {housePrices.trend[0].month.slice(-4)} – {housePrices.trend[housePrices.trend.length - 1].month.slice(-4)}
+                      {housePrices.trend[0].month.slice(-4)} –{" "}
+                      {housePrices.trend[housePrices.trend.length - 1].month.slice(-4)}
                     </p>
                   </div>
                   <Sparkline
                     data={housePriceSparkline}
-                    width={220}
                     height={44}
+                    className="w-full"
                     aria-label="Area house price trend"
                   />
                 </div>

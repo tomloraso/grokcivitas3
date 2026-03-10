@@ -24,6 +24,18 @@ agents        # Prompt/eval scaffolding
 tools         # Repo scripts
 ```
 
+## Frontend component inventory
+
+| Component | Path | Purpose |
+|---|---|---|
+| `StatCard` | `apps/web/src/components/ui/stat-card.tsx` | Canonical stat display primitive. Variants: `default`, `hero`, `mini`. Use `mini` when embedding inside another card. |
+| `Card` / `Panel` | `apps/web/src/components/ui/Card.tsx` | Glass surface wrappers. |
+| `MetricGrid` | `apps/web/src/components/data/MetricGrid.tsx` | Responsive grid container for `StatCard` collections. |
+| `Sparkline` | `apps/web/src/components/data/Sparkline.tsx` | SVG trend line, always `width="100%"` with `preserveAspectRatio="none"`. |
+| `TrendIndicator` | `apps/web/src/components/data/TrendIndicator.tsx` | Direction-only triangles ▲/▼ always teal. Never red, never conditional on good/bad. |
+
+See `apps/web/README.md` for the full Loira Voss design system specification.
+
 ## Scaffold baseline
 
 The repository currently includes a small `tasks` flow end-to-end as an architectural baseline.

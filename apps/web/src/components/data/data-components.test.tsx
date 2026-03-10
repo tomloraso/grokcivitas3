@@ -62,13 +62,13 @@ describe("StatCard", () => {
 describe("TrendIndicator", () => {
   it("renders positive delta with up direction", () => {
     renderWithProviders(<TrendIndicator delta={2.3} />);
-    const el = screen.getByLabelText("Trending up: +2.3%");
+    const el = screen.getByLabelText("Up: 2.3%");
     expect(el).toBeInTheDocument();
   });
 
   it("renders negative delta with down direction", () => {
     renderWithProviders(<TrendIndicator delta={-1.5} />);
-    const el = screen.getByLabelText("Trending down: -1.5%");
+    const el = screen.getByLabelText("Down: 1.5%");
     expect(el).toBeInTheDocument();
   });
 
@@ -80,12 +80,12 @@ describe("TrendIndicator", () => {
 
   it("respects explicit direction override", () => {
     renderWithProviders(<TrendIndicator delta={0} direction="up" />);
-    expect(screen.getByLabelText("Trending up: 0.0%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Up: 0.0%")).toBeInTheDocument();
   });
 
   it("renders point-percentage unit format", () => {
     renderWithProviders(<TrendIndicator delta={0.7} unit="pp" />);
-    expect(screen.getByLabelText("Trending up: +0.7pp")).toBeInTheDocument();
+    expect(screen.getByLabelText("Up: 0.7pp")).toBeInTheDocument();
   });
 
   it("passes accessibility smoke", async () => {
@@ -335,7 +335,7 @@ describe("Composition", () => {
       />
     );
     expect(screen.getByText("28.5%")).toBeInTheDocument();
-    expect(screen.getByLabelText("Trending down: -1.2%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Down: 1.2%")).toBeInTheDocument();
   });
 
   it("renders MetricGrid with StatCards", () => {

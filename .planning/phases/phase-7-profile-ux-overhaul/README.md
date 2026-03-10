@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Extended — P9 in progress (2026-03-09)
-- Last updated: 2026-03-09
+- Status: Extended — P12 complete (2026-03-10)
+- Last updated: 2026-03-10
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
 - Detailed brief: `.planning/ux-overhaul/README.md`
@@ -31,20 +31,35 @@ This phase covers only the school profile route (`/schools/:urn`). If the design
 ## Architecture View
 
 ```
-StatCard (apps/web/src/components/data/StatCard.tsx)
-  └── BenchmarkBlock (new internal component)
-        ├── BarRow    — sm+ proportional bars (school / local / national)
-        └── TextRow   — mobile compact text fallback
+StatCard (apps/web/src/components/ui/stat-card.tsx)  ← canonical (P10)
+  variants: default | hero | mini
+  size: sm | md | lg
+  trendDirection: "up" | "down" | null  ← inline ▲/▼ (P11)
+  └── BenchmarkBlock (internal)
+        └── BarRow — proportional bars (school / local / national)
+                     h-2 mobile / h-[5px] sm+, visible at all breakpoints
 
-Section components
+TrendIndicator (apps/web/src/components/data/TrendIndicator.tsx)  ← (P11)
+  ▲/▼ triangles always text-brand (teal) — never red, never conditional
+  Flat: — in text-disabled
+  Delta shown as absolute value; triangle conveys direction
+
+apps/web/src/components/data/StatCard.tsx  ← re-export shim only (P10)
+
+Section components (import via shim — no changes needed)
   ├── AcademicPerformanceSection  → "Results & Progress"
   ├── AttendanceBehaviourSection  → "Day-to-Day at School"
-  └── WorkforceLeadershipSection  → "Teachers & Staff"
+  ├── WorkforceLeadershipSection  → "Teachers & Staff"
+  └── DemographicsAndTrendsPanel  → "Pupil Demographics"  ← benchmarks added P12
   each accepts: benchmarkDashboard: BenchmarkDashboardVM | null
   each builds:  Map<metricKey, BenchmarkMetricVM> → BenchmarkSlot
 
+NeighbourhoodSection (imports from ui/stat-card directly)
+  └── variant="mini" size="sm" StatCards inside bordered containers
+      (eliminates double-padding that caused desktop overflow)
+
 SchoolProfileFeature
-  └── removes BenchmarkComparisonSection render (data now inline)
+  └── BenchmarkComparisonSection removed (data inline with each section)
 ```
 
 ## Deliverables
@@ -59,7 +74,10 @@ SchoolProfileFeature
 | P6 | `P6-design-system-documentation.md` | Partially complete — `apps/web/README.md` updated (2026-03-09) |
 | P7 | `P7-school-data-page-redesign-v2.md` | Completed (local, 2026-03-08) |
 | P8 | `P8-school-data-page-redesign-v3.md` | Completed (local, 2026-03-08) |
-| P9 | `P9-loira-voss-design-refresh.md` | In progress (2026-03-09) |
+| P9 | `P9-loira-voss-design-refresh.md` | Complete — superseded by P10 for StatCard |
+| P10 | `P10-statcard-shadcn-standardisation.md` | Complete (2026-03-09) |
+| P11 | `P11-trend-indicator-direction-triangles.md` | Complete (2026-03-10) |
+| P12 | Demographics benchmark wiring | Complete (2026-03-10) |
 
 ## Execution Sequence
 
@@ -78,7 +96,7 @@ SchoolProfileFeature
 
 ## Definition of Done
 
-- Every metric card (attendance, behaviour, workforce, performance) shows the school's value, trend sparkline, trend delta, and inline benchmark bars for local and England.
+- Every metric card (attendance, behaviour, workforce, performance, demographics) shows the school's value, trend sparkline, trend delta, and inline benchmark bars for local and England.
 - `BenchmarkComparisonSection` standalone section is removed from the profile render.
 - Section titles use parent-language headings, not DfE category names.
 - Benchmark bars show correct proportional widths on tablet/desktop; compact text fallback on mobile (< 640px).
@@ -87,6 +105,36 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-10 (P12 — Demographics benchmark wiring):
+  - **`DemographicsAndTrendsPanel.tsx`** — added `benchmarkDashboard: BenchmarkDashboardVM | null` prop; added `barDecimals` / `toBenchmarkSlot` helpers (same pattern as Workforce/Academic sections); builds `benchmarkLookup` Map; passes `benchmark={bm ? toBenchmarkSlot(bm) : undefined}` to each demographics `StatCard`. Now shows school/local/national comparison bars for all demographics metrics (FSM, EAL, SEN, EHCP, etc.) where benchmark data is available.
+  - **`SchoolProfileFeature.tsx`** — added `benchmarkDashboard={profile.benchmarkDashboard}` to `<DemographicsAndTrendsPanel>` call site.
+  - Note: `"demographics"` section already existed in `METRIC_SECTION_ORDER` / metric catalog and `buildBenchmarkDashboard` already bucketed demographics metrics — this was purely a frontend wiring gap.
+
+- 2026-03-10 (P11 — direction-only trend indicators + alignment fix):
+  - **`TrendIndicator.tsx`** — replaced `TrendingUp`/`TrendingDown` lucide icons with ▲/▼ unicode triangles. Both always `text-brand` (teal `#00D4C8`). Flat → `—` in `text-disabled`. Removed `+` prefix and conditional colour logic. Delta rendered as absolute value. Added `whitespace-nowrap shrink-0` — triangle is now always inline-prefixed to the number, never detaches to its own line.
+  - **Footer layout** — all four section `renderTrendFooter` functions changed from horizontal `flex justify-between` to vertical `space-y-1.5`: sparkline full-width on top (`className="w-full"`), delta row below. Fixes sparkline collapsing to zero in narrow cards. Period labels shortened to `X-yr trend` format.
+  - **`stat-card.tsx` label min-height** — label container gets `min-h-[40px]` so values align horizontally across all cards in a grid row regardless of title wrapping length.
+  - **`TrendIndicator.tsx`** two-line format: `▼ 1.2%` (triangle + value, `whitespace-nowrap`) on line 1; period label (`3-yr trend`) on line 2 in `text-disabled`. `flex-col` outer span.
+  - **`stat-card.tsx`** — new `trendDirection?: "up" | "down" | null` prop renders ▲/▼ inline *before* the value in `text-brand`. Use when direction triangle is wanted without a delta number. Existing `footer`+`TrendIndicator` pattern unchanged for sparkline+delta use cases.
+  - **`apps/web/README.md`** — new `### Trend indicators (P11)` section + `trendDirection` prop doc + inline alignment rule added.
+  - **Root `README.md`** — `TrendIndicator` added to component inventory table.
+  - **`P11-trend-indicator-direction-triangles.md`** planning doc created.
+
+- 2026-03-10 (P10 — Area Crime card redesign, `NeighbourhoodSection.tsx`):
+  - **Period label**: `Latest {month}` → `12 months to {month}` — unambiguous rolling window
+  - **Headline stat block**: danger-tinted container (`border-danger/30 bg-danger/5`); values plain white (`text-primary`)
+  - **Sparkline container**: matching danger tint (`border-danger/20 bg-danger/5`); label `text-danger/70`
+  - **Category rows**: each row gains a proportion bar (`h-1`, `bg-danger/50` fill scaled to % of total incidents) — dominant categories immediately visible at a glance; counts plain white
+  - All crime numbers settled on `text-primary` (white) after reviewing teal and danger variants — consistent with all other section stats; danger bars carry the severity signal
+
+- 2026-03-09 (P10 — StatCard shadcn standardisation):
+  - **`components/ui/stat-card.tsx`** (new) — canonical shadcn-style primitive with `cva` variants (`default`, `hero`, `mini`) and `size` prop (`sm`/`md`/`lg`). Built-in overflow protection. `tooltip`/`description` info button. `BenchmarkBlock` + `BarRow` internal. Re-exports `BenchmarkSlot` type.
+  - **`components/data/StatCard.tsx`** — converted to re-export shim; existing section components unchanged.
+  - **`NeighbourhoodSection.tsx`** — migrated from raw `div` blocks to `<StatCard variant="mini" size="sm">`. Double-padding root cause permanently resolved. Domain labels changed from `truncate` to wrapping (`leading-tight`) so long labels like "Living environment" display in full.
+  - **`apps/web/README.md`** — StatCard design system rule section (P10) added: variant table, size table, overflow protection spec, tooltip API, shim guidance.
+  - **Root `README.md`** — frontend component inventory table added.
+  - **`P10-statcard-shadcn-standardisation.md`** planning doc created.
 
 - 2026-03-09 (P9 — Liora Voss design refresh, iteration 3 — mobile density):
   - **Section panel padding**: `p-5 sm:p-6` → `p-4 sm:p-6` across all 8 section components (AcademicPerformance, AttendanceBehaviour, Demographics, Workforce, Neighbourhood, Ofsted, SchoolOverview, SchoolAnalyst).

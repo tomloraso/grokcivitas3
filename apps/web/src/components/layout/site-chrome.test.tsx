@@ -16,8 +16,8 @@ describe("SiteHeader", () => {
     renderWithProviders(<SiteHeader />);
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
-    expect(screen.getByLabelText("Civitas - return to home")).toBeInTheDocument();
-    expect(screen.getByText("CIVITAS")).toBeInTheDocument();
+    expect(screen.getByLabelText("[BRAND] - return to home")).toBeInTheDocument();
+    expect(screen.getByText("[BRAND]")).toBeInTheDocument();
   });
 
   it("passes accessibility smoke check", async () => {
@@ -33,7 +33,7 @@ describe("SiteFooter", () => {
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Footer" })).toBeInTheDocument();
-    expect(screen.getByText(/CIVITAS. All data sourced/)).toBeInTheDocument();
+    expect(screen.getByText(/\[BRAND\]. All data sourced/)).toBeInTheDocument();
   });
 
   it("renders footer links", () => {

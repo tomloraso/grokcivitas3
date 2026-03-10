@@ -305,6 +305,7 @@ export function SchoolProfileFeature(): JSX.Element {
                     trends={profile.trends}
                     demographicsCompleteness={profile.completeness.demographics}
                     trendsCompleteness={profile.completeness.trends}
+                    benchmarkDashboard={profile.benchmarkDashboard}
                   />
                 </ProfileSectionAccordion>
               </div>

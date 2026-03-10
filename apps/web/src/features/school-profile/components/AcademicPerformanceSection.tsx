@@ -132,19 +132,19 @@ function buildCards(
           variant={def.hero ? "hero" : "default"}
           footer={
             delta !== null ? (
-              <div className="flex items-center justify-between gap-2">
+              <div className="space-y-1.5">
                 {histValues.length > 1 ? (
                   <Sparkline
                     data={histValues}
-                    width={92}
                     height={30}
+                    className="w-full"
                     aria-label={`${def.label} trend`}
                   />
                 ) : null}
                 {def.valueType === "pct" ? (
-                  <TrendIndicator delta={delta} direction={directionFromDelta(delta)} unit="%" period={histValues.length > 1 ? `${histValues.length}yr` : undefined} />
+                  <TrendIndicator delta={delta} direction={directionFromDelta(delta)} unit="%" period={histValues.length > 1 ? `${histValues.length}-yr trend` : undefined} />
                 ) : (
-                  <TrendIndicator delta={delta} direction={directionFromDelta(delta)} asPercentage={false} period={histValues.length > 1 ? `${histValues.length}yr` : undefined} />
+                  <TrendIndicator delta={delta} direction={directionFromDelta(delta)} asPercentage={false} period={histValues.length > 1 ? `${histValues.length}-yr trend` : undefined} />
                 )}
               </div>
             ) : null
