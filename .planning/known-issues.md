@@ -174,6 +174,13 @@ Scope check on 2026-03-10:
 
 The UI is behaving as designed: trend indicators only appear when there is enough history to compute a delta. The remaining issue is partial data coverage for a subset of schools, not a blanket failure to ingest the prior-year release. The current pipeline already retains up to three academic years where the source provides them. The exact reason some schools only have `2024/25` rows is still under investigation and may reflect school lineage or source-coverage gaps rather than a missing global backfill.
 
+### Note (2026-03-10 follow-up)
+
+- Re-checked against the current code: this is a confirmed data-coverage issue, not a frontend defect.
+- `AcademicPerformanceSection` only renders sparklines / trend footers when it can compute a delta from a prior year; that behavior is intentional.
+- The backend already exposes this state as partial completeness via `insufficient_years_published`, and the shared completeness copy already has a one-year-specific message.
+- Treat this tracker item as a data-quality / lineage investigation unless product explicitly wants additional explanatory UI copy.
+
 ### Proposed fix
 
 1. Add an explicit data-quality audit for schools with only one year of performance history.
@@ -294,6 +301,21 @@ Clicking "Save for later" on a school profile shows error toast: "Could not save
 1. Database migration not applied — `saved_schools` table or FK constraint missing
 2. Proxy port mismatch — Vite proxy targets port 8001 but backend may be running on 8000
 3. School URN not present in `schools` table (data inconsistency)
+
+### Note (2026-03-10 follow-up)
+
+- Confirmed from code inspection: the backend intentionally returns 404 when the requested URN is absent from `schools`, and the current toast is surfacing that raw backend message.
+- The "proxy port mismatch" hypothesis is incorrect on this branch. `apps/web/vite.config.ts` proxies `/api` to `http://127.0.0.1:8000`.
+- Both the profile and favourites repositories are wired from the same `settings.database.url`, so this is not currently explained by the web app reading one database while favourites writes to another within the normal app container wiring.
+- This remains a plausible real user-facing bug if reproduced, but the exact runtime root cause is still unconfirmed. The strongest current hypothesis is dataset inconsistency for the failing URN rather than a routing issue.
+
+### Best-practice recommendation
+
+1. Reproduce this against the real Postgres-backed app with the failing URN and capture the exact response payload.
+2. Add a repository-level or API integration test covering the 404 path in `PostgresFavouriteRepository`.
+3. Add structured logging around the 404 branch so the failing `school_urn` and environment context are visible.
+4. Replace the manual existence pre-check with a single atomic insert / constraint-handling path where practical.
+5. Improve the user-facing error copy so the toast does not expose a bare "Not found" message.
 
 ### Workaround
 
