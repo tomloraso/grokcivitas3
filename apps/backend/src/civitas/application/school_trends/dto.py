@@ -74,6 +74,11 @@ class SchoolTrendsSeriesDto:
     teacher_turnover_pct: tuple[SchoolTrendPointDto, ...]
     qts_pct: tuple[SchoolTrendPointDto, ...]
     qualifications_level6_plus_pct: tuple[SchoolTrendPointDto, ...]
+    income_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
+    expenditure_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
+    staff_costs_pct_of_expenditure: tuple[SchoolTrendPointDto, ...]
+    revenue_reserve_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
+    teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
 
 
 @dataclass(frozen=True)
@@ -102,6 +107,11 @@ class SchoolTrendsBenchmarksDto:
     teacher_turnover_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
     qts_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
     qualifications_level6_plus_pct: tuple[SchoolTrendBenchmarkPointDto, ...]
+    income_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
+    expenditure_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
+    staff_costs_pct_of_expenditure: tuple[SchoolTrendBenchmarkPointDto, ...]
+    revenue_reserve_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
+    teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
 
 
 @dataclass(frozen=True)
@@ -118,6 +128,7 @@ class SchoolTrendsSectionCompletenessDto:
     attendance: SchoolTrendsCompletenessDto
     behaviour: SchoolTrendsCompletenessDto
     workforce: SchoolTrendsCompletenessDto
+    finance: SchoolTrendsCompletenessDto
 
 
 @dataclass(frozen=True)
@@ -143,6 +154,7 @@ class SchoolTrendDashboardMetricDto:
 class SchoolTrendDashboardSectionDto:
     key: Literal[
         "demographics",
+        "finance",
         "attendance",
         "behaviour",
         "workforce",

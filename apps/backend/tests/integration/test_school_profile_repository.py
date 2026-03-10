@@ -654,6 +654,57 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS school_financials_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    finance_source text NOT NULL DEFAULT 'aar',
+                    school_laestab text NULL,
+                    school_name text NOT NULL,
+                    trust_uid text NULL,
+                    trust_name text NULL,
+                    phase text NULL,
+                    overall_phase text NULL,
+                    admissions_policy text NULL,
+                    urban_rural text NULL,
+                    pupils_fte double precision NULL,
+                    teachers_fte double precision NULL,
+                    fsm_pct double precision NULL,
+                    ehcp_pct double precision NULL,
+                    sen_support_pct double precision NULL,
+                    eal_pct double precision NULL,
+                    total_grant_funding_gbp double precision NULL,
+                    total_self_generated_funding_gbp double precision NULL,
+                    total_income_gbp double precision NULL,
+                    teaching_staff_costs_gbp double precision NULL,
+                    supply_teaching_staff_costs_gbp double precision NULL,
+                    education_support_staff_costs_gbp double precision NULL,
+                    other_staff_costs_gbp double precision NULL,
+                    total_staff_costs_gbp double precision NULL,
+                    maintenance_improvement_costs_gbp double precision NULL,
+                    premises_costs_gbp double precision NULL,
+                    educational_supplies_costs_gbp double precision NULL,
+                    bought_in_professional_services_costs_gbp double precision NULL,
+                    catering_costs_gbp double precision NULL,
+                    total_expenditure_gbp double precision NULL,
+                    revenue_reserve_gbp double precision NULL,
+                    in_year_balance_gbp double precision NULL,
+                    income_per_pupil_gbp double precision NULL,
+                    expenditure_per_pupil_gbp double precision NULL,
+                    staff_costs_pct_of_expenditure double precision NULL,
+                    teaching_staff_costs_per_pupil_gbp double precision NULL,
+                    supply_staff_costs_pct_of_staff_costs double precision NULL,
+                    revenue_reserve_per_pupil_gbp double precision NULL,
+                    source_file_url text NOT NULL,
+                    source_updated_at_utc timestamptz NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_leadership_snapshot (
                     urn text PRIMARY KEY REFERENCES schools(urn) ON DELETE CASCADE,
                     headteacher_name text NULL,
@@ -1172,6 +1223,109 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO school_financials_yearly (
+                    urn,
+                    academic_year,
+                    finance_source,
+                    school_laestab,
+                    school_name,
+                    trust_uid,
+                    trust_name,
+                    phase,
+                    overall_phase,
+                    admissions_policy,
+                    urban_rural,
+                    pupils_fte,
+                    teachers_fte,
+                    fsm_pct,
+                    ehcp_pct,
+                    sen_support_pct,
+                    eal_pct,
+                    total_grant_funding_gbp,
+                    total_self_generated_funding_gbp,
+                    total_income_gbp,
+                    teaching_staff_costs_gbp,
+                    supply_teaching_staff_costs_gbp,
+                    education_support_staff_costs_gbp,
+                    other_staff_costs_gbp,
+                    total_staff_costs_gbp,
+                    maintenance_improvement_costs_gbp,
+                    premises_costs_gbp,
+                    educational_supplies_costs_gbp,
+                    bought_in_professional_services_costs_gbp,
+                    catering_costs_gbp,
+                    total_expenditure_gbp,
+                    revenue_reserve_gbp,
+                    in_year_balance_gbp,
+                    income_per_pupil_gbp,
+                    expenditure_per_pupil_gbp,
+                    staff_costs_pct_of_expenditure,
+                    teaching_staff_costs_per_pupil_gbp,
+                    supply_staff_costs_pct_of_staff_costs,
+                    revenue_reserve_per_pupil_gbp,
+                    source_file_url,
+                    source_updated_at_utc,
+                    updated_at
+                ) VALUES (
+                    '910001',
+                    '2023/24',
+                    'aar',
+                    '213/6007',
+                    'Profile Test School',
+                    '5712',
+                    'Example Trust',
+                    'Primary',
+                    'Primary',
+                    'Not applicable',
+                    'Urban major conurbation',
+                    312.0,
+                    18.4,
+                    20.0,
+                    2.1,
+                    13.0,
+                    8.4,
+                    1950000.0,
+                    120000.0,
+                    2070000.0,
+                    1015000.0,
+                    24500.0,
+                    332000.0,
+                    188000.0,
+                    1559500.0,
+                    90500.0,
+                    118000.0,
+                    56000.0,
+                    42000.0,
+                    64000.0,
+                    2030000.0,
+                    275000.0,
+                    40000.0,
+                    6634.62,
+                    6506.41,
+                    0.7682,
+                    3253.21,
+                    0.0157,
+                    881.41,
+                    'https://financial-benchmarking-and-insights-tool.education.gov.uk/files/AAR_2023-24_download.xlsx',
+                    '2026-03-10T10:00:00+00:00',
+                    '2026-03-10T10:00:00+00:00'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    total_income_gbp = EXCLUDED.total_income_gbp,
+                    total_expenditure_gbp = EXCLUDED.total_expenditure_gbp,
+                    income_per_pupil_gbp = EXCLUDED.income_per_pupil_gbp,
+                    expenditure_per_pupil_gbp = EXCLUDED.expenditure_per_pupil_gbp,
+                    total_staff_costs_gbp = EXCLUDED.total_staff_costs_gbp,
+                    staff_costs_pct_of_expenditure = EXCLUDED.staff_costs_pct_of_expenditure,
+                    revenue_reserve_gbp = EXCLUDED.revenue_reserve_gbp,
+                    revenue_reserve_per_pupil_gbp = EXCLUDED.revenue_reserve_per_pupil_gbp,
+                    updated_at = EXCLUDED.updated_at
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_leadership_snapshot (
                     urn,
                     headteacher_name,
@@ -1625,6 +1779,9 @@ def _cleanup_data(engine: Engine) -> None:
             text("DELETE FROM area_house_price_context WHERE area_code = 'E09000033'")
         )
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code = 'E01004736'"))
+        connection.execute(
+            text("DELETE FROM school_financials_yearly WHERE urn IN ('910001', '910002')")
+        )
         connection.execute(text("DELETE FROM ofsted_inspections WHERE urn IN ('910001', '910002')"))
         connection.execute(
             text("DELETE FROM school_behaviour_yearly WHERE urn IN ('910001', '910002')")
@@ -1710,6 +1867,16 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.workforce_latest.teacher_turnover_pct == 9.8
     assert result.workforce_latest.qts_pct == 95.2
     assert result.workforce_latest.qualifications_level6_plus_pct == 81.1
+    assert result.finance_latest is not None
+    assert result.finance_latest.academic_year == "2023/24"
+    assert result.finance_latest.total_income_gbp == pytest.approx(2070000.0)
+    assert result.finance_latest.total_expenditure_gbp == pytest.approx(2030000.0)
+    assert result.finance_latest.income_per_pupil_gbp == pytest.approx(6634.62)
+    assert result.finance_latest.expenditure_per_pupil_gbp == pytest.approx(6506.41)
+    assert result.finance_latest.total_staff_costs_gbp == pytest.approx(1559500.0)
+    assert result.finance_latest.staff_costs_pct_of_expenditure == pytest.approx(0.7682)
+    assert result.finance_latest.revenue_reserve_gbp == pytest.approx(275000.0)
+    assert result.finance_latest.revenue_reserve_per_pupil_gbp == pytest.approx(881.41)
     assert result.leadership_snapshot is not None
     assert result.leadership_snapshot.headteacher_name == "A. Jones"
     assert result.leadership_snapshot.headteacher_start_date == date(2020, 9, 1)
@@ -1797,6 +1964,8 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.completeness.behaviour.reason_code is None
     assert result.completeness.workforce.status == "available"
     assert result.completeness.workforce.reason_code is None
+    assert result.completeness.finance.status == "available"
+    assert result.completeness.finance.reason_code is None
     assert result.completeness.leadership.status == "available"
     assert result.completeness.leadership.reason_code is None
     assert result.completeness.ofsted_latest.status == "available"
@@ -1823,6 +1992,7 @@ def test_school_profile_repository_infers_zero_incident_crime_snapshot(engine: E
 
     assert result is not None
     assert result.school.urn == "910002"
+    assert result.finance_latest is None
     assert result.area_context.coverage.has_crime is True
     assert result.area_context.coverage.crime_months_available >= 1
     assert result.area_context.coverage.has_house_prices is False
@@ -1839,6 +2009,8 @@ def test_school_profile_repository_infers_zero_incident_crime_snapshot(engine: E
     else:
         assert result.completeness.area_crime.status == "available"
         assert result.completeness.area_crime.reason_code == "no_incidents_in_radius"
+    assert result.completeness.finance.status == "unavailable"
+    assert result.completeness.finance.reason_code == "not_applicable"
 
 
 def test_school_profile_repository_marks_area_crime_stale_after_school_refresh(

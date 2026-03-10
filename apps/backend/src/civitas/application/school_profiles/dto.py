@@ -157,6 +157,19 @@ class SchoolWorkforceLatestDto:
 
 
 @dataclass(frozen=True)
+class SchoolFinanceLatestDto:
+    academic_year: str
+    total_income_gbp: float | None
+    total_expenditure_gbp: float | None
+    income_per_pupil_gbp: float | None
+    expenditure_per_pupil_gbp: float | None
+    total_staff_costs_gbp: float | None
+    staff_costs_pct_of_expenditure: float | None
+    revenue_reserve_gbp: float | None
+    revenue_reserve_per_pupil_gbp: float | None
+
+
+@dataclass(frozen=True)
 class SchoolLeadershipSnapshotDto:
     headteacher_name: str | None
     headteacher_start_date: date | None
@@ -387,6 +400,7 @@ class SchoolProfileCompletenessDto:
     attendance: SchoolProfileSectionCompletenessDto
     behaviour: SchoolProfileSectionCompletenessDto
     workforce: SchoolProfileSectionCompletenessDto
+    finance: SchoolProfileSectionCompletenessDto
     leadership: SchoolProfileSectionCompletenessDto
     performance: SchoolProfileSectionCompletenessDto
     ofsted_latest: SchoolProfileSectionCompletenessDto
@@ -405,6 +419,7 @@ class SchoolProfileResponseDto:
     attendance_latest: SchoolAttendanceLatestDto | None
     behaviour_latest: SchoolBehaviourLatestDto | None
     workforce_latest: SchoolWorkforceLatestDto | None
+    finance_latest: SchoolFinanceLatestDto | None
     leadership_snapshot: SchoolLeadershipSnapshotDto | None
     performance: SchoolPerformanceDto | None
     ofsted_latest: SchoolOfstedLatestDto | None

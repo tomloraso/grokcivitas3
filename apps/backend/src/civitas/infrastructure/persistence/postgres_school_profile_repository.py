@@ -27,6 +27,7 @@ from civitas.domain.school_profiles.models import (
     SchoolDemographicsHomeLanguage,
     SchoolDemographicsLatest,
     SchoolDemographicsSendPrimaryNeed,
+    SchoolFinanceLatest,
     SchoolLeadershipSnapshot,
     SchoolOfstedLatest,
     SchoolOfstedTimeline,
@@ -461,6 +462,34 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 qualifications_level6_plus_pct,
                                 updated_at
                             FROM school_workforce_yearly
+                            WHERE urn = :urn
+                            ORDER BY
+                                substring(academic_year from 1 for 4)::integer DESC,
+                                academic_year DESC
+                            LIMIT 1
+                            """
+                        ),
+                        {"urn": urn},
+                    )
+                    .mappings()
+                    .first()
+                )
+                finance_row = (
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                academic_year,
+                                total_income_gbp,
+                                total_expenditure_gbp,
+                                income_per_pupil_gbp,
+                                expenditure_per_pupil_gbp,
+                                total_staff_costs_gbp,
+                                staff_costs_pct_of_expenditure,
+                                revenue_reserve_gbp,
+                                revenue_reserve_per_pupil_gbp,
+                                updated_at
+                            FROM school_financials_yearly
                             WHERE urn = :urn
                             ORDER BY
                                 substring(academic_year from 1 for 4)::integer DESC,
@@ -938,6 +967,26 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 ),
             )
 
+        finance_latest = None
+        if finance_row is not None and finance_row["academic_year"] is not None:
+            finance_latest = SchoolFinanceLatest(
+                academic_year=str(finance_row["academic_year"]),
+                total_income_gbp=_to_optional_float(finance_row["total_income_gbp"]),
+                total_expenditure_gbp=_to_optional_float(finance_row["total_expenditure_gbp"]),
+                income_per_pupil_gbp=_to_optional_float(finance_row["income_per_pupil_gbp"]),
+                expenditure_per_pupil_gbp=_to_optional_float(
+                    finance_row["expenditure_per_pupil_gbp"]
+                ),
+                total_staff_costs_gbp=_to_optional_float(finance_row["total_staff_costs_gbp"]),
+                staff_costs_pct_of_expenditure=_to_optional_float(
+                    finance_row["staff_costs_pct_of_expenditure"]
+                ),
+                revenue_reserve_gbp=_to_optional_float(finance_row["revenue_reserve_gbp"]),
+                revenue_reserve_per_pupil_gbp=_to_optional_float(
+                    finance_row["revenue_reserve_per_pupil_gbp"]
+                ),
+            )
+
         leadership_snapshot = None
         if leadership_row is not None:
             leadership_snapshot = SchoolLeadershipSnapshot(
@@ -1315,6 +1364,11 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 house_price_months_available=house_price_months_available,
             ),
         )
+        finance_applicable = finance_latest is not None or _finance_is_applicable(
+            school_type=_to_optional_str(row["type"]),
+            trust_name=_to_optional_str(row["trust_name"]),
+            trust_flag=_to_optional_str(row["trust_flag"]),
+        )
 
         completeness = SchoolProfileCompleteness(
             demographics=_build_demographics_completeness(
@@ -1332,6 +1386,13 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             workforce=_build_workforce_completeness(
                 workforce_latest=workforce_latest,
                 workforce_updated_at=workforce_updated_at,
+            ),
+            finance=_build_finance_completeness(
+                finance_latest=finance_latest,
+                finance_updated_at=_to_optional_datetime(
+                    finance_row["updated_at"] if finance_row is not None else None
+                ),
+                finance_applicable=finance_applicable,
             ),
             leadership=_build_leadership_completeness(
                 leadership_snapshot=leadership_snapshot,
@@ -1430,6 +1491,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
+            finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,
             ofsted_latest=ofsted_latest,
@@ -1727,6 +1789,51 @@ def _build_workforce_completeness(
         status="available",
         reason_code=None,
         last_updated_at=workforce_updated_at,
+    )
+
+
+def _build_finance_completeness(
+    *,
+    finance_latest: SchoolFinanceLatest | None,
+    finance_updated_at: datetime | None,
+    finance_applicable: bool,
+) -> SchoolProfileSectionCompleteness:
+    if finance_latest is None:
+        if not finance_applicable:
+            return _section_completeness(
+                status="unavailable",
+                reason_code="not_applicable",
+                last_updated_at=None,
+            )
+        return _section_completeness(
+            status="unavailable",
+            reason_code="source_missing",
+            last_updated_at=None,
+        )
+
+    if any(
+        value is None
+        for value in (
+            finance_latest.total_income_gbp,
+            finance_latest.total_expenditure_gbp,
+            finance_latest.income_per_pupil_gbp,
+            finance_latest.expenditure_per_pupil_gbp,
+            finance_latest.total_staff_costs_gbp,
+            finance_latest.staff_costs_pct_of_expenditure,
+            finance_latest.revenue_reserve_gbp,
+            finance_latest.revenue_reserve_per_pupil_gbp,
+        )
+    ):
+        return _section_completeness(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=finance_updated_at,
+        )
+
+    return _section_completeness(
+        status="available",
+        reason_code=None,
+        last_updated_at=finance_updated_at,
     )
 
 
@@ -2047,6 +2154,20 @@ def _compute_three_year_change_pct(
     if target_price is None or target_price <= 0:
         return None
     return round(((latest_average_price - target_price) / target_price) * 100.0, 2)
+
+
+def _finance_is_applicable(
+    *,
+    school_type: str | None,
+    trust_name: str | None,
+    trust_flag: str | None,
+) -> bool:
+    normalized_type = (school_type or "").strip().casefold()
+    return (
+        "academy" in normalized_type
+        or bool((trust_name or "").strip())
+        or bool((trust_flag or "").strip())
+    )
 
 
 def _supports_direct_fsm(*, source_dataset_id: object, fsm_pct: object) -> bool:

@@ -19,6 +19,7 @@ from civitas.application.school_profiles.dto import (
     SchoolBehaviourLatestDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsLatestDto,
+    SchoolFinanceLatestDto,
     SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
     SchoolOfstedTimelineCoverageDto,
@@ -196,6 +197,17 @@ def _profile_response() -> SchoolProfileResponseDto:
             qts_pct=95.2,
             qualifications_level6_plus_pct=81.1,
         ),
+        finance_latest=SchoolFinanceLatestDto(
+            academic_year="2023/24",
+            total_income_gbp=2070000.0,
+            total_expenditure_gbp=2030000.0,
+            income_per_pupil_gbp=6634.62,
+            expenditure_per_pupil_gbp=6506.41,
+            total_staff_costs_gbp=1559500.0,
+            staff_costs_pct_of_expenditure=0.7682,
+            revenue_reserve_gbp=275000.0,
+            revenue_reserve_per_pupil_gbp=881.41,
+        ),
         leadership_snapshot=SchoolLeadershipSnapshotDto(
             headteacher_name="A. Jones",
             headteacher_start_date=date(2020, 9, 1),
@@ -345,6 +357,12 @@ def _profile_response() -> SchoolProfileResponseDto:
                 last_updated_at=timestamp,
                 years_available=None,
             ),
+            finance=SchoolProfileSectionCompletenessDto(
+                status="available",
+                reason_code=None,
+                last_updated_at=timestamp,
+                years_available=None,
+            ),
             leadership=SchoolProfileSectionCompletenessDto(
                 status="available",
                 reason_code=None,
@@ -429,7 +447,10 @@ def test_get_school_profile_returns_expected_contract() -> None:
         "capability_key": None,
         "reason_code": "anonymous_user",
     }
+    assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
+    assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
     assert payload["benchmarks"] == {"metrics": []}
+    assert payload["completeness"]["finance"]["status"] == "available"
     assert payload["completeness"]["performance"]["years_available"] == ["2023/24", "2024/25"]
     assert fake_use_case.calls == [("123456", None)]
 
@@ -453,6 +474,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
         attendance_latest=None,
         behaviour_latest=None,
         workforce_latest=None,
+        finance_latest=None,
         leadership_snapshot=None,
         performance=None,
         ofsted_latest=None,
@@ -485,6 +507,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert payload["demographics_latest"] is None
     assert payload["attendance_latest"] is None
     assert payload["performance"] is None
+    assert payload["finance_latest"] is None
     assert payload["ofsted_timeline"] == {
         "events": [],
         "coverage": {

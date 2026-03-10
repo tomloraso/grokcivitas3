@@ -13,6 +13,7 @@ class PipelineSource(str, Enum):
     DFE_BEHAVIOUR = "dfe_behaviour"
     DFE_WORKFORCE = "dfe_workforce"
     DFE_PERFORMANCE = "dfe_performance"
+    SCHOOL_FINANCIAL_BENCHMARKS = "school_financial_benchmarks"
     OFSTED_LATEST = "ofsted_latest"
     OFSTED_TIMELINE = "ofsted_timeline"
     ONS_IMD = "ons_imd"

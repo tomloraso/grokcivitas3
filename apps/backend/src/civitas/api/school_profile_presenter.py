@@ -21,6 +21,7 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileDemographicsHomeLanguageResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileDemographicsSendPrimaryNeedResponse,
+    SchoolProfileFinanceLatestResponse,
     SchoolProfileLeadershipSnapshotResponse,
     SchoolProfileMetricBenchmarkResponse,
     SchoolProfileNeighbourhoodSectionResponse,
@@ -129,6 +130,20 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             teacher_turnover_pct=result.workforce_latest.teacher_turnover_pct,
             qts_pct=result.workforce_latest.qts_pct,
             qualifications_level6_plus_pct=result.workforce_latest.qualifications_level6_plus_pct,
+        )
+
+    finance_latest = None
+    if result.finance_latest is not None:
+        finance_latest = SchoolProfileFinanceLatestResponse(
+            academic_year=result.finance_latest.academic_year,
+            total_income_gbp=result.finance_latest.total_income_gbp,
+            total_expenditure_gbp=result.finance_latest.total_expenditure_gbp,
+            income_per_pupil_gbp=result.finance_latest.income_per_pupil_gbp,
+            expenditure_per_pupil_gbp=result.finance_latest.expenditure_per_pupil_gbp,
+            total_staff_costs_gbp=result.finance_latest.total_staff_costs_gbp,
+            staff_costs_pct_of_expenditure=result.finance_latest.staff_costs_pct_of_expenditure,
+            revenue_reserve_gbp=result.finance_latest.revenue_reserve_gbp,
+            revenue_reserve_per_pupil_gbp=result.finance_latest.revenue_reserve_per_pupil_gbp,
         )
 
     leadership_snapshot = None
@@ -305,6 +320,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
         attendance_latest=attendance_latest,
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
+        finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
         ofsted_latest=ofsted_latest,
@@ -337,6 +353,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             attendance=_to_section_completeness_response(result.completeness.attendance),
             behaviour=_to_section_completeness_response(result.completeness.behaviour),
             workforce=_to_section_completeness_response(result.completeness.workforce),
+            finance=_to_section_completeness_response(result.completeness.finance),
             leadership=_to_section_completeness_response(result.completeness.leadership),
             performance=_to_section_completeness_response(result.completeness.performance),
             ofsted_latest=_to_section_completeness_response(result.completeness.ofsted_latest),

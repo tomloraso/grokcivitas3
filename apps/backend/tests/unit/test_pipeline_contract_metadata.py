@@ -7,6 +7,8 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
+from openpyxl import Workbook
+
 from civitas.infrastructure.pipelines.base import PipelineRunContext, PipelineSource
 from civitas.infrastructure.pipelines.contracts import (
     dfe_attendance as attendance_contract,
@@ -34,6 +36,9 @@ from civitas.infrastructure.pipelines.contracts import (
 )
 from civitas.infrastructure.pipelines.contracts import (
     police as police_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
+    school_financial_benchmarks as finance_contract,
 )
 from civitas.infrastructure.pipelines.demographics_release_files import (
     BRONZE_MANIFEST_FILE_NAME as DEMOGRAPHICS_MANIFEST_FILE_NAME,
@@ -92,6 +97,12 @@ from civitas.infrastructure.pipelines.police_crime_context import (
 )
 from civitas.infrastructure.pipelines.police_crime_context import (
     PoliceCrimeContextPipeline,
+)
+from civitas.infrastructure.pipelines.school_financial_benchmarks import (
+    BRONZE_MANIFEST_FILE_NAME as SCHOOL_FINANCIAL_BENCHMARKS_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.school_financial_benchmarks import (
+    SchoolFinancialBenchmarksPipeline,
 )
 
 FIXTURES_ROOT = Path(__file__).resolve().parent.parent / "fixtures"
@@ -391,6 +402,38 @@ def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Pa
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     assert payload["normalization_contract_version"] == workforce_contract.CONTRACT_VERSION
     assert len(payload["assets"]) == 1
+
+
+def test_school_financial_benchmarks_download_writes_contract_version_to_manifest(
+    tmp_path: Path,
+) -> None:
+    workbook_path = tmp_path / "AAR_2023-24_download.xlsx"
+    workbook = Workbook()
+    index_sheet = workbook.active
+    index_sheet.title = "Index"
+    index_sheet.append(["Sheet", "Rows"])
+    index_sheet.append(["Academies", 1])
+    academies_sheet = workbook.create_sheet("Academies")
+    academies_sheet.append(["URN", "School Name", "Total Income"])
+    academies_sheet.append(["100001", "Example Academy", 2070000])
+    workbook.create_sheet("Central Services")
+    workbook.save(workbook_path)
+
+    pipeline = SchoolFinancialBenchmarksPipeline(
+        engine=None,
+        workbook_urls=(str(workbook_path),),
+    )
+    context = _context(PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / SCHOOL_FINANCIAL_BENCHMARKS_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == finance_contract.CONTRACT_VERSION
+    assert len(payload["assets"]) == 1
+    assert payload["assets"][0]["academic_year"] == "2023/24"
+    assert payload["assets"][0]["sheet_names"] == ["Index", "Academies", "Central Services"]
+    assert payload["assets"][0]["sheet_row_counts"]["Academies"] == 1
 
 
 def test_ofsted_latest_download_writes_contract_version_to_metadata(tmp_path: Path) -> None:

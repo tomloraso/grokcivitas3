@@ -517,6 +517,51 @@ def get_school_trends(
                 )
                 for point in result.series.qualifications_level6_plus_pct
             ],
+            income_per_pupil_gbp=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.income_per_pupil_gbp
+            ],
+            expenditure_per_pupil_gbp=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.expenditure_per_pupil_gbp
+            ],
+            staff_costs_pct_of_expenditure=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.staff_costs_pct_of_expenditure
+            ],
+            revenue_reserve_per_pupil_gbp=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.revenue_reserve_per_pupil_gbp
+            ],
+            teaching_staff_costs_per_pupil_gbp=[
+                SchoolTrendPointResponse(
+                    academic_year=point.academic_year,
+                    value=point.value,
+                    delta=point.delta,
+                    direction=point.direction,
+                )
+                for point in result.series.teaching_staff_costs_per_pupil_gbp
+            ],
         ),
         benchmarks=SchoolTrendsBenchmarksResponse(
             disadvantaged_pct=[
@@ -615,6 +660,26 @@ def get_school_trends(
                 SchoolTrendBenchmarkPointResponse(**point.__dict__)
                 for point in result.benchmarks.qualifications_level6_plus_pct
             ],
+            income_per_pupil_gbp=[
+                SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                for point in result.benchmarks.income_per_pupil_gbp
+            ],
+            expenditure_per_pupil_gbp=[
+                SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                for point in result.benchmarks.expenditure_per_pupil_gbp
+            ],
+            staff_costs_pct_of_expenditure=[
+                SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                for point in result.benchmarks.staff_costs_pct_of_expenditure
+            ],
+            revenue_reserve_per_pupil_gbp=[
+                SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                for point in result.benchmarks.revenue_reserve_per_pupil_gbp
+            ],
+            teaching_staff_costs_per_pupil_gbp=[
+                SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                for point in result.benchmarks.teaching_staff_costs_per_pupil_gbp
+            ],
         ),
         completeness=SchoolTrendsCompletenessResponse(
             status=result.completeness.status,
@@ -664,6 +729,16 @@ def get_school_trends(
                 years_available=(
                     list(result.section_completeness.workforce.years_available)
                     if result.section_completeness.workforce.years_available is not None
+                    else None
+                ),
+            ),
+            finance=SchoolTrendsCompletenessResponse(
+                status=result.section_completeness.finance.status,
+                reason_code=result.section_completeness.finance.reason_code,
+                last_updated_at=result.section_completeness.finance.last_updated_at,
+                years_available=(
+                    list(result.section_completeness.finance.years_available)
+                    if result.section_completeness.finance.years_available is not None
                     else None
                 ),
             ),

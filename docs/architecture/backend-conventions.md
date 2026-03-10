@@ -96,6 +96,17 @@ Keep model roles explicit and separate:
 2. Frontend consumes generated/typed clients from backend OpenAPI.
 3. Avoid hand-maintained duplicate API types in the frontend when generated types exist.
 
+## Configuration And Settings
+
+1. Environment-backed configuration must flow through `civitas.infrastructure.config.settings`.
+2. Runtime code, CLI entrypoints, scripts, and test fixtures must use `AppSettings` or `get_settings()`
+   instead of reading `.env` or `os.environ` ad hoc.
+3. Repo-root `.env` discovery belongs in the shared settings module, not in individual callers.
+4. If a new setting is needed for tests or operations, add it to `AppSettings` and reuse the shared
+   settings path. Do not add fixture-local `.env` parsing as a workaround.
+5. Test-only environment overrides that need to be deterministic across the suite belong in shared
+   pytest bootstrap such as `apps/backend/tests/conftest.py`, not in one-off shell commands.
+
 ## Thin Entrypoints
 
 API and CLI layers must remain thin:
@@ -110,4 +121,3 @@ API and CLI layers must remain thin:
 1. Imports point inward.
 2. `civitas.api.schemas` must only be imported by API modules.
 3. Keep leaf imports explicit; avoid barrel re-exports.
-

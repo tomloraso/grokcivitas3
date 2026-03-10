@@ -14,6 +14,7 @@ from civitas.domain.school_trends.models import (
     SchoolBehaviourYearlyRow,
     SchoolDemographicsSeries,
     SchoolDemographicsYearlyRow,
+    SchoolFinanceSeries,
     SchoolMetricBenchmarkSeries,
     SchoolMetricBenchmarkYearlyRow,
     SchoolWorkforceSeries,
@@ -29,12 +30,23 @@ class FakeSchoolTrendsRepository:
         attendance: SchoolAttendanceSeries | None,
         behaviour: SchoolBehaviourSeries | None,
         workforce: SchoolWorkforceSeries | None,
-        benchmarks: SchoolMetricBenchmarkSeries | None,
+        finance: SchoolFinanceSeries | None = None,
+        benchmarks: SchoolMetricBenchmarkSeries | None = None,
     ) -> None:
         self._demographics = demographics
         self._attendance = attendance
         self._behaviour = behaviour
         self._workforce = workforce
+        self._finance = (
+            finance
+            if finance is not None or demographics is None
+            else SchoolFinanceSeries(
+                urn=demographics.urn,
+                rows=(),
+                latest_updated_at=None,
+                is_applicable=False,
+            )
+        )
         self._benchmarks = benchmarks
         self.received_urns: list[str] = []
 
@@ -50,6 +62,9 @@ class FakeSchoolTrendsRepository:
 
     def get_workforce_series(self, urn: str) -> SchoolWorkforceSeries | None:
         return self._workforce
+
+    def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None:
+        return self._finance
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         return self._benchmarks

@@ -7,6 +7,7 @@ DataQualitySection = Literal[
     "attendance",
     "behaviour",
     "workforce",
+    "finance",
     "leadership",
     "school_performance",
     "ofsted_latest",

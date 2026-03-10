@@ -31,6 +31,7 @@ from civitas.application.school_profiles.dto import (
     SchoolDemographicsHomeLanguageDto,
     SchoolDemographicsLatestDto,
     SchoolDemographicsSendPrimaryNeedDto,
+    SchoolFinanceLatestDto,
     SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
     SchoolOfstedTimelineCoverageDto,
@@ -189,6 +190,24 @@ class GetSchoolProfileUseCase:
                 qts_pct=profile.workforce_latest.qts_pct,
                 qualifications_level6_plus_pct=(
                     profile.workforce_latest.qualifications_level6_plus_pct
+                ),
+            )
+
+        finance_latest = None
+        if profile.finance_latest is not None:
+            finance_latest = SchoolFinanceLatestDto(
+                academic_year=profile.finance_latest.academic_year,
+                total_income_gbp=profile.finance_latest.total_income_gbp,
+                total_expenditure_gbp=profile.finance_latest.total_expenditure_gbp,
+                income_per_pupil_gbp=profile.finance_latest.income_per_pupil_gbp,
+                expenditure_per_pupil_gbp=profile.finance_latest.expenditure_per_pupil_gbp,
+                total_staff_costs_gbp=profile.finance_latest.total_staff_costs_gbp,
+                staff_costs_pct_of_expenditure=(
+                    profile.finance_latest.staff_costs_pct_of_expenditure
+                ),
+                revenue_reserve_gbp=profile.finance_latest.revenue_reserve_gbp,
+                revenue_reserve_per_pupil_gbp=(
+                    profile.finance_latest.revenue_reserve_per_pupil_gbp
                 ),
             )
 
@@ -438,6 +457,12 @@ class GetSchoolProfileUseCase:
                 last_updated_at=profile.completeness.workforce.last_updated_at,
                 years_available=profile.completeness.workforce.years_available,
             ),
+            finance=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.finance.status,
+                reason_code=profile.completeness.finance.reason_code,
+                last_updated_at=profile.completeness.finance.last_updated_at,
+                years_available=profile.completeness.finance.years_available,
+            ),
             leadership=SchoolProfileSectionCompletenessDto(
                 status=profile.completeness.leadership.status,
                 reason_code=profile.completeness.leadership.reason_code,
@@ -555,6 +580,7 @@ class GetSchoolProfileUseCase:
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
+            finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,
             ofsted_latest=ofsted_latest,

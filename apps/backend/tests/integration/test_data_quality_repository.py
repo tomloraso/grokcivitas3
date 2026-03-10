@@ -181,6 +181,23 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS school_financials_yearly (
+                    urn text NOT NULL,
+                    academic_year text NOT NULL,
+                    school_name text NOT NULL,
+                    total_income_gbp double precision NULL,
+                    income_per_pupil_gbp double precision NULL,
+                    source_file_url text NOT NULL DEFAULT '',
+                    source_updated_at_utc timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS ofsted_inspections (
                     inspection_number text PRIMARY KEY,
                     urn text NOT NULL,
@@ -658,6 +675,47 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO school_financials_yearly (
+                    urn,
+                    academic_year,
+                    school_name,
+                    total_income_gbp,
+                    income_per_pupil_gbp,
+                    source_file_url,
+                    source_updated_at_utc,
+                    updated_at
+                )
+                VALUES
+                    (
+                        '990001',
+                        '2023/24',
+                        'Alpha Academy',
+                        2070000.0,
+                        6634.62,
+                        'https://example.com/AAR_2023-24_download.xlsx',
+                        '2100-03-03T01:30:00+00:00',
+                        '2100-03-03T01:30:00+00:00'
+                    ),
+                    (
+                        '990002',
+                        '2023/24',
+                        'Beta Academy',
+                        1980000.0,
+                        6120.25,
+                        'https://example.com/AAR_2023-24_download.xlsx',
+                        '2100-03-03T01:30:00+00:00',
+                        '2100-03-03T01:30:00+00:00'
+                    )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    total_income_gbp = EXCLUDED.total_income_gbp,
+                    income_per_pupil_gbp = EXCLUDED.income_per_pupil_gbp,
+                    updated_at = EXCLUDED.updated_at
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_ofsted_latest (
                     urn,
                     inspection_start_date,
@@ -912,6 +970,13 @@ def _seed_data(engine: Engine) -> None:
         _insert_pipeline_run(
             connection=connection,
             run_id=str(uuid4()),
+            source="school_financial_benchmarks",
+            status="succeeded",
+            finished_at="2100-03-03T01:30:00+00:00",
+        )
+        _insert_pipeline_run(
+            connection=connection,
+            run_id=str(uuid4()),
             source="dfe_characteristics",
             status="succeeded",
             finished_at="2100-03-02T12:00:00+00:00",
@@ -931,6 +996,14 @@ def _seed_data(engine: Engine) -> None:
             finished_at="2026-03-03T10:00:00+00:00",
         )
 
+        _insert_pipeline_run_event(
+            connection=connection,
+            run_id=str(uuid4()),
+            source="school_financial_benchmarks",
+            run_status="succeeded",
+            finished_at="2100-03-03T01:30:00+00:00",
+            contract_version="school_financial_benchmarks.v1",
+        )
         _insert_pipeline_run_event(
             connection=connection,
             run_id=str(uuid4()),
@@ -1132,6 +1205,7 @@ def _cleanup_data(engine: Engine) -> None:
                 """
                 DELETE FROM pipeline_runs
                 WHERE source IN (
+                    'school_financial_benchmarks',
                     'dfe_characteristics',
                     'ons_imd',
                     'gias',
@@ -1155,6 +1229,9 @@ def _cleanup_data(engine: Engine) -> None:
                 WHERE area_code IN ('E09000001')
                 """
             )
+        )
+        connection.execute(
+            text("DELETE FROM school_financials_yearly WHERE urn IN ('990001', '990002')")
         )
         connection.execute(text("DELETE FROM area_deprivation WHERE lsoa_code IN ('L001', 'L999')"))
         connection.execute(
@@ -1212,6 +1289,12 @@ def test_data_quality_repository_collects_snapshots_and_run_health(engine: Engin
     assert area_house_prices_snapshot.schools_total_count >= 2
     assert area_house_prices_snapshot.schools_with_section_count >= 1
     assert 0.0 <= area_house_prices_snapshot.section_coverage_ratio <= 1.0
+
+    finance_snapshot = next(snapshot for snapshot in snapshots if snapshot.section == "finance")
+    assert finance_snapshot.source == "school_financial_benchmarks"
+    assert finance_snapshot.dataset == "school_financials_yearly"
+    assert finance_snapshot.schools_with_section_count >= 2
+    assert finance_snapshot.contract_version == "school_financial_benchmarks.v1"
 
     previous_day_snapshot = demographics_snapshot.__class__(
         snapshot_date=date(2026, 3, 2),
@@ -1306,3 +1389,56 @@ def test_sql_pipeline_run_store_emits_pipeline_run_event(engine: Engine, tmp_pat
     assert row["contract_version"] == "dfe-v3"
     assert float(row["duration_seconds"]) == pytest.approx(3600.0)
     assert float(row["rejected_ratio"]) == pytest.approx(0.1)
+
+
+def test_sql_pipeline_run_store_emits_finance_pipeline_run_event(engine: Engine, tmp_path) -> None:
+    run_store = SqlPipelineRunStore(engine=engine)
+    context = PipelineRunContext(
+        run_id=uuid4(),
+        source=PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS,
+        started_at=datetime(2026, 3, 3, 11, 0, tzinfo=timezone.utc),
+        bronze_root=tmp_path,
+    )
+    run_store.record_started(context)
+    result = PipelineResult(
+        status=PipelineRunStatus.SUCCEEDED,
+        downloaded_rows=20,
+        staged_rows=18,
+        promoted_rows=18,
+        rejected_rows=2,
+        contract_version="school_financial_benchmarks.v1",
+        error_message=None,
+    )
+    run_store.record_finished(
+        context=context,
+        result=result,
+        finished_at=datetime(2026, 3, 3, 12, 0, tzinfo=timezone.utc),
+    )
+
+    with engine.connect() as connection:
+        row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT
+                        source,
+                        dataset,
+                        section,
+                        run_status,
+                        contract_version
+                    FROM pipeline_run_events
+                    WHERE run_id = :run_id
+                    """
+                ),
+                {"run_id": str(context.run_id)},
+            )
+            .mappings()
+            .first()
+        )
+
+    assert row is not None
+    assert row["source"] == "school_financial_benchmarks"
+    assert row["dataset"] == "school_financials_yearly"
+    assert row["section"] == "finance"
+    assert row["run_status"] == "succeeded"
+    assert row["contract_version"] == "school_financial_benchmarks.v1"

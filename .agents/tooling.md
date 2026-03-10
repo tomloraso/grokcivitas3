@@ -6,6 +6,9 @@ Run all commands from the repo root.
 
 - `uv sync --project apps/backend --extra dev`
 - `cd apps/web && npm install`
+- Backend API, CLI, and pytest read env-backed settings from the repo-root `.env` through the
+  shared settings module. Keep `CIVITAS_DATABASE_URL` and `CIVITAS_TEST_DATABASE_URL` there for
+  normal local work.
 
 ## Backend
 
@@ -17,6 +20,8 @@ Run all commands from the repo root.
 - Tests: `uv run --project apps/backend pytest`
 - Pipeline run: `uv run --project apps/backend civitas pipeline run --source gias`
 - Dev API: `uv run --project apps/backend uvicorn civitas.api.main:app --reload --host 0.0.0.0 --port 8000`
+- Do not add per-command dotenv parsing or shell-only exports to work around broken settings
+  resolution. Fix `AppSettings` or shared test bootstrap instead.
 
 ## Web
 

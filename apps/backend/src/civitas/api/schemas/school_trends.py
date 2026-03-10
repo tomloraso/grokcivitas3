@@ -50,6 +50,11 @@ class SchoolTrendsSeriesResponse(BaseModel):
     teacher_turnover_pct: list[SchoolTrendPointResponse]
     qts_pct: list[SchoolTrendPointResponse]
     qualifications_level6_plus_pct: list[SchoolTrendPointResponse]
+    income_per_pupil_gbp: list[SchoolTrendPointResponse]
+    expenditure_per_pupil_gbp: list[SchoolTrendPointResponse]
+    staff_costs_pct_of_expenditure: list[SchoolTrendPointResponse]
+    revenue_reserve_per_pupil_gbp: list[SchoolTrendPointResponse]
+    teaching_staff_costs_per_pupil_gbp: list[SchoolTrendPointResponse]
 
 
 class SchoolTrendsBenchmarksResponse(BaseModel):
@@ -77,6 +82,11 @@ class SchoolTrendsBenchmarksResponse(BaseModel):
     teacher_turnover_pct: list[SchoolTrendBenchmarkPointResponse]
     qts_pct: list[SchoolTrendBenchmarkPointResponse]
     qualifications_level6_plus_pct: list[SchoolTrendBenchmarkPointResponse]
+    income_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
+    expenditure_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
+    staff_costs_pct_of_expenditure: list[SchoolTrendBenchmarkPointResponse]
+    revenue_reserve_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
+    teaching_staff_costs_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
 
 
 class SchoolTrendsHistoryQualityResponse(BaseModel):
@@ -112,6 +122,7 @@ class SchoolTrendsSectionCompletenessResponse(BaseModel):
     attendance: SchoolTrendsCompletenessResponse
     behaviour: SchoolTrendsCompletenessResponse
     workforce: SchoolTrendsCompletenessResponse
+    finance: SchoolTrendsCompletenessResponse
 
 
 class SchoolTrendsResponse(BaseModel):
@@ -134,6 +145,7 @@ class SchoolTrendDashboardMetricResponse(BaseModel):
 class SchoolTrendDashboardSectionResponse(BaseModel):
     key: Literal[
         "demographics",
+        "finance",
         "attendance",
         "behaviour",
         "workforce",

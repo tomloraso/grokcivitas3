@@ -10,6 +10,8 @@
 - Work one task at a time unless phase parallelism is explicit.
 - Run commands from repo root using `.agents/tooling.md`.
 - Prefer direct changes over temporary compatibility shims.
+- If configuration is loading incorrectly, fix the shared settings/bootstrap path rather than adding
+  shell-session exports or fixture-local dotenv parsing.
 - Follow the golden path: write/adjust tests first, implement, then run `make lint` and `make test`.
 
 ## Code hygiene

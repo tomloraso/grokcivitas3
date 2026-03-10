@@ -1215,6 +1215,8 @@ def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]
         return ("school_workforce_yearly", "workforce")
     if source == PipelineSource.DFE_PERFORMANCE:
         return ("school_performance_yearly", "school_performance")
+    if source == PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS:
+        return ("school_financials_yearly", "finance")
     if source == PipelineSource.OFSTED_LATEST:
         return ("school_ofsted_latest", "ofsted_latest")
     if source == PipelineSource.OFSTED_TIMELINE:

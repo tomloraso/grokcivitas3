@@ -81,11 +81,11 @@ def test_get_school_trends_returns_expected_contract() -> None:
     fake_use_case = FakeGetSchoolTrendsUseCase(
         result=SchoolTrendsResponseDto(
             urn="123456",
-            years_available=("2024/25",),
+            years_available=("2023/24", "2024/25"),
             history_quality=SchoolTrendsHistoryQualityDto(
                 is_partial_history=True,
                 min_years_for_delta=2,
-                years_count=1,
+                years_count=2,
             ),
             series=SchoolTrendsSeriesDto(
                 disadvantaged_pct=(
@@ -280,6 +280,39 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                income_per_pupil_gbp=(
+                    SchoolTrendPointDto(
+                        academic_year="2023/24",
+                        value=6634.62,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                expenditure_per_pupil_gbp=(
+                    SchoolTrendPointDto(
+                        academic_year="2023/24",
+                        value=6506.41,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                staff_costs_pct_of_expenditure=(
+                    SchoolTrendPointDto(
+                        academic_year="2023/24",
+                        value=0.7682,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                revenue_reserve_per_pupil_gbp=(
+                    SchoolTrendPointDto(
+                        academic_year="2023/24",
+                        value=881.41,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                teaching_staff_costs_per_pupil_gbp=(),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=(
@@ -330,12 +363,29 @@ def test_get_school_trends_returns_expected_contract() -> None:
                 teacher_turnover_pct=(),
                 qts_pct=(),
                 qualifications_level6_plus_pct=(),
+                income_per_pupil_gbp=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2023/24",
+                        school_value=6634.62,
+                        national_value=6120.25,
+                        local_value=6450.10,
+                        school_vs_national_delta=514.37,
+                        school_vs_local_delta=184.52,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                expenditure_per_pupil_gbp=(),
+                staff_costs_pct_of_expenditure=(),
+                revenue_reserve_per_pupil_gbp=(),
+                teaching_staff_costs_per_pupil_gbp=(),
             ),
             completeness=SchoolTrendsCompletenessDto(
                 status="partial",
                 reason_code="insufficient_years_published",
                 last_updated_at=None,
-                years_available=("2024/25",),
+                years_available=("2023/24", "2024/25"),
             ),
             section_completeness=SchoolTrendsSectionCompletenessDto(
                 demographics=SchoolTrendsCompletenessDto(
@@ -362,6 +412,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     last_updated_at=None,
                     years_available=("2024/25",),
                 ),
+                finance=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2023/24",),
+                ),
             ),
         )
     )
@@ -372,13 +428,18 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["urn"] == "123456"
-    assert payload["years_available"] == ["2024/25"]
-    assert payload["history_quality"]["years_count"] == 1
+    assert payload["years_available"] == ["2023/24", "2024/25"]
+    assert payload["history_quality"]["years_count"] == 2
     assert payload["series"]["fsm_pct"][0]["value"] == 16.9
+    assert payload["series"]["income_per_pupil_gbp"][0]["value"] == 6634.62
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
     assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"
     assert payload["benchmarks"]["fsm_pct"][0]["school_vs_national_delta"] == pytest.approx(1.8)
+    assert payload["benchmarks"]["income_per_pupil_gbp"][0][
+        "school_vs_local_delta"
+    ] == pytest.approx(184.52)
+    assert payload["section_completeness"]["finance"]["years_available"] == ["2023/24"]
     assert fake_use_case.calls == ["123456"]
 
 
@@ -408,7 +469,7 @@ def test_get_school_trend_dashboard_returns_expected_contract() -> None:
     fake_use_case = FakeGetSchoolTrendDashboardUseCase(
         result=SchoolTrendDashboardResponseDto(
             urn="123456",
-            years_available=("2024", "2024/25"),
+            years_available=("2023/24", "2024", "2024/25"),
             sections=(
                 SchoolTrendDashboardSectionDto(
                     key="demographics",
@@ -425,6 +486,29 @@ def test_get_school_trend_dashboard_returns_expected_contract() -> None:
                                     local_value=16.2,
                                     school_vs_national_delta=1.8,
                                     school_vs_local_delta=0.7,
+                                    local_scope="local_authority_district",
+                                    local_area_code="E09000033",
+                                    local_area_label="Westminster",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+                SchoolTrendDashboardSectionDto(
+                    key="finance",
+                    metrics=(
+                        SchoolTrendDashboardMetricDto(
+                            metric_key="finance_income_per_pupil_gbp",
+                            label="Income per Pupil",
+                            unit="currency",
+                            points=(
+                                SchoolTrendBenchmarkPointDto(
+                                    academic_year="2023/24",
+                                    school_value=6634.62,
+                                    national_value=6120.25,
+                                    local_value=6450.10,
+                                    school_vs_national_delta=514.37,
+                                    school_vs_local_delta=184.52,
                                     local_scope="local_authority_district",
                                     local_area_code="E09000033",
                                     local_area_label="Westminster",
@@ -476,10 +560,12 @@ def test_get_school_trend_dashboard_returns_expected_contract() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["urn"] == "123456"
-    assert payload["years_available"] == ["2024", "2024/25"]
+    assert payload["years_available"] == ["2023/24", "2024", "2024/25"]
     assert payload["sections"][0]["key"] == "demographics"
     assert payload["sections"][0]["metrics"][0]["metric_key"] == "fsm_pct"
-    assert payload["sections"][1]["metrics"][0]["points"][0][
+    assert payload["sections"][1]["key"] == "finance"
+    assert payload["sections"][1]["metrics"][0]["metric_key"] == "finance_income_per_pupil_gbp"
+    assert payload["sections"][2]["metrics"][0]["points"][0][
         "school_vs_national_delta"
     ] == pytest.approx(5.4)
     assert fake_use_case.calls == ["123456"]

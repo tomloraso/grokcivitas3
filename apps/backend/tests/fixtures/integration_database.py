@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from sqlalchemy import create_engine, text
@@ -9,7 +8,6 @@ from sqlalchemy.engine.url import make_url
 
 from civitas.infrastructure.config.settings import AppSettings
 
-TEST_DATABASE_URL_ENV = "CIVITAS_TEST_DATABASE_URL"
 INTEGRATION_DATABASE_SKIP_REASON = (
     "Postgres integration tests require CIVITAS_TEST_DATABASE_URL or a test-scoped "
     "CIVITAS_DATABASE_URL; refusing to use the app database."
@@ -17,11 +15,13 @@ INTEGRATION_DATABASE_SKIP_REASON = (
 
 
 def integration_database_url() -> str | None:
-    explicit_database_url = os.getenv(TEST_DATABASE_URL_ENV, "").strip()
+    settings = AppSettings()
+
+    explicit_database_url = (settings.test_database_url or "").strip()
     if explicit_database_url:
         return explicit_database_url
 
-    configured_database_url = AppSettings().database.url.strip()
+    configured_database_url = settings.database.url.strip()
     if _is_test_scoped_database_url(configured_database_url):
         return configured_database_url
     return None

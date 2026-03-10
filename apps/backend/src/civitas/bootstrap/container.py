@@ -636,6 +636,9 @@ def pipeline_runner() -> PipelineRunner:
         PipelineSource.DFE_PERFORMANCE: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_performance
         ),
+        PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_school_financial_benchmarks
+        ),
         PipelineSource.OFSTED_LATEST: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_ofsted_latest
         ),

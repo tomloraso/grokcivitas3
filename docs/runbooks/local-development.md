@@ -27,7 +27,10 @@ PowerShell:
 Copy-Item .env.example .env
 ```
 
-Backend runtime configuration is loaded from `.env` via the shared settings module.
+Backend runtime configuration is loaded from the repo-root `.env` via the shared settings module.
+API, CLI, and pytest should all see the same settings source. Do not add separate `.env` parsing in
+fixtures, scripts, or one-off commands to compensate for a missing setting; fix the shared settings
+path instead.
 
 ## Testing database
 
@@ -46,10 +49,18 @@ CIVITAS_TEST_DATABASE_URL=postgresql+psycopg://app:app@localhost:5432/app_test
 Create the `app_test` database once with your normal Postgres tooling before running backend
 integration suites.
 
-`CIVITAS_TEST_DATABASE_URL` is used only for backend integration tests. If it is unset, backend
-pytest will only run integration suites when `CIVITAS_DATABASE_URL` already targets a clearly
-test-scoped database such as `app_test`. Otherwise those integration suites are skipped on purpose
-to avoid clobbering the shared app database.
+`CIVITAS_TEST_DATABASE_URL` is used only for backend integration tests. The integration bootstrap
+reads it through `AppSettings`, then falls back to `CIVITAS_DATABASE_URL` only when that value
+already targets a clearly test-scoped database such as `app_test`. Otherwise those integration
+suites are skipped on purpose to avoid clobbering the shared app database.
+
+Shared test-environment behavior:
+
+- Keep both database URLs in the repo-root `.env` for normal local work.
+- Let `apps/backend/tests/conftest.py` own deterministic test-only overrides such as runtime
+  environment and origin allowlists.
+- If integration tests are skipping or pointing at the wrong database, fix the shared settings or
+  pytest bootstrap. Do not rely on shell-session exports as a sticky plaster.
 
 Frontend (Vite) optional map tile configuration lives in `apps/web/.env.example`:
 

@@ -54,8 +54,10 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_POLICE_CRIME_SOURCE_MODE,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
     DEFAULT_POSTCODES_IO_BASE_URL,
+    DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS,
     DEFAULT_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS,
     DEFAULT_SCHOOL_PROFILE_CACHE_TTL_SECONDS,
+    REPO_ENV_FILE,
     AppSettings,
     get_settings,
 )
@@ -68,6 +70,7 @@ ENV_ACCESS_PATTERN = re.compile(r"\bos\.(?:environ|getenv)\b|\benviron\s*\[")
 def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     for name in (
         "CIVITAS_DATABASE_URL",
+        "CIVITAS_TEST_DATABASE_URL",
         "CIVITAS_BRONZE_ROOT",
         "CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT",
         "CIVITAS_GIAS_SOURCE_CSV",
@@ -94,6 +97,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DFE_PERFORMANCE_KS4_DATASET_ID",
         "CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS",
         "CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
+        "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
         "CIVITAS_IMD_SOURCE_CSV",
         "CIVITAS_IMD_RELEASE",
         "CIVITAS_POLICE_CRIME_SOURCE_ARCHIVE_URL",
@@ -110,6 +114,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_BEHAVIOUR",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_WORKFORCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_ONS_IMD",
@@ -134,6 +139,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_BEHAVIOUR",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_WORKFORCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_ONS_IMD",
@@ -220,6 +226,10 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         settings.pipeline.dfe_performance_lookback_years == DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS
     )
     assert settings.pipeline.dfe_performance_page_size == DEFAULT_DFE_PERFORMANCE_PAGE_SIZE
+    assert (
+        settings.pipeline.school_financial_benchmarks_workbook_urls
+        == DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS
+    )
     assert settings.pipeline.imd_source_csv is None
     assert settings.pipeline.imd_release == DEFAULT_IMD_RELEASE
     assert settings.pipeline.police_crime_source_archive_url is None
@@ -240,6 +250,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.max_reject_ratio_dfe_behaviour == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_workforce == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_performance == 1.0
+    assert settings.pipeline.max_reject_ratio_school_financial_benchmarks == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_latest == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_timeline == 1.0
     assert settings.pipeline.max_reject_ratio_ons_imd == 1.0
@@ -281,6 +292,10 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert (
         settings.data_quality.freshness_sla_hours_dfe_performance
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_school_financial_benchmarks
         == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
     )
     assert (
@@ -331,6 +346,10 @@ def test_app_settings_reads_environment_overrides(
 ) -> None:
     monkeypatch.setenv(
         "CIVITAS_DATABASE_URL", "postgresql+psycopg://override:override@localhost:5432/app"
+    )
+    monkeypatch.setenv(
+        "CIVITAS_TEST_DATABASE_URL",
+        "postgresql+psycopg://override:override@localhost:5432/app_test",
     )
     monkeypatch.setenv("CIVITAS_BRONZE_ROOT", str(tmp_path / "custom-bronze"))
     monkeypatch.setenv("CIVITAS_ALLOW_NONCANONICAL_BRONZE_ROOT", "true")
@@ -384,6 +403,10 @@ def test_app_settings_reads_environment_overrides(
     )
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS", "4")
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_PAGE_SIZE", "5000")
+    monkeypatch.setenv(
+        "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
+        " https://example.com/AAR_2022-23_download.xlsx, https://example.com/AAR_2023-24_download.xlsx ",
+    )
     monkeypatch.setenv("CIVITAS_IMD_SOURCE_CSV", "  https://example.com/file_7.csv  ")
     monkeypatch.setenv("CIVITAS_IMD_RELEASE", " IOD2019 ")
     monkeypatch.setenv(
@@ -434,6 +457,10 @@ def test_app_settings_reads_environment_overrides(
     settings = AppSettings(_env_file=None)
 
     assert settings.database.url == "postgresql+psycopg://override:override@localhost:5432/app"
+    assert (
+        settings.test_database_url
+        == "postgresql+psycopg://override:override@localhost:5432/app_test"
+    )
     assert settings.allow_noncanonical_bronze_root is True
     assert settings.pipeline.bronze_root == tmp_path / "custom-bronze"
     assert settings.pipeline.gias_source_csv == "https://example.com/gias.csv"
@@ -485,6 +512,10 @@ def test_app_settings_reads_environment_overrides(
     )
     assert settings.pipeline.dfe_performance_lookback_years == 4
     assert settings.pipeline.dfe_performance_page_size == 5000
+    assert settings.pipeline.school_financial_benchmarks_workbook_urls == (
+        "https://example.com/AAR_2022-23_download.xlsx",
+        "https://example.com/AAR_2023-24_download.xlsx",
+    )
     assert settings.pipeline.imd_source_csv == "https://example.com/file_7.csv"
     assert settings.pipeline.imd_release == "iod2019"
     assert (
@@ -609,3 +640,9 @@ def test_get_settings_loader_is_cached() -> None:
     second = get_settings()
     assert first is second
     get_settings.cache_clear()
+
+
+def test_settings_model_uses_repo_root_env_file() -> None:
+    assert REPO_ENV_FILE.is_absolute()
+    assert Path(__file__).resolve().parents[4] / ".env" == REPO_ENV_FILE
+    assert AppSettings.model_config.get("env_file") == REPO_ENV_FILE

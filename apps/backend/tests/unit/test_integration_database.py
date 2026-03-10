@@ -28,7 +28,7 @@ def test_integration_database_url_prefers_explicit_test_database(
 def test_integration_database_url_accepts_test_scoped_database_name(
     monkeypatch,
 ) -> None:
-    monkeypatch.delenv("CIVITAS_TEST_DATABASE_URL", raising=False)
+    monkeypatch.setenv("CIVITAS_TEST_DATABASE_URL", " ")
     monkeypatch.setenv(
         "CIVITAS_DATABASE_URL",
         "postgresql+psycopg://app:app@localhost:5432/app_test",
@@ -40,7 +40,7 @@ def test_integration_database_url_accepts_test_scoped_database_name(
 def test_integration_database_url_rejects_default_app_database(
     monkeypatch,
 ) -> None:
-    monkeypatch.delenv("CIVITAS_TEST_DATABASE_URL", raising=False)
+    monkeypatch.setenv("CIVITAS_TEST_DATABASE_URL", " ")
     monkeypatch.setenv(
         "CIVITAS_DATABASE_URL",
         "postgresql+psycopg://app:app@localhost:5432/app",

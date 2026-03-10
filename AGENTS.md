@@ -14,12 +14,13 @@ Civitas is an apps-first Python/TypeScript monorepo for backend + web delivery.
 3. **Read `docs/architecture/frontend-conventions.md`** for frontend layering, contract, and API-boundary conventions before implementing web features.
 4. **Keep documentation in sync.** Update `docs/` when behavior changes and add new pages to `docs/index.md`.
 5. **Run commands from repo root.** Use canonical commands in `.agents/tooling.md`.
-6. **Follow ownership + leaf-import rules.** Domain helpers go in `apps/backend/src/civitas/domain/shared/helpers`; application helpers go in `apps/backend/src/civitas/application/shared/utils`; avoid barrel re-exports.
-7. **Enforce inward imports.** Domain has zero outward dependencies; infrastructure depends on application/domain ports; entrypoints (`api`, `cli`) stay thin and bootstrap handles composition.
-8. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
-9. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
-10. **For auth/session foundation work, read `docs/runbooks/auth-development-provider.md` and `.agents/auth.md`.** Keep the development provider local/test-only and keep origin/cookie guardrails documented.
-11. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved. Keep benchmark cache materialization (`metric_benchmarks_yearly`) on the post-promote/manual workflow, not on the web request path.
+6. **Use shared settings, not ad hoc env parsing.** Runtime code, CLI entrypoints, scripts, and test fixtures must read env-backed config through `civitas.infrastructure.config.settings`. Fix settings/bootstrap issues there; do not rely on shell-session exports or fixture-local dotenv parsing.
+7. **Follow ownership + leaf-import rules.** Domain helpers go in `apps/backend/src/civitas/domain/shared/helpers`; application helpers go in `apps/backend/src/civitas/application/shared/utils`; avoid barrel re-exports.
+8. **Enforce inward imports.** Domain has zero outward dependencies; infrastructure depends on application/domain ports; entrypoints (`api`, `cli`) stay thin and bootstrap handles composition.
+9. **Contracts source of truth is backend OpenAPI.** Frontend consumes generated or typed clients derived from backend contracts.
+10. **Use the golden path workflow.** Tests first, then implementation, then run `make lint` and `make test`.
+11. **For auth/session foundation work, read `docs/runbooks/auth-development-provider.md` and `.agents/auth.md`.** Keep the development provider local/test-only and keep origin/cookie guardrails documented.
+12. **For pipeline work, read `docs/runbooks/pipelines.md` and `.agents/pipelines.md`.** All runs must flow Bronze -> Silver -> Gold, starting from canonical `data/bronze` unless an explicitly documented exception is approved. Keep benchmark cache materialization (`metric_benchmarks_yearly`) on the post-promote/manual workflow, not on the web request path.
 
 ## Agent guides
 

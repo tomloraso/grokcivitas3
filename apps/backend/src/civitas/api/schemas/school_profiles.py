@@ -140,6 +140,18 @@ class SchoolProfileLeadershipSnapshotResponse(BaseModel):
     leadership_turnover_score: float | None
 
 
+class SchoolProfileFinanceLatestResponse(BaseModel):
+    academic_year: str
+    total_income_gbp: float | None
+    total_expenditure_gbp: float | None
+    income_per_pupil_gbp: float | None
+    expenditure_per_pupil_gbp: float | None
+    total_staff_costs_gbp: float | None
+    staff_costs_pct_of_expenditure: float | None
+    revenue_reserve_gbp: float | None
+    revenue_reserve_per_pupil_gbp: float | None
+
+
 class SchoolProfileOfstedLatestResponse(BaseModel):
     overall_effectiveness_code: str | None
     overall_effectiveness_label: str | None
@@ -361,6 +373,7 @@ class SchoolProfileCompletenessResponse(BaseModel):
     attendance: SchoolProfileSectionCompletenessResponse
     behaviour: SchoolProfileSectionCompletenessResponse
     workforce: SchoolProfileSectionCompletenessResponse
+    finance: SchoolProfileSectionCompletenessResponse
     leadership: SchoolProfileSectionCompletenessResponse
     performance: SchoolProfileSectionCompletenessResponse
     ofsted_latest: SchoolProfileSectionCompletenessResponse
@@ -378,6 +391,7 @@ class SchoolProfileResponse(BaseModel):
     attendance_latest: SchoolProfileAttendanceLatestResponse | None
     behaviour_latest: SchoolProfileBehaviourLatestResponse | None
     workforce_latest: SchoolProfileWorkforceLatestResponse | None
+    finance_latest: SchoolProfileFinanceLatestResponse | None
     leadership_snapshot: SchoolProfileLeadershipSnapshotResponse | None
     performance: SchoolProfilePerformanceResponse | None
     ofsted_latest: SchoolProfileOfstedLatestResponse | None

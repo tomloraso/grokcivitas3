@@ -20,6 +20,7 @@ from civitas.domain.school_profiles.models import (
     SchoolDemographicsCoverage,
     SchoolDemographicsEthnicityGroup,
     SchoolDemographicsLatest,
+    SchoolFinanceLatest,
     SchoolLeadershipSnapshot,
     SchoolOfstedLatest,
     SchoolPerformance,
@@ -84,6 +85,7 @@ def _completeness(
     attendance: tuple[str, str | None] = ("available", None),
     behaviour: tuple[str, str | None] = ("available", None),
     workforce: tuple[str, str | None] = ("available", None),
+    finance: tuple[str, str | None] = ("available", None),
     leadership: tuple[str, str | None] = ("available", None),
     performance: tuple[str, str | None] = ("available", None),
     ofsted_latest: tuple[str, str | None] = ("available", None),
@@ -96,6 +98,7 @@ def _completeness(
         attendance=_section(*attendance),
         behaviour=_section(*behaviour),
         workforce=_section(*workforce),
+        finance=_section(*finance),
         leadership=_section(*leadership),
         performance=_section(*performance),
         ofsted_latest=_section(*ofsted_latest),
@@ -122,6 +125,7 @@ def _profile(
     ofsted_latest: SchoolOfstedLatest | None,
     area_context: SchoolAreaContext | None,
     completeness: SchoolProfileCompleteness,
+    finance_latest: SchoolFinanceLatest | None = None,
 ) -> SchoolProfile:
     return SchoolProfile(
         school=SchoolProfileSchool(
@@ -171,6 +175,7 @@ def _profile(
         attendance_latest=attendance_latest,
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
+        finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
         ofsted_latest=ofsted_latest,

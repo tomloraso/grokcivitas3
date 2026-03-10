@@ -168,6 +168,57 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS school_financials_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    finance_source text NOT NULL DEFAULT 'aar',
+                    school_laestab text NULL,
+                    school_name text NOT NULL,
+                    trust_uid text NULL,
+                    trust_name text NULL,
+                    phase text NULL,
+                    overall_phase text NULL,
+                    admissions_policy text NULL,
+                    urban_rural text NULL,
+                    pupils_fte double precision NULL,
+                    teachers_fte double precision NULL,
+                    fsm_pct double precision NULL,
+                    ehcp_pct double precision NULL,
+                    sen_support_pct double precision NULL,
+                    eal_pct double precision NULL,
+                    total_grant_funding_gbp double precision NULL,
+                    total_self_generated_funding_gbp double precision NULL,
+                    total_income_gbp double precision NULL,
+                    teaching_staff_costs_gbp double precision NULL,
+                    supply_teaching_staff_costs_gbp double precision NULL,
+                    education_support_staff_costs_gbp double precision NULL,
+                    other_staff_costs_gbp double precision NULL,
+                    total_staff_costs_gbp double precision NULL,
+                    maintenance_improvement_costs_gbp double precision NULL,
+                    premises_costs_gbp double precision NULL,
+                    educational_supplies_costs_gbp double precision NULL,
+                    bought_in_professional_services_costs_gbp double precision NULL,
+                    catering_costs_gbp double precision NULL,
+                    total_expenditure_gbp double precision NULL,
+                    revenue_reserve_gbp double precision NULL,
+                    in_year_balance_gbp double precision NULL,
+                    income_per_pupil_gbp double precision NULL,
+                    expenditure_per_pupil_gbp double precision NULL,
+                    staff_costs_pct_of_expenditure double precision NULL,
+                    teaching_staff_costs_per_pupil_gbp double precision NULL,
+                    supply_staff_costs_pct_of_staff_costs double precision NULL,
+                    revenue_reserve_per_pupil_gbp double precision NULL,
+                    source_file_url text NOT NULL,
+                    source_updated_at_utc timestamptz NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_performance_yearly (
                     urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
                     academic_year text NOT NULL,
@@ -350,6 +401,285 @@ def _ensure_schema(engine: Engine) -> None:
 
 def _seed_data(engine: Engine) -> None:
     with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO schools (
+                    urn, name, phase, type, status, postcode,
+                    easting, northing, location, capacity, pupil_count, open_date, close_date
+                ) VALUES (
+                    '920001',
+                    'Trends Test School',
+                    'Secondary',
+                    'Academy',
+                    'Open',
+                    'SW1A 1AA',
+                    0,
+                    0,
+                    ST_SetSRID(ST_MakePoint(-0.1416, 51.5010), 4326)::geography(Point, 4326),
+                    700,
+                    650,
+                    '2004-09-01',
+                    NULL
+                )
+                ON CONFLICT (urn) DO NOTHING
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO schools (
+                    urn, name, phase, type, status, postcode,
+                    easting, northing, location, capacity, pupil_count, open_date, close_date
+                ) VALUES (
+                    '920003',
+                    'Trends Benchmark Peer School',
+                    'Secondary',
+                    'Academy',
+                    'Open',
+                    'SW1A 3AA',
+                    0,
+                    0,
+                    ST_SetSRID(ST_MakePoint(-0.1412, 51.5012), 4326)::geography(Point, 4326),
+                    680,
+                    640,
+                    '2007-09-01',
+                    NULL
+                )
+                ON CONFLICT (urn) DO NOTHING
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_financials_yearly (
+                    urn,
+                    academic_year,
+                    finance_source,
+                    school_laestab,
+                    school_name,
+                    trust_uid,
+                    trust_name,
+                    phase,
+                    overall_phase,
+                    admissions_policy,
+                    urban_rural,
+                    pupils_fte,
+                    teachers_fte,
+                    fsm_pct,
+                    ehcp_pct,
+                    sen_support_pct,
+                    eal_pct,
+                    total_grant_funding_gbp,
+                    total_self_generated_funding_gbp,
+                    total_income_gbp,
+                    teaching_staff_costs_gbp,
+                    supply_teaching_staff_costs_gbp,
+                    education_support_staff_costs_gbp,
+                    other_staff_costs_gbp,
+                    total_staff_costs_gbp,
+                    maintenance_improvement_costs_gbp,
+                    premises_costs_gbp,
+                    educational_supplies_costs_gbp,
+                    bought_in_professional_services_costs_gbp,
+                    catering_costs_gbp,
+                    total_expenditure_gbp,
+                    revenue_reserve_gbp,
+                    in_year_balance_gbp,
+                    income_per_pupil_gbp,
+                    expenditure_per_pupil_gbp,
+                    staff_costs_pct_of_expenditure,
+                    teaching_staff_costs_per_pupil_gbp,
+                    supply_staff_costs_pct_of_staff_costs,
+                    revenue_reserve_per_pupil_gbp,
+                    source_file_url,
+                    source_updated_at_utc
+                ) VALUES
+                (
+                    '920001',
+                    '2023/24',
+                    'aar',
+                    '213/6007',
+                    'Trends Test School',
+                    '5712',
+                    'Example Trust',
+                    'Secondary',
+                    'Secondary',
+                    'Comprehensive',
+                    'Urban major conurbation',
+                    650.0,
+                    42.0,
+                    16.8,
+                    2.0,
+                    11.9,
+                    8.6,
+                    4020000.0,
+                    220000.0,
+                    4240000.0,
+                    2100000.0,
+                    52000.0,
+                    640000.0,
+                    315000.0,
+                    3107000.0,
+                    160000.0,
+                    210000.0,
+                    98000.0,
+                    74000.0,
+                    92000.0,
+                    4085000.0,
+                    525000.0,
+                    155000.0,
+                    6523.08,
+                    6284.62,
+                    0.7606,
+                    3230.77,
+                    0.0167,
+                    807.69,
+                    'https://example.com/AAR_2023-24_download.xlsx',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920001',
+                    '2024/25',
+                    'aar',
+                    '213/6007',
+                    'Trends Test School',
+                    '5712',
+                    'Example Trust',
+                    'Secondary',
+                    'Secondary',
+                    'Comprehensive',
+                    'Urban major conurbation',
+                    660.0,
+                    43.0,
+                    16.9,
+                    2.1,
+                    12.0,
+                    8.8,
+                    4150000.0,
+                    240000.0,
+                    4390000.0,
+                    2190000.0,
+                    55000.0,
+                    670000.0,
+                    330000.0,
+                    3245000.0,
+                    168000.0,
+                    220000.0,
+                    102000.0,
+                    76000.0,
+                    94000.0,
+                    4210000.0,
+                    560000.0,
+                    180000.0,
+                    6651.52,
+                    6378.79,
+                    0.7708,
+                    3318.18,
+                    0.0169,
+                    848.48,
+                    'https://example.com/AAR_2024-25_download.xlsx',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920003',
+                    '2023/24',
+                    'aar',
+                    '213/6009',
+                    'Trends Benchmark Peer School',
+                    '5714',
+                    'Example Trust',
+                    'Secondary',
+                    'Secondary',
+                    'Comprehensive',
+                    'Urban major conurbation',
+                    640.0,
+                    41.0,
+                    15.2,
+                    1.9,
+                    10.9,
+                    7.9,
+                    3890000.0,
+                    205000.0,
+                    4095000.0,
+                    2015000.0,
+                    50000.0,
+                    620000.0,
+                    300000.0,
+                    2985000.0,
+                    154000.0,
+                    205000.0,
+                    94000.0,
+                    70000.0,
+                    88000.0,
+                    3960000.0,
+                    490000.0,
+                    135000.0,
+                    6398.44,
+                    6187.50,
+                    0.7548,
+                    3148.44,
+                    0.0168,
+                    765.62,
+                    'https://example.com/AAR_2023-24_download.xlsx',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920003',
+                    '2024/25',
+                    'aar',
+                    '213/6009',
+                    'Trends Benchmark Peer School',
+                    '5714',
+                    'Example Trust',
+                    'Secondary',
+                    'Secondary',
+                    'Comprehensive',
+                    'Urban major conurbation',
+                    645.0,
+                    41.5,
+                    15.0,
+                    2.0,
+                    10.8,
+                    8.0,
+                    3940000.0,
+                    210000.0,
+                    4150000.0,
+                    2050000.0,
+                    51000.0,
+                    635000.0,
+                    306000.0,
+                    3042000.0,
+                    158000.0,
+                    208000.0,
+                    96000.0,
+                    71500.0,
+                    90000.0,
+                    4025000.0,
+                    505000.0,
+                    125000.0,
+                    6434.11,
+                    6240.31,
+                    0.7558,
+                    3178.29,
+                    0.0168,
+                    782.95,
+                    'https://example.com/AAR_2024-25_download.xlsx',
+                    '2026-03-10T10:00:00+00:00'
+                )
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    total_income_gbp = EXCLUDED.total_income_gbp,
+                    total_expenditure_gbp = EXCLUDED.total_expenditure_gbp,
+                    income_per_pupil_gbp = EXCLUDED.income_per_pupil_gbp,
+                    expenditure_per_pupil_gbp = EXCLUDED.expenditure_per_pupil_gbp,
+                    staff_costs_pct_of_expenditure = EXCLUDED.staff_costs_pct_of_expenditure,
+                    teaching_staff_costs_per_pupil_gbp = EXCLUDED.teaching_staff_costs_per_pupil_gbp,
+                    revenue_reserve_per_pupil_gbp = EXCLUDED.revenue_reserve_per_pupil_gbp
+                """
+            )
+        )
         connection.execute(
             text(
                 """
@@ -735,6 +1065,9 @@ def _cleanup_data(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
         connection.execute(
+            text("DELETE FROM school_financials_yearly WHERE urn IN ('920001', '920002', '920003')")
+        )
+        connection.execute(
             text("DELETE FROM area_house_price_context WHERE area_code IN ('E09000033')")
         )
         connection.execute(
@@ -816,6 +1149,16 @@ def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
     assert workforce.rows[1].qualifications_level6_plus_pct == 81.1
     assert workforce.latest_updated_at is not None
 
+    finance = repository.get_finance_series("920001")
+    assert finance is not None
+    assert finance.is_applicable is True
+    assert [row.academic_year for row in finance.rows] == ["2023/24", "2024/25"]
+    assert finance.rows[0].total_income_gbp == pytest.approx(4240000.0)
+    assert finance.rows[1].income_per_pupil_gbp == pytest.approx(6651.52)
+    assert finance.rows[1].staff_costs_pct_of_expenditure == pytest.approx(0.7708)
+    assert finance.rows[1].revenue_reserve_per_pupil_gbp == pytest.approx(848.48)
+    assert finance.latest_updated_at is not None
+
 
 def test_school_trends_repository_returns_partial_metric_benchmarks_without_persisting_on_miss(
     engine: Engine,
@@ -837,6 +1180,11 @@ def test_school_trends_repository_returns_partial_metric_benchmarks_without_pers
     assert fsm_2024.local_scope == "phase"
     assert fsm_2024.local_area_code == "Secondary"
     assert fsm_2024.local_area_label == "Secondary"
+
+    finance_income_2024 = by_metric_year[("finance_income_per_pupil_gbp", "2024/25")]
+    assert finance_income_2024.school_value == pytest.approx(6651.52)
+    assert finance_income_2024.national_value is None
+    assert finance_income_2024.local_value is None
 
     with engine.connect() as connection:
         benchmark_count = connection.execute(
@@ -887,6 +1235,10 @@ def test_school_trends_repository_reuses_cached_metric_benchmarks(engine: Engine
     progress8_disadvantaged_2024 = by_metric_year[("progress8_disadvantaged", "2024/25")]
     assert progress8_disadvantaged_2024.national_value is None
     assert progress8_disadvantaged_2024.local_value is None
+
+    finance_income_2024 = by_metric_year[("finance_income_per_pupil_gbp", "2024/25")]
+    assert finance_income_2024.national_value is None
+    assert finance_income_2024.local_value is None
 
 
 def test_school_trends_repository_recomputes_when_cached_snapshot_is_partial(
@@ -960,6 +1312,10 @@ def test_school_trends_repository_materializes_metric_benchmarks_for_requested_u
     assert fsm_2024.local_value is not None
     assert 0.0 <= fsm_2024.local_value <= 100.0
 
+    finance_income_2024 = by_metric_year[("finance_income_per_pupil_gbp", "2024/25")]
+    assert finance_income_2024.national_value is not None
+    assert finance_income_2024.local_value is not None
+
 
 def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Engine) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
@@ -989,6 +1345,25 @@ def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Eng
     assert ("national", "england") in scopes
     assert ("phase", "Secondary") in scopes
 
+    with engine.connect() as connection:
+        finance_scopes = {
+            tuple(row)
+            for row in connection.execute(
+                text(
+                    """
+                    SELECT benchmark_scope, benchmark_area
+                    FROM metric_benchmarks_yearly
+                    WHERE metric_key = 'finance_income_per_pupil_gbp'
+                      AND academic_year = '2024/25'
+                    ORDER BY benchmark_scope, benchmark_area
+                    """
+                )
+            ).all()
+        }
+
+    assert ("national", "england") in finance_scopes
+    assert ("phase", "Secondary") in finance_scopes
+
 
 def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     engine: Engine,
@@ -999,6 +1374,7 @@ def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     attendance = repository.get_attendance_series("920002")
     behaviour = repository.get_behaviour_series("920002")
     workforce = repository.get_workforce_series("920002")
+    finance = repository.get_finance_series("920002")
 
     assert demographics is not None
     assert demographics.urn == "920002"
@@ -1020,6 +1396,12 @@ def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     assert workforce.rows == ()
     assert workforce.latest_updated_at is None
 
+    assert finance is not None
+    assert finance.urn == "920002"
+    assert finance.is_applicable is False
+    assert finance.rows == ()
+    assert finance.latest_updated_at is None
+
 
 def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
@@ -1028,10 +1410,12 @@ def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine
     attendance = repository.get_attendance_series("999999")
     behaviour = repository.get_behaviour_series("999999")
     workforce = repository.get_workforce_series("999999")
+    finance = repository.get_finance_series("999999")
     benchmarks = repository.get_metric_benchmark_series("999999")
 
     assert demographics is None
     assert attendance is None
     assert behaviour is None
     assert workforce is None
+    assert finance is None
     assert benchmarks is None

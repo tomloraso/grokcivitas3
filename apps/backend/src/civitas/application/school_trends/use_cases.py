@@ -31,6 +31,8 @@ from civitas.domain.school_trends.models import (
     SchoolAttendanceYearlyRow,
     SchoolBehaviourYearlyRow,
     SchoolDemographicsYearlyRow,
+    SchoolFinanceSeries,
+    SchoolFinanceYearlyRow,
     SchoolMetricBenchmarkYearlyRow,
     SchoolWorkforceYearlyRow,
 )
@@ -39,6 +41,7 @@ MIN_YEARS_FOR_DELTA = 2
 MIN_YEARS_FOR_COMPLETE_HISTORY = 3
 DashboardSectionKey = Literal[
     "demographics",
+    "finance",
     "attendance",
     "behaviour",
     "workforce",
@@ -48,6 +51,7 @@ DashboardSectionKey = Literal[
 
 DASHBOARD_SECTION_ORDER = (
     "demographics",
+    "finance",
     "attendance",
     "behaviour",
     "workforce",
@@ -65,6 +69,31 @@ DASHBOARD_METRIC_CATALOG: tuple[tuple[str, str, str, str], ...] = (
     ("demographics", "male_pct", "Male Pupils (%)", "percent"),
     ("demographics", "female_pct", "Female Pupils (%)", "percent"),
     ("demographics", "pupil_mobility_pct", "Pupil Mobility (%)", "percent"),
+    ("finance", "finance_income_per_pupil_gbp", "Income per Pupil", "currency"),
+    (
+        "finance",
+        "finance_expenditure_per_pupil_gbp",
+        "Expenditure per Pupil",
+        "currency",
+    ),
+    (
+        "finance",
+        "finance_staff_costs_pct_of_expenditure",
+        "Staff Costs / Expenditure",
+        "ratio",
+    ),
+    (
+        "finance",
+        "finance_revenue_reserve_per_pupil_gbp",
+        "Revenue Reserve per Pupil",
+        "currency",
+    ),
+    (
+        "finance",
+        "finance_teaching_staff_costs_per_pupil_gbp",
+        "Teaching Staff Costs per Pupil",
+        "currency",
+    ),
     ("attendance", "overall_attendance_pct", "Overall Attendance (%)", "percent"),
     ("attendance", "overall_absence_pct", "Overall Absence (%)", "percent"),
     ("attendance", "persistent_absence_pct", "Persistent Absence (%)", "percent"),
@@ -132,6 +161,7 @@ class GetSchoolTrendsUseCase:
         attendance_series = self._school_trends_repository.get_attendance_series(normalized_urn)
         behaviour_series = self._school_trends_repository.get_behaviour_series(normalized_urn)
         workforce_series = self._school_trends_repository.get_workforce_series(normalized_urn)
+        finance_series = self._school_trends_repository.get_finance_series(normalized_urn)
         benchmark_series = self._school_trends_repository.get_metric_benchmark_series(
             normalized_urn
         )
@@ -139,6 +169,7 @@ class GetSchoolTrendsUseCase:
             attendance_series is None
             or behaviour_series is None
             or workforce_series is None
+            or finance_series is None
             or benchmark_series is None
         ):
             raise SchoolTrendsNotFoundError(normalized_urn)
@@ -147,12 +178,14 @@ class GetSchoolTrendsUseCase:
         attendance_rows = attendance_series.rows
         behaviour_rows = behaviour_series.rows
         workforce_rows = workforce_series.rows
+        finance_rows = finance_series.rows
 
         years_available = _merge_years_available(
             demographics_rows=demographics_rows,
             attendance_rows=attendance_rows,
             behaviour_rows=behaviour_rows,
             workforce_rows=workforce_rows,
+            finance_rows=finance_rows,
         )
         years_count = len(years_available)
 
@@ -182,6 +215,7 @@ class GetSchoolTrendsUseCase:
             last_updated_at=workforce_series.latest_updated_at,
             has_partial_metric_coverage=_has_partial_metric_coverage_workforce(workforce_rows),
         )
+        finance_completeness = _build_finance_completeness(finance_series)
         benchmark_rows_by_metric = _group_benchmark_rows_by_metric(benchmark_series.rows)
 
         return SchoolTrendsResponseDto(
@@ -289,6 +323,26 @@ class GetSchoolTrendsUseCase:
                     rows=workforce_rows,
                     metric_value=lambda row: row.qualifications_level6_plus_pct,
                 ),
+                income_per_pupil_gbp=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.income_per_pupil_gbp,
+                ),
+                expenditure_per_pupil_gbp=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.expenditure_per_pupil_gbp,
+                ),
+                staff_costs_pct_of_expenditure=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.staff_costs_pct_of_expenditure,
+                ),
+                revenue_reserve_per_pupil_gbp=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.revenue_reserve_per_pupil_gbp,
+                ),
+                teaching_staff_costs_per_pupil_gbp=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.teaching_staff_costs_per_pupil_gbp,
+                ),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=_build_metric_benchmark_series(
@@ -387,6 +441,26 @@ class GetSchoolTrendsUseCase:
                     rows_by_metric=benchmark_rows_by_metric,
                     metric_key="qualifications_level6_plus_pct",
                 ),
+                income_per_pupil_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_income_per_pupil_gbp",
+                ),
+                expenditure_per_pupil_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_expenditure_per_pupil_gbp",
+                ),
+                staff_costs_pct_of_expenditure=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_staff_costs_pct_of_expenditure",
+                ),
+                revenue_reserve_per_pupil_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_revenue_reserve_per_pupil_gbp",
+                ),
+                teaching_staff_costs_per_pupil_gbp=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_teaching_staff_costs_per_pupil_gbp",
+                ),
             ),
             completeness=_build_overall_completeness(
                 years_available=years_available,
@@ -394,12 +468,14 @@ class GetSchoolTrendsUseCase:
                 attendance=attendance_completeness,
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
+                finance=finance_completeness,
             ),
             section_completeness=SchoolTrendsSectionCompletenessDto(
                 demographics=demographics_completeness,
                 attendance=attendance_completeness,
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
+                finance=finance_completeness,
             ),
         )
 
@@ -607,6 +683,7 @@ def _build_overall_completeness(
     attendance: SchoolTrendsCompletenessDto,
     behaviour: SchoolTrendsCompletenessDto,
     workforce: SchoolTrendsCompletenessDto,
+    finance: SchoolTrendsCompletenessDto,
 ) -> SchoolTrendsCompletenessDto:
     if len(years_available) == 0:
         return SchoolTrendsCompletenessDto(
@@ -616,7 +693,11 @@ def _build_overall_completeness(
             years_available=years_available,
         )
 
-    sections = (demographics, attendance, behaviour, workforce)
+    sections = tuple(
+        section
+        for section in (demographics, attendance, behaviour, workforce, finance)
+        if section.reason_code != "not_applicable"
+    )
     if all(section.status == "available" for section in sections):
         return SchoolTrendsCompletenessDto(
             status="available",
@@ -648,12 +729,14 @@ def _merge_years_available(
     attendance_rows: Sequence[SchoolAttendanceYearlyRow],
     behaviour_rows: Sequence[SchoolBehaviourYearlyRow],
     workforce_rows: Sequence[SchoolWorkforceYearlyRow],
+    finance_rows: Sequence[SchoolFinanceYearlyRow],
 ) -> tuple[str, ...]:
     years = {
         *(row.academic_year for row in demographics_rows),
         *(row.academic_year for row in attendance_rows),
         *(row.academic_year for row in behaviour_rows),
         *(row.academic_year for row in workforce_rows),
+        *(row.academic_year for row in finance_rows),
     }
     return tuple(sorted(years, key=_academic_year_sort_key))
 
@@ -724,6 +807,39 @@ def _has_partial_metric_coverage_workforce(rows: Sequence[SchoolWorkforceYearlyR
         ):
             return True
     return False
+
+
+def _has_partial_metric_coverage_finance(rows: Sequence[SchoolFinanceYearlyRow]) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.income_per_pupil_gbp,
+                row.expenditure_per_pupil_gbp,
+                row.staff_costs_pct_of_expenditure,
+                row.revenue_reserve_per_pupil_gbp,
+                row.teaching_staff_costs_per_pupil_gbp,
+            )
+        ):
+            return True
+    return False
+
+
+def _build_finance_completeness(finance_series: SchoolFinanceSeries) -> SchoolTrendsCompletenessDto:
+    years_available = tuple(row.academic_year for row in finance_series.rows)
+    if not finance_series.is_applicable and len(finance_series.rows) == 0:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="not_applicable",
+            last_updated_at=None,
+            years_available=None,
+        )
+    return _build_completeness(
+        years_count=len(years_available),
+        years_available=years_available,
+        last_updated_at=finance_series.latest_updated_at,
+        has_partial_metric_coverage=_has_partial_metric_coverage_finance(finance_series.rows),
+    )
 
 
 def _academic_year_sort_key(value: str) -> tuple[int, str]:

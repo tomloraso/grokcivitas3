@@ -16,6 +16,18 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
+def _discover_repo_root() -> Path:
+    current_path = Path(__file__).resolve()
+    for parent in current_path.parents:
+        if (parent / ".planning" / "project-brief.md").exists():
+            return parent
+    return Path.cwd().resolve()
+
+
+REPO_ROOT = _discover_repo_root()
+REPO_ENV_FILE = REPO_ROOT / ".env"
+
 DEFAULT_DATABASE_URL = "postgresql+psycopg://app:app@localhost:5432/app"
 DEFAULT_BRONZE_ROOT = Path("data/bronze")
 DEFAULT_DEMOGRAPHICS_SOURCE_MODE = "release_files"
@@ -59,6 +71,10 @@ DEFAULT_DFE_PERFORMANCE_KS2_DATASET_ID = "019afee4-e5d0-72f9-9a8f-d7a1a56eac1d"
 DEFAULT_DFE_PERFORMANCE_KS4_DATASET_ID = "19e39901-a96c-be76-b9c2-6af54ae076d2"
 DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS = 3
 DEFAULT_DFE_PERFORMANCE_PAGE_SIZE = 10_000
+DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS = (
+    "https://financial-benchmarking-and-insights-tool.education.gov.uk/files/"
+    "AAR_2023-24_download.xlsx",
+)
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_HOUSE_PRICES_SOURCE_URL = (
     "https://publicdata.landregistry.gov.uk/market-trend-data/"
@@ -149,6 +165,7 @@ class PipelineSettings(BaseModel):
     dfe_performance_ks4_dataset_id: str
     dfe_performance_lookback_years: PositiveInt
     dfe_performance_page_size: PositiveInt
+    school_financial_benchmarks_workbook_urls: tuple[str, ...]
     imd_source_csv: str | None = None
     imd_release: str
     house_prices_source_csv: str | None = None
@@ -167,6 +184,7 @@ class PipelineSettings(BaseModel):
     max_reject_ratio_dfe_behaviour: float
     max_reject_ratio_dfe_workforce: float
     max_reject_ratio_dfe_performance: float
+    max_reject_ratio_school_financial_benchmarks: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
     max_reject_ratio_ons_imd: float
@@ -201,6 +219,7 @@ class DataQualitySettings(BaseModel):
     freshness_sla_hours_dfe_behaviour: PositiveInt
     freshness_sla_hours_dfe_workforce: PositiveInt
     freshness_sla_hours_dfe_performance: PositiveInt
+    freshness_sla_hours_school_financial_benchmarks: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
     freshness_sla_hours_ons_imd: PositiveInt
@@ -219,6 +238,9 @@ class DataQualitySettings(BaseModel):
             "dfe_behaviour": float(self.freshness_sla_hours_dfe_behaviour),
             "dfe_workforce": float(self.freshness_sla_hours_dfe_workforce),
             "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
+            "school_financial_benchmarks": float(
+                self.freshness_sla_hours_school_financial_benchmarks
+            ),
             "ofsted_latest": float(self.freshness_sla_hours_ofsted_latest),
             "ofsted_timeline": float(self.freshness_sla_hours_ofsted_timeline),
             "ons_imd": float(self.freshness_sla_hours_ons_imd),
@@ -274,7 +296,7 @@ class StripeBillingSettings(BaseModel):
 
 class AppSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=REPO_ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -283,6 +305,10 @@ class AppSettings(BaseSettings):
         default=DEFAULT_DATABASE_URL,
         min_length=1,
         validation_alias="CIVITAS_DATABASE_URL",
+    )
+    test_database_url: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_TEST_DATABASE_URL",
     )
 
     bronze_root: Path = Field(
@@ -398,6 +424,10 @@ class AppSettings(BaseSettings):
         le=10_000,
         validation_alias="CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
     )
+    school_financial_benchmarks_workbook_urls: str | None = Field(
+        default=",".join(DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS),
+        validation_alias="CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
+    )
     imd_source_csv: str | None = Field(
         default=None,
         validation_alias="CIVITAS_IMD_SOURCE_CSV",
@@ -484,6 +514,12 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
+    )
+    pipeline_max_reject_ratio_school_financial_benchmarks: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_FINANCIAL_BENCHMARKS",
     )
     pipeline_max_reject_ratio_ofsted_latest: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -595,6 +631,10 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_dfe_performance: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
+    )
+    data_quality_freshness_sla_hours_school_financial_benchmarks: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias=("CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_FINANCIAL_BENCHMARKS"),
     )
     data_quality_freshness_sla_hours_ofsted_latest: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -787,6 +827,9 @@ class AppSettings(BaseSettings):
             dfe_performance_ks4_dataset_id=self.dfe_performance_ks4_dataset_id,
             dfe_performance_lookback_years=self.dfe_performance_lookback_years,
             dfe_performance_page_size=self.dfe_performance_page_size,
+            school_financial_benchmarks_workbook_urls=_parse_csv_tokens(
+                self.school_financial_benchmarks_workbook_urls
+            ),
             imd_source_csv=self.imd_source_csv,
             imd_release=self.imd_release,
             house_prices_source_csv=self.house_prices_source_csv,
@@ -809,6 +852,9 @@ class AppSettings(BaseSettings):
             max_reject_ratio_dfe_behaviour=self.pipeline_max_reject_ratio_dfe_behaviour,
             max_reject_ratio_dfe_workforce=self.pipeline_max_reject_ratio_dfe_workforce,
             max_reject_ratio_dfe_performance=self.pipeline_max_reject_ratio_dfe_performance,
+            max_reject_ratio_school_financial_benchmarks=(
+                self.pipeline_max_reject_ratio_school_financial_benchmarks
+            ),
             max_reject_ratio_ofsted_latest=self.pipeline_max_reject_ratio_ofsted_latest,
             max_reject_ratio_ofsted_timeline=self.pipeline_max_reject_ratio_ofsted_timeline,
             max_reject_ratio_ons_imd=self.pipeline_max_reject_ratio_ons_imd,
@@ -856,6 +902,9 @@ class AppSettings(BaseSettings):
             freshness_sla_hours_dfe_workforce=self.data_quality_freshness_sla_hours_dfe_workforce,
             freshness_sla_hours_dfe_performance=(
                 self.data_quality_freshness_sla_hours_dfe_performance
+            ),
+            freshness_sla_hours_school_financial_benchmarks=(
+                self.data_quality_freshness_sla_hours_school_financial_benchmarks
             ),
             freshness_sla_hours_ofsted_latest=self.data_quality_freshness_sla_hours_ofsted_latest,
             freshness_sla_hours_ofsted_timeline=(
@@ -919,6 +968,7 @@ class AppSettings(BaseSettings):
         "dfe_attendance_release_slugs",
         "dfe_behaviour_release_slugs",
         "dfe_workforce_release_slugs",
+        "school_financial_benchmarks_workbook_urls",
         "imd_source_csv",
         "house_prices_source_csv",
         "house_prices_source_url",
@@ -937,6 +987,7 @@ class AppSettings(BaseSettings):
         "auth_auth0_client_secret",
         "auth_auth0_audience",
         "auth_auth0_connection",
+        "test_database_url",
         "billing_stripe_secret_key",
         "billing_stripe_webhook_secret",
         "billing_stripe_portal_configuration_id",

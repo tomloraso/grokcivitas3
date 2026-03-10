@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import bindparam, create_engine, text
 from sqlalchemy.engine import Engine
 
 from civitas.infrastructure.config.settings import AppSettings
@@ -521,7 +521,7 @@ def _cleanup_projection(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(
             text("DELETE FROM school_search_summary WHERE urn IN :urns").bindparams(
-                urns=SEEDED_URNS, expanding=True
+                bindparam("urns", value=SEEDED_URNS, expanding=True)
             )
         )
 
@@ -530,7 +530,7 @@ def _cleanup_school_performance(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(
             text("DELETE FROM school_performance_yearly WHERE urn IN :urns").bindparams(
-                urns=SEEDED_URNS, expanding=True
+                bindparam("urns", value=SEEDED_URNS, expanding=True)
             )
         )
 
@@ -539,7 +539,7 @@ def _cleanup_ofsted_latest(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(
             text("DELETE FROM school_ofsted_latest WHERE urn IN :urns").bindparams(
-                urns=SEEDED_URNS, expanding=True
+                bindparam("urns", value=SEEDED_URNS, expanding=True)
             )
         )
 
@@ -548,8 +548,7 @@ def _cleanup_schools(engine: Engine) -> None:
     with engine.begin() as connection:
         connection.execute(
             text("DELETE FROM schools WHERE urn IN :urns").bindparams(
-                urns=SEEDED_URNS,
-                expanding=True,
+                bindparam("urns", value=SEEDED_URNS, expanding=True)
             )
         )
 

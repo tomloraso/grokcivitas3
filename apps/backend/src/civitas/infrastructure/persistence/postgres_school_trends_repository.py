@@ -18,6 +18,8 @@ from civitas.domain.school_trends.models import (
     SchoolBehaviourYearlyRow,
     SchoolDemographicsSeries,
     SchoolDemographicsYearlyRow,
+    SchoolFinanceSeries,
+    SchoolFinanceYearlyRow,
     SchoolMetricBenchmarkSeries,
     SchoolMetricBenchmarkYearlyRow,
     SchoolWorkforceSeries,
@@ -249,6 +251,78 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
         )
 
+    def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None:
+        try:
+            with self._engine.connect() as connection:
+                school_row = _get_school_finance_context(connection, urn)
+                if school_row is None:
+                    return None
+
+                rows = (
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                academic_year,
+                                total_income_gbp,
+                                total_expenditure_gbp,
+                                income_per_pupil_gbp,
+                                expenditure_per_pupil_gbp,
+                                total_staff_costs_gbp,
+                                staff_costs_pct_of_expenditure,
+                                teaching_staff_costs_per_pupil_gbp,
+                                revenue_reserve_gbp,
+                                revenue_reserve_per_pupil_gbp,
+                                updated_at
+                            FROM school_financials_yearly
+                            WHERE urn = :urn
+                            ORDER BY
+                                substring(academic_year from 1 for 4)::integer ASC,
+                                academic_year ASC
+                            """
+                        ),
+                        {"urn": urn},
+                    )
+                    .mappings()
+                    .all()
+                )
+        except SQLAlchemyError as exc:
+            raise SchoolTrendsDataUnavailableError(
+                "School trends datastore is unavailable."
+            ) from exc
+
+        is_applicable = len(rows) > 0 or _school_finance_is_applicable(
+            school_type=_to_optional_str(school_row.get("type")),
+            trust_name=_to_optional_str(school_row.get("trust_name")),
+            trust_flag=_to_optional_str(school_row.get("trust_flag")),
+        )
+        return SchoolFinanceSeries(
+            urn=urn,
+            rows=tuple(
+                SchoolFinanceYearlyRow(
+                    academic_year=str(row["academic_year"]),
+                    total_income_gbp=_to_optional_float(row["total_income_gbp"]),
+                    total_expenditure_gbp=_to_optional_float(row["total_expenditure_gbp"]),
+                    income_per_pupil_gbp=_to_optional_float(row["income_per_pupil_gbp"]),
+                    expenditure_per_pupil_gbp=_to_optional_float(row["expenditure_per_pupil_gbp"]),
+                    total_staff_costs_gbp=_to_optional_float(row["total_staff_costs_gbp"]),
+                    staff_costs_pct_of_expenditure=_to_optional_float(
+                        row["staff_costs_pct_of_expenditure"]
+                    ),
+                    teaching_staff_costs_per_pupil_gbp=_to_optional_float(
+                        row["teaching_staff_costs_per_pupil_gbp"]
+                    ),
+                    revenue_reserve_gbp=_to_optional_float(row["revenue_reserve_gbp"]),
+                    revenue_reserve_per_pupil_gbp=_to_optional_float(
+                        row["revenue_reserve_per_pupil_gbp"]
+                    ),
+                )
+                for row in rows
+            ),
+            latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
+            is_applicable=is_applicable,
+        )
+
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         try:
             with self._engine.connect() as connection:
@@ -345,6 +419,24 @@ def _school_exists(connection: Connection, urn: str) -> bool:
     )
 
 
+def _get_school_finance_context(connection: Connection, urn: str) -> Mapping[str, object] | None:
+    row = (
+        connection.execute(
+            text(
+                """
+                SELECT type, trust_name, trust_flag
+                FROM schools
+                WHERE urn = :urn
+                """
+            ),
+            {"urn": urn},
+        )
+        .mappings()
+        .first()
+    )
+    return dict(row) if row is not None else None
+
+
 def _to_optional_float(value: object) -> float | None:
     if value is None:
         return None
@@ -376,6 +468,20 @@ def _to_benchmark_scope(value: object) -> BenchmarkScope:
     if normalized == "local_authority_district":
         return "local_authority_district"
     return "phase"
+
+
+def _school_finance_is_applicable(
+    *,
+    school_type: str | None,
+    trust_name: str | None,
+    trust_flag: str | None,
+) -> bool:
+    normalized_type = (school_type or "").strip().casefold()
+    return (
+        "academy" in normalized_type
+        or bool((trust_name or "").strip())
+        or bool((trust_flag or "").strip())
+    )
 
 
 def _get_metric_benchmark_rows_from_cache(
@@ -539,6 +645,38 @@ def _get_metric_benchmark_rows_from_cache(
                             )
                     ) AS metric(metric_key, metric_value)
                     WHERE workforce.urn = :urn
+
+                    UNION ALL
+
+                    SELECT
+                        finance.academic_year,
+                        metric.metric_key,
+                        metric.metric_value AS school_value
+                    FROM school_financials_yearly AS finance
+                    CROSS JOIN LATERAL (
+                        VALUES
+                            (
+                                'finance_income_per_pupil_gbp',
+                                finance.income_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_expenditure_per_pupil_gbp',
+                                finance.expenditure_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_staff_costs_pct_of_expenditure',
+                                finance.staff_costs_pct_of_expenditure::double precision
+                            ),
+                            (
+                                'finance_revenue_reserve_per_pupil_gbp',
+                                finance.revenue_reserve_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_teaching_staff_costs_per_pupil_gbp',
+                                finance.teaching_staff_costs_per_pupil_gbp::double precision
+                            )
+                    ) AS metric(metric_key, metric_value)
+                    WHERE finance.urn = :urn
 
                     UNION ALL
 
@@ -851,6 +989,42 @@ def _compute_metric_benchmark_rows(
                             (
                                 'qualifications_level6_plus_pct',
                                 workforce.qualifications_level6_plus_pct::double precision
+                            )
+                    ) AS metric(metric_key, metric_value)
+
+                    UNION ALL
+
+                    SELECT
+                        finance.urn,
+                        finance.academic_year,
+                        geo.phase,
+                        geo.lad_code,
+                        metric.metric_key,
+                        metric.metric_value
+                    FROM school_financials_yearly AS finance
+                    INNER JOIN school_geo AS geo
+                        ON geo.urn = finance.urn
+                    CROSS JOIN LATERAL (
+                        VALUES
+                            (
+                                'finance_income_per_pupil_gbp',
+                                finance.income_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_expenditure_per_pupil_gbp',
+                                finance.expenditure_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_staff_costs_pct_of_expenditure',
+                                finance.staff_costs_pct_of_expenditure::double precision
+                            ),
+                            (
+                                'finance_revenue_reserve_per_pupil_gbp',
+                                finance.revenue_reserve_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_teaching_staff_costs_per_pupil_gbp',
+                                finance.teaching_staff_costs_per_pupil_gbp::double precision
                             )
                     ) AS metric(metric_key, metric_value)
 
@@ -1315,6 +1489,43 @@ def _rebuild_metric_benchmark_rows(connection: Connection) -> int:
                         (
                             'qualifications_level6_plus_pct',
                             workforce.qualifications_level6_plus_pct::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    finance.urn,
+                    finance.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_financials_yearly AS finance
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = finance.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        (
+                            'finance_income_per_pupil_gbp',
+                            finance.income_per_pupil_gbp::double precision
+                        ),
+                        (
+                            'finance_expenditure_per_pupil_gbp',
+                            finance.expenditure_per_pupil_gbp::double precision
+                        ),
+                        (
+                            'finance_staff_costs_pct_of_expenditure',
+                            finance.staff_costs_pct_of_expenditure::double precision
+                        ),
+                        (
+                            'finance_revenue_reserve_per_pupil_gbp',
+                            finance.revenue_reserve_per_pupil_gbp::double precision
+                        ),
+                        (
+                            'finance_teaching_staff_costs_per_pupil_gbp',
+                            finance.teaching_staff_costs_per_pupil_gbp::double precision
                         )
                 ) AS metric(metric_key, metric_value)
 

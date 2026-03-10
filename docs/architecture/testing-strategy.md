@@ -6,7 +6,14 @@
 
 ## Integration
 
-- API endpoint behavior with in-memory infrastructure adapters.
+- Backend integration tests run against a real Postgres database and are destructive by design.
+- Prefer `CIVITAS_TEST_DATABASE_URL` for integration suites; only fall back to
+  `CIVITAS_DATABASE_URL` when it already points at an obviously test-scoped database.
+- Integration-test database selection must go through the shared settings module
+  (`civitas.infrastructure.config.settings`). Do not parse `.env` directly inside fixtures or test
+  helpers.
+- If test configuration is wrong, fix `AppSettings` or shared pytest bootstrap. Do not paper over
+  the problem with shell-only exports or duplicated dotenv loading.
 
 ## Boundary
 

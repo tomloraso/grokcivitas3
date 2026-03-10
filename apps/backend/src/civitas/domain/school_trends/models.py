@@ -85,10 +85,32 @@ class SchoolWorkforceYearlyRow:
 
 
 @dataclass(frozen=True)
+class SchoolFinanceYearlyRow:
+    academic_year: str
+    total_income_gbp: float | None
+    total_expenditure_gbp: float | None
+    income_per_pupil_gbp: float | None
+    expenditure_per_pupil_gbp: float | None
+    total_staff_costs_gbp: float | None
+    staff_costs_pct_of_expenditure: float | None
+    teaching_staff_costs_per_pupil_gbp: float | None
+    revenue_reserve_gbp: float | None
+    revenue_reserve_per_pupil_gbp: float | None
+
+
+@dataclass(frozen=True)
 class SchoolWorkforceSeries:
     urn: str
     rows: tuple[SchoolWorkforceYearlyRow, ...]
     latest_updated_at: datetime | None
+
+
+@dataclass(frozen=True)
+class SchoolFinanceSeries:
+    urn: str
+    rows: tuple[SchoolFinanceYearlyRow, ...]
+    latest_updated_at: datetime | None
+    is_applicable: bool
 
 
 @dataclass(frozen=True)

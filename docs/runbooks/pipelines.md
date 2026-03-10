@@ -121,6 +121,7 @@ uv run --project apps/backend civitas pipeline run --source uk_house_prices
 uv run --project apps/backend civitas pipeline run --source police_crime_context
 uv run --project apps/backend civitas pipeline run --source ofsted_latest
 uv run --project apps/backend civitas pipeline run --source ofsted_timeline
+uv run --project apps/backend civitas pipeline run --source school_financial_benchmarks
 ```
 
 ## Quality And Health Checks
@@ -144,11 +145,13 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
 - `dfe_attendance` promotes yearly school attendance and persistent-absence metrics into `school_attendance_yearly`.
 - `dfe_behaviour` promotes yearly school suspensions and exclusions metrics into `school_behaviour_yearly`.
 - `dfe_workforce` promotes yearly workforce rows into `school_workforce_yearly` and latest leadership attributes into `school_leadership_snapshot`.
+- `school_financial_benchmarks` promotes academy finance rows into `school_financials_yearly`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
 - `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.
 - Successful runs of `gias`, `dfe_characteristics`, `dfe_attendance`, `dfe_behaviour`,
-  `dfe_workforce`, `dfe_performance`, `ons_imd`, `uk_house_prices`, and
-  `police_crime_context` rebuild `metric_benchmarks_yearly` after promote.
+  `dfe_workforce`, `school_financial_benchmarks`, `dfe_performance`, `ons_imd`,
+  `uk_house_prices`, and `police_crime_context` rebuild `metric_benchmarks_yearly`
+  after promote.
 - Use `civitas pipeline materialize-benchmarks --all` after restoring a database snapshot or when
   benchmark cache rows need a manual full rebuild. Successful manual materialisation now bumps the
   `school_profile` cache version token so cached profile responses refresh without waiting for the
