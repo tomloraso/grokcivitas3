@@ -107,6 +107,9 @@ SchoolProfileFeature
 
 ## Tracking Log
 
+- 2026-03-10 (Phase 14 compat fix):
+  - **`favourites/mappers.ts`** — `mapSavedSchoolState()` now accepts `undefined | null` and returns a default `not_saved` state. Phase 14 added `saved_state` to search result types but the backend doesn't always include it; calling the mapper on `undefined` crashed the search page with `Cannot read properties of undefined (reading 'status')`.
+
 - 2026-03-10 (P13 — Compare page rebuild):
   - **`SchoolCompareFeature.tsx`** — full rewrite. Extracted inline components into dedicated files. Slim header with share button (clipboard copy). Premium gate replaced with compact `ComparePremiumBanner` (slim Panel). Dev premium bypass extracted to `isDevUnlocked` boolean. Section matrix replaced with `CompareMetricTable`.
   - **`CompareSchoolStrip.tsx`** (new) — horizontal scrollable school cards with `snap-x snap-mandatory`, badges (phase/type/postcode), `StatCard variant="mini"` for age range and distance, `X` remove button.
