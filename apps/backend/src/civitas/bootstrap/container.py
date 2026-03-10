@@ -59,6 +59,7 @@ from civitas.infrastructure.http.postcodes_io_client import PostcodesIoClient
 from civitas.infrastructure.payments.provider_factory import build_billing_provider_gateway
 from civitas.infrastructure.persistence.cached_school_profile_repository import (
     CachedSchoolProfileRepository,
+    PostgresSchoolProfileCacheInvalidator,
     PostgresSchoolProfileCacheVersionProvider,
 )
 from civitas.infrastructure.persistence.database import db_engine
@@ -302,18 +303,33 @@ def school_search_repository() -> PostgresSchoolSearchRepository:
 
 
 @lru_cache(maxsize=1)
-def school_profile_repository() -> CachedSchoolProfileRepository:
+def raw_school_profile_repository() -> PostgresSchoolProfileRepository:
     settings = app_settings()
-    engine = db_engine(settings.database.url)
-    delegate = PostgresSchoolProfileRepository(engine=engine)
-    version_provider = PostgresSchoolProfileCacheVersionProvider(
-        engine=engine,
+    return PostgresSchoolProfileRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def school_profile_cache_version_provider() -> PostgresSchoolProfileCacheVersionProvider:
+    settings = app_settings()
+    return PostgresSchoolProfileCacheVersionProvider(
+        engine=db_engine(settings.database.url),
         poll_interval_seconds=settings.school_search.profile_cache_invalidation_poll_seconds,
     )
+
+
+@lru_cache(maxsize=1)
+def school_profile_cache_invalidator() -> PostgresSchoolProfileCacheInvalidator:
+    settings = app_settings()
+    return PostgresSchoolProfileCacheInvalidator(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
+def school_profile_repository() -> CachedSchoolProfileRepository:
+    settings = app_settings()
     return CachedSchoolProfileRepository(
-        delegate=delegate,
+        delegate=raw_school_profile_repository(),
         ttl_seconds=settings.school_search.profile_cache_ttl_seconds,
-        version_provider=version_provider,
+        version_provider=school_profile_cache_version_provider(),
     )
 
 
@@ -396,6 +412,7 @@ def materialize_school_search_summaries_use_case() -> MaterializeSchoolSearchSum
 def get_school_profile_use_case() -> GetSchoolProfileUseCase:
     return GetSchoolProfileUseCase(
         school_profile_repository=school_profile_repository(),
+        refresh_school_profile_repository=raw_school_profile_repository(),
         postcode_context_resolver=postcode_resolver(),
         school_trends_repository=school_trends_repository(),
         summary_repository=summary_repository(),
@@ -426,6 +443,7 @@ def get_school_trend_dashboard_use_case() -> GetSchoolTrendDashboardUseCase:
 def materialize_school_benchmarks_use_case() -> MaterializeSchoolBenchmarksUseCase:
     return MaterializeSchoolBenchmarksUseCase(
         school_benchmark_materializer=school_trends_repository(),
+        school_profile_cache_invalidator=school_profile_cache_invalidator(),
     )
 
 

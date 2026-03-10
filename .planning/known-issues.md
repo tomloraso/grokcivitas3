@@ -105,14 +105,18 @@ cd apps/web && npm run test -- src/features/school-compare/school-compare.test.t
 
 ## BUG-004 - `materialize-benchmarks` CLI does not invalidate the in-process profile cache
 
-**Status:** Open
+**Status:** FIXED
 **Severity:** Low (data self-heals within 5 minutes; no incorrect data served past TTL)
 **Detected:** 2026-03-10
 **Assigned to:** Liam Kerrigan
 **Files:**
 - `apps/backend/src/civitas/application/school_trends/use_cases.py` — `MaterializeSchoolBenchmarksUseCase`
+- `apps/backend/src/civitas/application/school_profiles/ports/school_profile_cache_invalidator.py`
 - `apps/backend/src/civitas/infrastructure/persistence/cached_school_profile_repository.py`
-- `apps/backend/src/civitas/infrastructure/pipelines/runner.py` — `_touch_school_profile_cache_version` (existing pattern to follow)
+- `apps/backend/src/civitas/bootstrap/container.py`
+- `apps/backend/tests/unit/test_materialize_school_benchmarks_use_case.py`
+- `apps/backend/tests/unit/test_cached_school_profile_repository.py`
+- `apps/backend/src/civitas/infrastructure/pipelines/runner.py` — `_touch_school_profile_cache_version` (existing pattern mirrored for manual materialisation)
 
 ### Validation
 
@@ -122,20 +126,22 @@ Confirmed. Running `civitas pipeline materialize-benchmarks --all` rebuilds the 
 
 `MaterializeSchoolBenchmarksUseCase` only calls the `SchoolBenchmarkMaterializer` port — it has no reference to a cache invalidation mechanism. The pipeline runner (`PipelineRunRecorder._touch_school_profile_cache_version`) already implements the correct pattern (upsert `app_cache_versions` with `cache_key = "school_profile"`), but this is not called from the benchmark materialisation path.
 
-### Proposed fix
+### Fix implemented
 
-1. Define a `SchoolProfileCacheInvalidator` port in `apps/backend/src/civitas/application/school_profiles/ports/` (or reuse an existing port if one exists).
-2. Inject an optional implementation into `MaterializeSchoolBenchmarksUseCase`.
-3. Call it after a successful materialisation.
-4. Wire the concrete `PostgresSchoolProfileCacheVersionProvider` (or a lightweight writer equivalent) into the use case via the bootstrap container.
+- Added a `SchoolProfileCacheInvalidator` application port.
+- Added `PostgresSchoolProfileCacheInvalidator`, which upserts `app_cache_versions` using the same `school_profile` cache key pattern already used after successful pipeline runs.
+- Injected the invalidator into `MaterializeSchoolBenchmarksUseCase` and call it after successful full or targeted benchmark materialisation.
+- Wired the invalidator through the bootstrap container for the CLI/manual rebuild path.
+- Added unit coverage for successful invalidation and failure behavior, plus a repository-level test that the invalidator writes the cache token row.
 
 ### Workaround
 
 Wait ~5 minutes for the TTL to expire, or restart the API server to clear the in-process cache immediately.
 
-### Verification (once fixed)
+### Verification
 
-Confirm that immediately after running `civitas pipeline materialize-benchmarks --all`, a fresh profile request returns updated benchmark values without requiring a server restart or TTL expiry.
+- `uv run --project apps/backend pytest apps/backend/tests/unit/test_materialize_school_benchmarks_use_case.py apps/backend/tests/unit/test_cached_school_profile_repository.py -q`
+- Isolated repro confirmed the cached profile stays stale before the fix and refreshes once the cache version token is invalidated.
 
 ---
 
@@ -151,21 +157,29 @@ Confirm that immediately after running `civitas pipeline materialize-benchmarks 
 
 ### Validation
 
-Confirmed. Querying `school_performance_yearly WHERE urn = '136655'` returns a single row (`2024/25`). The `AcademicPerformanceSection` component requires `performance.history.length >= 2` to compute a year-on-year delta and render the sparkline + `TrendIndicator` footer. With only one year present, `delta = null` and the footer is suppressed entirely. Verified on 2026-03-10 via direct DB query:
+Confirmed. Querying `school_performance_yearly WHERE urn = '136655'` returns a single row (`2024/25`). The `AcademicPerformanceSection` component requires at least two history rows to compute a year-on-year delta and render the sparkline + `TrendIndicator` footer. With only one year present, `delta = null` and the footer is suppressed entirely. Verified on 2026-03-10 via direct DB query:
 
 ```
 academic_year: 2024/25  attainment8_average: 44.8  progress8_average: null
 ```
 
+Scope check on 2026-03-10:
+
+- `school_performance_yearly` contains `2022/23` rows for `16,408` URNs.
+- `school_performance_yearly` contains `2023/24` rows for `16,408` URNs.
+- `school_performance_yearly` contains `2024/25` rows for `21,398` URNs.
+- `4,990` URNs currently have only a single `2024/25` performance row.
+
 ### Root cause
 
-The DfE academic performance pipeline has only ingested a single academic year (`2024/25`) into `school_performance_yearly`. The trend display is data-driven: trends appear automatically once a second year exists. No frontend code change is required.
+The UI is behaving as designed: trend indicators only appear when there is enough history to compute a delta. The remaining issue is partial data coverage for a subset of schools, not a blanket failure to ingest the prior-year release. The current pipeline already retains up to three academic years where the source provides them. The exact reason some schools only have `2024/25` rows is still under investigation and may reflect school lineage or source-coverage gaps rather than a missing global backfill.
 
 ### Proposed fix
 
-Run the DfE performance pipeline against the 2023/24 release file to populate a prior-year row for each affected school. Trends and sparklines will appear in the Results & Progress section immediately on the next profile fetch (after the in-process cache TTL expires or the server is restarted).
-
-Check scope of the gap — it likely affects all or most schools, not just Congleton High School (URN 136655).
+1. Add an explicit data-quality audit for schools with only one year of performance history.
+2. Determine whether the missing history reflects genuine source coverage gaps, establishment churn, or a missing lineage model between related schools/URNs.
+3. If cross-URN stitching is required, use authoritative lineage data rather than postcode/name heuristics.
+4. Keep the current “no trend without two points” UI behavior; if product wants clearer UX, add explanatory copy rather than fabricating trend indicators.
 
 ### Workaround
 
@@ -179,7 +193,7 @@ Confirm that `school_performance_yearly WHERE urn = '136655'` returns at least t
 
 ## BUG-006 - Area deprivation absent on first profile load; appears after ~5 minutes
 
-**Status:** Open
+**Status:** FIXED
 **Severity:** Medium (incorrect first impression — deprivation context silently missing until TTL expires)
 **Detected:** 2026-03-10
 **Assigned to:** Liam Kerrigan
@@ -187,6 +201,7 @@ Confirm that `school_performance_yearly WHERE urn = '136655'` returns at least t
 - `apps/backend/src/civitas/application/school_profiles/use_cases.py` — `GetSchoolProfileUseCase._refresh_profile_context_if_needed`
 - `apps/backend/src/civitas/infrastructure/persistence/cached_school_profile_repository.py`
 - `apps/backend/src/civitas/bootstrap/container.py` — `get_school_profile_use_case`
+- `apps/backend/tests/unit/test_get_school_profile_use_case.py`
 
 ### Validation
 
@@ -202,30 +217,30 @@ self._postcode_context_resolver.resolve(postcode)          # populates postcode_
 refreshed = self._school_profile_repository.get_school_profile(urn)  # BUG: cache hit ✗
 ```
 
-### Proposed fix
+### Fix implemented
 
-Pass the underlying raw `PostgresSchoolProfileRepository` as a separate constructor parameter (`raw_profile_repository`) used only in the re-fetch step, bypassing the cache:
-
-1. Expose `delegate` as a public attribute on `CachedSchoolProfileRepository`.
-2. Add an optional `raw_profile_repository` parameter to `GetSchoolProfileUseCase.__init__`.
-3. In `_refresh_profile_context_if_needed`, use `self._raw_profile_repository` (falling back to `self._school_profile_repository`) for the re-fetch.
-4. In `container.get_school_profile_use_case()`, pass `raw_profile_repository=school_profile_repository().delegate`.
+- Added an optional `refresh_school_profile_repository` dependency to `GetSchoolProfileUseCase`, typed to the existing `SchoolProfileRepository` protocol.
+- Kept the primary read path on the cached repository.
+- Changed `_refresh_profile_context_if_needed` to use the dedicated refresh repository for the post-resolve re-fetch when one is provided.
+- Updated bootstrap wiring to inject the raw `PostgresSchoolProfileRepository` for refresh reads, while leaving the cached repository as the primary dependency.
+- Added a regression test that exercises the bug with `CachedSchoolProfileRepository` in the loop so the cache interaction is covered directly.
 
 ### Workaround
 
 Wait ~5 minutes for the TTL to expire, or restart the API server to clear the in-process cache immediately.
 
-### Verification (once fixed)
+### Verification
 
-On a clean server start, visit a school profile page and confirm that `area_context` includes deprivation data on the very first load without needing to wait for TTL expiry.
+- `uv run --project apps/backend pytest apps/backend/tests/unit/test_get_school_profile_use_case.py -q`
+- Isolated repro confirmed the stale first response before the fix and successful first-request deprivation hydration when a dedicated refresh repository bypasses the in-process cache.
 
 ---
 
 ## Tracker Notes
 
-- `make lint` still fails in the current branch because unrelated files already need formatting:
-  - `apps/backend/src/civitas/infrastructure/ai/prompt_templates/school_analyst.py`
-  - `apps/backend/tests/unit/test_school_analyst_prompt.py`
-- `uv run --project apps/backend mypy apps/backend/src` still has one unrelated pre-existing error in `apps/backend/src/civitas/infrastructure/ai/providers/grok_summary_generator.py`.
-- `cd apps/web && npm run lint` and `cd apps/web && npm run typecheck` passed.
-- `cd apps/web && npm run test`: 1 pre-existing failure — BUG-003 (compare feature, introduced `9cd9525`, not related to phase 7 work). School-profile test suite fully passing as of `747e4f7`.
+- `make lint` passed on 2026-03-10 after the cache invalidation + cache bypass fixes.
+- `make test` passed on 2026-03-10:
+  - Backend: `373 passed, 93 skipped`
+  - Web: `30 passed` test files / `215 passed` tests
+- `cd apps/web && npm run lint` and `cd apps/web && npm run typecheck` both passed as part of `make lint`.
+- BUG-003 is no longer a current failing test on this branch; the compare test suite passed during `make test`.

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.pool import StaticPool
+
 from civitas.domain.school_profiles.models import (
     SchoolAreaContext,
     SchoolAreaContextCoverage,
@@ -12,6 +15,7 @@ from civitas.domain.school_profiles.models import (
 )
 from civitas.infrastructure.persistence.cached_school_profile_repository import (
     CachedSchoolProfileRepository,
+    PostgresSchoolProfileCacheInvalidator,
 )
 
 
@@ -227,3 +231,41 @@ def test_cached_repository_can_be_disabled_with_zero_ttl() -> None:
     assert first.school.name == "First value"
     assert second.school.name == "Second value"
     assert delegate.calls == ["123456", "123456"]
+
+
+def test_postgres_school_profile_cache_invalidator_writes_cache_token() -> None:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE app_cache_versions (
+                    cache_key text PRIMARY KEY,
+                    version_updated_at text NOT NULL
+                )
+                """
+            )
+        )
+
+    invalidator = PostgresSchoolProfileCacheInvalidator(engine=engine)
+
+    invalidator.invalidate_school_profile_cache()
+
+    with engine.begin() as connection:
+        row = connection.execute(
+            text(
+                """
+                SELECT cache_key, version_updated_at
+                FROM app_cache_versions
+                WHERE cache_key = 'school_profile'
+                """
+            )
+        ).fetchone()
+
+    assert row is not None
+    assert row[0] == "school_profile"
+    assert row[1] is not None

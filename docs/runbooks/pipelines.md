@@ -150,7 +150,9 @@ uv run --project apps/backend civitas pipeline run --source ofsted_timeline
   `dfe_workforce`, `dfe_performance`, `ons_imd`, `uk_house_prices`, and
   `police_crime_context` rebuild `metric_benchmarks_yearly` after promote.
 - Use `civitas pipeline materialize-benchmarks --all` after restoring a database snapshot or when
-  benchmark cache rows need a manual full rebuild. Use `--urn` to reseed specific schools only.
+  benchmark cache rows need a manual full rebuild. Successful manual materialisation now bumps the
+  `school_profile` cache version token so cached profile responses refresh without waiting for the
+  full in-process TTL. Use `--urn` to reseed specific schools only.
 - When `CIVITAS_AI_ENABLED=true`, `pipeline run --all` submits overview-generation batches after successful promote and exits without waiting for provider completion.
 - Final AI persistence happens through a separate `poll-summary-batches` pass; this should be run by an operator or external scheduler until all pending batch items are finalized.
 - Keep `pipeline_runs` and `pipeline_source_locks` clean (`running=0`, no orphan locks) before sign-off.

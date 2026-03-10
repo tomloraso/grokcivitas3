@@ -2,6 +2,9 @@ from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any, Literal, cast
 
+from civitas.application.school_profiles.ports.school_profile_cache_invalidator import (
+    SchoolProfileCacheInvalidator,
+)
 from civitas.application.school_trends.dto import (
     SchoolTrendBenchmarkPointDto,
     SchoolTrendDashboardMetricDto,
@@ -453,18 +456,32 @@ class GetSchoolTrendDashboardUseCase:
 
 
 class MaterializeSchoolBenchmarksUseCase:
-    def __init__(self, school_benchmark_materializer: SchoolBenchmarkMaterializer) -> None:
+    def __init__(
+        self,
+        school_benchmark_materializer: SchoolBenchmarkMaterializer,
+        school_profile_cache_invalidator: SchoolProfileCacheInvalidator | None = None,
+    ) -> None:
         self._school_benchmark_materializer = school_benchmark_materializer
+        self._school_profile_cache_invalidator = school_profile_cache_invalidator
 
     def execute(self, *, urns: Sequence[str] | None = None) -> int:
         normalized_urns = tuple(
             dict.fromkeys(urn.strip() for urn in (urns or ()) if urn is not None and urn.strip())
         )
+        materialized_rows: int
         if len(normalized_urns) == 0:
-            return self._school_benchmark_materializer.materialize_all_metric_benchmarks()
-        return self._school_benchmark_materializer.materialize_metric_benchmarks_for_urns(
-            normalized_urns
-        )
+            materialized_rows = (
+                self._school_benchmark_materializer.materialize_all_metric_benchmarks()
+            )
+        else:
+            materialized_rows = (
+                self._school_benchmark_materializer.materialize_metric_benchmarks_for_urns(
+                    normalized_urns
+                )
+            )
+        if self._school_profile_cache_invalidator is not None:
+            self._school_profile_cache_invalidator.invalidate_school_profile_cache()
+        return materialized_rows
 
 
 def _build_metric_series(

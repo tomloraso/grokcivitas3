@@ -66,12 +66,14 @@ class GetSchoolProfileUseCase:
     def __init__(
         self,
         school_profile_repository: SchoolProfileRepository,
+        refresh_school_profile_repository: SchoolProfileRepository | None = None,
         postcode_context_resolver: PostcodeContextResolver | None = None,
         school_trends_repository: SchoolTrendsRepository | None = None,
         summary_repository: SummaryRepository | None = None,
         evaluate_access_use_case: EvaluateAccessUseCase | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
+        self._refresh_school_profile_repository = refresh_school_profile_repository
         self._postcode_context_resolver = postcode_context_resolver
         self._school_trends_repository = school_trends_repository
         self._summary_repository = summary_repository
@@ -611,7 +613,10 @@ class GetSchoolProfileUseCase:
         except Exception:
             return profile
 
-        refreshed_profile = self._school_profile_repository.get_school_profile(urn)
+        refresh_repository = (
+            self._refresh_school_profile_repository or self._school_profile_repository
+        )
+        refreshed_profile = refresh_repository.get_school_profile(urn)
         if refreshed_profile is None:
             return profile
         return refreshed_profile

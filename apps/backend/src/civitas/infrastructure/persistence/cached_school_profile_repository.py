@@ -9,6 +9,9 @@ from typing import Callable, Protocol
 from sqlalchemy import text
 from sqlalchemy.engine import Connection, Engine
 
+from civitas.application.school_profiles.ports.school_profile_cache_invalidator import (
+    SchoolProfileCacheInvalidator,
+)
 from civitas.application.school_profiles.ports.school_profile_repository import (
     SchoolProfileRepository,
 )
@@ -75,6 +78,15 @@ class PostgresSchoolProfileCacheVersionProvider(SchoolProfileCacheVersionProvide
         if isinstance(raw_token, str):
             return raw_token
         return str(raw_token)
+
+
+class PostgresSchoolProfileCacheInvalidator(SchoolProfileCacheInvalidator):
+    def __init__(self, *, engine: Engine) -> None:
+        self._engine = engine
+
+    def invalidate_school_profile_cache(self) -> None:
+        with self._engine.begin() as connection:
+            _touch_school_profile_cache_version(connection)
 
 
 class CachedSchoolProfileRepository(SchoolProfileRepository):
@@ -150,3 +162,44 @@ def _table_exists(connection: Connection, table_name: str) -> bool:
         ).fetchone()
         return row is not None
     return False
+
+
+def _touch_school_profile_cache_version(connection: Connection) -> None:
+    if not _table_exists(connection, "app_cache_versions"):
+        return
+
+    if connection.dialect.name == "postgresql":
+        connection.execute(
+            text(
+                """
+                INSERT INTO app_cache_versions (
+                    cache_key,
+                    version_updated_at
+                ) VALUES (
+                    :cache_key,
+                    timezone('utc', now())
+                )
+                ON CONFLICT (cache_key) DO UPDATE SET
+                    version_updated_at = timezone('utc', now())
+                """
+            ),
+            {"cache_key": _SCHOOL_PROFILE_CACHE_KEY},
+        )
+        return
+
+    connection.execute(
+        text(
+            """
+            INSERT INTO app_cache_versions (
+                cache_key,
+                version_updated_at
+            ) VALUES (
+                :cache_key,
+                CURRENT_TIMESTAMP
+            )
+            ON CONFLICT(cache_key) DO UPDATE SET
+                version_updated_at = CURRENT_TIMESTAMP
+            """
+        ),
+        {"cache_key": _SCHOOL_PROFILE_CACHE_KEY},
+    )

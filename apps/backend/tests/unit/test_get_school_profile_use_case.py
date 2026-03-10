@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from typing import Callable
 
 import pytest
 
@@ -31,6 +32,9 @@ from civitas.domain.school_profiles.models import (
 )
 from civitas.domain.school_summaries.models import SchoolSummary
 from civitas.domain.schools.models import PostcodeCoordinates
+from civitas.infrastructure.persistence.cached_school_profile_repository import (
+    CachedSchoolProfileRepository,
+)
 
 
 class FakeSchoolProfileRepository:
@@ -53,14 +57,21 @@ class FakeSchoolProfileRepository:
 
 
 class FakePostcodeContextResolver:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        error: Exception | None = None,
+        on_resolve: Callable[[str], None] | None = None,
+    ) -> None:
         self._error = error
+        self._on_resolve = on_resolve
         self.calls: list[str] = []
 
     def resolve(self, postcode: str) -> PostcodeCoordinates:
         self.calls.append(postcode)
         if self._error is not None:
             raise self._error
+        if self._on_resolve is not None:
+            self._on_resolve(postcode)
         return PostcodeCoordinates(
             postcode=postcode,
             lat=51.5,
@@ -79,6 +90,16 @@ class FakeSummaryRepository:
     def get_summary(self, urn: str, summary_kind: str) -> SchoolSummary | None:
         self.calls.append((urn, summary_kind))
         return self._summaries.get(summary_kind)
+
+
+class MutableSchoolProfileRepository:
+    def __init__(self, profile: SchoolProfile | None) -> None:
+        self.profile = profile
+        self.received_urns: list[str] = []
+
+    def get_school_profile(self, urn: str) -> SchoolProfile | None:
+        self.received_urns.append(urn)
+        return self.profile
 
 
 class FakeEvaluateAccessUseCase:
@@ -837,3 +858,78 @@ def test_get_school_profile_keeps_profile_when_context_rehydrate_fails() -> None
     assert resolver.calls == ["SW1A 1AA"]
     assert result.neighbourhood.access.state == "unavailable"
     assert result.neighbourhood.area_context is None
+
+
+def test_get_school_profile_uses_refresh_repository_to_bypass_cached_profile_on_rehydrate() -> None:
+    cached_delegate = MutableSchoolProfileRepository(_profile())
+    refresh_repository = MutableSchoolProfileRepository(_profile())
+    resolver = FakePostcodeContextResolver(
+        on_resolve=lambda _postcode: setattr(
+            refresh_repository,
+            "profile",
+            _profile(
+                area_context=SchoolAreaContext(
+                    deprivation=SchoolAreaDeprivation(
+                        lsoa_code="E01004736",
+                        imd_score=27.1,
+                        imd_rank=4825,
+                        imd_decile=3,
+                        idaci_score=0.241,
+                        idaci_decile=2,
+                        income_score=0.12,
+                        income_rank=7200,
+                        income_decile=2,
+                        employment_score=0.11,
+                        employment_rank=7000,
+                        employment_decile=2,
+                        education_score=0.16,
+                        education_rank=8100,
+                        education_decile=3,
+                        health_score=0.13,
+                        health_rank=7600,
+                        health_decile=3,
+                        crime_score=0.18,
+                        crime_rank=8900,
+                        crime_decile=4,
+                        barriers_score=0.14,
+                        barriers_rank=7800,
+                        barriers_decile=3,
+                        living_environment_score=0.17,
+                        living_environment_rank=8400,
+                        living_environment_decile=4,
+                        population_total=2000,
+                        local_authority_district_code="E09000033",
+                        local_authority_district_name="Westminster",
+                        source_release="IoD2025",
+                    ),
+                    crime=None,
+                    house_prices=None,
+                    coverage=SchoolAreaContextCoverage(
+                        has_deprivation=True,
+                        has_crime=False,
+                        crime_months_available=0,
+                        has_house_prices=False,
+                        house_price_months_available=0,
+                    ),
+                )
+            ),
+        )
+    )
+    use_case = GetSchoolProfileUseCase(
+        school_profile_repository=CachedSchoolProfileRepository(
+            delegate=cached_delegate,
+            ttl_seconds=300,
+        ),
+        refresh_school_profile_repository=refresh_repository,
+        postcode_context_resolver=resolver,
+    )
+
+    result = use_case.execute(urn="123456")
+
+    assert cached_delegate.received_urns == ["123456"]
+    assert refresh_repository.received_urns == ["123456"]
+    assert resolver.calls == ["SW1A 1AA"]
+    assert result.neighbourhood.area_context is not None
+    assert result.neighbourhood.area_context.coverage.has_deprivation is True
+    assert result.neighbourhood.area_context.deprivation is not None
+    assert result.neighbourhood.area_context.deprivation.lsoa_code == "E01004736"
