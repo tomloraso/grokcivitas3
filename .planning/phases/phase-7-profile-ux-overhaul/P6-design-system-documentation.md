@@ -2,7 +2,7 @@
 
 ## Status
 
-Not started
+Complete (2026-03-10)
 
 ## Goal
 
@@ -10,20 +10,22 @@ Document the `StatCard` with benchmark patterns so the same approach can be appl
 
 ## Deliverable
 
-`/.planning/ux-overhaul/design-system.md` — StatCard variants reference covering:
+Central design system guide created at `docs/architecture/design-system.md` (referenced from `AGENTS.md` rule 3b). Covers:
 
-- StatCard with `label` + `value` only (basic).
-- StatCard with `footer` (sparkline + TrendIndicator).
-- StatCard with `benchmark` (inline bars).
-- StatCard with both `footer` and `benchmark`.
-- `BenchmarkSlot` interface field-by-field reference.
-- When to pass `isPercent: true` vs `false` and the effect on bar scale.
-- Benchmark colour tokens (`--color-benchmark-school/local/national`) and their Tailwind aliases.
-- Mobile vs desktop rendering differences.
-- Rollout checklist for applying the pattern to new pages.
+- Full Loira Voss colour palette and typography
+- Button system (primary/secondary/ghost/compare variants with cva animation)
+- Card primitive (panel-surface glass styling)
+- StatCard variants (default/hero/mini), size prop, benchmark delta neutrality, title min-height
+- Trend indicators (always teal, vertical footer layout)
+- Layout patterns (mobile-first 375px, school profile, compare page)
+- Premium access gates and shareability
+- Anti-patterns list (8 explicit "do not" rules)
+
+This supersedes the original plan for `.planning/ux-overhaul/design-system.md` — the guide lives in `docs/architecture/` alongside other architecture docs, making it discoverable by all agents and contributors.
 
 ## Acceptance Criteria
 
-- [ ] `design-system.md` written and committed to `.planning/ux-overhaul/`.
-- [ ] `phased-delivery.md` references this deliverable under Phase 7.
-- [ ] Phase 9 (compare) team can implement `StatCard` with benchmark bars without re-reading this phase's implementation files.
+- [x] `design-system.md` written and committed to `docs/architecture/`.
+- [x] `AGENTS.md` references this deliverable (rule 3b + agent guides table).
+- [x] `docs/index.md` includes the guide in the docs index.
+- [x] Phase 9 (compare) team can implement `StatCard` with benchmark bars without re-reading this phase's implementation files.

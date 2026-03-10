@@ -41,6 +41,12 @@ Phase 9 is split into five deliverables:
 
 ## Tracking Log
 
+- 2026-03-10 (post-launch UX iterations under Phase 7 umbrella):
+  - P13–P13.9: Full compare page rebuild — accordion layout, visual polish, row readability, strip-to-table alignment, fixed 4-slot layout with ghost cards, accordion header hierarchy, mobile-first content, section heading alignment with profile. See `.planning/phases/phase-7-profile-ux-overhaul/README.md` tracking log for details.
+  - BUG-007 fixed: Compare "Clear all" race condition — `skipUrlSyncRef` prevents URL→selection sync from repopulating cleared items.
+  - BUG-008 fixed: Noisy `insufficient_years_published` completeness labels suppressed in compare cells.
+  - Design system guide (`docs/architecture/design-system.md`) now documents all compare page layout patterns, accordion rules, "This school" highlight, mobile/desktop breakpoints, and unavailable treatment.
+
 - 2026-03-07:
   - 9A completed: compare metric set, ordering, and completeness semantics frozen.
   - 9B completed: backend compare API, presenter, OpenAPI export, and frontend generated types aligned.

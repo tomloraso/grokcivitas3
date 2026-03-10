@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Extended — P13 complete (2026-03-10)
+- Status: Extended — P14.2 complete, all deliverables done (2026-03-10)
 - Last updated: 2026-03-10
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
@@ -71,7 +71,7 @@ SchoolProfileFeature
 | P3 | `P3-benchmark-wiring-sections.md` | Completed |
 | P4 | `P4-section-narrative-copy.md` | Completed |
 | P5 | `P5-responsive-mobile-polish.md` | Superseded by P9 |
-| P6 | `P6-design-system-documentation.md` | Partially complete — `apps/web/README.md` updated (2026-03-09) |
+| P6 | `P6-design-system-documentation.md` | Complete — `docs/architecture/design-system.md` created (2026-03-10) |
 | P7 | `P7-school-data-page-redesign-v2.md` | Completed (local, 2026-03-08) |
 | P8 | `P8-school-data-page-redesign-v3.md` | Completed (local, 2026-03-08) |
 | P9 | `P9-loira-voss-design-refresh.md` | Complete — superseded by P10 for StatCard |
@@ -118,6 +118,17 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-10 (P6 — Design system documentation complete):
+  - **`docs/architecture/design-system.md`** (new) — central design system & UX guide created. Codifies Loira Voss visual language: colour palette, typography, button system, StatCard rules, trend indicator neutrality, layout patterns (profile + compare), premium gates, shareability, and 8 anti-patterns. Supersedes the original plan for `.planning/ux-overhaul/design-system.md`.
+  - **`AGENTS.md`** — added rule 3b referencing the guide + Design System row in agent guides table.
+  - **`docs/index.md`** — added entry #10 (Design System & UX Guide), renumbered subsequent entries.
+
+- 2026-03-10 (BUG-007 — Compare clear-all race condition):
+  - **`SchoolCompareFeature.tsx`** — added `skipUrlSyncRef` to prevent URL→selection sync from repopulating cleared items during React Router's `startTransition` window.
+
+- 2026-03-10 (BUG-008 — Noisy completeness labels):
+  - **`compareMapper.ts`** — added `insufficient_years_published` to suppressed reason codes in `buildCompletenessLabel`, matching existing `partial_metric_coverage` pattern.
 
 - 2026-03-10 (P14.2 — Site-wide button variant standardisation):
   - **`SchoolProfileFeature.tsx`** — all four `variant="compare" size="none"` button call sites replaced with `variant="primary" size="default"`: header "Add to compare" button, header `CompareActionButton` ("Open compare"), mobile sticky bar compare toggle, and mobile sticky bar `CompareActionButton`. "Remove from compare" remains `variant="secondary"` (correct for secondary action). Manual `text-sm` removed from mobile bar (redundant — included in `size="default"`). Manual `px-4` removed from mobile `CompareActionButton` (included in `size="default"`).

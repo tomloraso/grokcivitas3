@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned, deferred post-launch candidate
-- Last updated: 2026-03-09
+- Status: Implemented — BUG-009 (save 404) open
+- Last updated: 2026-03-10
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 
@@ -61,6 +61,11 @@ Before implementation starts, the phase should already assume these concrete ext
   - `GET /api/v1/schools/search`
 - The web app owns favourites UI under `apps/web/src/features/favourites/`.
 - Viewer-specific cache invalidation is handled deliberately in `apps/web/src/api/client.ts` and `apps/web/src/features/auth/AuthProvider.tsx`; save or remove actions must not leave stale saved-state behind.
+
+## Tracking Log
+
+- 2026-03-10: Phase 14 implemented and committed (`fec7d4f`). SaveSchoolButton with Heart icon, tooltip, status-aware labels. Backend favourites API with `saved_schools` table. Mapper compat fix for undefined `saved_state` on search results (`favourites/mappers.ts`).
+- 2026-03-10: BUG-009 logged — "Save for later" returns 404 error toast. Possible causes: migration not applied, proxy port mismatch, or data inconsistency. Logged in `.planning/known-issues.md`.
 
 ## Definition Of Done
 
