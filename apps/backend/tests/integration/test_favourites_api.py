@@ -198,9 +198,7 @@ def test_put_account_favourite_rejects_untrusted_origin_when_cookie_is_present()
         secure=False,
         samesite="lax",
     )
-    app.dependency_overrides[get_auth_allowed_origins] = lambda: (
-        "https://allowed.example",
-    )
+    app.dependency_overrides[get_auth_allowed_origins] = lambda: ("https://allowed.example",)
 
     response = client.put(
         "/api/v1/account/favourites/123456",

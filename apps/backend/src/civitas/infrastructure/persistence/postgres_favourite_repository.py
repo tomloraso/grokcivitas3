@@ -274,7 +274,9 @@ def _map_saved_school_summary_row(row: RowMapping) -> AccountFavouriteSchoolDto:
 
 
 def _summary_text(row: RowMapping, field_name: str) -> str | None:
-    return _optional_text(row[f"summary_{field_name}"]) or _optional_text(row[f"school_{field_name}"])
+    return _optional_text(row[f"summary_{field_name}"]) or _optional_text(
+        row[f"school_{field_name}"]
+    )
 
 
 def _required_summary_text(row: RowMapping, field_name: str) -> str:
@@ -301,14 +303,18 @@ def _resolve_academic_metric_summary(
         label=_optional_text(row["primary_academic_metric_label"]) or PRIMARY_METRIC_LABEL,
         sort_value=_optional_float(row["primary_academic_metric_value"]),
         availability=_optional_text(row["primary_academic_metric_availability"]),
-        fallback_availability="not_published" if phase in {"Primary", "Middle deemed primary", "All-through"} else "unsupported",
+        fallback_availability="not_published"
+        if phase in {"Primary", "Middle deemed primary", "All-through"}
+        else "unsupported",
     )
     secondary = _academic_metric_choice(
         metric_key=_optional_text(row["secondary_academic_metric_key"]) or SECONDARY_METRIC_KEY,
         label=_optional_text(row["secondary_academic_metric_label"]) or SECONDARY_METRIC_LABEL,
         sort_value=_optional_float(row["secondary_academic_metric_value"]),
         availability=_optional_text(row["secondary_academic_metric_availability"]),
-        fallback_availability="not_published" if phase in {"Secondary", "Middle deemed secondary"} else ("not_published" if phase == "All-through" else "unsupported"),
+        fallback_availability="not_published"
+        if phase in {"Secondary", "Middle deemed secondary"}
+        else ("not_published" if phase == "All-through" else "unsupported"),
     )
     if phase in {"Primary", "Middle deemed primary", "All-through"}:
         return primary
