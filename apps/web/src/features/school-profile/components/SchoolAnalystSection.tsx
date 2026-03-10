@@ -13,7 +13,7 @@ export function SchoolAnalystSection({
   return (
     <section
       aria-labelledby="school-analyst-heading"
-      className="panel-surface space-y-5 rounded-lg p-5 sm:p-6"
+      className="panel-surface space-y-4 rounded-lg p-4 sm:space-y-5 sm:p-6"
     >
       <div className="space-y-1">
         <h2

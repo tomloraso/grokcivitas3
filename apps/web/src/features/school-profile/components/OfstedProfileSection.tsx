@@ -134,7 +134,7 @@ export function OfstedProfileSection({
   return (
     <section
       aria-labelledby="ofsted-heading"
-      className="panel-surface rounded-lg space-y-6 p-5 sm:p-6"
+      className="panel-surface rounded-lg space-y-4 p-4 sm:space-y-6 sm:p-6"
     >
       {/* ── Section header ─────────────────────── */}
       <div className="flex items-start justify-between gap-3">

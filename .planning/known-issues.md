@@ -103,6 +103,42 @@ cd apps/web && npm run test -- src/features/school-compare/school-compare.test.t
 
 ---
 
+## BUG-004 - `materialize-benchmarks` CLI does not invalidate the in-process profile cache
+
+**Status:** Open
+**Severity:** Low (data self-heals within 5 minutes; no incorrect data served past TTL)
+**Detected:** 2026-03-10
+**Assigned to:** Liam Kerrigan
+**Files:**
+- `apps/backend/src/civitas/application/school_trends/use_cases.py` — `MaterializeSchoolBenchmarksUseCase`
+- `apps/backend/src/civitas/infrastructure/persistence/cached_school_profile_repository.py`
+- `apps/backend/src/civitas/infrastructure/pipelines/runner.py` — `_touch_school_profile_cache_version` (existing pattern to follow)
+
+### Validation
+
+Confirmed. Running `civitas pipeline materialize-benchmarks --all` rebuilds the `metric_benchmarks_yearly` table with fresh benchmark averages, but the in-process `CachedSchoolProfileRepository` (default TTL: 300 seconds) is not notified. Profile responses already held in the in-process cache continue to return the pre-rebuild benchmark values until the TTL expires naturally. This means benchmark bars on the school profile page (all sections: demographics, attendance, behaviour, workforce, results & progress) can appear stale for up to 5 minutes after a rebuild.
+
+### Root cause
+
+`MaterializeSchoolBenchmarksUseCase` only calls the `SchoolBenchmarkMaterializer` port — it has no reference to a cache invalidation mechanism. The pipeline runner (`PipelineRunRecorder._touch_school_profile_cache_version`) already implements the correct pattern (upsert `app_cache_versions` with `cache_key = "school_profile"`), but this is not called from the benchmark materialisation path.
+
+### Proposed fix
+
+1. Define a `SchoolProfileCacheInvalidator` port in `apps/backend/src/civitas/application/school_profiles/ports/` (or reuse an existing port if one exists).
+2. Inject an optional implementation into `MaterializeSchoolBenchmarksUseCase`.
+3. Call it after a successful materialisation.
+4. Wire the concrete `PostgresSchoolProfileCacheVersionProvider` (or a lightweight writer equivalent) into the use case via the bootstrap container.
+
+### Workaround
+
+Wait ~5 minutes for the TTL to expire, or restart the API server to clear the in-process cache immediately.
+
+### Verification (once fixed)
+
+Confirm that immediately after running `civitas pipeline materialize-benchmarks --all`, a fresh profile request returns updated benchmark values without requiring a server restart or TTL expiry.
+
+---
+
 ## Tracker Notes
 
 - `make lint` still fails in the current branch because unrelated files already need formatting:

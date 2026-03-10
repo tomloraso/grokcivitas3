@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Completed — committed 2026-03-07
-- Last updated: 2026-03-07
+- Status: Extended — P9 in progress (2026-03-09)
+- Last updated: 2026-03-09
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
 - Detailed brief: `.planning/ux-overhaul/README.md`
@@ -24,7 +24,7 @@ This phase covers only the school profile route (`/schools/:urn`). If the design
 
 ## What Is Not Changing
 
-- The brand and colour system — navy/purple palette stays.
+- ~~The brand and colour system — navy/purple palette stays.~~ **Superseded by P9** — brand colour migrated from purple to teal (#00D4C8); font migrated from Space Grotesk + Public Sans to Inter. See P9 doc.
 - All existing API contracts — data is already available; no backend changes needed.
 - TypeScript interfaces — extended only, never broken.
 
@@ -55,10 +55,11 @@ SchoolProfileFeature
 | P2 | `P2-stat-card-visual-redesign.md` | Completed |
 | P3 | `P3-benchmark-wiring-sections.md` | Completed |
 | P4 | `P4-section-narrative-copy.md` | Completed |
-| P5 | `P5-responsive-mobile-polish.md` | Not started |
-| P6 | `P6-design-system-documentation.md` | Not started |
+| P5 | `P5-responsive-mobile-polish.md` | Superseded by P9 |
+| P6 | `P6-design-system-documentation.md` | Partially complete — `apps/web/README.md` updated (2026-03-09) |
 | P7 | `P7-school-data-page-redesign-v2.md` | Completed (local, 2026-03-08) |
 | P8 | `P8-school-data-page-redesign-v3.md` | Completed (local, 2026-03-08) |
+| P9 | `P9-loira-voss-design-refresh.md` | In progress (2026-03-09) |
 
 ## Execution Sequence
 
@@ -86,6 +87,32 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-09 (P9 — Liora Voss design refresh, iteration 3 — mobile density):
+  - **Section panel padding**: `p-5 sm:p-6` → `p-4 sm:p-6` across all 8 section components (AcademicPerformance, AttendanceBehaviour, Demographics, Workforce, Neighbourhood, Ofsted, SchoolOverview, SchoolAnalyst).
+  - **Section internal rhythm**: `space-y-5/6` → `space-y-4 sm:space-y-5/6` matching padding reduction.
+  - **Between-section gap** (`SchoolProfileFeature`): `space-y-8` → `space-y-5 lg:space-y-8`.
+  - **Hero metric strip** (`ProfileHeader`): `gap-8 sm:gap-10` → `gap-5 sm:gap-8`.
+  - **Accordion chrome** (`ProfileSectionAccordion`): `px-4 py-3` → `px-3 py-2.5 min-h-[44px]` (≥44px touch target preserved).
+  - **Bottom guard**: `pb-24` → `pb-20 lg:pb-0`.
+  - `SchoolProfileFeature` comment block updated; `apps/web/README.md` mobile density table added.
+
+- 2026-03-09 (P9 — Liora Voss design refresh, iteration 2):
+  - `ProfileHeader`: removed decorative UK map SVG watermark (`UKMapWatermark`) added and reverted in same session — hero section is now illustration-free by design rule.
+  - `SiteFooter`: both `CIVITAS` occurrences (logo link + copyright line) replaced with `[BRAND]`.
+  - `SchoolProfileFeature`: 30-line styling comment block added at top of file; TOC sidebar `top` corrected to `3.75rem` (flush below 56px nav); mobile sticky CTA hardened with `min-h-[52px]` tap target and `env(safe-area-inset-bottom)` iOS safe-area padding.
+  - `apps/web/README.md`: new `## School Profile UI` section added covering colour palette, typography, card primitive, mobile/desktop layout rules, brand placeholder locations, and no-illustrations rule.
+  - `P9-loira-voss-design-refresh.md` planning doc created.
+
+- 2026-03-09 (P9 — Liora Voss design refresh, iteration 1):
+  - **Global token migration** — brand colour `#A855F7` (purple) → `#00D4C8` (teal) across `--ref-color-brand-*` tokens; `--ref-color-navy-900/950/800/700` deepened to match designer spec; `--color-trend-up` set to teal, `--color-trend-down` set to `#FF4D6D` (was both neutral blue).
+  - **Font migration** — `@fontsource/inter` installed; `theme.css` imports swapped from Space Grotesk + Public Sans → Inter (400/500/600/700); `--font-family-display` and `--font-family-body` tokens updated.
+  - **Hardcoded purple purge** — `btn-compare` border/glow/gradient, panel resize handle, and light-theme overrides all updated to teal in `tokens.css` and `theme.css`.
+  - **`SiteHeader`**: `CIVITAS` → `[BRAND]` (display text + aria-label).
+  - **`Card`**: `rounded-lg` → `rounded-xl`; hover lift `hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200` added.
+  - **`SchoolProfileFeature`**: two-column desktop layout (280px sticky TOC + main content); section IDs for jump-link targets; sections 3–8 wrapped in `ProfileSectionAccordion` (Ofsted + Results open by default, rest closed); mobile sticky "Add to compare" bar added (fixed bottom, `z-nav`, `lg:hidden`); `pb-24` guards content above sticky bar.
+  - **`ProfileSectionAccordion`** new component created — zero-dependency React-state accordion; accordion toggles `lg:hidden` so desktop always renders sections in full.
+  - Planning doc `P9-loira-voss-design-refresh.md` created.
 
 - 2026-03-08 (Liora Voss design pass — P8, V3 polish, local only):
   - `WorkforceLeadershipSection`: removed `WorkforceMetricCard` helper — catalog null-skip now in `.flatMap()` alongside value null-skip, eliminating ghost-card escape hatch. `StatCard` rendered directly.

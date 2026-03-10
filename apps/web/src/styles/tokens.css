@@ -3,8 +3,8 @@
 /* ================================================================== */
 
 :root {
-  --font-family-display: "Space Grotesk";
-  --font-family-body: "Public Sans";
+  --font-family-display: "Inter";
+  --font-family-body: "Inter";
   --font-family-mono: "IBM Plex Mono";
 
   /* Typography scale */
@@ -34,10 +34,10 @@
   --text-opacity-muted: 0.72;
   --text-opacity-subtle: 0.56;
 
-  --ref-color-navy-950: #060a13;
-  --ref-color-navy-900: #0c1222;
-  --ref-color-navy-800: #141d30;
-  --ref-color-navy-700: #1c2840;
+  --ref-color-navy-950: #02060F;
+  --ref-color-navy-900: #0A1428;
+  --ref-color-navy-800: #0F172A;
+  --ref-color-navy-700: #1E2937;
   --ref-color-navy-600: #263350;
 
   --ref-color-grey-50: #f8fafc;
@@ -51,9 +51,9 @@
   --ref-color-grey-800: #1e293b;
   --ref-color-grey-900: #0f172a;
 
-  --ref-color-brand-500: #A855F7;
-  --ref-color-brand-400: #C084FC;
-  --ref-color-brand-600: #8B2FC9;
+  --ref-color-brand-500: #00D4C8;
+  --ref-color-brand-400: #33DDD8;
+  --ref-color-brand-600: #00A89D;
   --ref-color-accent-400: #22d3ee;
   --ref-color-accent-500: #06b6d4;
   --ref-color-phase-secondary: #E879F9;
@@ -159,9 +159,9 @@
   --color-state-danger: var(--ref-color-danger-500);
   --color-state-info: var(--ref-color-info-500);
 
-  /* Trend direction — movement vs stable, not good vs bad */
-  --color-trend-up: var(--ref-color-info-500);
-  --color-trend-down: var(--ref-color-info-500);
+  /* Trend direction — teal for positive movement, red for negative */
+  --color-trend-up: #00D4C8;
+  --color-trend-down: #FF4D6D;
   --color-trend-flat: var(--ref-color-grey-500);
 
   /* Benchmark comparison — school / local / national */
@@ -173,8 +173,8 @@
   --color-phase-secondary: var(--ref-color-phase-secondary);
   --color-phase-all-through: var(--ref-color-phase-all-through);
   --color-phase-default: var(--ref-color-phase-default);
-  --marker-glow: rgba(168, 85, 247, 0.4);
-  --marker-glow-active: rgba(168, 85, 247, 0.55);
+  --marker-glow: rgba(0, 212, 200, 0.4);
+  --marker-glow-active: rgba(0, 212, 200, 0.55);
 
   --elevation-sm: 0 10px 24px rgba(1, 4, 15, 0.32);
   --elevation-md: 0 24px 56px rgba(1, 4, 15, 0.42);
@@ -250,8 +250,8 @@
   --color-phase-secondary: var(--ref-color-phase-secondary);
   --color-phase-all-through: var(--ref-color-phase-all-through);
   --color-phase-default: var(--ref-color-phase-default);
-  --marker-glow: rgba(168, 85, 247, 0.25);
-  --marker-glow-active: rgba(168, 85, 247, 0.40);
+  --marker-glow: rgba(0, 212, 200, 0.25);
+  --marker-glow-active: rgba(0, 212, 200, 0.40);
 
   --elevation-sm: 0 10px 24px rgba(0, 0, 0, 0.06);
   --elevation-md: 0 24px 56px rgba(0, 0, 0, 0.10);
@@ -292,8 +292,8 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(12, 18, 34, 0.65);
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: rgba(10, 20, 40, 0.65);
+  border: 1px solid rgba(0, 212, 200, 0.25);
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -316,7 +316,7 @@
   inset: 0;
   border-radius: 0.75rem;
   padding: 1px;
-  background: linear-gradient(135deg, #C084FC 0%, #7C3AED 45%, #A78BFA 100%);
+  background: linear-gradient(135deg, #33DDD8 0%, #00A89D 45%, #00D4C8 100%);
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -332,15 +332,15 @@
 
 .btn-compare:hover {
   transform: translateY(-2px) scale(1.05);
-  background: rgba(167, 139, 250, 0.13);
+  background: rgba(0, 212, 200, 0.10);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-color: transparent;
   color: #fff;
   box-shadow:
-    0 0 0 1px rgba(192, 132, 252, 0.2),
-    0 0 22px rgba(192, 132, 252, 0.5),
-    0 0 55px rgba(167, 139, 250, 0.25),
+    0 0 0 1px rgba(0, 212, 200, 0.2),
+    0 0 22px rgba(0, 212, 200, 0.45),
+    0 0 55px rgba(0, 212, 200, 0.20),
     0 8px 30px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
@@ -353,13 +353,13 @@
   transform: scale(0.95) translateY(0);
   transition-duration: 90ms;
   box-shadow:
-    0 0 0 1px rgba(192, 132, 252, 0.4),
-    0 0 28px rgba(192, 132, 252, 0.55) inset,
-    0 0 18px rgba(192, 132, 252, 0.3);
+    0 0 0 1px rgba(0, 212, 200, 0.4),
+    0 0 28px rgba(0, 212, 200, 0.50) inset,
+    0 0 18px rgba(0, 212, 200, 0.25);
 }
 
 .btn-compare:focus-visible {
-  outline: 2px solid rgba(192, 132, 252, 0.7);
+  outline: 2px solid rgba(0, 212, 200, 0.7);
   outline-offset: 2px;
 }
 
@@ -367,16 +367,16 @@
 [data-theme="light"] .btn-compare {
   color: #1c2840;
   background: rgba(255, 255, 255, 0.75);
-  border-color: rgba(139, 47, 201, 0.25);
+  border-color: rgba(0, 168, 157, 0.30);
 }
 
 [data-theme="light"] .btn-compare:hover {
   color: #1c2840;
-  background: rgba(168, 85, 247, 0.08);
+  background: rgba(0, 212, 200, 0.08);
   box-shadow:
-    0 0 0 1px rgba(139, 47, 201, 0.2),
-    0 0 18px rgba(139, 47, 201, 0.35),
-    0 0 40px rgba(139, 47, 201, 0.15),
+    0 0 0 1px rgba(0, 168, 157, 0.2),
+    0 0 18px rgba(0, 168, 157, 0.30),
+    0 0 40px rgba(0, 212, 200, 0.12),
     0 8px 24px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }

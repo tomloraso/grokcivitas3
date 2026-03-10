@@ -307,7 +307,7 @@ export function ProfileHeader({
           <div className="h-px bg-gradient-to-r from-brand/40 via-brand/10 to-transparent" aria-hidden />
 
           <div
-            className="flex flex-wrap items-start gap-8 sm:gap-10"
+            className="flex flex-wrap items-start gap-5 sm:gap-8"
             role="region"
             aria-label="Key facts"
           >

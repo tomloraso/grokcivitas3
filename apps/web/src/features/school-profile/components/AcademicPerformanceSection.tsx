@@ -188,7 +188,7 @@ export function AcademicPerformanceSection({
   return (
     <section
       aria-labelledby="results-progress-heading"
-      className="panel-surface rounded-lg space-y-5 p-5 sm:p-6"
+      className="panel-surface rounded-lg space-y-4 p-4 sm:space-y-5 sm:p-6"
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2

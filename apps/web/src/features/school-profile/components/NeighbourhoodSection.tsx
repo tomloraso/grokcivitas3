@@ -110,7 +110,7 @@ export function NeighbourhoodSection({
   return (
     <section
       aria-labelledby="neighbourhood-heading"
-      className="panel-surface rounded-lg space-y-5 p-5 sm:p-6"
+      className="panel-surface rounded-lg space-y-4 p-4 sm:space-y-5 sm:p-6"
     >
       <div className="space-y-1">
         <h2

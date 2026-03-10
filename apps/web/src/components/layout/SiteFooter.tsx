@@ -18,7 +18,7 @@ export function SiteFooter(): JSX.Element {
           to={paths.home}
           className="text-xs font-display font-semibold tracking-[0.18em] text-secondary transition-opacity duration-fast hover:opacity-80"
         >
-          CIVITAS
+          [BRAND]
         </Link>
 
         <nav aria-label="Footer" className="flex items-center gap-5">
@@ -34,7 +34,7 @@ export function SiteFooter(): JSX.Element {
         </nav>
 
         <p className="text-xs text-disabled">
-          &copy; {new Date().getFullYear()} CIVITAS. All data sourced from UK government.
+          &copy; {new Date().getFullYear()} [BRAND]. All data sourced from UK government.
         </p>
 
         <p className="text-[10px] text-disabled/60">

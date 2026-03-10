@@ -143,7 +143,7 @@ export function AttendanceBehaviourSection({
   return (
     <section
       aria-labelledby="day-to-day-heading"
-      className="panel-surface rounded-lg space-y-6 p-5 sm:p-6"
+      className="panel-surface rounded-lg space-y-4 p-4 sm:space-y-6 sm:p-6"
     >
       <div className="space-y-1">
         <h2

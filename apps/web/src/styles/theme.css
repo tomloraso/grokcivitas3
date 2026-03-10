@@ -1,8 +1,7 @@
-@import "@fontsource/space-grotesk/latin-500.css";
-@import "@fontsource/space-grotesk/latin-700.css";
-@import "@fontsource/public-sans/latin-400.css";
-@import "@fontsource/public-sans/latin-500.css";
-@import "@fontsource/public-sans/latin-600.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-500.css";
+@import "@fontsource/inter/latin-600.css";
+@import "@fontsource/inter/latin-700.css";
 @import "@fontsource/ibm-plex-mono/latin-500.css";
 
 @layer base {
@@ -176,10 +175,10 @@
   }
   .panel-resize-handle:hover,
   .panel-resize-handle:active {
-    background: rgba(168, 85, 247, 0.35);
+    background: rgba(0, 212, 200, 0.35);
   }
   .panel-resize-handle:focus-visible {
-    background: rgba(168, 85, 247, 0.5);
+    background: rgba(0, 212, 200, 0.5);
     outline: none;
   }
 

@@ -55,9 +55,9 @@ export function SiteHeader({
         <Link
           to={paths.home}
           className="text-sm font-display font-semibold tracking-[0.18em] text-primary transition-opacity duration-fast hover:opacity-80"
-          aria-label="Civitas - return to home"
+          aria-label="[BRAND] - return to home"
         >
-          CIVITAS
+          [BRAND]
         </Link>
 
         <div className="flex items-center gap-3">
