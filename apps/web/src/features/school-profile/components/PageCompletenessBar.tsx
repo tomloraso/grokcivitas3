@@ -20,6 +20,7 @@ export function PageCompletenessBar({
     { label: "Attendance", ...completeness.attendance },
     { label: "Behaviour", ...completeness.behaviour },
     { label: "Workforce", ...completeness.workforce },
+    { label: "Finance", ...completeness.finance },
     { label: "Leadership", ...completeness.leadership },
     { label: "Performance", ...completeness.performance },
     { label: "Trends", ...completeness.trends },

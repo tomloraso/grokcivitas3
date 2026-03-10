@@ -59,11 +59,12 @@ describe("mapProfileToVM", () => {
     expect(vm.attendance?.overallAttendancePct).toBe(94.7);
     expect(vm.behaviour?.suspensionsRate).toBe(0.9);
     expect(vm.workforce?.pupilTeacherRatio).toBe(16.7);
+    expect(vm.finance?.incomePerPupilGbp).toBe(10350);
     expect(vm.leadership?.headteacherName).toBe("A. Smith");
     expect(vm.ofsted?.providerPageUrl).toBe("https://reports.ofsted.gov.uk/provider/21/100001");
     expect(vm.neighbourhood.areaContext?.housePrices?.areaName).toBe("Camden");
     expect(vm.neighbourhood.areaContext?.crime?.annualIncidentsPer1000).toHaveLength(3);
-    expect(vm.benchmarkDashboard?.sections).toHaveLength(6);
+    expect(vm.benchmarkDashboard?.sections).toHaveLength(7);
   });
 
   it("keeps unsupported source-limited metrics explicit", () => {
@@ -79,9 +80,11 @@ describe("mapProfileToVM", () => {
     const vm = mapProfileToVM(PROFILE_RESPONSE, TRENDS_RESPONSE, DASHBOARD_RESPONSE);
 
     expect(vm.completeness.attendance.status).toBe("available");
+    expect(vm.completeness.finance.status).toBe("available");
     expect(vm.completeness.workforce.messageKey).toBe("partialMetricCoverage");
     expect(vm.completeness.areaHousePrices.status).toBe("available");
     expect(vm.trends?.sectionCompleteness.behaviour.status).toBe("available");
+    expect(vm.trends?.sectionCompleteness.finance.messageKey).toBe("insufficientYearsPublished");
   });
 
   it("handles missing optional trend and dashboard payloads", () => {

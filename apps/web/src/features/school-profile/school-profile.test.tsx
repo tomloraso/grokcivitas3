@@ -84,6 +84,7 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByRole("heading", { name: "Analyst View" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Day-to-Day at School" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Teachers & Staff" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "School Finance" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
 
       expect(
@@ -97,6 +98,7 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
       expect(screen.getAllByText("Suspension Rate").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
       expect(screen.getByText("House Prices")).toBeInTheDocument();
       expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
@@ -197,6 +199,54 @@ describe("SchoolProfileFeature", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Premium neighbourhood context is available/i)).toBeInTheDocument();
     expect(screen.queryByText("Average Price")).not.toBeInTheDocument();
+  });
+
+  it("renders a not-applicable finance state for non-academy schools", async () => {
+    const nonAcademyProfile = structuredClone(PROFILE_RESPONSE);
+    nonAcademyProfile.school.type = "Community School";
+    nonAcademyProfile.finance_latest = null;
+    nonAcademyProfile.completeness.finance = {
+      status: "unavailable",
+      reason_code: "not_applicable",
+      last_updated_at: null,
+      years_available: null
+    };
+
+    const nonAcademyTrends = structuredClone(TRENDS_RESPONSE);
+    nonAcademyTrends.series.income_per_pupil_gbp = [];
+    nonAcademyTrends.series.expenditure_per_pupil_gbp = [];
+    nonAcademyTrends.series.staff_costs_pct_of_expenditure = [];
+    nonAcademyTrends.series.revenue_reserve_per_pupil_gbp = [];
+    nonAcademyTrends.series.teaching_staff_costs_per_pupil_gbp = [];
+    nonAcademyTrends.benchmarks.income_per_pupil_gbp = [];
+    nonAcademyTrends.benchmarks.expenditure_per_pupil_gbp = [];
+    nonAcademyTrends.benchmarks.staff_costs_pct_of_expenditure = [];
+    nonAcademyTrends.benchmarks.revenue_reserve_per_pupil_gbp = [];
+    nonAcademyTrends.benchmarks.teaching_staff_costs_per_pupil_gbp = [];
+    nonAcademyTrends.section_completeness.finance = {
+      status: "unavailable",
+      reason_code: "not_applicable",
+      last_updated_at: null,
+      years_available: null
+    };
+
+    const nonAcademyDashboard = structuredClone(DASHBOARD_RESPONSE);
+    nonAcademyDashboard.sections = nonAcademyDashboard.sections.filter(
+      (section) => section.key !== "finance"
+    );
+
+    profileMock.mockResolvedValueOnce(nonAcademyProfile);
+    trendsMock.mockResolvedValueOnce(nonAcademyTrends);
+    dashboardMock.mockResolvedValueOnce(nonAcademyDashboard);
+
+    renderProfileAtUrn("100001");
+
+    expect(
+      await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("This section doesn't apply to this type of school.").length
+    ).toBeGreaterThan(0);
   });
 
   it(

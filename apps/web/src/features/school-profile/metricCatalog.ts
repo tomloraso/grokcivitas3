@@ -2,6 +2,7 @@ export type MetricUnit = "percent" | "count" | "ratio" | "score" | "currency" | 
 
 export type MetricSectionKey =
   | "demographics"
+  | "finance"
   | "attendance"
   | "behaviour"
   | "workforce"
@@ -19,6 +20,7 @@ export interface MetricCatalogEntry {
 
 export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
   "demographics",
+  "finance",
   "attendance",
   "behaviour",
   "workforce",
@@ -28,6 +30,7 @@ export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
 
 export const METRIC_SECTION_LABELS: Record<MetricSectionKey, string> = {
   demographics: "Demographics",
+  finance: "Finance",
   attendance: "Attendance",
   behaviour: "Behaviour",
   workforce: "Workforce",
@@ -110,6 +113,41 @@ export const METRIC_CATALOG: Record<string, MetricCatalogEntry> = {
     description: "Pupils who joined or left the school mid-year, excluding those who moved at the normal transition point. High mobility can indicate instability in the school community.",
     section: "demographics",
     unit: "percent"
+  },
+  income_per_pupil_gbp: {
+    key: "income_per_pupil_gbp",
+    label: "Income per Pupil",
+    description: "Total income divided by full-time equivalent pupils. Helps compare school income levels on a like-for-like basis.",
+    section: "finance",
+    unit: "currency"
+  },
+  expenditure_per_pupil_gbp: {
+    key: "expenditure_per_pupil_gbp",
+    label: "Expenditure per Pupil",
+    description: "Total expenditure divided by full-time equivalent pupils. Useful for comparing school spending levels across different school sizes.",
+    section: "finance",
+    unit: "currency"
+  },
+  staff_costs_pct_of_expenditure: {
+    key: "staff_costs_pct_of_expenditure",
+    label: "Staff Costs Share of Expenditure",
+    description: "The proportion of total expenditure spent on staff costs. This shows how much of the school's spending goes on staffing.",
+    section: "finance",
+    unit: "percent"
+  },
+  revenue_reserve_per_pupil_gbp: {
+    key: "revenue_reserve_per_pupil_gbp",
+    label: "Revenue Reserve per Pupil",
+    description: "Revenue reserves divided by full-time equivalent pupils. Gives context on retained financial headroom relative to school size.",
+    section: "finance",
+    unit: "currency"
+  },
+  teaching_staff_costs_per_pupil_gbp: {
+    key: "teaching_staff_costs_per_pupil_gbp",
+    label: "Teaching Staff Costs per Pupil",
+    description: "Teaching staff costs divided by full-time equivalent pupils. Indicates direct classroom staffing spend relative to school size.",
+    section: "finance",
+    unit: "currency"
   },
   overall_attendance_pct: {
     key: "overall_attendance_pct",

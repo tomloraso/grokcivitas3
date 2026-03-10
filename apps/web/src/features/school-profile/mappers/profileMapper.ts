@@ -28,6 +28,7 @@ import type {
   DemographicsCategoryVM,
   DemographicsEthnicityGroupVM,
   DemographicsVM,
+  FinanceLatestVM,
   LeadershipSnapshotVM,
   OfstedTimelineVM,
   OfstedVM,
@@ -353,6 +354,25 @@ function mapWorkforce(profile: SchoolProfileResponse): WorkforceLatestVM | null 
   };
 }
 
+function mapFinance(profile: SchoolProfileResponse): FinanceLatestVM | null {
+  const finance = profile.finance_latest;
+  if (!finance) {
+    return null;
+  }
+
+  return {
+    academicYear: finance.academic_year,
+    totalIncomeGbp: finance.total_income_gbp,
+    totalExpenditureGbp: finance.total_expenditure_gbp,
+    incomePerPupilGbp: finance.income_per_pupil_gbp,
+    expenditurePerPupilGbp: finance.expenditure_per_pupil_gbp,
+    totalStaffCostsGbp: finance.total_staff_costs_gbp,
+    staffCostsPctOfExpenditure: finance.staff_costs_pct_of_expenditure,
+    revenueReserveGbp: finance.revenue_reserve_gbp,
+    revenueReservePerPupilGbp: finance.revenue_reserve_per_pupil_gbp
+  };
+}
+
 function mapLeadership(profile: SchoolProfileResponse): LeadershipSnapshotVM | null {
   const leadership = profile.leadership_snapshot;
   if (!leadership) {
@@ -612,7 +632,8 @@ function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
       demographics: mapSectionCompleteness(trends.section_completeness.demographics),
       attendance: mapSectionCompleteness(trends.section_completeness.attendance),
       behaviour: mapSectionCompleteness(trends.section_completeness.behaviour),
-      workforce: mapSectionCompleteness(trends.section_completeness.workforce)
+      workforce: mapSectionCompleteness(trends.section_completeness.workforce),
+      finance: mapSectionCompleteness(trends.section_completeness.finance)
     }
   };
 }
@@ -766,6 +787,7 @@ function mapCompleteness(
     attendance: mapSectionCompleteness(profile.completeness.attendance),
     behaviour: mapSectionCompleteness(profile.completeness.behaviour),
     workforce: mapSectionCompleteness(profile.completeness.workforce),
+    finance: mapSectionCompleteness(profile.completeness.finance),
     leadership: mapSectionCompleteness(profile.completeness.leadership),
     performance: mapSectionCompleteness(profile.completeness.performance),
     trends: trendsCompleteness,
@@ -823,6 +845,7 @@ export function mapProfileToVM(
     attendance: mapAttendance(profile),
     behaviour: mapBehaviour(profile),
     workforce: mapWorkforce(profile),
+    finance: mapFinance(profile),
     leadership: mapLeadership(profile),
     performance: mapPerformance(profile),
     ofsted: mapOfsted(profile),

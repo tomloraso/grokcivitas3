@@ -422,7 +422,7 @@ export interface components {
             /** Count */
             count: number;
             /** Schools */
-            schools?: components["schemas"]["AccountFavouriteSchoolResponse"][];
+            schools: components["schemas"]["AccountFavouriteSchoolResponse"][];
         };
         /** AuthStartRequest */
         AuthStartRequest: {
@@ -900,6 +900,7 @@ export interface components {
             attendance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             behaviour: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             workforce: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            finance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             leadership: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
@@ -993,6 +994,27 @@ export interface components {
             percentage: number | null;
             /** Count */
             count: number | null;
+        };
+        /** SchoolProfileFinanceLatestResponse */
+        SchoolProfileFinanceLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Total Income Gbp */
+            total_income_gbp: number | null;
+            /** Total Expenditure Gbp */
+            total_expenditure_gbp: number | null;
+            /** Income Per Pupil Gbp */
+            income_per_pupil_gbp: number | null;
+            /** Expenditure Per Pupil Gbp */
+            expenditure_per_pupil_gbp: number | null;
+            /** Total Staff Costs Gbp */
+            total_staff_costs_gbp: number | null;
+            /** Staff Costs Pct Of Expenditure */
+            staff_costs_pct_of_expenditure: number | null;
+            /** Revenue Reserve Gbp */
+            revenue_reserve_gbp: number | null;
+            /** Revenue Reserve Per Pupil Gbp */
+            revenue_reserve_per_pupil_gbp: number | null;
         };
         /** SchoolProfileLeadershipSnapshotResponse */
         SchoolProfileLeadershipSnapshotResponse: {
@@ -1177,6 +1199,7 @@ export interface components {
             attendance_latest: components["schemas"]["SchoolProfileAttendanceLatestResponse"] | null;
             behaviour_latest: components["schemas"]["SchoolProfileBehaviourLatestResponse"] | null;
             workforce_latest: components["schemas"]["SchoolProfileWorkforceLatestResponse"] | null;
+            finance_latest: components["schemas"]["SchoolProfileFinanceLatestResponse"] | null;
             leadership_snapshot: components["schemas"]["SchoolProfileLeadershipSnapshotResponse"] | null;
             performance: components["schemas"]["SchoolProfilePerformanceResponse"] | null;
             ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
@@ -1395,7 +1418,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            key: "demographics" | "finance" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
             /** Metrics */
             metrics: components["schemas"]["SchoolTrendDashboardMetricResponse"][];
         };
@@ -1460,6 +1483,16 @@ export interface components {
             qts_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Income Per Pupil Gbp */
+            income_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Expenditure Per Pupil Gbp */
+            expenditure_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Staff Costs Pct Of Expenditure */
+            staff_costs_pct_of_expenditure: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Revenue Reserve Per Pupil Gbp */
+            revenue_reserve_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teaching Staff Costs Per Pupil Gbp */
+            teaching_staff_costs_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
         };
         /** SchoolTrendsCompletenessResponse */
         SchoolTrendsCompletenessResponse: {
@@ -1502,6 +1535,7 @@ export interface components {
             attendance: components["schemas"]["SchoolTrendsCompletenessResponse"];
             behaviour: components["schemas"]["SchoolTrendsCompletenessResponse"];
             workforce: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            finance: components["schemas"]["SchoolTrendsCompletenessResponse"];
         };
         /** SchoolTrendsSeriesResponse */
         SchoolTrendsSeriesResponse: {
@@ -1553,6 +1587,16 @@ export interface components {
             qts_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Qualifications Level6 Plus Pct */
             qualifications_level6_plus_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Income Per Pupil Gbp */
+            income_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Expenditure Per Pupil Gbp */
+            expenditure_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Staff Costs Pct Of Expenditure */
+            staff_costs_pct_of_expenditure: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Revenue Reserve Per Pupil Gbp */
+            revenue_reserve_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teaching Staff Costs Per Pupil Gbp */
+            teaching_staff_costs_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {

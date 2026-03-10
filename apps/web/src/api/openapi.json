@@ -1070,7 +1070,8 @@
         "type": "object",
         "required": [
           "access",
-          "count"
+          "count",
+          "schools"
         ],
         "title": "AccountFavouritesResponse"
       },
@@ -2962,6 +2963,9 @@
           "workforce": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           },
+          "finance": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
           "leadership": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           },
@@ -2990,6 +2994,7 @@
           "attendance",
           "behaviour",
           "workforce",
+          "finance",
           "leadership",
           "performance",
           "ofsted_latest",
@@ -3339,6 +3344,115 @@
           "count"
         ],
         "title": "SchoolProfileDemographicsSendPrimaryNeedResponse"
+      },
+      "SchoolProfileFinanceLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "total_income_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Income Gbp"
+          },
+          "total_expenditure_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Expenditure Gbp"
+          },
+          "income_per_pupil_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Income Per Pupil Gbp"
+          },
+          "expenditure_per_pupil_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expenditure Per Pupil Gbp"
+          },
+          "total_staff_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Staff Costs Gbp"
+          },
+          "staff_costs_pct_of_expenditure": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Staff Costs Pct Of Expenditure"
+          },
+          "revenue_reserve_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Reserve Gbp"
+          },
+          "revenue_reserve_per_pupil_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Reserve Per Pupil Gbp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "total_income_gbp",
+          "total_expenditure_gbp",
+          "income_per_pupil_gbp",
+          "expenditure_per_pupil_gbp",
+          "total_staff_costs_gbp",
+          "staff_costs_pct_of_expenditure",
+          "revenue_reserve_gbp",
+          "revenue_reserve_per_pupil_gbp"
+        ],
+        "title": "SchoolProfileFinanceLatestResponse"
       },
       "SchoolProfileLeadershipSnapshotResponse": {
         "properties": {
@@ -4249,6 +4363,16 @@
               }
             ]
           },
+          "finance_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileFinanceLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "leadership_snapshot": {
             "anyOf": [
               {
@@ -4304,6 +4428,7 @@
           "attendance_latest",
           "behaviour_latest",
           "workforce_latest",
+          "finance_latest",
           "leadership_snapshot",
           "performance",
           "ofsted_latest",
@@ -5281,6 +5406,7 @@
             "type": "string",
             "enum": [
               "demographics",
+              "finance",
               "attendance",
               "behaviour",
               "workforce",
@@ -5530,6 +5656,41 @@
             },
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
+          },
+          "income_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Income Per Pupil Gbp"
+          },
+          "expenditure_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Expenditure Per Pupil Gbp"
+          },
+          "staff_costs_pct_of_expenditure": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Staff Costs Pct Of Expenditure"
+          },
+          "revenue_reserve_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Revenue Reserve Per Pupil Gbp"
+          },
+          "teaching_staff_costs_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teaching Staff Costs Per Pupil Gbp"
           }
         },
         "type": "object",
@@ -5557,7 +5718,12 @@
           "teachers_3plus_years_pct",
           "teacher_turnover_pct",
           "qts_pct",
-          "qualifications_level6_plus_pct"
+          "qualifications_level6_plus_pct",
+          "income_per_pupil_gbp",
+          "expenditure_per_pupil_gbp",
+          "staff_costs_pct_of_expenditure",
+          "revenue_reserve_per_pupil_gbp",
+          "teaching_staff_costs_per_pupil_gbp"
         ],
         "title": "SchoolTrendsBenchmarksResponse"
       },
@@ -5708,6 +5874,9 @@
           },
           "workforce": {
             "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
+          "finance": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
           }
         },
         "type": "object",
@@ -5715,7 +5884,8 @@
           "demographics",
           "attendance",
           "behaviour",
-          "workforce"
+          "workforce",
+          "finance"
         ],
         "title": "SchoolTrendsSectionCompletenessResponse"
       },
@@ -5888,6 +6058,41 @@
             },
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
+          },
+          "income_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Income Per Pupil Gbp"
+          },
+          "expenditure_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Expenditure Per Pupil Gbp"
+          },
+          "staff_costs_pct_of_expenditure": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Staff Costs Pct Of Expenditure"
+          },
+          "revenue_reserve_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Revenue Reserve Per Pupil Gbp"
+          },
+          "teaching_staff_costs_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teaching Staff Costs Per Pupil Gbp"
           }
         },
         "type": "object",
@@ -5915,7 +6120,12 @@
           "teachers_3plus_years_pct",
           "teacher_turnover_pct",
           "qts_pct",
-          "qualifications_level6_plus_pct"
+          "qualifications_level6_plus_pct",
+          "income_per_pupil_gbp",
+          "expenditure_per_pupil_gbp",
+          "staff_costs_pct_of_expenditure",
+          "revenue_reserve_per_pupil_gbp",
+          "teaching_staff_costs_per_pupil_gbp"
         ],
         "title": "SchoolTrendsSeriesResponse"
       },

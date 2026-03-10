@@ -108,6 +108,18 @@ export interface WorkforceLatestVM {
   qualificationsLevel6PlusPct: number | null;
 }
 
+export interface FinanceLatestVM {
+  academicYear: string;
+  totalIncomeGbp: number | null;
+  totalExpenditureGbp: number | null;
+  incomePerPupilGbp: number | null;
+  expenditurePerPupilGbp: number | null;
+  totalStaffCostsGbp: number | null;
+  staffCostsPctOfExpenditure: number | null;
+  revenueReserveGbp: number | null;
+  revenueReservePerPupilGbp: number | null;
+}
+
 export interface LeadershipSnapshotVM {
   headteacherName: string | null;
   headteacherStartDate: string | null;
@@ -285,6 +297,7 @@ export interface TrendsSectionCompletenessVM {
   attendance: SectionCompletenessVM;
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
+  finance: SectionCompletenessVM;
 }
 
 export interface TrendsVM {
@@ -380,6 +393,7 @@ export interface ProfileCompletenessVM {
   attendance: SectionCompletenessVM;
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
+  finance: SectionCompletenessVM;
   leadership: SectionCompletenessVM;
   performance: SectionCompletenessVM;
   trends: SectionCompletenessVM;
@@ -416,6 +430,7 @@ export interface SchoolProfileVM {
   attendance: AttendanceLatestVM | null;
   behaviour: BehaviourLatestVM | null;
   workforce: WorkforceLatestVM | null;
+  finance: FinanceLatestVM | null;
   leadership: LeadershipSnapshotVM | null;
   performance: PerformanceVM | null;
   ofsted: OfstedVM | null;

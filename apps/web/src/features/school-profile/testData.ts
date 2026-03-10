@@ -146,6 +146,17 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     qts_pct: 91.3,
     qualifications_level6_plus_pct: null
   },
+  finance_latest: {
+    academic_year: "2023/24",
+    total_income_gbp: 2070000,
+    total_expenditure_gbp: 1980000,
+    income_per_pupil_gbp: 10350,
+    expenditure_per_pupil_gbp: 9900,
+    total_staff_costs_gbp: 1432000,
+    staff_costs_pct_of_expenditure: 72.3,
+    revenue_reserve_gbp: 182000,
+    revenue_reserve_per_pupil_gbp: 910
+  },
   leadership_snapshot: {
     headteacher_name: "A. Smith",
     headteacher_start_date: "2021-09-01",
@@ -438,6 +449,66 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
         local_area_label: "Camden"
       },
       {
+        metric_key: "income_per_pupil_gbp",
+        academic_year: "2023/24",
+        school_value: 10350,
+        national_value: 8760,
+        local_value: 10010,
+        school_vs_national_delta: 1590,
+        school_vs_local_delta: 340,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "expenditure_per_pupil_gbp",
+        academic_year: "2023/24",
+        school_value: 9900,
+        national_value: 8655,
+        local_value: 9750,
+        school_vs_national_delta: 1245,
+        school_vs_local_delta: 150,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "staff_costs_pct_of_expenditure",
+        academic_year: "2023/24",
+        school_value: 72.3,
+        national_value: 77.1,
+        local_value: 74.8,
+        school_vs_national_delta: -4.8,
+        school_vs_local_delta: -2.5,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "revenue_reserve_per_pupil_gbp",
+        academic_year: "2023/24",
+        school_value: 910,
+        national_value: 540,
+        local_value: 780,
+        school_vs_national_delta: 370,
+        school_vs_local_delta: 130,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "teaching_staff_costs_per_pupil_gbp",
+        academic_year: "2023/24",
+        school_value: 6120,
+        national_value: 5450,
+        local_value: 5980,
+        school_vs_national_delta: 670,
+        school_vs_local_delta: 140,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
         metric_key: "progress8_average",
         academic_year: "2024/25",
         school_value: 0.11,
@@ -487,6 +558,12 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
       reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2022/23", "2023/24", "2024/25"]
+    },
+    finance: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24"]
     },
     leadership: {
       status: "available",
@@ -622,7 +699,22 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       { academic_year: "2023/24", value: 90.8, delta: null, direction: null },
       { academic_year: "2024/25", value: 91.3, delta: 0.5, direction: "up" }
     ],
-    qualifications_level6_plus_pct: EMPTY_SERIES
+    qualifications_level6_plus_pct: EMPTY_SERIES,
+    income_per_pupil_gbp: [
+      { academic_year: "2023/24", value: 10350, delta: null, direction: null }
+    ],
+    expenditure_per_pupil_gbp: [
+      { academic_year: "2023/24", value: 9900, delta: null, direction: null }
+    ],
+    staff_costs_pct_of_expenditure: [
+      { academic_year: "2023/24", value: 72.3, delta: null, direction: null }
+    ],
+    revenue_reserve_per_pupil_gbp: [
+      { academic_year: "2023/24", value: 910, delta: null, direction: null }
+    ],
+    teaching_staff_costs_per_pupil_gbp: [
+      { academic_year: "2023/24", value: 6120, delta: null, direction: null }
+    ]
   },
   benchmarks: {
     disadvantaged_pct: [
@@ -672,7 +764,72 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
     teachers_3plus_years_pct: EMPTY_BENCHMARKS,
     teacher_turnover_pct: EMPTY_BENCHMARKS,
     qts_pct: EMPTY_BENCHMARKS,
-    qualifications_level6_plus_pct: EMPTY_BENCHMARKS
+    qualifications_level6_plus_pct: EMPTY_BENCHMARKS,
+    income_per_pupil_gbp: [
+      {
+        academic_year: "2023/24",
+        school_value: 10350,
+        national_value: 8760,
+        local_value: 10010,
+        school_vs_national_delta: 1590,
+        school_vs_local_delta: 340,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    expenditure_per_pupil_gbp: [
+      {
+        academic_year: "2023/24",
+        school_value: 9900,
+        national_value: 8655,
+        local_value: 9750,
+        school_vs_national_delta: 1245,
+        school_vs_local_delta: 150,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    staff_costs_pct_of_expenditure: [
+      {
+        academic_year: "2023/24",
+        school_value: 72.3,
+        national_value: 77.1,
+        local_value: 74.8,
+        school_vs_national_delta: -4.8,
+        school_vs_local_delta: -2.5,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    revenue_reserve_per_pupil_gbp: [
+      {
+        academic_year: "2023/24",
+        school_value: 910,
+        national_value: 540,
+        local_value: 780,
+        school_vs_national_delta: 370,
+        school_vs_local_delta: 130,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    teaching_staff_costs_per_pupil_gbp: [
+      {
+        academic_year: "2023/24",
+        school_value: 6120,
+        national_value: 5450,
+        local_value: 5980,
+        school_vs_national_delta: 670,
+        school_vs_local_delta: 140,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ]
   },
   completeness: {
     status: "partial",
@@ -704,6 +861,12 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2023/24", "2024/25"]
+    },
+    finance: {
+      status: "partial",
+      reason_code: "insufficient_years_published",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24"]
     }
   }
 };
@@ -738,6 +901,101 @@ export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
               local_value: 18.1,
               school_vs_national_delta: -6.6,
               school_vs_local_delta: -0.9,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      key: "finance",
+      metrics: [
+        {
+          metric_key: "income_per_pupil_gbp",
+          label: "Income per Pupil",
+          unit: "currency",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 10350,
+              national_value: 8760,
+              local_value: 10010,
+              school_vs_national_delta: 1590,
+              school_vs_local_delta: 340,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "expenditure_per_pupil_gbp",
+          label: "Expenditure per Pupil",
+          unit: "currency",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 9900,
+              national_value: 8655,
+              local_value: 9750,
+              school_vs_national_delta: 1245,
+              school_vs_local_delta: 150,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "staff_costs_pct_of_expenditure",
+          label: "Staff Costs Share of Expenditure",
+          unit: "percent",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 72.3,
+              national_value: 77.1,
+              local_value: 74.8,
+              school_vs_national_delta: -4.8,
+              school_vs_local_delta: -2.5,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "revenue_reserve_per_pupil_gbp",
+          label: "Revenue Reserve per Pupil",
+          unit: "currency",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 910,
+              national_value: 540,
+              local_value: 780,
+              school_vs_national_delta: 370,
+              school_vs_local_delta: 130,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "teaching_staff_costs_per_pupil_gbp",
+          label: "Teaching Staff Costs per Pupil",
+          unit: "currency",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 6120,
+              national_value: 5450,
+              local_value: 5980,
+              school_vs_national_delta: 670,
+              school_vs_local_delta: 140,
               local_scope: "local_authority_district",
               local_area_code: "E09000007",
               local_area_label: "Camden"

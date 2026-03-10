@@ -66,6 +66,7 @@ import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileSectionAccordion } from "./components/ProfileSectionAccordion";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
+import { SchoolFinanceSection } from "./components/SchoolFinanceSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
@@ -77,6 +78,7 @@ const TOC_SECTIONS = [
   { id: "day-to-day", label: "Day-to-Day" },
   { id: "demographics", label: "Pupil Demographics" },
   { id: "teachers-staff", label: "Teachers & Staff" },
+  { id: "finance", label: "Finance" },
   { id: "neighbourhood", label: "Neighbourhood" },
 ] as const;
 
@@ -317,6 +319,17 @@ export function SchoolProfileFeature(): JSX.Element {
                     trends={profile.trends}
                     workforceCompleteness={profile.completeness.workforce}
                     leadershipCompleteness={profile.completeness.leadership}
+                    benchmarkDashboard={profile.benchmarkDashboard}
+                  />
+                </ProfileSectionAccordion>
+              </div>
+
+              <div id="finance">
+                <ProfileSectionAccordion title="School Finance" defaultOpen={false}>
+                  <SchoolFinanceSection
+                    finance={profile.finance}
+                    trends={profile.trends}
+                    completeness={profile.completeness.finance}
                     benchmarkDashboard={profile.benchmarkDashboard}
                   />
                 </ProfileSectionAccordion>
