@@ -177,6 +177,50 @@ Confirm that `school_performance_yearly WHERE urn = '136655'` returns at least t
 
 ---
 
+## BUG-006 - Area deprivation absent on first profile load; appears after ~5 minutes
+
+**Status:** Open
+**Severity:** Medium (incorrect first impression — deprivation context silently missing until TTL expires)
+**Detected:** 2026-03-10
+**Assigned to:** Liam Kerrigan
+**Files:**
+- `apps/backend/src/civitas/application/school_profiles/use_cases.py` — `GetSchoolProfileUseCase._refresh_profile_context_if_needed`
+- `apps/backend/src/civitas/infrastructure/persistence/cached_school_profile_repository.py`
+- `apps/backend/src/civitas/bootstrap/container.py` — `get_school_profile_use_case`
+
+### Validation
+
+Confirmed. On a clean server start (empty `postcode_cache`), visiting a school profile page returns a profile with `area_context.coverage.has_deprivation = false`. After ~5 minutes the deprivation data appears without any user action. The 5-minute window matches the `CachedSchoolProfileRepository` TTL (300 seconds).
+
+### Root cause
+
+`GetSchoolProfileUseCase._refresh_profile_context_if_needed` detects missing deprivation, calls `postcode_context_resolver.resolve(postcode)` (which writes the resolved postcode with `lsoa_code` into `postcode_cache`), and then re-fetches the profile via `self._school_profile_repository`. That repository is the **cached** `CachedSchoolProfileRepository` — the re-fetch hits the in-process cache and returns the same no-deprivation result that was cached seconds earlier. The fix does not take effect until the TTL expires and the next request triggers a genuine DB read.
+
+```python
+# use_cases.py — _refresh_profile_context_if_needed (simplified)
+self._postcode_context_resolver.resolve(postcode)          # populates postcode_cache ✓
+refreshed = self._school_profile_repository.get_school_profile(urn)  # BUG: cache hit ✗
+```
+
+### Proposed fix
+
+Pass the underlying raw `PostgresSchoolProfileRepository` as a separate constructor parameter (`raw_profile_repository`) used only in the re-fetch step, bypassing the cache:
+
+1. Expose `delegate` as a public attribute on `CachedSchoolProfileRepository`.
+2. Add an optional `raw_profile_repository` parameter to `GetSchoolProfileUseCase.__init__`.
+3. In `_refresh_profile_context_if_needed`, use `self._raw_profile_repository` (falling back to `self._school_profile_repository`) for the re-fetch.
+4. In `container.get_school_profile_use_case()`, pass `raw_profile_repository=school_profile_repository().delegate`.
+
+### Workaround
+
+Wait ~5 minutes for the TTL to expire, or restart the API server to clear the in-process cache immediately.
+
+### Verification (once fixed)
+
+On a clean server start, visit a school profile page and confirm that `area_context` includes deprivation data on the very first load without needing to wait for TTL expiry.
+
+---
+
 ## Tracker Notes
 
 - `make lint` still fails in the current branch because unrelated files already need formatting:
