@@ -4,2152 +4,2176 @@
  */
 
 export interface paths {
-  "/api/v1/auth/start": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Sign In */
+        post: operations["start_sign_in_api_v1_auth_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Start Sign In */
-    post: operations["start_sign_in_api_v1_auth_start_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/callback": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auth Callback */
+        get: operations["auth_callback_api_v1_auth_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Auth Callback */
-    get: operations["auth_callback_api_v1_auth_callback_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/session": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Session */
+        get: operations["get_session_api_v1_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Session */
-    get: operations["get_session_api_v1_session_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/auth/signout": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/signout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Out */
+        post: operations["sign_out_api_v1_auth_signout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Sign Out */
-    post: operations["sign_out_api_v1_auth_signout_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/billing/products": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/account/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Account Access */
+        get: operations["get_account_access_api_v1_account_access_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Billing Products */
-    get: operations["list_billing_products_api_v1_billing_products_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/billing/checkout-sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/billing/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Billing Products */
+        get: operations["list_billing_products_api_v1_billing_products_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Create Checkout Session */
-    post: operations["create_checkout_session_api_v1_billing_checkout_sessions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/billing/checkout-sessions/{checkout_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/billing/checkout-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Checkout Session */
+        post: operations["create_checkout_session_api_v1_billing_checkout_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get Checkout Status */
-    get: operations["get_checkout_status_api_v1_billing_checkout_sessions__checkout_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/billing/portal-sessions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/billing/checkout-sessions/{checkout_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Checkout Status */
+        get: operations["get_checkout_status_api_v1_billing_checkout_sessions__checkout_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Create Billing Portal Session */
-    post: operations["create_billing_portal_session_api_v1_billing_portal_sessions_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/billing/webhooks/stripe": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/billing/portal-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Billing Portal Session */
+        post: operations["create_billing_portal_session_api_v1_billing_portal_sessions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Stripe Webhook */
-    post: operations["stripe_webhook_api_v1_billing_webhooks_stripe_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/billing/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stripe Webhook */
+        post: operations["stripe_webhook_api_v1_billing_webhooks_stripe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Health */
-    get: operations["health_api_v1_health_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/tasks": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List Tasks */
-    get: operations["list_tasks_api_v1_tasks_get"];
-    put?: never;
-    /** Create Task */
-    post: operations["create_task_api_v1_tasks_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Tasks */
+        get: operations["list_tasks_api_v1_tasks_get"];
+        put?: never;
+        /** Create Task */
+        post: operations["create_task_api_v1_tasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Search Schools */
-    get: operations["search_schools_api_v1_schools_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools/search": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/schools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Schools */
+        get: operations["search_schools_api_v1_schools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Search Schools By Name */
-    get: operations["search_schools_by_name_api_v1_schools_search_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools/compare": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/schools/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Schools By Name */
+        get: operations["search_schools_by_name_api_v1_schools_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get School Compare */
-    get: operations["get_school_compare_api_v1_schools_compare_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools/{urn}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/schools/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Compare */
+        get: operations["get_school_compare_api_v1_schools_compare_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get School Profile */
-    get: operations["get_school_profile_api_v1_schools__urn__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools/{urn}/trends": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/schools/{urn}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Profile */
+        get: operations["get_school_profile_api_v1_schools__urn__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get School Trends */
-    get: operations["get_school_trends_api_v1_schools__urn__trends_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v1/schools/{urn}/trends/dashboard": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/schools/{urn}/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Trends */
+        get: operations["get_school_trends_api_v1_schools__urn__trends_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get School Trend Dashboard */
-    get: operations["get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/api/v1/schools/{urn}/trends/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get School Trend Dashboard */
+        get: operations["get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** AuthStartRequest */
-    AuthStartRequest: {
-      /** Email */
-      email: string;
-      /** Return To */
-      return_to?: string | null;
-    };
-    /** AuthStartResponse */
-    AuthStartResponse: {
-      /** Redirect Url */
-      redirect_url: string;
-    };
-    /** BillingPortalSessionCreateRequest */
-    BillingPortalSessionCreateRequest: {
-      /** Return Path */
-      return_path?: string | null;
-    };
-    /** BillingPortalSessionCreateResponse */
-    BillingPortalSessionCreateResponse: {
-      /** Redirect Url */
-      redirect_url: string;
-    };
-    /** BillingProductResponse */
-    BillingProductResponse: {
-      /** Code */
-      code: string;
-      /** Display Name */
-      display_name: string;
-      /** Description */
-      description: string | null;
-      /** Billing Interval */
-      billing_interval: ("monthly" | "annual" | "one_time") | null;
-      /** Duration Days */
-      duration_days: number | null;
-      /** Capability Keys */
-      capability_keys: string[];
-    };
-    /** BillingProductsResponse */
-    BillingProductsResponse: {
-      /** Products */
-      products: components["schemas"]["BillingProductResponse"][];
-    };
-    /** BillingWebhookResponse */
-    BillingWebhookResponse: {
-      /** Provider Event Id */
-      provider_event_id: string;
-      /**
-       * Reconciliation Status
-       * @enum {string}
-       */
-      reconciliation_status: "applied" | "duplicate" | "ignored" | "failed";
-      /** Checkout Id */
-      checkout_id: string | null;
-      /** Entitlement Id */
-      entitlement_id: string | null;
-      /** Account Access State */
-      account_access_state:
-        | ("anonymous" | "free" | "pending" | "premium")
-        | null;
-    };
-    /** CheckoutSessionCreateRequest */
-    CheckoutSessionCreateRequest: {
-      /** Product Code */
-      product_code: string;
-      /** Success Path */
-      success_path?: string | null;
-      /** Cancel Path */
-      cancel_path?: string | null;
-    };
-    /** CheckoutSessionCreateResponse */
-    CheckoutSessionCreateResponse: {
-      /** Checkout Id */
-      checkout_id: string | null;
-      /** Product Code */
-      product_code: string;
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: "open" | "already_covered";
-      /** Redirect Url */
-      redirect_url: string | null;
-      /** Expires At */
-      expires_at: string | null;
-      /**
-       * Account Access State
-       * @enum {string}
-       */
-      account_access_state: "anonymous" | "free" | "pending" | "premium";
-    };
-    /** CheckoutSessionStatusResponse */
-    CheckoutSessionStatusResponse: {
-      /**
-       * Checkout Id
-       * Format: uuid
-       */
-      checkout_id: string;
-      /** Product Code */
-      product_code: string;
-      /**
-       * Status
-       * @enum {string}
-       */
-      status:
-        | "open"
-        | "already_covered"
-        | "processing_payment"
-        | "completed"
-        | "canceled"
-        | "expired"
-        | "failed";
-      /** Redirect Url */
-      redirect_url: string | null;
-      /** Expires At */
-      expires_at: string | null;
-      /**
-       * Account Access State
-       * @enum {string}
-       */
-      account_access_state: "anonymous" | "free" | "pending" | "premium";
-    };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components["schemas"]["ValidationError"][];
-    };
-    /** PostcodeSchoolSearchItemResponse */
-    PostcodeSchoolSearchItemResponse: {
-      /** Urn */
-      urn: string;
-      /** Name */
-      name: string;
-      /** Type */
-      type: string | null;
-      /** Phase */
-      phase: string | null;
-      /** Postcode */
-      postcode: string | null;
-      /** Lat */
-      lat: number;
-      /** Lng */
-      lng: number;
-      /** Distance Miles */
-      distance_miles: number;
-      /** Pupil Count */
-      pupil_count: number | null;
-      latest_ofsted: components["schemas"]["SchoolSearchLatestOfstedResponse"];
-      academic_metric: components["schemas"]["SchoolSearchAcademicMetricResponse"];
-    };
-    /** SchoolCompareBenchmarkResponse */
-    SchoolCompareBenchmarkResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** School Value */
-      school_value: number | null;
-      /** National Value */
-      national_value: number | null;
-      /** Local Value */
-      local_value: number | null;
-      /** School Vs National Delta */
-      school_vs_national_delta: number | null;
-      /** School Vs Local Delta */
-      school_vs_local_delta: number | null;
-      /**
-       * Local Scope
-       * @enum {string}
-       */
-      local_scope: "local_authority_district" | "phase";
-      /** Local Area Code */
-      local_area_code: string;
-      /** Local Area Label */
-      local_area_label: string;
-    };
-    /** SchoolCompareCellResponse */
-    SchoolCompareCellResponse: {
-      /** Urn */
-      urn: string;
-      /** Value Text */
-      value_text: string | null;
-      /** Value Numeric */
-      value_numeric: number | null;
-      /** Year Label */
-      year_label: string | null;
-      /** Snapshot Date */
-      snapshot_date: string | null;
-      /**
-       * Availability
-       * @enum {string}
-       */
-      availability: "available" | "unsupported" | "unavailable" | "suppressed";
-      /**
-       * Completeness Status
-       * @enum {string}
-       */
-      completeness_status: "available" | "partial" | "unavailable";
-      /** Completeness Reason Code */
-      completeness_reason_code:
-        | (
-            | "source_missing"
-            | "insufficient_years_published"
-            | "source_not_in_catalog"
-            | "source_file_missing_for_year"
-            | "source_schema_incompatible_for_year"
-            | "partial_metric_coverage"
-            | "source_not_provided"
-            | "rejected_by_validation"
-            | "not_joined_yet"
-            | "pipeline_failed_recently"
-            | "not_applicable"
-            | "source_coverage_gap"
-            | "stale_after_school_refresh"
-            | "no_incidents_in_radius"
-          )
-        | null;
-      benchmark: components["schemas"]["SchoolCompareBenchmarkResponse"] | null;
-    };
-    /** SchoolCompareResponse */
-    SchoolCompareResponse: {
-      /** Schools */
-      schools: components["schemas"]["SchoolCompareSchoolResponse"][];
-      /** Sections */
-      sections: components["schemas"]["SchoolCompareSectionResponse"][];
-    };
-    /** SchoolCompareRowResponse */
-    SchoolCompareRowResponse: {
-      /** Metric Key */
-      metric_key: string;
-      /** Label */
-      label: string;
-      /**
-       * Unit
-       * @enum {string}
-       */
-      unit:
-        | "text"
-        | "date"
-        | "days"
-        | "years"
-        | "percent"
-        | "count"
-        | "rate"
-        | "ratio"
-        | "score"
-        | "currency"
-        | "decile";
-      /** Cells */
-      cells: components["schemas"]["SchoolCompareCellResponse"][];
-    };
-    /** SchoolCompareSchoolResponse */
-    SchoolCompareSchoolResponse: {
-      /** Urn */
-      urn: string;
-      /** Name */
-      name: string;
-      /** Postcode */
-      postcode: string | null;
-      /** Phase */
-      phase: string | null;
-      /** Type */
-      type: string | null;
-      /** Age Range Label */
-      age_range_label: string;
-    };
-    /** SchoolCompareSectionResponse */
-    SchoolCompareSectionResponse: {
-      /**
-       * Key
-       * @enum {string}
-       */
-      key:
-        | "inspection"
-        | "demographics"
-        | "attendance"
-        | "behaviour"
-        | "workforce"
-        | "performance"
-        | "area";
-      /** Label */
-      label: string;
-      /** Rows */
-      rows: components["schemas"]["SchoolCompareRowResponse"][];
-    };
-    /** SchoolNameSearchResponse */
-    SchoolNameSearchResponse: {
-      /** Count */
-      count: number;
-      /** Schools */
-      schools: components["schemas"]["SchoolSearchItemResponse"][];
-    };
-    /** SchoolProfileAreaContextCoverageResponse */
-    SchoolProfileAreaContextCoverageResponse: {
-      /** Has Deprivation */
-      has_deprivation: boolean;
-      /** Has Crime */
-      has_crime: boolean;
-      /** Crime Months Available */
-      crime_months_available: number;
-      /** Has House Prices */
-      has_house_prices: boolean;
-      /** House Price Months Available */
-      house_price_months_available: number;
-    };
-    /** SchoolProfileAreaContextResponse */
-    SchoolProfileAreaContextResponse: {
-      deprivation:
-        | components["schemas"]["SchoolProfileAreaDeprivationResponse"]
-        | null;
-      crime: components["schemas"]["SchoolProfileAreaCrimeResponse"] | null;
-      house_prices:
-        | components["schemas"]["SchoolProfileAreaHousePricesResponse"]
-        | null;
-      coverage: components["schemas"]["SchoolProfileAreaContextCoverageResponse"];
-    };
-    /** SchoolProfileAreaCrimeAnnualRateResponse */
-    SchoolProfileAreaCrimeAnnualRateResponse: {
-      /** Year */
-      year: number;
-      /** Total Incidents */
-      total_incidents: number;
-      /** Incidents Per 1000 */
-      incidents_per_1000: number | null;
-    };
-    /** SchoolProfileAreaCrimeCategoryResponse */
-    SchoolProfileAreaCrimeCategoryResponse: {
-      /** Category */
-      category: string;
-      /** Incident Count */
-      incident_count: number;
-    };
-    /** SchoolProfileAreaCrimeResponse */
-    SchoolProfileAreaCrimeResponse: {
-      /** Radius Miles */
-      radius_miles: number;
-      /** Latest Month */
-      latest_month: string;
-      /** Total Incidents */
-      total_incidents: number;
-      /** Population Denominator */
-      population_denominator: number | null;
-      /** Incidents Per 1000 */
-      incidents_per_1000: number | null;
-      /** Annual Incidents Per 1000 */
-      annual_incidents_per_1000: components["schemas"]["SchoolProfileAreaCrimeAnnualRateResponse"][];
-      /** Categories */
-      categories: components["schemas"]["SchoolProfileAreaCrimeCategoryResponse"][];
-    };
-    /** SchoolProfileAreaDeprivationResponse */
-    SchoolProfileAreaDeprivationResponse: {
-      /** Lsoa Code */
-      lsoa_code: string;
-      /** Imd Score */
-      imd_score: number;
-      /** Imd Rank */
-      imd_rank: number;
-      /** Imd Decile */
-      imd_decile: number;
-      /** Idaci Score */
-      idaci_score: number;
-      /** Idaci Decile */
-      idaci_decile: number;
-      /** Income Score */
-      income_score: number | null;
-      /** Income Rank */
-      income_rank: number | null;
-      /** Income Decile */
-      income_decile: number | null;
-      /** Employment Score */
-      employment_score: number | null;
-      /** Employment Rank */
-      employment_rank: number | null;
-      /** Employment Decile */
-      employment_decile: number | null;
-      /** Education Score */
-      education_score: number | null;
-      /** Education Rank */
-      education_rank: number | null;
-      /** Education Decile */
-      education_decile: number | null;
-      /** Health Score */
-      health_score: number | null;
-      /** Health Rank */
-      health_rank: number | null;
-      /** Health Decile */
-      health_decile: number | null;
-      /** Crime Score */
-      crime_score: number | null;
-      /** Crime Rank */
-      crime_rank: number | null;
-      /** Crime Decile */
-      crime_decile: number | null;
-      /** Barriers Score */
-      barriers_score: number | null;
-      /** Barriers Rank */
-      barriers_rank: number | null;
-      /** Barriers Decile */
-      barriers_decile: number | null;
-      /** Living Environment Score */
-      living_environment_score: number | null;
-      /** Living Environment Rank */
-      living_environment_rank: number | null;
-      /** Living Environment Decile */
-      living_environment_decile: number | null;
-      /** Population Total */
-      population_total: number | null;
-      /** Local Authority District Code */
-      local_authority_district_code: string | null;
-      /** Local Authority District Name */
-      local_authority_district_name: string | null;
-      /** Source Release */
-      source_release: string;
-    };
-    /** SchoolProfileAreaHousePricePointResponse */
-    SchoolProfileAreaHousePricePointResponse: {
-      /** Month */
-      month: string;
-      /** Average Price */
-      average_price: number;
-      /** Annual Change Pct */
-      annual_change_pct: number | null;
-      /** Monthly Change Pct */
-      monthly_change_pct: number | null;
-    };
-    /** SchoolProfileAreaHousePricesResponse */
-    SchoolProfileAreaHousePricesResponse: {
-      /** Area Code */
-      area_code: string;
-      /** Area Name */
-      area_name: string;
-      /** Latest Month */
-      latest_month: string;
-      /** Average Price */
-      average_price: number;
-      /** Annual Change Pct */
-      annual_change_pct: number | null;
-      /** Monthly Change Pct */
-      monthly_change_pct: number | null;
-      /** Three Year Change Pct */
-      three_year_change_pct: number | null;
-      /** Trend */
-      trend: components["schemas"]["SchoolProfileAreaHousePricePointResponse"][];
-    };
-    /** SchoolProfileAttendanceLatestResponse */
-    SchoolProfileAttendanceLatestResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Overall Attendance Pct */
-      overall_attendance_pct: number | null;
-      /** Overall Absence Pct */
-      overall_absence_pct: number | null;
-      /** Persistent Absence Pct */
-      persistent_absence_pct: number | null;
-    };
-    /** SchoolProfileBehaviourLatestResponse */
-    SchoolProfileBehaviourLatestResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Suspensions Count */
-      suspensions_count: number | null;
-      /** Suspensions Rate */
-      suspensions_rate: number | null;
-      /** Permanent Exclusions Count */
-      permanent_exclusions_count: number | null;
-      /** Permanent Exclusions Rate */
-      permanent_exclusions_rate: number | null;
-    };
-    /** SchoolProfileBenchmarksResponse */
-    SchoolProfileBenchmarksResponse: {
-      /** Metrics */
-      metrics?: components["schemas"]["SchoolProfileMetricBenchmarkResponse"][];
-    };
-    /** SchoolProfileCompletenessResponse */
-    SchoolProfileCompletenessResponse: {
-      demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      attendance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      behaviour: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      workforce: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      leadership: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      area_crime: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-      area_house_prices: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
-    };
-    /** SchoolProfileDemographicsCoverageResponse */
-    SchoolProfileDemographicsCoverageResponse: {
-      /** Fsm Supported */
-      fsm_supported: boolean;
-      /** Fsm6 Supported */
-      fsm6_supported: boolean;
-      /** Gender Supported */
-      gender_supported: boolean;
-      /** Mobility Supported */
-      mobility_supported: boolean;
-      /** Send Primary Need Supported */
-      send_primary_need_supported: boolean;
-      /** Ethnicity Supported */
-      ethnicity_supported: boolean;
-      /** Top Languages Supported */
-      top_languages_supported: boolean;
-    };
-    /** SchoolProfileDemographicsEthnicityGroupResponse */
-    SchoolProfileDemographicsEthnicityGroupResponse: {
-      /** Key */
-      key: string;
-      /** Label */
-      label: string;
-      /** Percentage */
-      percentage: number | null;
-      /** Count */
-      count: number | null;
-    };
-    /** SchoolProfileDemographicsHomeLanguageResponse */
-    SchoolProfileDemographicsHomeLanguageResponse: {
-      /** Key */
-      key: string;
-      /** Label */
-      label: string;
-      /** Rank */
-      rank: number;
-      /** Percentage */
-      percentage: number | null;
-      /** Count */
-      count: number | null;
-    };
-    /** SchoolProfileDemographicsLatestResponse */
-    SchoolProfileDemographicsLatestResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Disadvantaged Pct */
-      disadvantaged_pct: number | null;
-      /** Fsm Pct */
-      fsm_pct: number | null;
-      /** Fsm6 Pct */
-      fsm6_pct?: number | null;
-      /** Sen Pct */
-      sen_pct: number | null;
-      /** Ehcp Pct */
-      ehcp_pct: number | null;
-      /** Eal Pct */
-      eal_pct: number | null;
-      /** First Language English Pct */
-      first_language_english_pct: number | null;
-      /** First Language Unclassified Pct */
-      first_language_unclassified_pct: number | null;
-      /** Male Pct */
-      male_pct?: number | null;
-      /** Female Pct */
-      female_pct?: number | null;
-      /** Pupil Mobility Pct */
-      pupil_mobility_pct?: number | null;
-      coverage: components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
-      /** Ethnicity Breakdown */
-      ethnicity_breakdown?: components["schemas"]["SchoolProfileDemographicsEthnicityGroupResponse"][];
-      /** Send Primary Needs */
-      send_primary_needs?: components["schemas"]["SchoolProfileDemographicsSendPrimaryNeedResponse"][];
-      /** Top Home Languages */
-      top_home_languages?: components["schemas"]["SchoolProfileDemographicsHomeLanguageResponse"][];
-    };
-    /** SchoolProfileDemographicsSendPrimaryNeedResponse */
-    SchoolProfileDemographicsSendPrimaryNeedResponse: {
-      /** Key */
-      key: string;
-      /** Label */
-      label: string;
-      /** Percentage */
-      percentage: number | null;
-      /** Count */
-      count: number | null;
-    };
-    /** SchoolProfileLeadershipSnapshotResponse */
-    SchoolProfileLeadershipSnapshotResponse: {
-      /** Headteacher Name */
-      headteacher_name: string | null;
-      /** Headteacher Start Date */
-      headteacher_start_date: string | null;
-      /** Headteacher Tenure Years */
-      headteacher_tenure_years: number | null;
-      /** Leadership Turnover Score */
-      leadership_turnover_score: number | null;
-    };
-    /** SchoolProfileMetricBenchmarkResponse */
-    SchoolProfileMetricBenchmarkResponse: {
-      /** Metric Key */
-      metric_key: string;
-      /** Academic Year */
-      academic_year: string;
-      /** School Value */
-      school_value: number | null;
-      /** National Value */
-      national_value: number | null;
-      /** Local Value */
-      local_value: number | null;
-      /** School Vs National Delta */
-      school_vs_national_delta: number | null;
-      /** School Vs Local Delta */
-      school_vs_local_delta: number | null;
-      /**
-       * Local Scope
-       * @enum {string}
-       */
-      local_scope: "local_authority_district" | "phase";
-      /** Local Area Code */
-      local_area_code: string;
-      /** Local Area Label */
-      local_area_label: string;
-    };
-    /** SchoolProfileOfstedLatestResponse */
-    SchoolProfileOfstedLatestResponse: {
-      /** Overall Effectiveness Code */
-      overall_effectiveness_code: string | null;
-      /** Overall Effectiveness Label */
-      overall_effectiveness_label: string | null;
-      /** Inspection Start Date */
-      inspection_start_date: string | null;
-      /** Publication Date */
-      publication_date: string | null;
-      /** Latest Oeif Inspection Start Date */
-      latest_oeif_inspection_start_date: string | null;
-      /** Latest Oeif Publication Date */
-      latest_oeif_publication_date: string | null;
-      /** Quality Of Education Code */
-      quality_of_education_code: string | null;
-      /** Quality Of Education Label */
-      quality_of_education_label: string | null;
-      /** Behaviour And Attitudes Code */
-      behaviour_and_attitudes_code: string | null;
-      /** Behaviour And Attitudes Label */
-      behaviour_and_attitudes_label: string | null;
-      /** Personal Development Code */
-      personal_development_code: string | null;
-      /** Personal Development Label */
-      personal_development_label: string | null;
-      /** Leadership And Management Code */
-      leadership_and_management_code: string | null;
-      /** Leadership And Management Label */
-      leadership_and_management_label: string | null;
-      /** Latest Ungraded Inspection Date */
-      latest_ungraded_inspection_date: string | null;
-      /** Latest Ungraded Publication Date */
-      latest_ungraded_publication_date: string | null;
-      /** Most Recent Inspection Date */
-      most_recent_inspection_date: string | null;
-      /** Days Since Most Recent Inspection */
-      days_since_most_recent_inspection: number | null;
-      /** Is Graded */
-      is_graded: boolean;
-      /** Ungraded Outcome */
-      ungraded_outcome: string | null;
-      /** Provider Page Url */
-      provider_page_url?: string | null;
-    };
-    /** SchoolProfileOfstedTimelineCoverageResponse */
-    SchoolProfileOfstedTimelineCoverageResponse: {
-      /** Is Partial History */
-      is_partial_history: boolean;
-      /** Earliest Event Date */
-      earliest_event_date: string | null;
-      /** Latest Event Date */
-      latest_event_date: string | null;
-      /** Events Count */
-      events_count: number;
-    };
-    /** SchoolProfileOfstedTimelineEventResponse */
-    SchoolProfileOfstedTimelineEventResponse: {
-      /** Inspection Number */
-      inspection_number: string;
-      /**
-       * Inspection Start Date
-       * Format: date
-       */
-      inspection_start_date: string;
-      /** Publication Date */
-      publication_date: string | null;
-      /** Inspection Type */
-      inspection_type: string | null;
-      /** Overall Effectiveness Label */
-      overall_effectiveness_label: string | null;
-      /** Headline Outcome Text */
-      headline_outcome_text: string | null;
-      /** Category Of Concern */
-      category_of_concern: string | null;
-    };
-    /** SchoolProfileOfstedTimelineResponse */
-    SchoolProfileOfstedTimelineResponse: {
-      /** Events */
-      events: components["schemas"]["SchoolProfileOfstedTimelineEventResponse"][];
-      coverage: components["schemas"]["SchoolProfileOfstedTimelineCoverageResponse"];
-    };
-    /** SchoolProfilePerformanceResponse */
-    SchoolProfilePerformanceResponse: {
-      latest:
-        | components["schemas"]["SchoolProfilePerformanceYearResponse"]
-        | null;
-      /** History */
-      history?: components["schemas"]["SchoolProfilePerformanceYearResponse"][];
-    };
-    /** SchoolProfilePerformanceYearResponse */
-    SchoolProfilePerformanceYearResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Attainment8 Average */
-      attainment8_average: number | null;
-      /** Progress8 Average */
-      progress8_average: number | null;
-      /** Progress8 Disadvantaged */
-      progress8_disadvantaged: number | null;
-      /** Progress8 Not Disadvantaged */
-      progress8_not_disadvantaged: number | null;
-      /** Progress8 Disadvantaged Gap */
-      progress8_disadvantaged_gap: number | null;
-      /** Engmath 5 Plus Pct */
-      engmath_5_plus_pct: number | null;
-      /** Engmath 4 Plus Pct */
-      engmath_4_plus_pct: number | null;
-      /** Ebacc Entry Pct */
-      ebacc_entry_pct: number | null;
-      /** Ebacc 5 Plus Pct */
-      ebacc_5_plus_pct: number | null;
-      /** Ebacc 4 Plus Pct */
-      ebacc_4_plus_pct: number | null;
-      /** Ks2 Reading Expected Pct */
-      ks2_reading_expected_pct: number | null;
-      /** Ks2 Writing Expected Pct */
-      ks2_writing_expected_pct: number | null;
-      /** Ks2 Maths Expected Pct */
-      ks2_maths_expected_pct: number | null;
-      /** Ks2 Combined Expected Pct */
-      ks2_combined_expected_pct: number | null;
-      /** Ks2 Reading Higher Pct */
-      ks2_reading_higher_pct: number | null;
-      /** Ks2 Writing Higher Pct */
-      ks2_writing_higher_pct: number | null;
-      /** Ks2 Maths Higher Pct */
-      ks2_maths_higher_pct: number | null;
-      /** Ks2 Combined Higher Pct */
-      ks2_combined_higher_pct: number | null;
-    };
-    /** SchoolProfileResponse */
-    SchoolProfileResponse: {
-      school: components["schemas"]["SchoolProfileSchoolResponse"];
-      /** Overview Text */
-      overview_text: string | null;
-      /** Analyst Text */
-      analyst_text: string | null;
-      demographics_latest:
-        | components["schemas"]["SchoolProfileDemographicsLatestResponse"]
-        | null;
-      attendance_latest:
-        | components["schemas"]["SchoolProfileAttendanceLatestResponse"]
-        | null;
-      behaviour_latest:
-        | components["schemas"]["SchoolProfileBehaviourLatestResponse"]
-        | null;
-      workforce_latest:
-        | components["schemas"]["SchoolProfileWorkforceLatestResponse"]
-        | null;
-      leadership_snapshot:
-        | components["schemas"]["SchoolProfileLeadershipSnapshotResponse"]
-        | null;
-      performance:
-        | components["schemas"]["SchoolProfilePerformanceResponse"]
-        | null;
-      ofsted_latest:
-        | components["schemas"]["SchoolProfileOfstedLatestResponse"]
-        | null;
-      ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
-      area_context: components["schemas"]["SchoolProfileAreaContextResponse"];
-      benchmarks?: components["schemas"]["SchoolProfileBenchmarksResponse"];
-      completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
-    };
-    /** SchoolProfileSchoolResponse */
-    SchoolProfileSchoolResponse: {
-      /** Urn */
-      urn: string;
-      /** Name */
-      name: string;
-      /** Phase */
-      phase: string | null;
-      /** Type */
-      type: string | null;
-      /** Status */
-      status: string | null;
-      /** Postcode */
-      postcode: string | null;
-      /** Website */
-      website: string | null;
-      /** Telephone */
-      telephone: string | null;
-      /** Head Title */
-      head_title: string | null;
-      /** Head First Name */
-      head_first_name: string | null;
-      /** Head Last Name */
-      head_last_name: string | null;
-      /** Head Job Title */
-      head_job_title: string | null;
-      /** Address Street */
-      address_street: string | null;
-      /** Address Locality */
-      address_locality: string | null;
-      /** Address Line3 */
-      address_line3: string | null;
-      /** Address Town */
-      address_town: string | null;
-      /** Address County */
-      address_county: string | null;
-      /** Statutory Low Age */
-      statutory_low_age: number | null;
-      /** Statutory High Age */
-      statutory_high_age: number | null;
-      /** Gender */
-      gender: string | null;
-      /** Religious Character */
-      religious_character: string | null;
-      /** Diocese */
-      diocese: string | null;
-      /** Admissions Policy */
-      admissions_policy: string | null;
-      /** Sixth Form */
-      sixth_form: string | null;
-      /** Nursery Provision */
-      nursery_provision: string | null;
-      /** Boarders */
-      boarders: string | null;
-      /** Fsm Pct Gias */
-      fsm_pct_gias: number | null;
-      /** Trust Name */
-      trust_name: string | null;
-      /** Trust Flag */
-      trust_flag: string | null;
-      /** Federation Name */
-      federation_name: string | null;
-      /** Federation Flag */
-      federation_flag: string | null;
-      /** La Name */
-      la_name: string | null;
-      /** La Code */
-      la_code: string | null;
-      /** Urban Rural */
-      urban_rural: string | null;
-      /** Number Of Boys */
-      number_of_boys: number | null;
-      /** Number Of Girls */
-      number_of_girls: number | null;
-      /** Lsoa Code */
-      lsoa_code: string | null;
-      /** Lsoa Name */
-      lsoa_name: string | null;
-      /** Last Changed Date */
-      last_changed_date: string | null;
-      /** Lat */
-      lat: number;
-      /** Lng */
-      lng: number;
-    };
-    /** SchoolProfileSectionCompletenessResponse */
-    SchoolProfileSectionCompletenessResponse: {
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: "available" | "partial" | "unavailable";
-      /** Reason Code */
-      reason_code:
-        | (
-            | "source_missing"
-            | "insufficient_years_published"
-            | "source_not_in_catalog"
-            | "source_file_missing_for_year"
-            | "source_schema_incompatible_for_year"
-            | "partial_metric_coverage"
-            | "source_not_provided"
-            | "rejected_by_validation"
-            | "not_joined_yet"
-            | "pipeline_failed_recently"
-            | "not_applicable"
-            | "source_coverage_gap"
-            | "stale_after_school_refresh"
-            | "no_incidents_in_radius"
-          )
-        | null;
-      /** Last Updated At */
-      last_updated_at: string | null;
-      /** Years Available */
-      years_available?: string[] | null;
-    };
-    /** SchoolProfileWorkforceLatestResponse */
-    SchoolProfileWorkforceLatestResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Pupil Teacher Ratio */
-      pupil_teacher_ratio: number | null;
-      /** Supply Staff Pct */
-      supply_staff_pct: number | null;
-      /** Teachers 3Plus Years Pct */
-      teachers_3plus_years_pct: number | null;
-      /** Teacher Turnover Pct */
-      teacher_turnover_pct: number | null;
-      /** Qts Pct */
-      qts_pct: number | null;
-      /** Qualifications Level6 Plus Pct */
-      qualifications_level6_plus_pct: number | null;
-    };
-    /** SchoolSearchAcademicMetricResponse */
-    SchoolSearchAcademicMetricResponse: {
-      /** Metric Key */
-      metric_key: string | null;
-      /** Label */
-      label: string | null;
-      /** Display Value */
-      display_value: string | null;
-      /** Sort Value */
-      sort_value: number | null;
-      /** Availability */
-      availability: string;
-    };
-    /** SchoolSearchItemResponse */
-    SchoolSearchItemResponse: {
-      /** Urn */
-      urn: string;
-      /** Name */
-      name: string;
-      /** Type */
-      type: string | null;
-      /** Phase */
-      phase: string | null;
-      /** Postcode */
-      postcode: string | null;
-      /** Lat */
-      lat: number;
-      /** Lng */
-      lng: number;
-      /** Distance Miles */
-      distance_miles: number;
-    };
-    /** SchoolSearchLatestOfstedResponse */
-    SchoolSearchLatestOfstedResponse: {
-      /** Label */
-      label: string | null;
-      /** Sort Rank */
-      sort_rank: number | null;
-      /** Availability */
-      availability: string;
-    };
-    /** SchoolTrendBenchmarkPointResponse */
-    SchoolTrendBenchmarkPointResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** School Value */
-      school_value: number | null;
-      /** National Value */
-      national_value: number | null;
-      /** Local Value */
-      local_value: number | null;
-      /** School Vs National Delta */
-      school_vs_national_delta: number | null;
-      /** School Vs Local Delta */
-      school_vs_local_delta: number | null;
-      /**
-       * Local Scope
-       * @enum {string}
-       */
-      local_scope: "local_authority_district" | "phase";
-      /** Local Area Code */
-      local_area_code: string;
-      /** Local Area Label */
-      local_area_label: string;
-    };
-    /** SchoolTrendDashboardMetricResponse */
-    SchoolTrendDashboardMetricResponse: {
-      /** Metric Key */
-      metric_key: string;
-      /** Label */
-      label: string;
-      /** Unit */
-      unit: string;
-      /** Points */
-      points: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-    };
-    /** SchoolTrendDashboardResponse */
-    SchoolTrendDashboardResponse: {
-      /** Urn */
-      urn: string;
-      /** Years Available */
-      years_available: string[];
-      /** Sections */
-      sections: components["schemas"]["SchoolTrendDashboardSectionResponse"][];
-      completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
-    };
-    /** SchoolTrendDashboardSectionResponse */
-    SchoolTrendDashboardSectionResponse: {
-      /**
-       * Key
-       * @enum {string}
-       */
-      key:
-        | "demographics"
-        | "attendance"
-        | "behaviour"
-        | "workforce"
-        | "performance"
-        | "area";
-      /** Metrics */
-      metrics: components["schemas"]["SchoolTrendDashboardMetricResponse"][];
-    };
-    /** SchoolTrendPointResponse */
-    SchoolTrendPointResponse: {
-      /** Academic Year */
-      academic_year: string;
-      /** Value */
-      value: number | null;
-      /** Delta */
-      delta: number | null;
-      /** Direction */
-      direction: ("up" | "down" | "flat") | null;
-    };
-    /** SchoolTrendsBenchmarksResponse */
-    SchoolTrendsBenchmarksResponse: {
-      /** Disadvantaged Pct */
-      disadvantaged_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Fsm Pct */
-      fsm_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Fsm6 Pct */
-      fsm6_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Sen Pct */
-      sen_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Ehcp Pct */
-      ehcp_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Eal Pct */
-      eal_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** First Language English Pct */
-      first_language_english_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** First Language Unclassified Pct */
-      first_language_unclassified_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Male Pct */
-      male_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Female Pct */
-      female_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Pupil Mobility Pct */
-      pupil_mobility_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Overall Attendance Pct */
-      overall_attendance_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Overall Absence Pct */
-      overall_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Persistent Absence Pct */
-      persistent_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Suspensions Count */
-      suspensions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Suspensions Rate */
-      suspensions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Permanent Exclusions Count */
-      permanent_exclusions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Permanent Exclusions Rate */
-      permanent_exclusions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Pupil Teacher Ratio */
-      pupil_teacher_ratio: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Supply Staff Pct */
-      supply_staff_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Teachers 3Plus Years Pct */
-      teachers_3plus_years_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Teacher Turnover Pct */
-      teacher_turnover_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Qts Pct */
-      qts_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-      /** Qualifications Level6 Plus Pct */
-      qualifications_level6_plus_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
-    };
-    /** SchoolTrendsCompletenessResponse */
-    SchoolTrendsCompletenessResponse: {
-      /**
-       * Status
-       * @enum {string}
-       */
-      status: "available" | "partial" | "unavailable";
-      /** Reason Code */
-      reason_code:
-        | (
-            | "source_missing"
-            | "insufficient_years_published"
-            | "source_not_in_catalog"
-            | "source_file_missing_for_year"
-            | "source_schema_incompatible_for_year"
-            | "partial_metric_coverage"
-            | "source_not_provided"
-            | "rejected_by_validation"
-            | "not_joined_yet"
-            | "pipeline_failed_recently"
-            | "not_applicable"
-          )
-        | null;
-      /** Last Updated At */
-      last_updated_at: string | null;
-      /** Years Available */
-      years_available?: string[] | null;
-    };
-    /** SchoolTrendsHistoryQualityResponse */
-    SchoolTrendsHistoryQualityResponse: {
-      /** Is Partial History */
-      is_partial_history: boolean;
-      /** Min Years For Delta */
-      min_years_for_delta: number;
-      /** Years Count */
-      years_count: number;
-    };
-    /** SchoolTrendsResponse */
-    SchoolTrendsResponse: {
-      /** Urn */
-      urn: string;
-      /** Years Available */
-      years_available: string[];
-      history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
-      series: components["schemas"]["SchoolTrendsSeriesResponse"];
-      benchmarks: components["schemas"]["SchoolTrendsBenchmarksResponse"];
-      completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
-      section_completeness: components["schemas"]["SchoolTrendsSectionCompletenessResponse"];
-    };
-    /** SchoolTrendsSectionCompletenessResponse */
-    SchoolTrendsSectionCompletenessResponse: {
-      demographics: components["schemas"]["SchoolTrendsCompletenessResponse"];
-      attendance: components["schemas"]["SchoolTrendsCompletenessResponse"];
-      behaviour: components["schemas"]["SchoolTrendsCompletenessResponse"];
-      workforce: components["schemas"]["SchoolTrendsCompletenessResponse"];
-    };
-    /** SchoolTrendsSeriesResponse */
-    SchoolTrendsSeriesResponse: {
-      /** Disadvantaged Pct */
-      disadvantaged_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Fsm Pct */
-      fsm_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Fsm6 Pct */
-      fsm6_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Sen Pct */
-      sen_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Ehcp Pct */
-      ehcp_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Eal Pct */
-      eal_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** First Language English Pct */
-      first_language_english_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** First Language Unclassified Pct */
-      first_language_unclassified_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Male Pct */
-      male_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Female Pct */
-      female_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Pupil Mobility Pct */
-      pupil_mobility_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Overall Attendance Pct */
-      overall_attendance_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Overall Absence Pct */
-      overall_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Persistent Absence Pct */
-      persistent_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Suspensions Count */
-      suspensions_count: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Suspensions Rate */
-      suspensions_rate: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Permanent Exclusions Count */
-      permanent_exclusions_count: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Permanent Exclusions Rate */
-      permanent_exclusions_rate: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Pupil Teacher Ratio */
-      pupil_teacher_ratio: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Supply Staff Pct */
-      supply_staff_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Teachers 3Plus Years Pct */
-      teachers_3plus_years_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Teacher Turnover Pct */
-      teacher_turnover_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Qts Pct */
-      qts_pct: components["schemas"]["SchoolTrendPointResponse"][];
-      /** Qualifications Level6 Plus Pct */
-      qualifications_level6_plus_pct: components["schemas"]["SchoolTrendPointResponse"][];
-    };
-    /** SchoolsSearchCenterResponse */
-    SchoolsSearchCenterResponse: {
-      /** Lat */
-      lat: number;
-      /** Lng */
-      lng: number;
-    };
-    /** SchoolsSearchQueryResponse */
-    SchoolsSearchQueryResponse: {
-      /** Postcode */
-      postcode: string;
-      /** Radius Miles */
-      radius_miles: number;
-      /** Phases */
-      phases: string[];
-      /** Sort */
-      sort: string;
-    };
-    /** SchoolsSearchResponse */
-    SchoolsSearchResponse: {
-      query: components["schemas"]["SchoolsSearchQueryResponse"];
-      center: components["schemas"]["SchoolsSearchCenterResponse"];
-      /** Count */
-      count: number;
-      /** Schools */
-      schools: components["schemas"]["PostcodeSchoolSearchItemResponse"][];
-    };
-    /** SessionResponse */
-    SessionResponse: {
-      /**
-       * State
-       * @enum {string}
-       */
-      state: "anonymous" | "authenticated";
-      user: components["schemas"]["SessionUserResponse"] | null;
-      /** Expires At */
-      expires_at: string | null;
-      /** Anonymous Reason */
-      anonymous_reason:
-        | ("missing" | "invalid" | "expired" | "revoked" | "signed_out")
-        | null;
-    };
-    /** SessionUserResponse */
-    SessionUserResponse: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Email */
-      email: string;
-    };
-    /** TaskCreateRequest */
-    TaskCreateRequest: {
-      /** Title */
-      title: string;
-    };
-    /** TaskResponse */
-    TaskResponse: {
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Title */
-      title: string;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /** ValidationError */
-    ValidationError: {
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-      /** Input */
-      input?: unknown;
-      /** Context */
-      ctx?: Record<string, never>;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: {
+        /** AccountAccessResponse */
+        AccountAccessResponse: {
+            /**
+             * Account Access State
+             * @enum {string}
+             */
+            account_access_state: "anonymous" | "free" | "pending" | "premium";
+            /** Capability Keys */
+            capability_keys?: string[];
+            /** Access Epoch */
+            access_epoch: string;
+            /** Entitlements */
+            entitlements?: components["schemas"]["AccountEntitlementResponse"][];
+        };
+        /** AccountEntitlementResponse */
+        AccountEntitlementResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Product Code */
+            product_code: string;
+            /** Product Display Name */
+            product_display_name: string;
+            /** Capability Keys */
+            capability_keys?: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "active" | "expired" | "revoked";
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /** Ends At */
+            ends_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Revoked Reason Code */
+            revoked_reason_code: string | null;
+        };
+        /** AuthStartRequest */
+        AuthStartRequest: {
+            /** Email */
+            email: string;
+            /** Return To */
+            return_to?: string | null;
+        };
+        /** AuthStartResponse */
+        AuthStartResponse: {
+            /** Redirect Url */
+            redirect_url: string;
+        };
+        /** BillingPortalSessionCreateRequest */
+        BillingPortalSessionCreateRequest: {
+            /** Return Path */
+            return_path?: string | null;
+        };
+        /** BillingPortalSessionCreateResponse */
+        BillingPortalSessionCreateResponse: {
+            /** Redirect Url */
+            redirect_url: string;
+        };
+        /** BillingProductResponse */
+        BillingProductResponse: {
+            /** Code */
+            code: string;
+            /** Display Name */
+            display_name: string;
+            /** Description */
+            description: string | null;
+            /** Billing Interval */
+            billing_interval: ("monthly" | "annual" | "one_time") | null;
+            /** Duration Days */
+            duration_days: number | null;
+            /** Capability Keys */
+            capability_keys: string[];
+        };
+        /** BillingProductsResponse */
+        BillingProductsResponse: {
+            /** Products */
+            products: components["schemas"]["BillingProductResponse"][];
+        };
+        /** BillingWebhookResponse */
+        BillingWebhookResponse: {
+            /** Provider Event Id */
+            provider_event_id: string;
+            /**
+             * Reconciliation Status
+             * @enum {string}
+             */
+            reconciliation_status: "applied" | "duplicate" | "ignored" | "failed";
+            /** Checkout Id */
+            checkout_id: string | null;
+            /** Entitlement Id */
+            entitlement_id: string | null;
+            /** Account Access State */
+            account_access_state: ("anonymous" | "free" | "pending" | "premium") | null;
+        };
+        /** CheckoutSessionCreateRequest */
+        CheckoutSessionCreateRequest: {
+            /** Product Code */
+            product_code: string;
+            /** Success Path */
+            success_path?: string | null;
+            /** Cancel Path */
+            cancel_path?: string | null;
+        };
+        /** CheckoutSessionCreateResponse */
+        CheckoutSessionCreateResponse: {
+            /** Checkout Id */
+            checkout_id: string | null;
+            /** Product Code */
+            product_code: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "already_covered";
+            /** Redirect Url */
+            redirect_url: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Account Access State
+             * @enum {string}
+             */
+            account_access_state: "anonymous" | "free" | "pending" | "premium";
+        };
+        /** CheckoutSessionStatusResponse */
+        CheckoutSessionStatusResponse: {
+            /**
+             * Checkout Id
+             * Format: uuid
+             */
+            checkout_id: string;
+            /** Product Code */
+            product_code: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "already_covered" | "processing_payment" | "completed" | "canceled" | "expired" | "failed";
+            /** Redirect Url */
+            redirect_url: string | null;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Account Access State
+             * @enum {string}
+             */
+            account_access_state: "anonymous" | "free" | "pending" | "premium";
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** PostcodeSchoolSearchItemResponse */
+        PostcodeSchoolSearchItemResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Distance Miles */
+            distance_miles: number;
+            /** Pupil Count */
+            pupil_count: number | null;
+            latest_ofsted: components["schemas"]["SchoolSearchLatestOfstedResponse"];
+            academic_metric: components["schemas"]["SchoolSearchAcademicMetricResponse"];
+        };
+        /** SchoolCompareBenchmarkResponse */
+        SchoolCompareBenchmarkResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
+        };
+        /** SchoolCompareCellResponse */
+        SchoolCompareCellResponse: {
+            /** Urn */
+            urn: string;
+            /** Value Text */
+            value_text: string | null;
+            /** Value Numeric */
+            value_numeric: number | null;
+            /** Year Label */
+            year_label: string | null;
+            /** Snapshot Date */
+            snapshot_date: string | null;
+            /**
+             * Availability
+             * @enum {string}
+             */
+            availability: "available" | "unsupported" | "unavailable" | "suppressed";
+            /**
+             * Completeness Status
+             * @enum {string}
+             */
+            completeness_status: "available" | "partial" | "unavailable";
+            /** Completeness Reason Code */
+            completeness_reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            benchmark: components["schemas"]["SchoolCompareBenchmarkResponse"] | null;
+        };
+        /** SchoolCompareResponse */
+        SchoolCompareResponse: {
+            access: components["schemas"]["SectionAccessResponse"];
+            /** Schools */
+            schools: components["schemas"]["SchoolCompareSchoolResponse"][];
+            /** Sections */
+            sections: components["schemas"]["SchoolCompareSectionResponse"][];
+        };
+        /** SchoolCompareRowResponse */
+        SchoolCompareRowResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Label */
+            label: string;
+            /**
+             * Unit
+             * @enum {string}
+             */
+            unit: "text" | "date" | "days" | "years" | "percent" | "count" | "rate" | "ratio" | "score" | "currency" | "decile";
+            /** Cells */
+            cells: components["schemas"]["SchoolCompareCellResponse"][];
+        };
+        /** SchoolCompareSchoolResponse */
+        SchoolCompareSchoolResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Postcode */
+            postcode: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Type */
+            type: string | null;
+            /** Age Range Label */
+            age_range_label: string;
+        };
+        /** SchoolCompareSectionResponse */
+        SchoolCompareSectionResponse: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            /** Label */
+            label: string;
+            /** Rows */
+            rows: components["schemas"]["SchoolCompareRowResponse"][];
+        };
+        /** SchoolNameSearchResponse */
+        SchoolNameSearchResponse: {
+            /** Count */
+            count: number;
+            /** Schools */
+            schools: components["schemas"]["SchoolSearchItemResponse"][];
+        };
+        /** SchoolProfileAnalystSectionResponse */
+        SchoolProfileAnalystSectionResponse: {
+            access: components["schemas"]["SectionAccessResponse"];
+            /** Text */
+            text: string | null;
+            /** Teaser Text */
+            teaser_text: string | null;
+            /** Disclaimer */
+            disclaimer: string | null;
+        };
+        /** SchoolProfileAreaContextCoverageResponse */
+        SchoolProfileAreaContextCoverageResponse: {
+            /** Has Deprivation */
+            has_deprivation: boolean;
+            /** Has Crime */
+            has_crime: boolean;
+            /** Crime Months Available */
+            crime_months_available: number;
+            /** Has House Prices */
+            has_house_prices: boolean;
+            /** House Price Months Available */
+            house_price_months_available: number;
+        };
+        /** SchoolProfileAreaContextResponse */
+        SchoolProfileAreaContextResponse: {
+            deprivation: components["schemas"]["SchoolProfileAreaDeprivationResponse"] | null;
+            crime: components["schemas"]["SchoolProfileAreaCrimeResponse"] | null;
+            house_prices: components["schemas"]["SchoolProfileAreaHousePricesResponse"] | null;
+            coverage: components["schemas"]["SchoolProfileAreaContextCoverageResponse"];
+        };
+        /** SchoolProfileAreaCrimeAnnualRateResponse */
+        SchoolProfileAreaCrimeAnnualRateResponse: {
+            /** Year */
+            year: number;
+            /** Total Incidents */
+            total_incidents: number;
+            /** Incidents Per 1000 */
+            incidents_per_1000: number | null;
+        };
+        /** SchoolProfileAreaCrimeCategoryResponse */
+        SchoolProfileAreaCrimeCategoryResponse: {
+            /** Category */
+            category: string;
+            /** Incident Count */
+            incident_count: number;
+        };
+        /** SchoolProfileAreaCrimeResponse */
+        SchoolProfileAreaCrimeResponse: {
+            /** Radius Miles */
+            radius_miles: number;
+            /** Latest Month */
+            latest_month: string;
+            /** Total Incidents */
+            total_incidents: number;
+            /** Population Denominator */
+            population_denominator: number | null;
+            /** Incidents Per 1000 */
+            incidents_per_1000: number | null;
+            /** Annual Incidents Per 1000 */
+            annual_incidents_per_1000: components["schemas"]["SchoolProfileAreaCrimeAnnualRateResponse"][];
+            /** Categories */
+            categories: components["schemas"]["SchoolProfileAreaCrimeCategoryResponse"][];
+        };
+        /** SchoolProfileAreaDeprivationResponse */
+        SchoolProfileAreaDeprivationResponse: {
+            /** Lsoa Code */
+            lsoa_code: string;
+            /** Imd Score */
+            imd_score: number;
+            /** Imd Rank */
+            imd_rank: number;
+            /** Imd Decile */
+            imd_decile: number;
+            /** Idaci Score */
+            idaci_score: number;
+            /** Idaci Decile */
+            idaci_decile: number;
+            /** Income Score */
+            income_score: number | null;
+            /** Income Rank */
+            income_rank: number | null;
+            /** Income Decile */
+            income_decile: number | null;
+            /** Employment Score */
+            employment_score: number | null;
+            /** Employment Rank */
+            employment_rank: number | null;
+            /** Employment Decile */
+            employment_decile: number | null;
+            /** Education Score */
+            education_score: number | null;
+            /** Education Rank */
+            education_rank: number | null;
+            /** Education Decile */
+            education_decile: number | null;
+            /** Health Score */
+            health_score: number | null;
+            /** Health Rank */
+            health_rank: number | null;
+            /** Health Decile */
+            health_decile: number | null;
+            /** Crime Score */
+            crime_score: number | null;
+            /** Crime Rank */
+            crime_rank: number | null;
+            /** Crime Decile */
+            crime_decile: number | null;
+            /** Barriers Score */
+            barriers_score: number | null;
+            /** Barriers Rank */
+            barriers_rank: number | null;
+            /** Barriers Decile */
+            barriers_decile: number | null;
+            /** Living Environment Score */
+            living_environment_score: number | null;
+            /** Living Environment Rank */
+            living_environment_rank: number | null;
+            /** Living Environment Decile */
+            living_environment_decile: number | null;
+            /** Population Total */
+            population_total: number | null;
+            /** Local Authority District Code */
+            local_authority_district_code: string | null;
+            /** Local Authority District Name */
+            local_authority_district_name: string | null;
+            /** Source Release */
+            source_release: string;
+        };
+        /** SchoolProfileAreaHousePricePointResponse */
+        SchoolProfileAreaHousePricePointResponse: {
+            /** Month */
+            month: string;
+            /** Average Price */
+            average_price: number;
+            /** Annual Change Pct */
+            annual_change_pct: number | null;
+            /** Monthly Change Pct */
+            monthly_change_pct: number | null;
+        };
+        /** SchoolProfileAreaHousePricesResponse */
+        SchoolProfileAreaHousePricesResponse: {
+            /** Area Code */
+            area_code: string;
+            /** Area Name */
+            area_name: string;
+            /** Latest Month */
+            latest_month: string;
+            /** Average Price */
+            average_price: number;
+            /** Annual Change Pct */
+            annual_change_pct: number | null;
+            /** Monthly Change Pct */
+            monthly_change_pct: number | null;
+            /** Three Year Change Pct */
+            three_year_change_pct: number | null;
+            /** Trend */
+            trend: components["schemas"]["SchoolProfileAreaHousePricePointResponse"][];
+        };
+        /** SchoolProfileAttendanceLatestResponse */
+        SchoolProfileAttendanceLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Overall Attendance Pct */
+            overall_attendance_pct: number | null;
+            /** Overall Absence Pct */
+            overall_absence_pct: number | null;
+            /** Persistent Absence Pct */
+            persistent_absence_pct: number | null;
+        };
+        /** SchoolProfileBehaviourLatestResponse */
+        SchoolProfileBehaviourLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Suspensions Count */
+            suspensions_count: number | null;
+            /** Suspensions Rate */
+            suspensions_rate: number | null;
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: number | null;
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: number | null;
+        };
+        /** SchoolProfileBenchmarksResponse */
+        SchoolProfileBenchmarksResponse: {
+            /** Metrics */
+            metrics?: components["schemas"]["SchoolProfileMetricBenchmarkResponse"][];
+        };
+        /** SchoolProfileCompletenessResponse */
+        SchoolProfileCompletenessResponse: {
+            demographics: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            attendance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            behaviour: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            workforce: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            leadership: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_latest: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            ofsted_timeline: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_deprivation: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_crime: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            area_house_prices: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+        };
+        /** SchoolProfileDemographicsCoverageResponse */
+        SchoolProfileDemographicsCoverageResponse: {
+            /** Fsm Supported */
+            fsm_supported: boolean;
+            /** Fsm6 Supported */
+            fsm6_supported: boolean;
+            /** Gender Supported */
+            gender_supported: boolean;
+            /** Mobility Supported */
+            mobility_supported: boolean;
+            /** Send Primary Need Supported */
+            send_primary_need_supported: boolean;
+            /** Ethnicity Supported */
+            ethnicity_supported: boolean;
+            /** Top Languages Supported */
+            top_languages_supported: boolean;
+        };
+        /** SchoolProfileDemographicsEthnicityGroupResponse */
+        SchoolProfileDemographicsEthnicityGroupResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
+        };
+        /** SchoolProfileDemographicsHomeLanguageResponse */
+        SchoolProfileDemographicsHomeLanguageResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Rank */
+            rank: number;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
+        };
+        /** SchoolProfileDemographicsLatestResponse */
+        SchoolProfileDemographicsLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Disadvantaged Pct */
+            disadvantaged_pct: number | null;
+            /** Fsm Pct */
+            fsm_pct: number | null;
+            /** Fsm6 Pct */
+            fsm6_pct?: number | null;
+            /** Sen Pct */
+            sen_pct: number | null;
+            /** Ehcp Pct */
+            ehcp_pct: number | null;
+            /** Eal Pct */
+            eal_pct: number | null;
+            /** First Language English Pct */
+            first_language_english_pct: number | null;
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: number | null;
+            /** Male Pct */
+            male_pct?: number | null;
+            /** Female Pct */
+            female_pct?: number | null;
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct?: number | null;
+            coverage: components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
+            /** Ethnicity Breakdown */
+            ethnicity_breakdown?: components["schemas"]["SchoolProfileDemographicsEthnicityGroupResponse"][];
+            /** Send Primary Needs */
+            send_primary_needs?: components["schemas"]["SchoolProfileDemographicsSendPrimaryNeedResponse"][];
+            /** Top Home Languages */
+            top_home_languages?: components["schemas"]["SchoolProfileDemographicsHomeLanguageResponse"][];
+        };
+        /** SchoolProfileDemographicsSendPrimaryNeedResponse */
+        SchoolProfileDemographicsSendPrimaryNeedResponse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Percentage */
+            percentage: number | null;
+            /** Count */
+            count: number | null;
+        };
+        /** SchoolProfileLeadershipSnapshotResponse */
+        SchoolProfileLeadershipSnapshotResponse: {
+            /** Headteacher Name */
+            headteacher_name: string | null;
+            /** Headteacher Start Date */
+            headteacher_start_date: string | null;
+            /** Headteacher Tenure Years */
+            headteacher_tenure_years: number | null;
+            /** Leadership Turnover Score */
+            leadership_turnover_score: number | null;
+        };
+        /** SchoolProfileMetricBenchmarkResponse */
+        SchoolProfileMetricBenchmarkResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
+        };
+        /** SchoolProfileNeighbourhoodSectionResponse */
+        SchoolProfileNeighbourhoodSectionResponse: {
+            access: components["schemas"]["SectionAccessResponse"];
+            area_context: components["schemas"]["SchoolProfileAreaContextResponse"] | null;
+            /** Teaser Text */
+            teaser_text: string | null;
+        };
+        /** SchoolProfileOfstedLatestResponse */
+        SchoolProfileOfstedLatestResponse: {
+            /** Overall Effectiveness Code */
+            overall_effectiveness_code: string | null;
+            /** Overall Effectiveness Label */
+            overall_effectiveness_label: string | null;
+            /** Inspection Start Date */
+            inspection_start_date: string | null;
+            /** Publication Date */
+            publication_date: string | null;
+            /** Latest Oeif Inspection Start Date */
+            latest_oeif_inspection_start_date: string | null;
+            /** Latest Oeif Publication Date */
+            latest_oeif_publication_date: string | null;
+            /** Quality Of Education Code */
+            quality_of_education_code: string | null;
+            /** Quality Of Education Label */
+            quality_of_education_label: string | null;
+            /** Behaviour And Attitudes Code */
+            behaviour_and_attitudes_code: string | null;
+            /** Behaviour And Attitudes Label */
+            behaviour_and_attitudes_label: string | null;
+            /** Personal Development Code */
+            personal_development_code: string | null;
+            /** Personal Development Label */
+            personal_development_label: string | null;
+            /** Leadership And Management Code */
+            leadership_and_management_code: string | null;
+            /** Leadership And Management Label */
+            leadership_and_management_label: string | null;
+            /** Latest Ungraded Inspection Date */
+            latest_ungraded_inspection_date: string | null;
+            /** Latest Ungraded Publication Date */
+            latest_ungraded_publication_date: string | null;
+            /** Most Recent Inspection Date */
+            most_recent_inspection_date: string | null;
+            /** Days Since Most Recent Inspection */
+            days_since_most_recent_inspection: number | null;
+            /** Is Graded */
+            is_graded: boolean;
+            /** Ungraded Outcome */
+            ungraded_outcome: string | null;
+            /** Provider Page Url */
+            provider_page_url?: string | null;
+        };
+        /** SchoolProfileOfstedTimelineCoverageResponse */
+        SchoolProfileOfstedTimelineCoverageResponse: {
+            /** Is Partial History */
+            is_partial_history: boolean;
+            /** Earliest Event Date */
+            earliest_event_date: string | null;
+            /** Latest Event Date */
+            latest_event_date: string | null;
+            /** Events Count */
+            events_count: number;
+        };
+        /** SchoolProfileOfstedTimelineEventResponse */
+        SchoolProfileOfstedTimelineEventResponse: {
+            /** Inspection Number */
+            inspection_number: string;
+            /**
+             * Inspection Start Date
+             * Format: date
+             */
+            inspection_start_date: string;
+            /** Publication Date */
+            publication_date: string | null;
+            /** Inspection Type */
+            inspection_type: string | null;
+            /** Overall Effectiveness Label */
+            overall_effectiveness_label: string | null;
+            /** Headline Outcome Text */
+            headline_outcome_text: string | null;
+            /** Category Of Concern */
+            category_of_concern: string | null;
+        };
+        /** SchoolProfileOfstedTimelineResponse */
+        SchoolProfileOfstedTimelineResponse: {
+            /** Events */
+            events: components["schemas"]["SchoolProfileOfstedTimelineEventResponse"][];
+            coverage: components["schemas"]["SchoolProfileOfstedTimelineCoverageResponse"];
+        };
+        /** SchoolProfilePerformanceResponse */
+        SchoolProfilePerformanceResponse: {
+            latest: components["schemas"]["SchoolProfilePerformanceYearResponse"] | null;
+            /** History */
+            history?: components["schemas"]["SchoolProfilePerformanceYearResponse"][];
+        };
+        /** SchoolProfilePerformanceYearResponse */
+        SchoolProfilePerformanceYearResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Attainment8 Average */
+            attainment8_average: number | null;
+            /** Progress8 Average */
+            progress8_average: number | null;
+            /** Progress8 Disadvantaged */
+            progress8_disadvantaged: number | null;
+            /** Progress8 Not Disadvantaged */
+            progress8_not_disadvantaged: number | null;
+            /** Progress8 Disadvantaged Gap */
+            progress8_disadvantaged_gap: number | null;
+            /** Engmath 5 Plus Pct */
+            engmath_5_plus_pct: number | null;
+            /** Engmath 4 Plus Pct */
+            engmath_4_plus_pct: number | null;
+            /** Ebacc Entry Pct */
+            ebacc_entry_pct: number | null;
+            /** Ebacc 5 Plus Pct */
+            ebacc_5_plus_pct: number | null;
+            /** Ebacc 4 Plus Pct */
+            ebacc_4_plus_pct: number | null;
+            /** Ks2 Reading Expected Pct */
+            ks2_reading_expected_pct: number | null;
+            /** Ks2 Writing Expected Pct */
+            ks2_writing_expected_pct: number | null;
+            /** Ks2 Maths Expected Pct */
+            ks2_maths_expected_pct: number | null;
+            /** Ks2 Combined Expected Pct */
+            ks2_combined_expected_pct: number | null;
+            /** Ks2 Reading Higher Pct */
+            ks2_reading_higher_pct: number | null;
+            /** Ks2 Writing Higher Pct */
+            ks2_writing_higher_pct: number | null;
+            /** Ks2 Maths Higher Pct */
+            ks2_maths_higher_pct: number | null;
+            /** Ks2 Combined Higher Pct */
+            ks2_combined_higher_pct: number | null;
+        };
+        /** SchoolProfileResponse */
+        SchoolProfileResponse: {
+            school: components["schemas"]["SchoolProfileSchoolResponse"];
+            /** Overview Text */
+            overview_text: string | null;
+            analyst: components["schemas"]["SchoolProfileAnalystSectionResponse"];
+            demographics_latest: components["schemas"]["SchoolProfileDemographicsLatestResponse"] | null;
+            attendance_latest: components["schemas"]["SchoolProfileAttendanceLatestResponse"] | null;
+            behaviour_latest: components["schemas"]["SchoolProfileBehaviourLatestResponse"] | null;
+            workforce_latest: components["schemas"]["SchoolProfileWorkforceLatestResponse"] | null;
+            leadership_snapshot: components["schemas"]["SchoolProfileLeadershipSnapshotResponse"] | null;
+            performance: components["schemas"]["SchoolProfilePerformanceResponse"] | null;
+            ofsted_latest: components["schemas"]["SchoolProfileOfstedLatestResponse"] | null;
+            ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
+            neighbourhood: components["schemas"]["SchoolProfileNeighbourhoodSectionResponse"];
+            benchmarks?: components["schemas"]["SchoolProfileBenchmarksResponse"];
+            completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
+        };
+        /** SchoolProfileSchoolResponse */
+        SchoolProfileSchoolResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Phase */
+            phase: string | null;
+            /** Type */
+            type: string | null;
+            /** Status */
+            status: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Website */
+            website: string | null;
+            /** Telephone */
+            telephone: string | null;
+            /** Head Title */
+            head_title: string | null;
+            /** Head First Name */
+            head_first_name: string | null;
+            /** Head Last Name */
+            head_last_name: string | null;
+            /** Head Job Title */
+            head_job_title: string | null;
+            /** Address Street */
+            address_street: string | null;
+            /** Address Locality */
+            address_locality: string | null;
+            /** Address Line3 */
+            address_line3: string | null;
+            /** Address Town */
+            address_town: string | null;
+            /** Address County */
+            address_county: string | null;
+            /** Statutory Low Age */
+            statutory_low_age: number | null;
+            /** Statutory High Age */
+            statutory_high_age: number | null;
+            /** Gender */
+            gender: string | null;
+            /** Religious Character */
+            religious_character: string | null;
+            /** Diocese */
+            diocese: string | null;
+            /** Admissions Policy */
+            admissions_policy: string | null;
+            /** Sixth Form */
+            sixth_form: string | null;
+            /** Nursery Provision */
+            nursery_provision: string | null;
+            /** Boarders */
+            boarders: string | null;
+            /** Fsm Pct Gias */
+            fsm_pct_gias: number | null;
+            /** Trust Name */
+            trust_name: string | null;
+            /** Trust Flag */
+            trust_flag: string | null;
+            /** Federation Name */
+            federation_name: string | null;
+            /** Federation Flag */
+            federation_flag: string | null;
+            /** La Name */
+            la_name: string | null;
+            /** La Code */
+            la_code: string | null;
+            /** Urban Rural */
+            urban_rural: string | null;
+            /** Number Of Boys */
+            number_of_boys: number | null;
+            /** Number Of Girls */
+            number_of_girls: number | null;
+            /** Lsoa Code */
+            lsoa_code: string | null;
+            /** Lsoa Name */
+            lsoa_name: string | null;
+            /** Last Changed Date */
+            last_changed_date: string | null;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+        };
+        /** SchoolProfileSectionCompletenessResponse */
+        SchoolProfileSectionCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
+        };
+        /** SchoolProfileWorkforceLatestResponse */
+        SchoolProfileWorkforceLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: number | null;
+            /** Supply Staff Pct */
+            supply_staff_pct: number | null;
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: number | null;
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: number | null;
+            /** Qts Pct */
+            qts_pct: number | null;
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: number | null;
+        };
+        /** SchoolSearchAcademicMetricResponse */
+        SchoolSearchAcademicMetricResponse: {
+            /** Metric Key */
+            metric_key: string | null;
+            /** Label */
+            label: string | null;
+            /** Display Value */
+            display_value: string | null;
+            /** Sort Value */
+            sort_value: number | null;
+            /** Availability */
+            availability: string;
+        };
+        /** SchoolSearchItemResponse */
+        SchoolSearchItemResponse: {
+            /** Urn */
+            urn: string;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string | null;
+            /** Phase */
+            phase: string | null;
+            /** Postcode */
+            postcode: string | null;
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+            /** Distance Miles */
+            distance_miles: number;
+        };
+        /** SchoolSearchLatestOfstedResponse */
+        SchoolSearchLatestOfstedResponse: {
+            /** Label */
+            label: string | null;
+            /** Sort Rank */
+            sort_rank: number | null;
+            /** Availability */
+            availability: string;
+        };
+        /** SchoolTrendBenchmarkPointResponse */
+        SchoolTrendBenchmarkPointResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** School Value */
+            school_value: number | null;
+            /** National Value */
+            national_value: number | null;
+            /** Local Value */
+            local_value: number | null;
+            /** School Vs National Delta */
+            school_vs_national_delta: number | null;
+            /** School Vs Local Delta */
+            school_vs_local_delta: number | null;
+            /**
+             * Local Scope
+             * @enum {string}
+             */
+            local_scope: "local_authority_district" | "phase";
+            /** Local Area Code */
+            local_area_code: string;
+            /** Local Area Label */
+            local_area_label: string;
+        };
+        /** SchoolTrendDashboardMetricResponse */
+        SchoolTrendDashboardMetricResponse: {
+            /** Metric Key */
+            metric_key: string;
+            /** Label */
+            label: string;
+            /** Unit */
+            unit: string;
+            /** Points */
+            points: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+        };
+        /** SchoolTrendDashboardResponse */
+        SchoolTrendDashboardResponse: {
+            /** Urn */
+            urn: string;
+            /** Years Available */
+            years_available: string[];
+            /** Sections */
+            sections: components["schemas"]["SchoolTrendDashboardSectionResponse"][];
+            completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
+        };
+        /** SchoolTrendDashboardSectionResponse */
+        SchoolTrendDashboardSectionResponse: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            /** Metrics */
+            metrics: components["schemas"]["SchoolTrendDashboardMetricResponse"][];
+        };
+        /** SchoolTrendPointResponse */
+        SchoolTrendPointResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Value */
+            value: number | null;
+            /** Delta */
+            delta: number | null;
+            /** Direction */
+            direction: ("up" | "down" | "flat") | null;
+        };
+        /** SchoolTrendsBenchmarksResponse */
+        SchoolTrendsBenchmarksResponse: {
+            /** Disadvantaged Pct */
+            disadvantaged_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Fsm Pct */
+            fsm_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Fsm6 Pct */
+            fsm6_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Sen Pct */
+            sen_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Ehcp Pct */
+            ehcp_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Eal Pct */
+            eal_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** First Language English Pct */
+            first_language_english_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Male Pct */
+            male_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Female Pct */
+            female_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Overall Attendance Pct */
+            overall_attendance_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Overall Absence Pct */
+            overall_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Persistent Absence Pct */
+            persistent_absence_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Suspensions Count */
+            suspensions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Suspensions Rate */
+            suspensions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Supply Staff Pct */
+            supply_staff_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Qts Pct */
+            qts_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+        };
+        /** SchoolTrendsCompletenessResponse */
+        SchoolTrendsCompletenessResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "partial" | "unavailable";
+            /** Reason Code */
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            /** Last Updated At */
+            last_updated_at: string | null;
+            /** Years Available */
+            years_available?: string[] | null;
+        };
+        /** SchoolTrendsHistoryQualityResponse */
+        SchoolTrendsHistoryQualityResponse: {
+            /** Is Partial History */
+            is_partial_history: boolean;
+            /** Min Years For Delta */
+            min_years_for_delta: number;
+            /** Years Count */
+            years_count: number;
+        };
+        /** SchoolTrendsResponse */
+        SchoolTrendsResponse: {
+            /** Urn */
+            urn: string;
+            /** Years Available */
+            years_available: string[];
+            history_quality: components["schemas"]["SchoolTrendsHistoryQualityResponse"];
+            series: components["schemas"]["SchoolTrendsSeriesResponse"];
+            benchmarks: components["schemas"]["SchoolTrendsBenchmarksResponse"];
+            completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            section_completeness: components["schemas"]["SchoolTrendsSectionCompletenessResponse"];
+        };
+        /** SchoolTrendsSectionCompletenessResponse */
+        SchoolTrendsSectionCompletenessResponse: {
+            demographics: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            attendance: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            behaviour: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            workforce: components["schemas"]["SchoolTrendsCompletenessResponse"];
+        };
+        /** SchoolTrendsSeriesResponse */
+        SchoolTrendsSeriesResponse: {
+            /** Disadvantaged Pct */
+            disadvantaged_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Fsm Pct */
+            fsm_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Fsm6 Pct */
+            fsm6_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Sen Pct */
+            sen_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ehcp Pct */
+            ehcp_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Eal Pct */
+            eal_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language English Pct */
+            first_language_english_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** First Language Unclassified Pct */
+            first_language_unclassified_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Male Pct */
+            male_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Female Pct */
+            female_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Pupil Mobility Pct */
+            pupil_mobility_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Overall Attendance Pct */
+            overall_attendance_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Overall Absence Pct */
+            overall_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Persistent Absence Pct */
+            persistent_absence_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Suspensions Count */
+            suspensions_count: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Suspensions Rate */
+            suspensions_rate: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Permanent Exclusions Count */
+            permanent_exclusions_count: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Permanent Exclusions Rate */
+            permanent_exclusions_rate: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Pupil Teacher Ratio */
+            pupil_teacher_ratio: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Supply Staff Pct */
+            supply_staff_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teachers 3Plus Years Pct */
+            teachers_3plus_years_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Teacher Turnover Pct */
+            teacher_turnover_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Qts Pct */
+            qts_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Qualifications Level6 Plus Pct */
+            qualifications_level6_plus_pct: components["schemas"]["SchoolTrendPointResponse"][];
+        };
+        /** SchoolsSearchCenterResponse */
+        SchoolsSearchCenterResponse: {
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
+        };
+        /** SchoolsSearchQueryResponse */
+        SchoolsSearchQueryResponse: {
+            /** Postcode */
+            postcode: string;
+            /** Radius Miles */
+            radius_miles: number;
+            /** Phases */
+            phases: string[];
+            /** Sort */
+            sort: string;
+        };
+        /** SchoolsSearchResponse */
+        SchoolsSearchResponse: {
+            query: components["schemas"]["SchoolsSearchQueryResponse"];
+            center: components["schemas"]["SchoolsSearchCenterResponse"];
+            /** Count */
+            count: number;
+            /** Schools */
+            schools: components["schemas"]["PostcodeSchoolSearchItemResponse"][];
+        };
+        /** SectionAccessResponse */
+        SectionAccessResponse: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "available" | "locked" | "unavailable";
+            /** Capability Key */
+            capability_key: string | null;
+            /** Reason Code */
+            reason_code: ("free_baseline" | "premium_capability_missing" | "anonymous_user" | "artefact_not_published" | "artefact_not_supported" | "entitlement_expired" | "entitlement_revoked") | null;
+            /** Product Codes */
+            product_codes?: string[];
+            /** Requires Auth */
+            requires_auth: boolean;
+            /** Requires Purchase */
+            requires_purchase: boolean;
+            /** School Name */
+            school_name?: string | null;
+        };
+        /** SessionResponse */
+        SessionResponse: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "anonymous" | "authenticated";
+            user: components["schemas"]["SessionUserResponse"] | null;
+            /** Expires At */
+            expires_at: string | null;
+            /** Anonymous Reason */
+            anonymous_reason: ("missing" | "invalid" | "expired" | "revoked" | "signed_out") | null;
+            /**
+             * Account Access State
+             * @enum {string}
+             */
+            account_access_state: "anonymous" | "free" | "pending" | "premium";
+            /** Capability Keys */
+            capability_keys: string[];
+            /** Access Epoch */
+            access_epoch: string;
+        };
+        /** SessionUserResponse */
+        SessionUserResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+        };
+        /** TaskCreateRequest */
+        TaskCreateRequest: {
+            /** Title */
+            title: string;
+        };
+        /** TaskResponse */
+        TaskResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  start_sign_in_api_v1_auth_start_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    start_sign_in_api_v1_auth_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AuthStartRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthStartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AuthStartRequest"];
-      };
+    auth_callback_api_v1_auth_callback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    get_session_api_v1_session_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["AuthStartResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
         };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
     };
-  };
-  auth_callback_api_v1_auth_callback_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    sign_out_api_v1_auth_signout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    get_account_access_api_v1_account_access_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": unknown;
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAccessResponse"];
+                };
+            };
         };
-      };
     };
-  };
-  get_session_api_v1_session_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    list_billing_products_api_v1_billing_products_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingProductsResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    create_checkout_session_api_v1_billing_checkout_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SessionResponse"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutSessionCreateRequest"];
+            };
         };
-      };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutSessionCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-  };
-  sign_out_api_v1_auth_signout_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    get_checkout_status_api_v1_billing_checkout_sessions__checkout_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                checkout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutSessionStatusResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    create_billing_portal_session_api_v1_billing_portal_sessions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["SessionResponse"];
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingPortalSessionCreateRequest"];
+            };
         };
-      };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingPortalSessionCreateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-  };
-  list_billing_products_api_v1_billing_products_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    stripe_webhook_api_v1_billing_webhooks_stripe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingWebhookResponse"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    health_api_v1_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["BillingProductsResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
         };
-      };
     };
-  };
-  create_checkout_session_api_v1_billing_checkout_sessions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    list_tasks_api_v1_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"][];
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CheckoutSessionCreateRequest"];
-      };
+    create_task_api_v1_tasks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    search_schools_api_v1_schools_get: {
+        parameters: {
+            query: {
+                postcode: string;
+                radius?: number | null;
+                phase?: string[] | null;
+                sort?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["CheckoutSessionCreateResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolsSearchResponse"];
+                };
+            };
+            /** @description Invalid postcode or radius parameter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Postcode not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Postcode resolver unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
     };
-  };
-  get_checkout_status_api_v1_billing_checkout_sessions__checkout_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        checkout_id: string;
-      };
-      cookie?: never;
+    search_schools_by_name_api_v1_schools_search_get: {
+        parameters: {
+            query: {
+                name: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolNameSearchResponse"];
+                };
+            };
+            /** @description Invalid name search parameter. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    get_school_compare_api_v1_schools_compare_get: {
+        parameters: {
+            query?: {
+                urns?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["CheckoutSessionStatusResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolCompareResponse"];
+                };
+            };
+            /** @description Invalid compare request parameters. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description One or more school URNs were not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School compare datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
     };
-  };
-  create_billing_portal_session_api_v1_billing_portal_sessions_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    get_school_profile_api_v1_schools__urn__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolProfileResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School profile datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BillingPortalSessionCreateRequest"];
-      };
+    get_school_trends_api_v1_schools__urn__trends_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolTrendsResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School trends datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
     };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                urn: string;
+            };
+            cookie?: never;
         };
-        content: {
-          "application/json": components["schemas"]["BillingPortalSessionCreateResponse"];
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchoolTrendDashboardResponse"];
+                };
+            };
+            /** @description School URN not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description School trends datastore unavailable. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
     };
-  };
-  stripe_webhook_api_v1_billing_webhooks_stripe_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BillingWebhookResponse"];
-        };
-      };
-    };
-  };
-  health_api_v1_health_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": {
-            [key: string]: string;
-          };
-        };
-      };
-    };
-  };
-  list_tasks_api_v1_tasks_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskResponse"][];
-        };
-      };
-    };
-  };
-  create_task_api_v1_tasks_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["TaskCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["TaskResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  search_schools_api_v1_schools_get: {
-    parameters: {
-      query: {
-        postcode: string;
-        radius?: number | null;
-        phase?: string[] | null;
-        sort?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolsSearchResponse"];
-        };
-      };
-      /** @description Invalid postcode or radius parameter. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Postcode not found. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description Postcode resolver unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  search_schools_by_name_api_v1_schools_search_get: {
-    parameters: {
-      query: {
-        name: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolNameSearchResponse"];
-        };
-      };
-      /** @description Invalid name search parameter. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_school_compare_api_v1_schools_compare_get: {
-    parameters: {
-      query?: {
-        urns?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolCompareResponse"];
-        };
-      };
-      /** @description Invalid compare request parameters. */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description One or more school URNs were not found. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description School compare datastore unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  get_school_profile_api_v1_schools__urn__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        urn: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolProfileResponse"];
-        };
-      };
-      /** @description School URN not found. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description School profile datastore unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  get_school_trends_api_v1_schools__urn__trends_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        urn: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolTrendsResponse"];
-        };
-      };
-      /** @description School URN not found. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description School trends datastore unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        urn: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SchoolTrendDashboardResponse"];
-        };
-      };
-      /** @description School URN not found. */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-      /** @description School trends datastore unavailable. */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
 }

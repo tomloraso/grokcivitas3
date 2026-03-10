@@ -19,5 +19,6 @@
 15. [Local Development Runbook](./runbooks/local-development.md)
 16. [Development Auth Provider Runbook](./runbooks/auth-development-provider.md)
 17. [Auth0 Managed Provider Runbook](./runbooks/auth0-managed-provider.md)
-18. [Data Pipeline Runbook](./runbooks/pipelines.md)
+18. [Premium Access Release Runbook](./runbooks/premium-access-release.md)
+19. [Data Pipeline Runbook](./runbooks/pipelines.md)
 

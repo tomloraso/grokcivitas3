@@ -7,6 +7,24 @@ import {
   TRENDS_RESPONSE
 } from "../src/features/school-profile/testData";
 
+const PREMIUM_SESSION_RESPONSE = {
+  state: "authenticated",
+  user: {
+    id: "1a8538b9-3099-4ee6-b14b-e8cb4a7af5ca",
+    email: "person@example.com",
+  },
+  expires_at: "2026-03-21T10:00:00Z",
+  anonymous_reason: null,
+  account_access_state: "premium",
+  capability_keys: [
+    "premium_ai_analyst",
+    "premium_comparison",
+    "premium_neighbourhood",
+  ],
+  access_epoch:
+    "premium:premium_ai_analyst,premium_comparison,premium_neighbourhood",
+};
+
 const mockSearchResponse = {
   query: {
     postcode: "SW1A 1AA",
@@ -96,6 +114,14 @@ async function registerCompareRoutes(page: Page): Promise<void> {
       highAge: 18
     })
   } as const;
+
+  await page.route("**/api/v1/session", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(PREMIUM_SESSION_RESPONSE)
+    });
+  });
 
   await page.route("**/api/v1/schools?**", async (route) => {
     await route.fulfill({
@@ -211,7 +237,7 @@ test("profile entry points can build and open compare", async ({ page }) => {
 
   await gotoRoute(page, "/schools/200002");
   await page.getByRole("button", { name: "Add to compare" }).click();
-  await page.getByRole("link", { name: /Compare 2\/4 selected/ }).click();
+  await page.getByRole("link", { name: "Open compare" }).click();
 
   await expect(
     page.getByRole("heading", { name: "Compare schools side by side" })

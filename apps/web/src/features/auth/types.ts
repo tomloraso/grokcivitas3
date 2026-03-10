@@ -10,6 +10,9 @@ export interface AuthSession {
   user: AuthUser | null;
   expiresAt: string | null;
   anonymousReason: SessionResponse["anonymous_reason"];
+  accountAccessState: SessionResponse["account_access_state"];
+  capabilityKeys: string[];
+  accessEpoch: string;
 }
 
 export const ANONYMOUS_SESSION: AuthSession = {
@@ -17,6 +20,9 @@ export const ANONYMOUS_SESSION: AuthSession = {
   user: null,
   expiresAt: null,
   anonymousReason: "missing",
+  accountAccessState: "anonymous",
+  capabilityKeys: [],
+  accessEpoch: "anonymous:none",
 };
 
 export function mapSessionResponse(session: SessionResponse): AuthSession {
@@ -30,5 +36,8 @@ export function mapSessionResponse(session: SessionResponse): AuthSession {
       : null,
     expiresAt: session.expires_at,
     anonymousReason: session.anonymous_reason,
+    accountAccessState: session.account_access_state,
+    capabilityKeys: [...session.capability_keys],
+    accessEpoch: session.access_epoch,
   };
 }

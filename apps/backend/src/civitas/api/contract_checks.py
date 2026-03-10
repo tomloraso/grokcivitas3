@@ -6,7 +6,7 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
     {
         "school",
         "overview_text",
-        "analyst_text",
+        "analyst",
         "demographics_latest",
         "attendance_latest",
         "behaviour_latest",
@@ -15,12 +15,12 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "performance",
         "ofsted_latest",
         "ofsted_timeline",
-        "area_context",
+        "neighbourhood",
         "benchmarks",
         "completeness",
     }
 )
-REQUIRED_SCHOOL_COMPARE_PROPERTIES = frozenset({"schools", "sections"})
+REQUIRED_SCHOOL_COMPARE_PROPERTIES = frozenset({"access", "schools", "sections"})
 REQUIRED_SCHOOL_COMPARE_SECTION_PROPERTIES = frozenset({"key", "label", "rows"})
 REQUIRED_SCHOOL_COMPARE_ROW_PROPERTIES = frozenset({"metric_key", "label", "unit", "cells"})
 REQUIRED_SCHOOLS_SEARCH_PROPERTIES = frozenset({"query", "center", "count", "schools"})

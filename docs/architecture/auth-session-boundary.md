@@ -15,9 +15,11 @@ Detailed setup and operator steps still live in:
 
 - The external provider verifies the upstream user identity.
 - Civitas owns `UserAccount`, `AuthIdentity`, `AuthAttempt`, and `AppSession`.
+- The access slice owns entitlement and capability evaluation.
 - The browser talks only to Civitas auth routes.
 - The web app does not import provider SDKs or store provider session state.
 - Provider-specific behavior stays in backend infrastructure, bootstrap, and configuration.
+- `/api/v1/session` remains auth-owned, but the API response now composes lightweight access metadata from the access slice for shell rendering and cache invalidation.
 
 ## Public Route Contract
 
@@ -65,6 +67,7 @@ Because of that:
 
 - The app shell loads `GET /api/v1/session`.
 - The backend resolves the current user from the Civitas session cookie only.
+- The auth route then composes the current `account_access_state`, `capability_keys`, and `access_epoch` from the access slice.
 - Missing, invalid, expired, revoked, or signed-out sessions resolve to the anonymous contract.
 
 ### 4. Sign-out

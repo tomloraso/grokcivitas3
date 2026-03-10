@@ -50,8 +50,22 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
   },
   overview_text:
     "Camden Bridge Primary School is an open academy in Camden serving pupils aged 4 to 11. The latest published profile shows a mixed intake, nursery provision, and a setting in an urban major conurbation. Recent demographics indicate moderate disadvantage and SEND levels, with a relatively low EHCP share and a modest proportion of pupils with English as an additional language. Attendance is strong against national patterns, while behaviour measures remain low. The latest Ofsted outcome is Good, and the school sits in a more deprived local area by IMD decile, which provides useful context for its published outcomes. Overall, the current dataset describes a mainstream primary school with stable profile indicators, a clear local catchment, and a broadly balanced intake.",
-  analyst_text:
-    "The published profile points to a school with more stability than volatility across the current evidence base. Demographic measures suggest a mixed but not extreme level of disadvantage, while attendance remains strong and behaviour indicators stay low in the latest available year. Ofsted and the broader profile appear aligned rather than contradictory, which reduces the sense of a major unresolved quality gap in the current dataset. The deprivation context is still relevant, but the school's published indicators suggest it is operating with reasonable consistency against that backdrop.",
+  analyst: {
+    access: {
+      state: "available",
+      capability_key: "premium_ai_analyst",
+      reason_code: null,
+      product_codes: [],
+      requires_auth: false,
+      requires_purchase: false,
+      school_name: null,
+    },
+    text:
+      "The published profile points to a school with more stability than volatility across the current evidence base. Demographic measures suggest a mixed but not extreme level of disadvantage, while attendance remains strong and behaviour indicators stay low in the latest available year. Ofsted and the broader profile appear aligned rather than contradictory, which reduces the sense of a major unresolved quality gap in the current dataset. The deprivation context is still relevant, but the school's published indicators suggest it is operating with reasonable consistency against that backdrop.",
+    teaser_text: null,
+    disclaimer:
+      "This analyst view is AI-generated from public government data. It highlights patterns in the published evidence, but it is not official advice or a recommendation.",
+  },
   demographics_latest: {
     academic_year: "2024/25",
     disadvantaged_pct: 17.2,
@@ -250,110 +264,122 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
       events_count: 9
     }
   },
-  area_context: {
-    deprivation: {
-      lsoa_code: "E01004736",
-      imd_score: 22.4,
-      imd_rank: 10234,
-      imd_decile: 3,
-      idaci_score: 0.241,
-      idaci_decile: 2,
-      income_score: 0.19,
-      income_rank: 9500,
-      income_decile: 3,
-      employment_score: 0.13,
-      employment_rank: 10100,
-      employment_decile: 4,
-      education_score: 12.5,
-      education_rank: 8800,
-      education_decile: 3,
-      health_score: 0.56,
-      health_rank: 9900,
-      health_decile: 4,
-      crime_score: 0.44,
-      crime_rank: 7600,
-      crime_decile: 3,
-      barriers_score: 24.3,
-      barriers_rank: 7200,
-      barriers_decile: 3,
-      living_environment_score: 30.1,
-      living_environment_rank: 6800,
-      living_environment_decile: 2,
-      population_total: 1198,
-      local_authority_district_code: "E09000007",
-      local_authority_district_name: "Camden",
-      source_release: "IoD2025"
+  neighbourhood: {
+    access: {
+      state: "available",
+      capability_key: "premium_neighbourhood",
+      reason_code: null,
+      product_codes: [],
+      requires_auth: false,
+      requires_purchase: false,
+      school_name: null,
     },
-    crime: {
-      radius_miles: 1.0,
-      latest_month: "2026-01",
-      total_incidents: 486,
-      population_denominator: 1198,
-      incidents_per_1000: 405.7,
-      annual_incidents_per_1000: [
-        {
-          year: 2024,
-          total_incidents: 5200,
-          incidents_per_1000: 4339.0
-        },
-        {
-          year: 2025,
-          total_incidents: 4910,
-          incidents_per_1000: 4098.5
-        },
-        {
-          year: 2026,
-          total_incidents: 486,
-          incidents_per_1000: 405.7
-        }
-      ],
-      categories: [
-        {
-          category: "Violent Crime",
-          incident_count: 132
-        },
-        {
-          category: "Anti-social Behaviour",
-          incident_count: 97
-        }
-      ]
+    area_context: {
+      deprivation: {
+        lsoa_code: "E01004736",
+        imd_score: 22.4,
+        imd_rank: 10234,
+        imd_decile: 3,
+        idaci_score: 0.241,
+        idaci_decile: 2,
+        income_score: 0.19,
+        income_rank: 9500,
+        income_decile: 3,
+        employment_score: 0.13,
+        employment_rank: 10100,
+        employment_decile: 4,
+        education_score: 12.5,
+        education_rank: 8800,
+        education_decile: 3,
+        health_score: 0.56,
+        health_rank: 9900,
+        health_decile: 4,
+        crime_score: 0.44,
+        crime_rank: 7600,
+        crime_decile: 3,
+        barriers_score: 24.3,
+        barriers_rank: 7200,
+        barriers_decile: 3,
+        living_environment_score: 30.1,
+        living_environment_rank: 6800,
+        living_environment_decile: 2,
+        population_total: 1198,
+        local_authority_district_code: "E09000007",
+        local_authority_district_name: "Camden",
+        source_release: "IoD2025"
+      },
+      crime: {
+        radius_miles: 1.0,
+        latest_month: "2026-01",
+        total_incidents: 486,
+        population_denominator: 1198,
+        incidents_per_1000: 405.7,
+        annual_incidents_per_1000: [
+          {
+            year: 2024,
+            total_incidents: 5200,
+            incidents_per_1000: 4339.0
+          },
+          {
+            year: 2025,
+            total_incidents: 4910,
+            incidents_per_1000: 4098.5
+          },
+          {
+            year: 2026,
+            total_incidents: 486,
+            incidents_per_1000: 405.7
+          }
+        ],
+        categories: [
+          {
+            category: "Violent Crime",
+            incident_count: 132
+          },
+          {
+            category: "Anti-social Behaviour",
+            incident_count: 97
+          }
+        ]
+      },
+      house_prices: {
+        area_code: "E09000007",
+        area_name: "Camden",
+        latest_month: "2025-12",
+        average_price: 783812,
+        annual_change_pct: -11.1,
+        monthly_change_pct: -1.1,
+        three_year_change_pct: -8.98,
+        trend: [
+          {
+            month: "2025-10",
+            average_price: 831422,
+            annual_change_pct: -2.5,
+            monthly_change_pct: -4.7
+          },
+          {
+            month: "2025-11",
+            average_price: 792240,
+            annual_change_pct: -8.8,
+            monthly_change_pct: -4.7
+          },
+          {
+            month: "2025-12",
+            average_price: 783812,
+            annual_change_pct: -11.1,
+            monthly_change_pct: -1.1
+          }
+        ]
+      },
+      coverage: {
+        has_deprivation: true,
+        has_crime: true,
+        crime_months_available: 36,
+        has_house_prices: true,
+        house_price_months_available: 372
+      }
     },
-    house_prices: {
-      area_code: "E09000007",
-      area_name: "Camden",
-      latest_month: "2025-12",
-      average_price: 783812,
-      annual_change_pct: -11.1,
-      monthly_change_pct: -1.1,
-      three_year_change_pct: -8.98,
-      trend: [
-        {
-          month: "2025-10",
-          average_price: 831422,
-          annual_change_pct: -2.5,
-          monthly_change_pct: -4.7
-        },
-        {
-          month: "2025-11",
-          average_price: 792240,
-          annual_change_pct: -8.8,
-          monthly_change_pct: -4.7
-        },
-        {
-          month: "2025-12",
-          average_price: 783812,
-          annual_change_pct: -11.1,
-          monthly_change_pct: -1.1
-        }
-      ]
-    },
-    coverage: {
-      has_deprivation: true,
-      has_crime: true,
-      crime_months_available: 36,
-      has_house_prices: true,
-      house_price_months_available: 372
-    }
+    teaser_text: null
   },
   benchmarks: {
     metrics: [

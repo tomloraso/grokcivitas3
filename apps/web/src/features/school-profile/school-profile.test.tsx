@@ -11,6 +11,8 @@ import {
 import { ThemeProvider } from "../../app/providers/ThemeProvider";
 import { ToastProvider } from "../../components/ui/Toast";
 import { TooltipProvider } from "../../components/ui/Tooltip";
+import { AuthProvider } from "../auth/AuthProvider";
+import { ANONYMOUS_SESSION } from "../auth/types";
 import { CompareSelectionProvider } from "../../shared/context/CompareSelectionContext";
 import { SearchContextProvider } from "../../shared/context/SearchContext";
 import { runA11yAudit } from "../../test/accessibility";
@@ -44,15 +46,17 @@ function renderProfileAtUrn(urn: string) {
 
   return render(
     <ThemeProvider>
-      <SearchContextProvider>
-        <CompareSelectionProvider>
-          <TooltipProvider>
-            <ToastProvider>
-              <RouterProvider router={router} />
-            </ToastProvider>
-          </TooltipProvider>
-        </CompareSelectionProvider>
-      </SearchContextProvider>
+      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+        <SearchContextProvider>
+          <CompareSelectionProvider>
+            <TooltipProvider>
+              <ToastProvider>
+                <RouterProvider router={router} />
+              </ToastProvider>
+            </TooltipProvider>
+          </CompareSelectionProvider>
+        </SearchContextProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
@@ -152,6 +156,46 @@ describe("SchoolProfileFeature", () => {
 
     expect(await screen.findByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+  });
+
+  it("renders premium preview gates when analyst and neighbourhood data are locked", async () => {
+    const lockedProfile = structuredClone(PROFILE_RESPONSE);
+    lockedProfile.analyst = {
+      access: {
+        state: "locked",
+        capability_key: "premium_ai_analyst",
+        reason_code: "premium_capability_missing",
+        product_codes: ["premium_launch"],
+        requires_auth: false,
+        requires_purchase: true,
+        school_name: "Camden Bridge Primary School",
+      },
+      text: null,
+      teaser_text: "The published profile points to a school with more stability than volatility.",
+      disclaimer: PROFILE_RESPONSE.analyst.disclaimer,
+    };
+    lockedProfile.neighbourhood = {
+      access: {
+        state: "locked",
+        capability_key: "premium_neighbourhood",
+        reason_code: "premium_capability_missing",
+        product_codes: ["premium_launch"],
+        requires_auth: false,
+        requires_purchase: true,
+        school_name: "Camden Bridge Primary School",
+      },
+      area_context: null,
+      teaser_text: "Premium neighbourhood context is available for Camden Bridge Primary School.",
+    };
+    profileMock.mockResolvedValueOnce(lockedProfile);
+
+    renderProfileAtUrn("100001");
+
+    expect(
+      await screen.findByText(/Unlock the full analyst view for Camden Bridge Primary School/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Premium neighbourhood context is available/i)).toBeInTheDocument();
+    expect(screen.queryByText("Average Price")).not.toBeInTheDocument();
   });
 
   it(

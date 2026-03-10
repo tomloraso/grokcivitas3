@@ -1,4 +1,5 @@
 import type {
+  AccountAccessResponse,
   BillingPortalSessionCreateRequest,
   BillingPortalSessionCreateResponse,
   BillingProductsResponse,
@@ -34,6 +35,7 @@ interface CacheEntry {
 
 const responseCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<unknown>>();
+let currentAccessEpoch = "anonymous:none";
 
 interface StartSignInInput {
   email: string;
@@ -71,6 +73,10 @@ function cacheTtlForRequest(url: string, init?: RequestInit): number | null {
   return null;
 }
 
+function isAccessSensitiveRequest(url: string): boolean {
+  return SCHOOL_COMPARE_PATH_RE.test(url) || SCHOOL_PROFILE_PATH_RE.test(url);
+}
+
 function readFromCache<T>(key: string): T | null {
   const entry = responseCache.get(key);
   if (!entry) {
@@ -106,7 +112,10 @@ function writeToCache(key: string, value: unknown, ttlMs: number): void {
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const cacheTtlMs = cacheTtlForRequest(url, init);
-  const cacheKey = `${normalizeMethod(init)}:${url}`;
+  const accessScope = isAccessSensitiveRequest(url)
+    ? `:access:${currentAccessEpoch}`
+    : "";
+  const cacheKey = `${normalizeMethod(init)}:${url}${accessScope}`;
 
   if (cacheTtlMs !== null) {
     const cached = readFromCache<T>(cacheKey);
@@ -177,9 +186,17 @@ export function __resetApiRequestCacheForTests(): void {
   resetApiRequestCache();
 }
 
+export function __setApiAccessEpochForTests(accessEpoch: string): void {
+  setApiAccessEpoch(accessEpoch);
+}
+
 export function resetApiRequestCache(): void {
   responseCache.clear();
   inFlightRequests.clear();
+}
+
+export function setApiAccessEpoch(accessEpoch: string): void {
+  currentAccessEpoch = accessEpoch.trim() || "anonymous:none";
 }
 
 export async function startSignIn(
@@ -202,6 +219,10 @@ export async function signOut(): Promise<SessionResponse> {
   return request<SessionResponse>("/api/v1/auth/signout", {
     method: "POST"
   });
+}
+
+export async function getAccountAccess(): Promise<AccountAccessResponse> {
+  return request<AccountAccessResponse>("/api/v1/account/access");
 }
 
 export async function listBillingProducts(): Promise<BillingProductsResponse> {

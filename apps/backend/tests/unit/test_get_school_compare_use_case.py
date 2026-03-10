@@ -7,6 +7,7 @@ from civitas.application.school_compare.errors import (
     SchoolCompareNotFoundError,
 )
 from civitas.application.school_compare.use_cases import GetSchoolCompareUseCase
+from civitas.domain.access.models import AccessDecision
 from civitas.domain.school_profiles.models import (
     SchoolAreaContext,
     SchoolAreaContextCoverage,
@@ -53,6 +54,16 @@ class FakeSchoolTrendsRepository:
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         self.calls.append(urn)
         return self._benchmarks.get(urn)
+
+
+class FakeEvaluateAccessUseCase:
+    def __init__(self, decision: AccessDecision) -> None:
+        self._decision = decision
+        self.calls: list[tuple[str, object | None]] = []
+
+    def execute(self, *, requirement_key: str, user_id: object | None, allow_preview: bool = True):
+        self.calls.append((requirement_key, user_id))
+        return self._decision
 
 
 def _section(
@@ -594,6 +605,8 @@ def test_get_school_compare_returns_aligned_rows_in_request_order() -> None:
 
     result = use_case.execute(urns="200002, 100001")
 
+    assert result.access.state == "available"
+    assert result.access.capability_key == "premium_comparison"
     assert [school.urn for school in result.schools] == ["200002", "100001"]
     assert [section.key for section in result.sections] == [
         "inspection",
@@ -672,12 +685,45 @@ def test_get_school_compare_hides_ks2_rows_when_no_school_publishes_ks2_data() -
 
     result = use_case.execute(urns="200002,300003")
 
+    assert result.access.state == "available"
     performance_row_keys = [
         row.metric_key
         for row in next(section for section in result.sections if section.key == "performance").rows
     ]
     assert "ks2_reading_expected_pct" not in performance_row_keys
     assert "attainment8_average" in performance_row_keys
+
+
+def test_get_school_compare_returns_locked_payload_without_metric_sections() -> None:
+    evaluate_access_use_case = FakeEvaluateAccessUseCase(
+        AccessDecision(
+            requirement_key="school_compare.core",
+            access_level="preview_only",
+            section_state="locked",
+            capability_key="premium_comparison",
+            reason_code="anonymous_user",
+            available_product_codes=("premium_launch",),
+            requires_auth=True,
+            requires_purchase=False,
+        )
+    )
+    use_case = GetSchoolCompareUseCase(
+        school_profile_repository=FakeSchoolProfileRepository(
+            {
+                "100001": _primary_profile(),
+                "200002": _secondary_profile(),
+            }
+        ),
+        school_trends_repository=FakeSchoolTrendsRepository({}),
+        evaluate_access_use_case=evaluate_access_use_case,
+    )
+
+    result = use_case.execute(urns="100001,200002")
+
+    assert result.access.state == "locked"
+    assert result.access.product_codes == ("premium_launch",)
+    assert [school.urn for school in result.schools] == ["100001", "200002"]
+    assert result.sections == ()
 
 
 def test_get_school_compare_rejects_invalid_parameters() -> None:

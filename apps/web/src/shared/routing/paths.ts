@@ -12,6 +12,7 @@ import {
  */
 export const paths = {
   home: "/",
+  account: "/account",
   homeSearch: ({
     view = "map",
     resultsPhases = [],
@@ -39,6 +40,28 @@ export const paths = {
 
     const params = new URLSearchParams({ returnTo });
     return `/sign-in?${params.toString()}` as const;
+  },
+  upgrade: ({
+    capability,
+    product,
+    returnTo,
+  }: {
+    capability?: string;
+    product?: string;
+    returnTo?: string | null;
+  } = {}) => {
+    const params = new URLSearchParams();
+    if (capability) {
+      params.set("capability", capability);
+    }
+    if (product) {
+      params.set("product", product);
+    }
+    if (returnTo) {
+      params.set("returnTo", returnTo);
+    }
+    const query = params.toString();
+    return query ? (`/account/upgrade?${query}` as const) : "/account/upgrade";
   },
   compare: (urns: string[] = []) =>
     urns.length > 0

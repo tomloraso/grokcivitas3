@@ -16,7 +16,7 @@ interface ProfileHeaderProps {
   ofsted: OfstedVM | null;
   ofstedCompleteness: SectionCompletenessVM;
   demographics: DemographicsVM | null;
-  areaContext: AreaContextVM;
+  areaContext: AreaContextVM | null;
   actions?: ReactNode;
 }
 
@@ -257,8 +257,7 @@ export function ProfileHeader({
         }
       : null;
 
-  const hasSignals =
-    ofsted || areaContext.deprivation || needSignal;
+  const hasSignals = ofsted || areaContext?.deprivation || needSignal;
 
   return (
     <header className="space-y-6">
@@ -314,16 +313,16 @@ export function ProfileHeader({
             {ofsted ? <OfstedSignal ofsted={ofsted} /> : null}
 
             {/* Vertical divider between signals */}
-            {ofsted && (areaContext.deprivation || needSignal) ? (
+            {ofsted && (areaContext?.deprivation || needSignal) ? (
               <div className="hidden h-16 w-px self-center bg-border-subtle/60 sm:block" aria-hidden />
             ) : null}
 
-            {areaContext.deprivation ? (
+            {areaContext?.deprivation ? (
               <MiniDeprivationGauge decile={areaContext.deprivation.imdDecile} />
             ) : null}
 
             {/* Vertical divider */}
-            {areaContext.deprivation && needSignal ? (
+            {areaContext?.deprivation && needSignal ? (
               <div className="hidden h-16 w-px self-center bg-border-subtle/60 sm:block" aria-hidden />
             ) : null}
 

@@ -399,6 +399,7 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
         postcode_context_resolver=postcode_resolver(),
         school_trends_repository=school_trends_repository(),
         summary_repository=summary_repository(),
+        evaluate_access_use_case=evaluate_access_use_case(),
     )
 
 
@@ -406,6 +407,7 @@ def get_school_compare_use_case() -> GetSchoolCompareUseCase:
     return GetSchoolCompareUseCase(
         school_profile_repository=school_profile_repository(),
         school_trends_repository=school_trends_repository(),
+        evaluate_access_use_case=evaluate_access_use_case(),
     )
 
 

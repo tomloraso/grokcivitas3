@@ -1,4 +1,4 @@
-import { Building2, GraduationCap, MapPin } from "lucide-react";
+import { Building2, GraduationCap, LockKeyhole, MapPin } from "lucide-react";
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import {
   Link,
@@ -18,10 +18,12 @@ import { Card, Panel } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
+import { useAuth } from "../auth/useAuth";
 import type { CompareSelectionItem } from "../../shared/context/CompareSelectionContext";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { readCompareUrlState } from "../../shared/routing/compareUrns";
 import { paths } from "../../shared/routing/paths";
+import { buildAccessActionHref, getPremiumPaywallCopy } from "../premium-access/copy";
 import { mapCompareToVM } from "./mappers/compareMapper";
 import type { CompareCellVM, CompareSchoolColumnVM } from "./types";
 
@@ -70,6 +72,7 @@ export function SchoolCompareFeature(): JSX.Element {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { session } = useAuth();
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const [reloadToken, bumpReloadToken] = useReducer(
     (value: number) => value + 1,
@@ -196,7 +199,7 @@ export function SchoolCompareFeature(): JSX.Element {
     return () => {
       requestSeqRef.current += 1;
     };
-  }, [effectiveUrns, reloadToken, replaceSchools]);
+  }, [effectiveUrns, reloadToken, replaceSchools, session.accessEpoch]);
 
   const fallbackSchools = useMemo(
     () =>
@@ -339,17 +342,76 @@ export function SchoolCompareFeature(): JSX.Element {
             }}
           />
 
-          {compareVm.sections.map((section) => (
-            <CompareSectionMatrix
-              key={section.key}
-              label={section.label}
-              schools={compareVm.schools}
-              rows={section.rows}
+          {compareVm.access.state === "locked" ? (
+            <CompareLockedState
+              compareVm={compareVm}
+              currentHref={`${location.pathname}${location.search}`}
             />
-          ))}
+          ) : (
+            compareVm.sections.map((section) => (
+              <CompareSectionMatrix
+                key={section.key}
+                label={section.label}
+                schools={compareVm.schools}
+                rows={section.rows}
+              />
+            ))
+          )}
         </div>
       ) : null}
     </PageContainer>
+  );
+}
+
+function CompareLockedState({
+  compareVm,
+  currentHref,
+}: {
+  compareVm: NonNullable<ReturnType<typeof mapCompareToVM>>;
+  currentHref: string;
+}): JSX.Element {
+  const copy = getPremiumPaywallCopy({
+    capabilityKey: compareVm.access.capabilityKey,
+    schoolName: null,
+    requiresAuth: compareVm.access.requiresAuth,
+  });
+  const actionHref = buildAccessActionHref({
+    access: compareVm.access,
+    returnTo: currentHref,
+  });
+
+  return (
+    <Panel className="space-y-5 border-brand/30 bg-brand/5">
+      <div className="space-y-2">
+        <p className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-brand">
+          <LockKeyhole className="h-3.5 w-3.5" aria-hidden />
+          Premium compare
+        </p>
+        <h2 className="text-xl font-semibold text-primary">{copy.title}</h2>
+        <p className="max-w-3xl text-sm text-secondary">{copy.description}</p>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        {compareVm.schools.map((school) => (
+          <Card key={school.urn} className="border-brand/20 bg-surface/80">
+            <p className="font-mono text-xs text-disabled">URN {school.urn}</p>
+            <p className="mt-1 text-base font-semibold text-primary">{school.name}</p>
+            <p className="mt-2 text-sm text-secondary">
+              {school.phase} · {school.type}
+            </p>
+          </Card>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Button asChild variant="primary">
+          <Link to={actionHref}>{copy.buttonLabel}</Link>
+        </Button>
+        <Button asChild variant="secondary">
+          <Link to={paths.home}>Back to search</Link>
+        </Button>
+      </div>
+    </Panel>
   );
 }
 

@@ -27,9 +27,18 @@ export type BillingPortalSessionCreateRequest =
 export type BillingPortalSessionCreateResponse =
   components["schemas"]["BillingPortalSessionCreateResponse"];
 
+export type AccountAccessResponse =
+  components["schemas"]["AccountAccessResponse"];
+
+export type AccountEntitlementResponse =
+  components["schemas"]["AccountEntitlementResponse"];
+
 export type SessionResponse = components["schemas"]["SessionResponse"];
 
 export type SessionUser = components["schemas"]["SessionUserResponse"];
+
+export type SectionAccessResponse =
+  components["schemas"]["SectionAccessResponse"];
 
 export type Task = components["schemas"]["TaskResponse"];
 
@@ -100,6 +109,12 @@ export type SchoolProfileAreaContext =
 
 export type SchoolProfileAreaHousePrices =
   components["schemas"]["SchoolProfileAreaHousePricesResponse"];
+
+export type SchoolProfileAnalystSection =
+  components["schemas"]["SchoolProfileAnalystSectionResponse"];
+
+export type SchoolProfileNeighbourhoodSection =
+  components["schemas"]["SchoolProfileNeighbourhoodSectionResponse"];
 
 export type SchoolCompareResponse =
   components["schemas"]["SchoolCompareResponse"];

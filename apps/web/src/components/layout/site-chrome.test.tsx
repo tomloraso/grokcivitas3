@@ -25,6 +25,33 @@ describe("SiteHeader", () => {
     const results = await runA11yAudit(container);
     expect(results).toHaveNoViolations();
   });
+
+  it("renders premium status in the account pill", () => {
+    renderWithProviders(
+      <SiteHeader
+        isAuthenticated
+        accountEmail="person@example.com"
+        accountAccessState="premium"
+      />,
+      {
+        initialSession: {
+          state: "authenticated",
+          user: {
+            id: "a32d5bf0-0ec5-4dc9-bd40-636264a6fb96",
+            email: "person@example.com",
+          },
+          expiresAt: null,
+          anonymousReason: null,
+          accountAccessState: "premium",
+          capabilityKeys: ["premium_comparison"],
+          accessEpoch: "premium:premium_comparison",
+        },
+      }
+    );
+
+    expect(screen.getByText("Premium")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute("href", "/account");
+  });
 });
 
 describe("SiteFooter", () => {

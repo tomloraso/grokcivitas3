@@ -8,18 +8,23 @@ import { ANONYMOUS_SESSION } from "../features/auth/types";
 interface ProviderOptions extends Omit<RenderOptions, "wrapper"> {
   /** Initial route entries for MemoryRouter. Defaults to ["/"] */
   initialEntries?: string[];
+  initialSession?: typeof ANONYMOUS_SESSION;
 }
 
 export function renderWithProviders(
   ui: ReactElement,
   options?: ProviderOptions
 ): RenderResult {
-  const { initialEntries = ["/"], ...renderOptions } = options ?? {};
+  const {
+    initialEntries = ["/"],
+    initialSession = ANONYMOUS_SESSION,
+    ...renderOptions
+  } = options ?? {};
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <ThemeProvider>
-        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+        <AuthProvider autoLoad={false} initialSession={initialSession}>
           <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
         </AuthProvider>
       </ThemeProvider>

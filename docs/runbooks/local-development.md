@@ -121,6 +121,28 @@ CIVITAS_AUTH_AUTH0_CONNECTION=email
 Use HTTPS origins for any browser-based Auth0 rehearsal so secure cookies and callback URLs match the managed-provider path.
 For managed environments, keep the public browser-facing `/api/v1/*` routes on the same origin path space the web app uses, even if the backend runs behind a separate upstream proxy target.
 
+## Premium billing configuration
+
+Premium billing is disabled by default in the committed local baseline:
+
+```bash
+CIVITAS_BILLING_ENABLED=false
+CIVITAS_BILLING_PROVIDER=stripe
+```
+
+When you need a local Stripe test-mode rehearsal, enable billing and provide the Stripe secrets:
+
+```bash
+CIVITAS_BILLING_ENABLED=true
+CIVITAS_BILLING_STRIPE_SECRET_KEY=<stripe-test-secret>
+CIVITAS_BILLING_STRIPE_WEBHOOK_SECRET=<stripe-test-webhook-secret>
+# Optional when your Stripe billing portal uses an explicit configuration
+# CIVITAS_BILLING_STRIPE_PORTAL_CONFIGURATION_ID=<portal-config-id>
+```
+
+The full premium staging checklist, webhook replay drill, and rollback notes live in
+[Premium Access Release Runbook](./premium-access-release.md).
+
 ## Daily commands
 
 ```bash

@@ -1,3 +1,4 @@
+from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.school_compare import (
     SchoolCompareBenchmarkResponse,
     SchoolCompareCellResponse,
@@ -11,6 +12,15 @@ from civitas.application.school_compare.dto import SchoolCompareResponseDto
 
 def to_school_compare_response(result: SchoolCompareResponseDto) -> SchoolCompareResponse:
     return SchoolCompareResponse(
+        access=SectionAccessResponse(
+            state=result.access.state,
+            capability_key=result.access.capability_key,
+            reason_code=result.access.reason_code,
+            product_codes=list(result.access.product_codes),
+            requires_auth=result.access.requires_auth,
+            requires_purchase=result.access.requires_purchase,
+            school_name=result.access.school_name,
+        ),
         schools=[
             SchoolCompareSchoolResponse(
                 urn=school.urn,

@@ -141,7 +141,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
         {
             "school": {},
             "overview_text": {},
-            "analyst_text": {},
+            "analyst": {},
             "demographics_latest": {},
             "attendance_latest": {},
             "behaviour_latest": {},
@@ -150,7 +150,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
             "performance": {},
             "ofsted_latest": {},
             "ofsted_timeline": {},
-            "area_context": {},
+            "neighbourhood": {},
             "benchmarks": {},
             "completeness": {},
         }
@@ -164,7 +164,7 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
         {
             "school": {},
             "overview_text": {},
-            "analyst_text": {},
+            "analyst": {},
             "demographics_latest": {},
             "ofsted_latest": {},
             "benchmarks": {},
@@ -176,7 +176,8 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
         RuntimeError,
         match=(
             "SchoolProfileResponse missing required properties: "
-            "area_context, attendance_latest, behaviour_latest, leadership_snapshot, "
+            "attendance_latest, behaviour_latest, leadership_snapshot, "
+            "neighbourhood, "
             "ofsted_timeline, performance, workforce_latest"
         ),
     ):
@@ -188,7 +189,7 @@ def test_validate_school_profile_response_contract_does_not_require_required_lis
         {
             "school": {},
             "overview_text": {},
-            "analyst_text": {},
+            "analyst": {},
             "demographics_latest": {},
             "attendance_latest": {},
             "behaviour_latest": {},
@@ -197,7 +198,7 @@ def test_validate_school_profile_response_contract_does_not_require_required_lis
             "performance": {},
             "ofsted_latest": {},
             "ofsted_timeline": {},
-            "area_context": {},
+            "neighbourhood": {},
             "benchmarks": {},
             "completeness": {},
         }
@@ -220,6 +221,7 @@ def test_validate_school_profile_response_contract_rejects_missing_schema() -> N
 def test_validate_school_compare_response_contract_accepts_required_properties() -> None:
     openapi_schema = _openapi_with_compare_properties(
         {
+            "access": {},
             "schools": {},
             "sections": {},
         }
@@ -231,6 +233,7 @@ def test_validate_school_compare_response_contract_accepts_required_properties()
 def test_validate_school_compare_response_contract_rejects_missing_properties() -> None:
     openapi_schema = _openapi_with_compare_properties(
         {
+            "access": {},
             "schools": {},
         }
     )
@@ -245,11 +248,15 @@ def test_validate_school_compare_response_contract_rejects_missing_properties() 
 def test_validate_school_compare_response_contract_rejects_missing_required_list_entries() -> None:
     openapi_schema = _openapi_with_compare_properties(
         {
+            "access": {},
             "schools": {},
             "sections": {},
         }
     )
-    openapi_schema["components"]["schemas"]["SchoolCompareResponse"]["required"] = ["schools"]
+    openapi_schema["components"]["schemas"]["SchoolCompareResponse"]["required"] = [
+        "access",
+        "schools",
+    ]
 
     with pytest.raises(
         RuntimeError,

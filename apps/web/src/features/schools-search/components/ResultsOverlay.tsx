@@ -9,6 +9,7 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../../components/ui/LoadingSkeleton";
 import { useToast } from "../../../components/ui/ToastContext";
+import { CompareActionButton } from "../../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../../shared/context/CompareSelectionContext";
 import { useIsMobile } from "../../../shared/hooks/useIsMobile";
 import {
@@ -536,15 +537,13 @@ export function ResultsOverlay({
               </div>
 
               <div className="flex items-center gap-2">
-                {items.length >= 2 ? (
-                  <Button asChild variant="secondary" size="sm">
-                    <Link to={paths.compare(items.map((item) => item.urn))}>Open compare</Link>
-                  </Button>
-                ) : (
-                  <Button type="button" variant="secondary" size="sm" disabled>
-                    Compare {items.length}/4
-                  </Button>
-                )}
+                <CompareActionButton
+                  urns={items.map((item) => item.urn)}
+                  label={items.length >= 2 ? "Open compare" : `Compare ${items.length}/4`}
+                  lockedLabel="Unlock compare"
+                  variant="secondary"
+                  size="sm"
+                />
                 <Button type="button" variant="ghost" size="sm" onClick={onClose} aria-label="Back to map">
                   <X className="h-4 w-4" aria-hidden />
                 </Button>

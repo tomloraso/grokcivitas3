@@ -1,8 +1,11 @@
 import type {
   SchoolProfileResponse,
+  SchoolProfileAnalystSection,
+  SchoolProfileNeighbourhoodSection,
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse
 } from "../../../api/types";
+import { mapSectionAccess } from "../../premium-access/mappers";
 import { mapCompletenessReasonToMessageKey } from "../../../shared/completeness";
 import {
   DEMOGRAPHICS_METRIC_KEYS,
@@ -39,6 +42,7 @@ import type {
   TrendsVM,
   UnsupportedMetricVM,
   AttendanceLatestVM,
+  AnalystSectionVM,
   WorkforceLatestVM
 } from "../types";
 
@@ -459,7 +463,9 @@ function mapPerformance(profile: SchoolProfileResponse): PerformanceVM | null {
 }
 
 function mapAreaDeprivationDomains(
-  deprivation: NonNullable<NonNullable<SchoolProfileResponse["area_context"]>["deprivation"]>
+  deprivation: NonNullable<
+    NonNullable<SchoolProfileNeighbourhoodSection["area_context"]>["deprivation"]
+  >
 ): AreaDeprivationDomainVM[] {
   return Object.entries(DEPRIVATION_DOMAIN_LABELS).map(([key, label]) => ({
     key,
@@ -470,8 +476,12 @@ function mapAreaDeprivationDomains(
   }));
 }
 
-function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
-  const area = profile.area_context;
+function mapAreaContext(
+  area: SchoolProfileNeighbourhoodSection["area_context"]
+): AreaContextVM | null {
+  if (!area) {
+    return null;
+  }
 
   return {
     deprivation: area.deprivation
@@ -537,6 +547,27 @@ function mapAreaContext(profile: SchoolProfileResponse): AreaContextVM {
       hasHousePrices: area.coverage.has_house_prices,
       housePriceMonthsAvailable: area.coverage.house_price_months_available
     }
+  };
+}
+
+function mapAnalystSection(
+  analyst: SchoolProfileAnalystSection
+): AnalystSectionVM {
+  return {
+    access: mapSectionAccess(analyst.access),
+    text: toOptionalText(analyst.text),
+    teaserText: toOptionalText(analyst.teaser_text),
+    disclaimer: toOptionalText(analyst.disclaimer),
+  };
+}
+
+function mapNeighbourhoodSection(
+  neighbourhood: SchoolProfileNeighbourhoodSection
+) {
+  return {
+    access: mapSectionAccess(neighbourhood.access),
+    areaContext: mapAreaContext(neighbourhood.area_context),
+    teaserText: toOptionalText(neighbourhood.teaser_text),
   };
 }
 
@@ -785,7 +816,7 @@ export function mapProfileToVM(
   return {
     school: mapSchool(profile),
     overviewText: toOptionalText(profile.overview_text),
-    analystText: toOptionalText(profile.analyst_text),
+    analyst: mapAnalystSection(profile.analyst),
     demographics: mapDemographics(profile),
     attendance: mapAttendance(profile),
     behaviour: mapBehaviour(profile),
@@ -794,7 +825,7 @@ export function mapProfileToVM(
     performance: mapPerformance(profile),
     ofsted: mapOfsted(profile),
     ofstedTimeline: mapOfstedTimeline(profile),
-    areaContext: mapAreaContext(profile),
+    neighbourhood: mapNeighbourhoodSection(profile.neighbourhood),
     trends: mapTrends(trends),
     benchmarkDashboard: buildBenchmarkDashboard(profile, dashboard),
     completeness: mapCompleteness(profile, trends),

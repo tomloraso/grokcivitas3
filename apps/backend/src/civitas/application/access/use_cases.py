@@ -42,6 +42,10 @@ class GetCurrentAccountAccessUseCase:
                 state="anonymous",
                 user_id=None,
                 capability_keys=(),
+                access_epoch=_build_access_epoch(
+                    state="anonymous",
+                    capability_keys=(),
+                ),
                 entitlements=(),
             )
 
@@ -71,6 +75,10 @@ class GetCurrentAccountAccessUseCase:
             state=state,
             user_id=user_id,
             capability_keys=capability_keys,
+            access_epoch=_build_access_epoch(
+                state=state,
+                capability_keys=capability_keys,
+            ),
             entitlements=entitlement_dtos,
         )
 
@@ -220,3 +228,12 @@ def _current_access_state(
     if any(entitlement.effective_status(at=at) == "pending" for entitlement in entitlements):
         return "pending"
     return "free"
+
+
+def _build_access_epoch(
+    *,
+    state: AccountAccessState,
+    capability_keys: tuple[str, ...],
+) -> str:
+    capability_token = ",".join(capability_keys) if capability_keys else "none"
+    return f"{state}:{capability_token}"

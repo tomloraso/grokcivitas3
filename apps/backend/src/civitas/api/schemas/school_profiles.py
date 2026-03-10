@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from civitas.api.schemas.access import SectionAccessResponse
+
 
 class SchoolProfileSchoolResponse(BaseModel):
     urn: str
@@ -271,6 +273,13 @@ class SchoolProfileAreaContextResponse(BaseModel):
     coverage: SchoolProfileAreaContextCoverageResponse
 
 
+class SchoolProfileAnalystSectionResponse(BaseModel):
+    access: SectionAccessResponse
+    text: str | None
+    teaser_text: str | None
+    disclaimer: str | None
+
+
 class SchoolProfilePerformanceYearResponse(BaseModel):
     academic_year: str
     attainment8_average: float | None
@@ -315,6 +324,12 @@ class SchoolProfileBenchmarksResponse(BaseModel):
     metrics: list[SchoolProfileMetricBenchmarkResponse] = Field(default_factory=list)
 
 
+class SchoolProfileNeighbourhoodSectionResponse(BaseModel):
+    access: SectionAccessResponse
+    area_context: SchoolProfileAreaContextResponse | None
+    teaser_text: str | None
+
+
 class SchoolProfileSectionCompletenessResponse(BaseModel):
     status: Literal["available", "partial", "unavailable"]
     reason_code: (
@@ -357,7 +372,7 @@ class SchoolProfileCompletenessResponse(BaseModel):
 class SchoolProfileResponse(BaseModel):
     school: SchoolProfileSchoolResponse
     overview_text: str | None
-    analyst_text: str | None
+    analyst: SchoolProfileAnalystSectionResponse
     demographics_latest: SchoolProfileDemographicsLatestResponse | None
     attendance_latest: SchoolProfileAttendanceLatestResponse | None
     behaviour_latest: SchoolProfileBehaviourLatestResponse | None
@@ -366,7 +381,7 @@ class SchoolProfileResponse(BaseModel):
     performance: SchoolProfilePerformanceResponse | None
     ofsted_latest: SchoolProfileOfstedLatestResponse | None
     ofsted_timeline: SchoolProfileOfstedTimelineResponse
-    area_context: SchoolProfileAreaContextResponse
+    neighbourhood: SchoolProfileNeighbourhoodSectionResponse
     benchmarks: SchoolProfileBenchmarksResponse = Field(
         default_factory=SchoolProfileBenchmarksResponse
     )

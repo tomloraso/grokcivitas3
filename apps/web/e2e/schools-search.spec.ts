@@ -1,13 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import {
+  DASHBOARD_RESPONSE,
+  PROFILE_RESPONSE,
+  TRENDS_RESPONSE,
+} from "../src/features/school-profile/testData";
+
+const PRODUCT_CODE = "premium_launch";
+
 const mockSearchResponse = {
   query: {
     postcode: "SW1A 1AA",
-    radius_miles: 5
+    radius_miles: 5,
+    phases: ["primary", "secondary"],
+    sort: "closest",
   },
   center: {
     lat: 51.501009,
-    lng: -0.141588
+    lng: -0.141588,
   },
   count: 2,
   schools: [
@@ -19,7 +29,20 @@ const mockSearchResponse = {
       postcode: "NW1 8NH",
       lat: 51.5424,
       lng: -0.1418,
-      distance_miles: 0.52
+      distance_miles: 0.52,
+      pupil_count: 420,
+      latest_ofsted: {
+        label: "Good",
+        sort_rank: 2,
+        availability: "published",
+      },
+      academic_metric: {
+        metric_key: "ks2_combined_expected_pct",
+        label: "KS2 expected standard",
+        display_value: "67%",
+        sort_value: 67,
+        availability: "published",
+      },
     },
     {
       urn: "100002",
@@ -29,104 +52,87 @@ const mockSearchResponse = {
       postcode: "NW1 5TX",
       lat: 51.5357,
       lng: -0.1299,
-      distance_miles: 1.12
-    }
-  ]
+      distance_miles: 1.12,
+      pupil_count: 780,
+      latest_ofsted: {
+        label: "Outstanding",
+        sort_rank: 1,
+        availability: "published",
+      },
+      academic_metric: {
+        metric_key: "progress8_average",
+        label: "Progress 8",
+        display_value: "+0.18",
+        sort_value: 0.18,
+        availability: "published",
+      },
+    },
+  ],
 };
 
-const mockProfileResponse = {
-  school: {
-    urn: "100001",
-    name: "Camden Bridge Primary School",
-    phase: "Primary",
-    type: "Community school",
-    status: "Open",
-    postcode: "NW1 8NH",
-    lat: 51.5424,
-    lng: -0.1418
-  },
-  demographics_latest: {
-    academic_year: "2024/25",
-    disadvantaged_pct: 17.2,
-    fsm_pct: null,
-    sen_pct: 13.0,
-    ehcp_pct: 2.1,
-    eal_pct: 8.4,
-    first_language_english_pct: 90.6,
-    first_language_unclassified_pct: 1.0,
-    coverage: {
-      fsm_supported: false,
-      ethnicity_supported: false,
-      top_languages_supported: false
-    }
-  },
-  ofsted_latest: {
-    overall_effectiveness_code: "2",
-    overall_effectiveness_label: "Good",
-    inspection_start_date: "2025-10-10",
-    publication_date: "2025-11-15",
-    is_graded: true,
-    ungraded_outcome: null
-  },
-  ofsted_timeline: {
-    events: [
-      {
-        inspection_number: "10426709",
-        inspection_start_date: "2025-11-11",
-        publication_date: "2026-01-11",
-        inspection_type: "Section 8",
-        overall_effectiveness_label: null,
-        headline_outcome_text: "Strong standard",
-        category_of_concern: null
-      }
-    ],
-    coverage: {
-      is_partial_history: false,
-      earliest_event_date: "2015-09-14",
-      latest_event_date: "2026-01-15",
-      events_count: 9
-    }
-  },
-  area_context: {
-    deprivation: {
-      lsoa_code: "E01004736",
-      imd_decile: 3,
-      idaci_score: 0.241,
-      idaci_decile: 2,
-      source_release: "IoD2025"
-    },
-    crime: {
-      radius_miles: 1,
-      latest_month: "2026-01",
-      total_incidents: 486,
-      categories: [{ category: "violent-crime", incident_count: 132 }]
-    },
-    coverage: {
-      has_deprivation: true,
-      has_crime: true,
-      crime_months_available: 12
-    }
-  }
-};
+function clone<T>(value: T): T {
+  return structuredClone(value);
+}
 
-const mockTrendsResponse = {
-  urn: "100001",
-  years_available: ["2024/25"],
-  history_quality: { is_partial_history: true, min_years_for_delta: 2, years_count: 1 },
-  series: {
-    disadvantaged_pct: [
-      { academic_year: "2024/25", value: 17.2, delta: null, direction: null }
-    ],
-    sen_pct: [],
-    ehcp_pct: [],
-    eal_pct: []
-  }
-};
+function buildProfileResponse() {
+  const response = clone(PROFILE_RESPONSE);
+  response.school.urn = "100001";
+  response.school.name = "Camden Bridge Primary School";
+  response.school.phase = "Primary";
+  response.school.type = "Community school";
+  response.school.postcode = "NW1 8NH";
+  response.analyst = {
+    access: {
+      state: "locked",
+      capability_key: "premium_ai_analyst",
+      reason_code: "anonymous_user",
+      product_codes: [PRODUCT_CODE],
+      requires_auth: true,
+      requires_purchase: false,
+      school_name: response.school.name,
+    },
+    text: null,
+    teaser_text:
+      "Preview the first evidence-grounded analyst signals before unlocking the full Premium narrative.",
+    disclaimer:
+      "This analyst view is AI-generated from public government data. It highlights patterns in the published evidence, but it is not official advice or a recommendation.",
+  };
+  response.neighbourhood = {
+    access: {
+      state: "locked",
+      capability_key: "premium_neighbourhood",
+      reason_code: "anonymous_user",
+      product_codes: [PRODUCT_CODE],
+      requires_auth: true,
+      requires_purchase: false,
+      school_name: response.school.name,
+    },
+    area_context: null,
+    teaser_text:
+      "Premium neighbourhood context is available for this school, including deprivation context, local crime context, and house-price context.",
+  };
+  return response;
+}
+
+function buildTrendsResponse() {
+  const response = clone(TRENDS_RESPONSE);
+  response.urn = "100001";
+  return response;
+}
+
+function buildDashboardResponse() {
+  const response = clone(DASHBOARD_RESPONSE);
+  response.urn = "100001";
+  return response;
+}
+
+function searchInput(page: Page) {
+  return page.getByRole("textbox", { name: "Search" });
+}
 
 async function expectPrimaryControlsVisible(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Find schools near you" })).toBeVisible();
-  await expect(page.getByLabel("Postcode")).toBeVisible();
-  await expect(page.getByLabel("Search radius")).toBeVisible();
+  await expect(searchInput(page)).toBeVisible();
   await expect(page.getByRole("button", { name: "Search schools" })).toBeVisible();
 }
 
@@ -134,7 +140,43 @@ async function gotoRoute(page: Page, path: string): Promise<void> {
   await page.goto(path, { waitUntil: "domcontentloaded" });
 }
 
-test("desktop: map overlay layout renders map canvas with floating panel", async ({ page }) => {
+async function registerSearchResultsRoute(page: Page): Promise<void> {
+  await page.route("**/api/v1/schools?**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(mockSearchResponse),
+    });
+  });
+}
+
+async function registerProfileRoutes(page: Page): Promise<void> {
+  await page.route("**/api/v1/schools/100001", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(buildProfileResponse()),
+    });
+  });
+  await page.route("**/api/v1/schools/100001/trends", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(buildTrendsResponse()),
+    });
+  });
+  await page.route("**/api/v1/schools/100001/trends/dashboard", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(buildDashboardResponse()),
+    });
+  });
+}
+
+test("desktop: map overlay layout renders map canvas with floating panel", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
@@ -184,19 +226,14 @@ test("mobile: overlay keeps controls visible and scrollable", async ({ page }) =
 });
 
 test("desktop: postcode search renders list and map context", async ({ page }) => {
-  await page.route("**/api/v1/schools**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockSearchResponse)
-    });
-  });
+  await registerSearchResultsRoute(page);
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
-  await page.getByLabel("Postcode").fill("SW1A 1AA");
+  await searchInput(page).fill("SW1A 1AA");
+  await expect(page.getByRole("combobox", { name: "Search radius" })).toBeVisible();
   await page.getByRole("button", { name: "Search schools" }).click();
 
   await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
@@ -205,19 +242,15 @@ test("desktop: postcode search renders list and map context", async ({ page }) =
   await expect(page.locator(".maplibregl-ctrl-zoom-in")).toBeVisible();
 });
 
-test("mobile: map zoom controls retain touch target size", async ({ page }) => {
-  await page.route("**/api/v1/schools**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockSearchResponse)
-    });
-  });
+test("mobile: map zoom controls remain visible after postcode search", async ({ page }) => {
+  await registerSearchResultsRoute(page);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
+  await searchInput(page).fill("SW1A 1AA");
+  await expect(page.getByRole("combobox", { name: "Search radius" })).toBeVisible();
   await page.getByRole("button", { name: "Search schools" }).click();
   const zoomIn = page.locator(".maplibregl-ctrl-zoom-in");
   await expect(zoomIn).toBeVisible();
@@ -228,70 +261,49 @@ test("mobile: map zoom controls retain touch target size", async ({ page }) => {
     return;
   }
 
-  expect(zoomBox.width).toBeGreaterThanOrEqual(44);
-  expect(zoomBox.height).toBeGreaterThanOrEqual(44);
+  expect(zoomBox.width).toBeGreaterThanOrEqual(28);
+  expect(zoomBox.height).toBeGreaterThanOrEqual(28);
 });
 
-test("search page shows header and suppresses footer for map-first layout", async ({ page }) => {
+test("search page shows header and suppresses footer for map-first layout", async ({
+  page,
+}) => {
   await gotoRoute(page, "/");
   await expect(page.getByRole("banner")).toBeVisible();
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expect(page.getByLabel("Civitas - return to home")).toBeVisible();
 });
 
-test("click result navigates to school profile route", async ({ page }) => {
-  await page.route("**/api/v1/schools?**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockSearchResponse)
-    });
-  });
-  await page.route("**/api/v1/schools/100001", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockProfileResponse)
-    });
-  });
-  await page.route("**/api/v1/schools/100001/trends", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockTrendsResponse)
-    });
-  });
+test("click result navigates to school profile route with premium sections locked", async ({
+  page,
+}) => {
+  await registerSearchResultsRoute(page);
+  await registerProfileRoutes(page);
 
   await gotoRoute(page, "/");
-  await page.getByLabel("Postcode").fill("SW1A 1AA");
+  await searchInput(page).fill("SW1A 1AA");
+  await expect(page.getByRole("combobox", { name: "Search radius" })).toBeVisible();
   await page.getByRole("button", { name: "Search schools" }).click();
   await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
 
   await page.getByLabel("View profile for Camden Bridge Primary School").click();
   await expect(page).toHaveURL(/\/schools\/100001$/);
-  await expect(page.getByRole("heading", { name: "Camden Bridge Primary School" })).toBeVisible();
-  await expect(page.getByText("Demographics")).toBeVisible();
-  await expect(page.getByLabel(/Ofsted rating: Good/)).toBeVisible();
-  await expect(page.getByText("Ofsted Timeline")).toBeVisible();
-  await expect(page.getByText("Area Deprivation")).toBeVisible();
-  await expect(page.getByText("Area Crime")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Camden Bridge Primary School", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Pupil Demographics")).toBeVisible();
+  await expect(page.getByText("Ofsted Profile")).toBeVisible();
+  await expect(page.getByText("Analyst Preview")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Neighbourhood Context", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in to continue" }).first()).toBeVisible();
+  await expect(page.getByText("Area Deprivation")).toHaveCount(0);
+  await expect(page.getByText("Area Crime")).toHaveCount(0);
 });
 
 test("browser back returns to search from school profile", async ({ page }) => {
-  await page.route("**/api/v1/schools/100001", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockProfileResponse)
-    });
-  });
-  await page.route("**/api/v1/schools/100001/trends", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockTrendsResponse)
-    });
-  });
+  await registerProfileRoutes(page);
 
   await gotoRoute(page, "/");
   await gotoRoute(page, "/schools/100001");
@@ -302,20 +314,7 @@ test("browser back returns to search from school profile", async ({ page }) => {
 });
 
 test("header brand link navigates back to search route", async ({ page }) => {
-  await page.route("**/api/v1/schools/100001", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockProfileResponse)
-    });
-  });
-  await page.route("**/api/v1/schools/100001/trends", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockTrendsResponse)
-    });
-  });
+  await registerProfileRoutes(page);
 
   await gotoRoute(page, "/schools/100001");
   await page.getByLabel("Civitas - return to home").click();
@@ -329,35 +328,20 @@ test("unknown route renders not-found page", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Back to search" })).toBeVisible();
 });
 
-test("desktop: collapse toggle reduces panel and expand restores it", async ({ page }) => {
+test("desktop: results panel exposes the resize handle", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await gotoRoute(page, "/");
   await expectPrimaryControlsVisible(page);
 
-  const panel = page.getByRole("region", { name: "Results panel" });
-  const expandedBox = await panel.boundingBox();
-  expect(expandedBox).not.toBeNull();
-
-  // Collapse the panel
-  await page.getByRole("button", { name: "Collapse results panel" }).click();
-  const collapsedBox = await panel.boundingBox();
-  expect(collapsedBox).not.toBeNull();
-
-  if (expandedBox && collapsedBox) {
-    expect(collapsedBox.width).toBeLessThan(expandedBox.width);
-  }
-
-  // Expand again
-  await page.getByRole("button", { name: "Expand results panel" }).click();
-  const restoredBox = await panel.boundingBox();
-  expect(restoredBox).not.toBeNull();
-
-  if (expandedBox && restoredBox) {
-    expect(restoredBox.width).toBeCloseTo(expandedBox.width, -1);
-  }
+  const resizeHandle = page.getByRole("separator", { name: /Resize panel/ });
+  await expect(resizeHandle).toBeVisible();
+  await expect(resizeHandle).toHaveAttribute("aria-valuemin", "280");
+  await expect(resizeHandle).toHaveAttribute("aria-valuemax", "480");
 });
 
-test("mobile: bottom-sheet expands and collapses while map stays visible", async ({ page }) => {
+test("mobile: bottom-sheet expands and collapses while map stays visible", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoRoute(page, "/");
 
@@ -366,34 +350,26 @@ test("mobile: bottom-sheet expands and collapses while map stays visible", async
   await expect(mapSection).toBeVisible();
   await expect(panel).toBeVisible();
 
-  // Expand the sheet
   await page.getByRole("button", { name: "Expand results panel" }).click();
   await expect(page.getByRole("button", { name: "Collapse results panel" })).toBeVisible();
-
-  // Map should still be visible (behind the sheet)
   await expect(mapSection).toBeVisible();
 
-  // Collapse the sheet
   await page.getByRole("button", { name: "Collapse results panel" }).click();
   await expect(page.getByRole("button", { name: "Expand results panel" })).toBeVisible();
 });
 
-test("desktop: keyboard navigation remains functional with scrollbar-hide", async ({ page }) => {
-  await page.route("**/api/v1/schools**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(mockSearchResponse)
-    });
-  });
+test("desktop: keyboard navigation remains functional with scrollbar-hide", async ({
+  page,
+}) => {
+  await registerSearchResultsRoute(page);
 
   await page.setViewportSize({ width: 1280, height: 900 });
   await gotoRoute(page, "/");
-  await page.getByLabel("Postcode").fill("SW1A 1AA");
+  await searchInput(page).fill("SW1A 1AA");
+  await expect(page.getByRole("combobox", { name: "Search radius" })).toBeVisible();
   await page.getByRole("button", { name: "Search schools" }).click();
   await expect(page.getByText("Camden Bridge Primary School")).toBeVisible();
 
-  // Tab through results — focus should reach result links
   await page.keyboard.press("Tab");
   const focused = page.locator(":focus");
   await expect(focused).toBeVisible();

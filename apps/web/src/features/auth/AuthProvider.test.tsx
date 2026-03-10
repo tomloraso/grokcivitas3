@@ -63,12 +63,18 @@ describe("AuthProvider", () => {
       user: null,
       expires_at: null,
       anonymous_reason: "missing",
+      account_access_state: "anonymous",
+      capability_keys: [],
+      access_epoch: "anonymous:none",
     });
     signOutMock.mockResolvedValue({
       state: "anonymous",
       user: null,
       expires_at: null,
       anonymous_reason: "signed_out",
+      account_access_state: "anonymous",
+      capability_keys: [],
+      access_epoch: "anonymous:none",
     });
     startSignInMock.mockResolvedValue({
       redirect_url: "/api/v1/auth/callback?state=state-1&ticket=valid-ticket",
@@ -88,6 +94,9 @@ describe("AuthProvider", () => {
       },
       expires_at: "2026-03-21T10:00:00Z",
       anonymous_reason: null,
+      account_access_state: "premium",
+      capability_keys: ["premium_comparison"],
+      access_epoch: "premium:premium_comparison",
     });
 
     renderAuth(<AuthProbe />);
@@ -107,6 +116,9 @@ describe("AuthProvider", () => {
       },
       expires_at: "2026-03-21T10:00:00Z",
       anonymous_reason: null,
+      account_access_state: "free",
+      capability_keys: [],
+      access_epoch: "free:none",
     });
 
     renderAuth(<AuthProbe />);
@@ -145,6 +157,9 @@ describe("AuthProvider", () => {
       },
       expires_at: "2026-03-21T10:00:00Z",
       anonymous_reason: null,
+      account_access_state: "free",
+      capability_keys: [],
+      access_epoch: "free:none",
     });
 
     renderAuth(<AuthProbe />);
@@ -168,6 +183,9 @@ describe("AuthProvider", () => {
         user: null,
         expires_at: null,
         anonymous_reason: "missing",
+        account_access_state: "anonymous",
+        capability_keys: [],
+        access_epoch: "anonymous:none",
       })
       .mockResolvedValueOnce({
         state: "authenticated",
@@ -177,6 +195,9 @@ describe("AuthProvider", () => {
         },
         expires_at: "2026-03-21T10:00:00Z",
         anonymous_reason: null,
+        account_access_state: "premium",
+        capability_keys: ["premium_ai_analyst"],
+        access_epoch: "premium:premium_ai_analyst",
       });
 
     renderAuth(<AuthProbe />);
@@ -191,5 +212,43 @@ describe("AuthProvider", () => {
     });
     expect(screen.getByTestId("auth-email")).toHaveTextContent("person@example.com");
     expect(resetApiRequestCacheMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears cached responses when access epoch changes without an auth-state change", async () => {
+    const user = userEvent.setup();
+    getSessionMock
+      .mockResolvedValueOnce({
+        state: "authenticated",
+        user: {
+          id: "a32d5bf0-0ec5-4dc9-bd40-636264a6fb96",
+          email: "person@example.com",
+        },
+        expires_at: "2026-03-21T10:00:00Z",
+        anonymous_reason: null,
+        account_access_state: "free",
+        capability_keys: [],
+        access_epoch: "free:none",
+      })
+      .mockResolvedValueOnce({
+        state: "authenticated",
+        user: {
+          id: "a32d5bf0-0ec5-4dc9-bd40-636264a6fb96",
+          email: "person@example.com",
+        },
+        expires_at: "2026-03-21T10:00:00Z",
+        anonymous_reason: null,
+        account_access_state: "premium",
+        capability_keys: ["premium_comparison"],
+        access_epoch: "premium:premium_comparison",
+      });
+
+    renderAuth(<AuthProbe />);
+    await screen.findByText("person@example.com");
+
+    await user.click(screen.getByRole("button", { name: "reload session" }));
+
+    await waitFor(() => {
+      expect(resetApiRequestCacheMock).toHaveBeenCalledTimes(2);
+    });
   });
 });

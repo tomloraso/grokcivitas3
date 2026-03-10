@@ -52,7 +52,7 @@ describe("mapProfileToVM", () => {
 
     expect(vm.school.name).toBe("Camden Bridge Primary School");
     expect(vm.overviewText).toMatch(/open academy in Camden/i);
-    expect(vm.analystText).toMatch(/more stability than volatility/i);
+    expect(vm.analyst.text).toMatch(/more stability than volatility/i);
     expect(vm.demographics?.coverage.fsm6Supported).toBe(true);
     expect(vm.demographics?.sendPrimaryNeeds[0]?.label).toBe("Autistic spectrum disorder");
     expect(vm.attendance?.overallAttendancePct).toBe(94.7);
@@ -60,8 +60,8 @@ describe("mapProfileToVM", () => {
     expect(vm.workforce?.pupilTeacherRatio).toBe(16.7);
     expect(vm.leadership?.headteacherName).toBe("A. Smith");
     expect(vm.ofsted?.providerPageUrl).toBe("https://reports.ofsted.gov.uk/provider/21/100001");
-    expect(vm.areaContext.housePrices?.areaName).toBe("Camden");
-    expect(vm.areaContext.crime?.annualIncidentsPer1000).toHaveLength(3);
+    expect(vm.neighbourhood.areaContext?.housePrices?.areaName).toBe("Camden");
+    expect(vm.neighbourhood.areaContext?.crime?.annualIncidentsPer1000).toHaveLength(3);
     expect(vm.benchmarkDashboard?.sections).toHaveLength(6);
   });
 
@@ -89,5 +89,44 @@ describe("mapProfileToVM", () => {
     expect(vm.trends).toBeNull();
     expect(vm.benchmarkDashboard?.sections[0]?.metrics[0]?.trendPoints).toEqual([]);
     expect(vm.completeness.trends.status).toBe("unavailable");
+  });
+
+  it("maps locked analyst and neighbourhood previews without leaking premium data", () => {
+    const lockedProfile = structuredClone(PROFILE_RESPONSE);
+    lockedProfile.analyst = {
+      access: {
+        state: "locked",
+        capability_key: "premium_ai_analyst",
+        reason_code: "premium_capability_missing",
+        product_codes: ["premium_launch"],
+        requires_auth: false,
+        requires_purchase: true,
+        school_name: "Camden Bridge Primary School",
+      },
+      text: null,
+      teaser_text: "The published profile points to a school with more stability than volatility.",
+      disclaimer: PROFILE_RESPONSE.analyst.disclaimer,
+    };
+    lockedProfile.neighbourhood = {
+      access: {
+        state: "locked",
+        capability_key: "premium_neighbourhood",
+        reason_code: "premium_capability_missing",
+        product_codes: ["premium_launch"],
+        requires_auth: false,
+        requires_purchase: true,
+        school_name: "Camden Bridge Primary School",
+      },
+      area_context: null,
+      teaser_text: "Premium neighbourhood context is available for Camden Bridge Primary School.",
+    };
+
+    const vm = mapProfileToVM(lockedProfile, TRENDS_RESPONSE, DASHBOARD_RESPONSE);
+
+    expect(vm.analyst.access.state).toBe("locked");
+    expect(vm.analyst.text).toBeNull();
+    expect(vm.analyst.teaserText).toMatch(/more stability than volatility/i);
+    expect(vm.neighbourhood.access.state).toBe("locked");
+    expect(vm.neighbourhood.areaContext).toBeNull();
   });
 });

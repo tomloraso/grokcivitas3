@@ -3,7 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from typing import cast
+from uuid import UUID
 
+from civitas.application.access.dto import SectionAccessDto
+from civitas.application.access.policies import (
+    SCHOOL_COMPARE_CORE_REQUIREMENT,
+    get_access_requirement,
+)
+from civitas.application.access.use_cases import EvaluateAccessUseCase
 from civitas.application.school_compare.dto import (
     SchoolCompareBenchmarkDto,
     SchoolCompareCellDto,
@@ -74,14 +81,20 @@ class GetSchoolCompareUseCase:
         self,
         school_profile_repository: SchoolProfileRepository,
         school_trends_repository: SchoolTrendsRepository,
+        evaluate_access_use_case: EvaluateAccessUseCase | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
         self._school_trends_repository = school_trends_repository
+        self._evaluate_access_use_case = evaluate_access_use_case
 
-    def execute(self, *, urns: str) -> SchoolCompareResponseDto:
+    def execute(
+        self,
+        *,
+        urns: str,
+        viewer_user_id: UUID | None = None,
+    ) -> SchoolCompareResponseDto:
         normalized_urns = _normalize_requested_urns(urns)
         profiles_by_urn: dict[str, SchoolProfile] = {}
-        benchmark_rows_by_urn: dict[str, dict[str, SchoolMetricBenchmarkYearlyRow]] = {}
         missing_urns: list[str] = []
 
         for urn in normalized_urns:
@@ -97,12 +110,23 @@ class GetSchoolCompareUseCase:
                 continue
 
             profiles_by_urn[urn] = profile
-            benchmark_rows_by_urn[urn] = self._latest_benchmark_rows(urn)
 
         if missing_urns:
             raise SchoolCompareNotFoundError(tuple(missing_urns))
 
         schools = tuple(_build_school_dto(profiles_by_urn[urn]) for urn in normalized_urns)
+        access = _resolve_compare_access(
+            viewer_user_id=viewer_user_id,
+            evaluate_access_use_case=self._evaluate_access_use_case,
+        )
+        if access.state == "locked":
+            return SchoolCompareResponseDto(
+                access=access,
+                schools=schools,
+                sections=(),
+            )
+
+        benchmark_rows_by_urn = {urn: self._latest_benchmark_rows(urn) for urn in normalized_urns}
         has_ks2_data = any(
             _profile_publishes_performance_group(
                 profile=profiles_by_urn[urn],
@@ -160,6 +184,7 @@ class GetSchoolCompareUseCase:
             )
 
         return SchoolCompareResponseDto(
+            access=access,
             schools=schools,
             sections=tuple(sections),
         )
@@ -197,6 +222,36 @@ def _normalize_requested_urns(raw_urns: str) -> tuple[str, ...]:
         raise InvalidSchoolCompareParametersError("Compare requires unique URNs.")
 
     return tuple(parts)
+
+
+def _resolve_compare_access(
+    *,
+    viewer_user_id: UUID | None,
+    evaluate_access_use_case: EvaluateAccessUseCase | None,
+) -> SectionAccessDto:
+    requirement = get_access_requirement(SCHOOL_COMPARE_CORE_REQUIREMENT)
+    if evaluate_access_use_case is None:
+        return SectionAccessDto(
+            state="available",
+            capability_key=requirement.capability_key,
+            reason_code=None,
+            product_codes=(),
+            requires_auth=False,
+            requires_purchase=False,
+        )
+
+    decision = evaluate_access_use_case.execute(
+        requirement_key=SCHOOL_COMPARE_CORE_REQUIREMENT,
+        user_id=viewer_user_id,
+    )
+    return SectionAccessDto(
+        state=decision.section_state,
+        capability_key=decision.capability_key,
+        reason_code=decision.reason_code,
+        product_codes=decision.available_product_codes,
+        requires_auth=decision.requires_auth,
+        requires_purchase=decision.requires_purchase,
+    )
 
 
 def _build_school_dto(profile: SchoolProfile) -> SchoolCompareSchoolDto:

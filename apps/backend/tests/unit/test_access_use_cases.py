@@ -153,6 +153,7 @@ def test_get_current_account_access_returns_anonymous_for_missing_user() -> None
 
     assert result.state == "anonymous"
     assert result.capability_keys == ()
+    assert result.access_epoch == "anonymous:none"
     assert result.entitlements == ()
 
 
@@ -175,6 +176,7 @@ def test_get_current_account_access_returns_pending_before_activation() -> None:
 
     assert result.state == "pending"
     assert result.capability_keys == ()
+    assert result.access_epoch == "pending:none"
     assert result.entitlements[0].status == "pending"
     assert result.entitlements[0].product_display_name == "Premium"
 
@@ -202,6 +204,9 @@ def test_get_current_account_access_returns_premium_with_capability_keys() -> No
         "premium_ai_analyst",
         "premium_comparison",
         "premium_neighbourhood",
+    )
+    assert (
+        result.access_epoch == "premium:premium_ai_analyst,premium_comparison,premium_neighbourhood"
     )
     assert [entitlement.status for entitlement in result.entitlements] == ["active", "revoked"]
 

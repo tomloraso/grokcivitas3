@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   getSession,
   resetApiRequestCache,
+  setApiAccessEpoch,
   signOut as signOutRequest,
   startSignIn as startSignInRequest,
 } from "../../api/client";
@@ -29,6 +30,7 @@ export function AuthProvider({
   }, [session]);
 
   function applySession(nextSession: AuthSession): void {
+    setApiAccessEpoch(nextSession.accessEpoch);
     if (!areSessionsEqual(sessionRef.current, nextSession)) {
       resetApiRequestCache();
     }
@@ -107,6 +109,8 @@ export function AuthProvider({
       value={{
         isLoading,
         session,
+        hasCapability: (capabilityKey: string) =>
+          session.capabilityKeys.includes(capabilityKey),
         reloadSession,
         startSignIn,
         signOut,
@@ -122,6 +126,7 @@ function areSessionsEqual(left: AuthSession, right: AuthSession): boolean {
     left.state === right.state &&
     left.expiresAt === right.expiresAt &&
     left.anonymousReason === right.anonymousReason &&
+    left.accessEpoch === right.accessEpoch &&
     left.user?.id === right.user?.id &&
     left.user?.email === right.user?.email
   );

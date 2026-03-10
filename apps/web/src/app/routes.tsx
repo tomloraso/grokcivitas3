@@ -18,6 +18,16 @@ const SchoolCompareFeature = lazy(async () => {
   return { default: module.SchoolCompareFeature };
 });
 
+const AccountFeature = lazy(async () => {
+  const module = await import("../features/premium-access/AccountFeature");
+  return { default: module.AccountFeature };
+});
+
+const UpgradeFeature = lazy(async () => {
+  const module = await import("../features/premium-access/UpgradeFeature");
+  return { default: module.UpgradeFeature };
+});
+
 const routes: RouteObject[] = [
   {
     element: <RootLayout />,
@@ -29,6 +39,40 @@ const routes: RouteObject[] = [
       {
         path: "sign-in",
         element: <SignInFeature />
+      },
+      {
+        path: "account",
+        element: (
+          <Suspense
+            fallback={
+              <PageContainer>
+                <div className="space-y-6">
+                  <LoadingSkeleton lines={4} />
+                  <LoadingSkeleton lines={6} />
+                </div>
+              </PageContainer>
+            }
+          >
+            <AccountFeature />
+          </Suspense>
+        )
+      },
+      {
+        path: "account/upgrade",
+        element: (
+          <Suspense
+            fallback={
+              <PageContainer>
+                <div className="space-y-6">
+                  <LoadingSkeleton lines={4} />
+                  <LoadingSkeleton lines={6} />
+                </div>
+              </PageContainer>
+            }
+          >
+            <UpgradeFeature />
+          </Suspense>
+        )
       },
       {
         path: "compare",

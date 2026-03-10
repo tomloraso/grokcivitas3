@@ -1,10 +1,11 @@
 from collections.abc import Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from civitas.api.dependencies import (
     get_create_task_use_case,
     get_list_tasks_use_case,
+    get_optional_session_user,
     get_school_compare_use_case,
     get_school_profile_use_case,
     get_school_trend_dashboard_use_case,
@@ -13,37 +14,7 @@ from civitas.api.dependencies import (
     get_search_schools_by_postcode_use_case,
 )
 from civitas.api.schemas.school_compare import SchoolCompareResponse
-from civitas.api.schemas.school_profiles import (
-    SchoolProfileAreaContextCoverageResponse,
-    SchoolProfileAreaContextResponse,
-    SchoolProfileAreaCrimeAnnualRateResponse,
-    SchoolProfileAreaCrimeCategoryResponse,
-    SchoolProfileAreaCrimeResponse,
-    SchoolProfileAreaDeprivationResponse,
-    SchoolProfileAreaHousePricePointResponse,
-    SchoolProfileAreaHousePricesResponse,
-    SchoolProfileAttendanceLatestResponse,
-    SchoolProfileBehaviourLatestResponse,
-    SchoolProfileBenchmarksResponse,
-    SchoolProfileCompletenessResponse,
-    SchoolProfileDemographicsCoverageResponse,
-    SchoolProfileDemographicsEthnicityGroupResponse,
-    SchoolProfileDemographicsHomeLanguageResponse,
-    SchoolProfileDemographicsLatestResponse,
-    SchoolProfileDemographicsSendPrimaryNeedResponse,
-    SchoolProfileLeadershipSnapshotResponse,
-    SchoolProfileMetricBenchmarkResponse,
-    SchoolProfileOfstedLatestResponse,
-    SchoolProfileOfstedTimelineCoverageResponse,
-    SchoolProfileOfstedTimelineEventResponse,
-    SchoolProfileOfstedTimelineResponse,
-    SchoolProfilePerformanceResponse,
-    SchoolProfilePerformanceYearResponse,
-    SchoolProfileResponse,
-    SchoolProfileSchoolResponse,
-    SchoolProfileSectionCompletenessResponse,
-    SchoolProfileWorkforceLatestResponse,
-)
+from civitas.api.schemas.school_profiles import SchoolProfileResponse
 from civitas.api.schemas.school_trends import (
     SchoolTrendBenchmarkPointResponse,
     SchoolTrendDashboardMetricResponse,
@@ -69,6 +40,8 @@ from civitas.api.schemas.schools import (
 )
 from civitas.api.schemas.tasks import TaskCreateRequest, TaskResponse
 from civitas.api.school_compare_presenter import to_school_compare_response
+from civitas.api.school_profile_presenter import to_school_profile_response
+from civitas.application.identity.dto import SessionUserDto
 from civitas.application.school_compare.errors import (
     InvalidSchoolCompareParametersError,
     SchoolCompareDataUnavailableError,
@@ -242,11 +215,16 @@ def search_schools_by_name(
     },
 )
 def get_school_compare(
+    response: Response,
     urns: str | None = Query(default=None),
+    viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: GetSchoolCompareUseCase = Depends(get_school_compare_use_case),
 ) -> SchoolCompareResponse:
     try:
-        result = use_case.execute(urns=urns or "")
+        result = use_case.execute(
+            urns=urns or "",
+            viewer_user_id=viewer.id if viewer is not None else None,
+        )
     except InvalidSchoolCompareParametersError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except SchoolCompareNotFoundError as exc:
@@ -267,514 +245,22 @@ def get_school_compare(
     },
 )
 def get_school_profile(
+    response: Response,
     urn: str,
+    viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: GetSchoolProfileUseCase = Depends(get_school_profile_use_case),
 ) -> SchoolProfileResponse:
     try:
-        result = use_case.execute(urn=urn)
+        result = use_case.execute(
+            urn=urn,
+            viewer_user_id=viewer.id if viewer is not None else None,
+        )
     except SchoolProfileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except SchoolProfileDataUnavailableError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-    demographics_latest = None
-    if result.demographics_latest is not None:
-        demographics_latest = SchoolProfileDemographicsLatestResponse(
-            academic_year=result.demographics_latest.academic_year,
-            disadvantaged_pct=result.demographics_latest.disadvantaged_pct,
-            fsm_pct=result.demographics_latest.fsm_pct,
-            fsm6_pct=result.demographics_latest.fsm6_pct,
-            sen_pct=result.demographics_latest.sen_pct,
-            ehcp_pct=result.demographics_latest.ehcp_pct,
-            eal_pct=result.demographics_latest.eal_pct,
-            first_language_english_pct=result.demographics_latest.first_language_english_pct,
-            first_language_unclassified_pct=result.demographics_latest.first_language_unclassified_pct,
-            male_pct=result.demographics_latest.male_pct,
-            female_pct=result.demographics_latest.female_pct,
-            pupil_mobility_pct=result.demographics_latest.pupil_mobility_pct,
-            coverage=SchoolProfileDemographicsCoverageResponse(
-                fsm_supported=result.demographics_latest.coverage.fsm_supported,
-                fsm6_supported=result.demographics_latest.coverage.fsm6_supported,
-                gender_supported=result.demographics_latest.coverage.gender_supported,
-                mobility_supported=result.demographics_latest.coverage.mobility_supported,
-                send_primary_need_supported=(
-                    result.demographics_latest.coverage.send_primary_need_supported
-                ),
-                ethnicity_supported=result.demographics_latest.coverage.ethnicity_supported,
-                top_languages_supported=result.demographics_latest.coverage.top_languages_supported,
-            ),
-            ethnicity_breakdown=[
-                SchoolProfileDemographicsEthnicityGroupResponse(
-                    key=group.key,
-                    label=group.label,
-                    percentage=group.percentage,
-                    count=group.count,
-                )
-                for group in result.demographics_latest.ethnicity_breakdown
-            ],
-            send_primary_needs=[
-                SchoolProfileDemographicsSendPrimaryNeedResponse(
-                    key=need.key,
-                    label=need.label,
-                    percentage=need.percentage,
-                    count=need.count,
-                )
-                for need in result.demographics_latest.send_primary_needs
-            ],
-            top_home_languages=[
-                SchoolProfileDemographicsHomeLanguageResponse(
-                    key=language.key,
-                    label=language.label,
-                    rank=language.rank,
-                    percentage=language.percentage,
-                    count=language.count,
-                )
-                for language in result.demographics_latest.top_home_languages
-            ],
-        )
-
-    attendance_latest = None
-    if result.attendance_latest is not None:
-        attendance_latest = SchoolProfileAttendanceLatestResponse(
-            academic_year=result.attendance_latest.academic_year,
-            overall_attendance_pct=result.attendance_latest.overall_attendance_pct,
-            overall_absence_pct=result.attendance_latest.overall_absence_pct,
-            persistent_absence_pct=result.attendance_latest.persistent_absence_pct,
-        )
-
-    behaviour_latest = None
-    if result.behaviour_latest is not None:
-        behaviour_latest = SchoolProfileBehaviourLatestResponse(
-            academic_year=result.behaviour_latest.academic_year,
-            suspensions_count=result.behaviour_latest.suspensions_count,
-            suspensions_rate=result.behaviour_latest.suspensions_rate,
-            permanent_exclusions_count=result.behaviour_latest.permanent_exclusions_count,
-            permanent_exclusions_rate=result.behaviour_latest.permanent_exclusions_rate,
-        )
-
-    workforce_latest = None
-    if result.workforce_latest is not None:
-        workforce_latest = SchoolProfileWorkforceLatestResponse(
-            academic_year=result.workforce_latest.academic_year,
-            pupil_teacher_ratio=result.workforce_latest.pupil_teacher_ratio,
-            supply_staff_pct=result.workforce_latest.supply_staff_pct,
-            teachers_3plus_years_pct=result.workforce_latest.teachers_3plus_years_pct,
-            teacher_turnover_pct=result.workforce_latest.teacher_turnover_pct,
-            qts_pct=result.workforce_latest.qts_pct,
-            qualifications_level6_plus_pct=result.workforce_latest.qualifications_level6_plus_pct,
-        )
-
-    leadership_snapshot = None
-    if result.leadership_snapshot is not None:
-        leadership_snapshot = SchoolProfileLeadershipSnapshotResponse(
-            headteacher_name=result.leadership_snapshot.headteacher_name,
-            headteacher_start_date=result.leadership_snapshot.headteacher_start_date,
-            headteacher_tenure_years=result.leadership_snapshot.headteacher_tenure_years,
-            leadership_turnover_score=result.leadership_snapshot.leadership_turnover_score,
-        )
-
-    ofsted_latest = None
-    if result.ofsted_latest is not None:
-        ofsted_latest = SchoolProfileOfstedLatestResponse(
-            overall_effectiveness_code=result.ofsted_latest.overall_effectiveness_code,
-            overall_effectiveness_label=result.ofsted_latest.overall_effectiveness_label,
-            inspection_start_date=result.ofsted_latest.inspection_start_date,
-            publication_date=result.ofsted_latest.publication_date,
-            latest_oeif_inspection_start_date=result.ofsted_latest.latest_oeif_inspection_start_date,
-            latest_oeif_publication_date=result.ofsted_latest.latest_oeif_publication_date,
-            quality_of_education_code=result.ofsted_latest.quality_of_education_code,
-            quality_of_education_label=result.ofsted_latest.quality_of_education_label,
-            behaviour_and_attitudes_code=result.ofsted_latest.behaviour_and_attitudes_code,
-            behaviour_and_attitudes_label=result.ofsted_latest.behaviour_and_attitudes_label,
-            personal_development_code=result.ofsted_latest.personal_development_code,
-            personal_development_label=result.ofsted_latest.personal_development_label,
-            leadership_and_management_code=result.ofsted_latest.leadership_and_management_code,
-            leadership_and_management_label=result.ofsted_latest.leadership_and_management_label,
-            latest_ungraded_inspection_date=result.ofsted_latest.latest_ungraded_inspection_date,
-            latest_ungraded_publication_date=result.ofsted_latest.latest_ungraded_publication_date,
-            most_recent_inspection_date=result.ofsted_latest.most_recent_inspection_date,
-            days_since_most_recent_inspection=result.ofsted_latest.days_since_most_recent_inspection,
-            is_graded=result.ofsted_latest.is_graded,
-            ungraded_outcome=result.ofsted_latest.ungraded_outcome,
-            provider_page_url=result.ofsted_latest.provider_page_url,
-        )
-
-    ofsted_timeline = SchoolProfileOfstedTimelineResponse(
-        events=[
-            SchoolProfileOfstedTimelineEventResponse(
-                inspection_number=event.inspection_number,
-                inspection_start_date=event.inspection_start_date,
-                publication_date=event.publication_date,
-                inspection_type=event.inspection_type,
-                overall_effectiveness_label=event.overall_effectiveness_label,
-                headline_outcome_text=event.headline_outcome_text,
-                category_of_concern=event.category_of_concern,
-            )
-            for event in result.ofsted_timeline.events
-        ]
-        if result.ofsted_timeline is not None
-        else [],
-        coverage=SchoolProfileOfstedTimelineCoverageResponse(
-            is_partial_history=result.ofsted_timeline.coverage.is_partial_history,
-            earliest_event_date=result.ofsted_timeline.coverage.earliest_event_date,
-            latest_event_date=result.ofsted_timeline.coverage.latest_event_date,
-            events_count=result.ofsted_timeline.coverage.events_count,
-        )
-        if result.ofsted_timeline is not None
-        else SchoolProfileOfstedTimelineCoverageResponse(
-            is_partial_history=True,
-            earliest_event_date=None,
-            latest_event_date=None,
-            events_count=0,
-        ),
-    )
-
-    performance = None
-    if result.performance is not None:
-        latest = None
-        if result.performance.latest is not None:
-            latest = SchoolProfilePerformanceYearResponse(
-                academic_year=result.performance.latest.academic_year,
-                attainment8_average=result.performance.latest.attainment8_average,
-                progress8_average=result.performance.latest.progress8_average,
-                progress8_disadvantaged=result.performance.latest.progress8_disadvantaged,
-                progress8_not_disadvantaged=result.performance.latest.progress8_not_disadvantaged,
-                progress8_disadvantaged_gap=result.performance.latest.progress8_disadvantaged_gap,
-                engmath_5_plus_pct=result.performance.latest.engmath_5_plus_pct,
-                engmath_4_plus_pct=result.performance.latest.engmath_4_plus_pct,
-                ebacc_entry_pct=result.performance.latest.ebacc_entry_pct,
-                ebacc_5_plus_pct=result.performance.latest.ebacc_5_plus_pct,
-                ebacc_4_plus_pct=result.performance.latest.ebacc_4_plus_pct,
-                ks2_reading_expected_pct=result.performance.latest.ks2_reading_expected_pct,
-                ks2_writing_expected_pct=result.performance.latest.ks2_writing_expected_pct,
-                ks2_maths_expected_pct=result.performance.latest.ks2_maths_expected_pct,
-                ks2_combined_expected_pct=result.performance.latest.ks2_combined_expected_pct,
-                ks2_reading_higher_pct=result.performance.latest.ks2_reading_higher_pct,
-                ks2_writing_higher_pct=result.performance.latest.ks2_writing_higher_pct,
-                ks2_maths_higher_pct=result.performance.latest.ks2_maths_higher_pct,
-                ks2_combined_higher_pct=result.performance.latest.ks2_combined_higher_pct,
-            )
-
-        performance = SchoolProfilePerformanceResponse(
-            latest=latest,
-            history=[
-                SchoolProfilePerformanceYearResponse(
-                    academic_year=year.academic_year,
-                    attainment8_average=year.attainment8_average,
-                    progress8_average=year.progress8_average,
-                    progress8_disadvantaged=year.progress8_disadvantaged,
-                    progress8_not_disadvantaged=year.progress8_not_disadvantaged,
-                    progress8_disadvantaged_gap=year.progress8_disadvantaged_gap,
-                    engmath_5_plus_pct=year.engmath_5_plus_pct,
-                    engmath_4_plus_pct=year.engmath_4_plus_pct,
-                    ebacc_entry_pct=year.ebacc_entry_pct,
-                    ebacc_5_plus_pct=year.ebacc_5_plus_pct,
-                    ebacc_4_plus_pct=year.ebacc_4_plus_pct,
-                    ks2_reading_expected_pct=year.ks2_reading_expected_pct,
-                    ks2_writing_expected_pct=year.ks2_writing_expected_pct,
-                    ks2_maths_expected_pct=year.ks2_maths_expected_pct,
-                    ks2_combined_expected_pct=year.ks2_combined_expected_pct,
-                    ks2_reading_higher_pct=year.ks2_reading_higher_pct,
-                    ks2_writing_higher_pct=year.ks2_writing_higher_pct,
-                    ks2_maths_higher_pct=year.ks2_maths_higher_pct,
-                    ks2_combined_higher_pct=year.ks2_combined_higher_pct,
-                )
-                for year in result.performance.history
-            ],
-        )
-
-    deprivation = None
-    if result.area_context is not None and result.area_context.deprivation is not None:
-        deprivation = SchoolProfileAreaDeprivationResponse(
-            lsoa_code=result.area_context.deprivation.lsoa_code,
-            imd_score=result.area_context.deprivation.imd_score,
-            imd_rank=result.area_context.deprivation.imd_rank,
-            imd_decile=result.area_context.deprivation.imd_decile,
-            idaci_score=result.area_context.deprivation.idaci_score,
-            idaci_decile=result.area_context.deprivation.idaci_decile,
-            income_score=result.area_context.deprivation.income_score,
-            income_rank=result.area_context.deprivation.income_rank,
-            income_decile=result.area_context.deprivation.income_decile,
-            employment_score=result.area_context.deprivation.employment_score,
-            employment_rank=result.area_context.deprivation.employment_rank,
-            employment_decile=result.area_context.deprivation.employment_decile,
-            education_score=result.area_context.deprivation.education_score,
-            education_rank=result.area_context.deprivation.education_rank,
-            education_decile=result.area_context.deprivation.education_decile,
-            health_score=result.area_context.deprivation.health_score,
-            health_rank=result.area_context.deprivation.health_rank,
-            health_decile=result.area_context.deprivation.health_decile,
-            crime_score=result.area_context.deprivation.crime_score,
-            crime_rank=result.area_context.deprivation.crime_rank,
-            crime_decile=result.area_context.deprivation.crime_decile,
-            barriers_score=result.area_context.deprivation.barriers_score,
-            barriers_rank=result.area_context.deprivation.barriers_rank,
-            barriers_decile=result.area_context.deprivation.barriers_decile,
-            living_environment_score=result.area_context.deprivation.living_environment_score,
-            living_environment_rank=result.area_context.deprivation.living_environment_rank,
-            living_environment_decile=result.area_context.deprivation.living_environment_decile,
-            population_total=result.area_context.deprivation.population_total,
-            local_authority_district_code=(
-                result.area_context.deprivation.local_authority_district_code
-            ),
-            local_authority_district_name=(
-                result.area_context.deprivation.local_authority_district_name
-            ),
-            source_release=result.area_context.deprivation.source_release,
-        )
-
-    crime = None
-    if result.area_context is not None and result.area_context.crime is not None:
-        crime = SchoolProfileAreaCrimeResponse(
-            radius_miles=result.area_context.crime.radius_miles,
-            latest_month=result.area_context.crime.latest_month,
-            total_incidents=result.area_context.crime.total_incidents,
-            population_denominator=result.area_context.crime.population_denominator,
-            incidents_per_1000=result.area_context.crime.incidents_per_1000,
-            annual_incidents_per_1000=[
-                SchoolProfileAreaCrimeAnnualRateResponse(
-                    year=annual_rate.year,
-                    total_incidents=annual_rate.total_incidents,
-                    incidents_per_1000=annual_rate.incidents_per_1000,
-                )
-                for annual_rate in result.area_context.crime.annual_incidents_per_1000
-            ],
-            categories=[
-                SchoolProfileAreaCrimeCategoryResponse(
-                    category=category.category,
-                    incident_count=category.incident_count,
-                )
-                for category in result.area_context.crime.categories
-            ],
-        )
-
-    house_prices = None
-    if result.area_context is not None and result.area_context.house_prices is not None:
-        house_prices = SchoolProfileAreaHousePricesResponse(
-            area_code=result.area_context.house_prices.area_code,
-            area_name=result.area_context.house_prices.area_name,
-            latest_month=result.area_context.house_prices.latest_month,
-            average_price=result.area_context.house_prices.average_price,
-            annual_change_pct=result.area_context.house_prices.annual_change_pct,
-            monthly_change_pct=result.area_context.house_prices.monthly_change_pct,
-            three_year_change_pct=result.area_context.house_prices.three_year_change_pct,
-            trend=[
-                SchoolProfileAreaHousePricePointResponse(
-                    month=point.month,
-                    average_price=point.average_price,
-                    annual_change_pct=point.annual_change_pct,
-                    monthly_change_pct=point.monthly_change_pct,
-                )
-                for point in result.area_context.house_prices.trend
-            ],
-        )
-
-    area_context = SchoolProfileAreaContextResponse(
-        deprivation=deprivation,
-        crime=crime,
-        house_prices=house_prices,
-        coverage=SchoolProfileAreaContextCoverageResponse(
-            has_deprivation=result.area_context.coverage.has_deprivation,
-            has_crime=result.area_context.coverage.has_crime,
-            crime_months_available=result.area_context.coverage.crime_months_available,
-            has_house_prices=result.area_context.coverage.has_house_prices,
-            house_price_months_available=result.area_context.coverage.house_price_months_available,
-        )
-        if result.area_context is not None
-        else SchoolProfileAreaContextCoverageResponse(
-            has_deprivation=False,
-            has_crime=False,
-            crime_months_available=0,
-            has_house_prices=False,
-            house_price_months_available=0,
-        ),
-    )
-
-    return SchoolProfileResponse(
-        school=SchoolProfileSchoolResponse(
-            urn=result.school.urn,
-            name=result.school.name,
-            phase=result.school.phase,
-            type=result.school.school_type,
-            status=result.school.status,
-            postcode=result.school.postcode,
-            website=result.school.website,
-            telephone=result.school.telephone,
-            head_title=result.school.head_title,
-            head_first_name=result.school.head_first_name,
-            head_last_name=result.school.head_last_name,
-            head_job_title=result.school.head_job_title,
-            address_street=result.school.address_street,
-            address_locality=result.school.address_locality,
-            address_line3=result.school.address_line3,
-            address_town=result.school.address_town,
-            address_county=result.school.address_county,
-            statutory_low_age=result.school.statutory_low_age,
-            statutory_high_age=result.school.statutory_high_age,
-            gender=result.school.gender,
-            religious_character=result.school.religious_character,
-            diocese=result.school.diocese,
-            admissions_policy=result.school.admissions_policy,
-            sixth_form=result.school.sixth_form,
-            nursery_provision=result.school.nursery_provision,
-            boarders=result.school.boarders,
-            fsm_pct_gias=result.school.fsm_pct_gias,
-            trust_name=result.school.trust_name,
-            trust_flag=result.school.trust_flag,
-            federation_name=result.school.federation_name,
-            federation_flag=result.school.federation_flag,
-            la_name=result.school.la_name,
-            la_code=result.school.la_code,
-            urban_rural=result.school.urban_rural,
-            number_of_boys=result.school.number_of_boys,
-            number_of_girls=result.school.number_of_girls,
-            lsoa_code=result.school.lsoa_code,
-            lsoa_name=result.school.lsoa_name,
-            last_changed_date=result.school.last_changed_date,
-            lat=result.school.lat,
-            lng=result.school.lng,
-        ),
-        overview_text=result.overview_text,
-        analyst_text=result.analyst_text,
-        demographics_latest=demographics_latest,
-        attendance_latest=attendance_latest,
-        behaviour_latest=behaviour_latest,
-        workforce_latest=workforce_latest,
-        leadership_snapshot=leadership_snapshot,
-        performance=performance,
-        ofsted_latest=ofsted_latest,
-        ofsted_timeline=ofsted_timeline,
-        area_context=area_context,
-        benchmarks=SchoolProfileBenchmarksResponse(
-            metrics=[
-                SchoolProfileMetricBenchmarkResponse(
-                    metric_key=metric.metric_key,
-                    academic_year=metric.academic_year,
-                    school_value=metric.school_value,
-                    national_value=metric.national_value,
-                    local_value=metric.local_value,
-                    school_vs_national_delta=metric.school_vs_national_delta,
-                    school_vs_local_delta=metric.school_vs_local_delta,
-                    local_scope=metric.local_scope,
-                    local_area_code=metric.local_area_code,
-                    local_area_label=metric.local_area_label,
-                )
-                for metric in result.benchmarks.metrics
-            ],
-        ),
-        completeness=SchoolProfileCompletenessResponse(
-            demographics=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.demographics.status,
-                reason_code=result.completeness.demographics.reason_code,
-                last_updated_at=result.completeness.demographics.last_updated_at,
-                years_available=(
-                    list(result.completeness.demographics.years_available)
-                    if result.completeness.demographics.years_available is not None
-                    else None
-                ),
-            ),
-            attendance=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.attendance.status,
-                reason_code=result.completeness.attendance.reason_code,
-                last_updated_at=result.completeness.attendance.last_updated_at,
-                years_available=(
-                    list(result.completeness.attendance.years_available)
-                    if result.completeness.attendance.years_available is not None
-                    else None
-                ),
-            ),
-            behaviour=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.behaviour.status,
-                reason_code=result.completeness.behaviour.reason_code,
-                last_updated_at=result.completeness.behaviour.last_updated_at,
-                years_available=(
-                    list(result.completeness.behaviour.years_available)
-                    if result.completeness.behaviour.years_available is not None
-                    else None
-                ),
-            ),
-            workforce=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.workforce.status,
-                reason_code=result.completeness.workforce.reason_code,
-                last_updated_at=result.completeness.workforce.last_updated_at,
-                years_available=(
-                    list(result.completeness.workforce.years_available)
-                    if result.completeness.workforce.years_available is not None
-                    else None
-                ),
-            ),
-            leadership=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.leadership.status,
-                reason_code=result.completeness.leadership.reason_code,
-                last_updated_at=result.completeness.leadership.last_updated_at,
-                years_available=(
-                    list(result.completeness.leadership.years_available)
-                    if result.completeness.leadership.years_available is not None
-                    else None
-                ),
-            ),
-            performance=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.performance.status,
-                reason_code=result.completeness.performance.reason_code,
-                last_updated_at=result.completeness.performance.last_updated_at,
-                years_available=(
-                    list(result.completeness.performance.years_available)
-                    if result.completeness.performance.years_available is not None
-                    else None
-                ),
-            ),
-            ofsted_latest=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.ofsted_latest.status,
-                reason_code=result.completeness.ofsted_latest.reason_code,
-                last_updated_at=result.completeness.ofsted_latest.last_updated_at,
-                years_available=(
-                    list(result.completeness.ofsted_latest.years_available)
-                    if result.completeness.ofsted_latest.years_available is not None
-                    else None
-                ),
-            ),
-            ofsted_timeline=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.ofsted_timeline.status,
-                reason_code=result.completeness.ofsted_timeline.reason_code,
-                last_updated_at=result.completeness.ofsted_timeline.last_updated_at,
-                years_available=(
-                    list(result.completeness.ofsted_timeline.years_available)
-                    if result.completeness.ofsted_timeline.years_available is not None
-                    else None
-                ),
-            ),
-            area_deprivation=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.area_deprivation.status,
-                reason_code=result.completeness.area_deprivation.reason_code,
-                last_updated_at=result.completeness.area_deprivation.last_updated_at,
-                years_available=(
-                    list(result.completeness.area_deprivation.years_available)
-                    if result.completeness.area_deprivation.years_available is not None
-                    else None
-                ),
-            ),
-            area_crime=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.area_crime.status,
-                reason_code=result.completeness.area_crime.reason_code,
-                last_updated_at=result.completeness.area_crime.last_updated_at,
-                years_available=(
-                    list(result.completeness.area_crime.years_available)
-                    if result.completeness.area_crime.years_available is not None
-                    else None
-                ),
-            ),
-            area_house_prices=SchoolProfileSectionCompletenessResponse(
-                status=result.completeness.area_house_prices.status,
-                reason_code=result.completeness.area_house_prices.reason_code,
-                last_updated_at=result.completeness.area_house_prices.last_updated_at,
-                years_available=(
-                    list(result.completeness.area_house_prices.years_available)
-                    if result.completeness.area_house_prices.years_available is not None
-                    else None
-                ),
-            ),
-        ),
-    )
+    return to_school_profile_response(result)
 
 
 @router.get(

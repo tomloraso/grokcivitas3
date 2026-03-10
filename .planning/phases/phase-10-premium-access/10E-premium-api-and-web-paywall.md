@@ -76,7 +76,7 @@ Each premium-sensitive response should expose a typed access block that can answ
 Implementation-aligned recommendation:
 
 - keep `/api/v1/session` as the app-shell boot payload and extend it with the lightweight access fields the shell needs immediately, specifically `account_access_state`, `capability_keys`, and `access_epoch`
-- keep richer product, billing, and renewal detail in account-facing endpoints such as `AccountAccessResponse`
+- keep richer product, billing, and renewal detail in an authenticated account endpoint such as `GET /api/v1/account/access`
 - this preserves the current `AuthProvider` as the central boot loader rather than forcing a second mandatory app-shell fetch
 
 Recommended section-state enum:
@@ -106,8 +106,8 @@ Recommended contract changes:
 
 - `GET /api/v1/schools/{urn}`
   - keep the free baseline fields already used by the profile page
-  - replace the current raw nullable `analyst_text` field with a typed section wrapper
-  - wrap neighbourhood context in its own premium-aware section rather than exposing `area_context` as an always-free flat payload
+  - replace the current raw nullable `analyst_text` field with a typed `analyst` section wrapper
+  - wrap neighbourhood context in its own premium-aware `neighbourhood` section rather than exposing `area_context` as an always-free flat payload
   - keep the free overview field unchanged unless a shared wrapper design clearly reduces total churn
 
 For the launch analyst summary, the API contract should distinguish:
@@ -136,6 +136,7 @@ Recommended compare behavior:
 - when locked, the endpoint returns a typed locked response with requested school context and paywall metadata rather than a generic hard failure
 - search, profile, and results-table compare actions should open a teaser modal or locked affordance for free viewers
 - a direct visit to the compare route should render a locked page state rather than a broken route
+- in the current codebase, keep this on the existing `GET /api/v1/schools/compare` route and current `routes.py` module rather than inventing a parallel compare route tree
 
 ### Trends And Benchmark Dashboard
 
@@ -146,15 +147,18 @@ Recommended compare behavior:
 
 1. Extend the shell session contract before touching paywall UI.
    - Update backend auth schemas and DTOs to carry lightweight access state and `access_epoch`.
+   - Keep `CurrentSessionDto` as auth-owned, and compose access metadata into the API response inside the auth route boundary rather than moving billing or entitlement logic into the identity slice.
    - Update `apps/web/src/features/auth/types.ts` and `apps/web/src/features/auth/AuthProvider.tsx` so the existing auth provider can propagate premium status into the shell and cache layer.
 2. Change the profile contract only where the premium boundary actually exists.
    - Update backend school-profile DTOs and schemas so the analyst surface becomes a typed section wrapper.
    - Wrap neighbourhood context in a second premium-aware section contract.
    - Keep the free overview field unchanged unless a shared wrapper design is measurably simpler.
    - Update `apps/backend/src/civitas/api/contract_checks.py` in the same slice.
+   - Keep route ownership in the current `apps/backend/src/civitas/api/routes.py` module, but move any large presentation mapping into helper functions if needed to avoid further bloating the route file.
 3. Make compare premium-aware without relying on button-level guards.
-   - Update compare schemas and route handlers so the current full compare payload becomes the `available` branch of a premium-aware response.
+   - Update compare DTOs, schemas, and route handlers so the current full compare payload becomes the `available` branch of a premium-aware response.
    - Return a `locked` compare payload with paywall metadata when the viewer lacks `premium_comparison`.
+   - Keep access decisions in backend application code by extending the compare/profile use-case seam or adding application-level wrappers; do not encode capability checks directly in React or as route-only conditionals.
 4. Make access-sensitive caching access-epoch-aware.
    - Update `apps/web/src/api/client.ts` so profile and compare cache keys vary by access epoch, or are cleared whenever the access epoch changes.
    - Treat profile and compare routes as access-sensitive from day one.
@@ -175,6 +179,11 @@ apps/web/src/features/school-compare/
 apps/web/src/features/school-profile/
 apps/web/src/features/schools-search/
 ```
+
+Implementation note for the current repo:
+
+- `apps/web/src/app/routes.tsx` is the route registry today, so `/account` and `/account/upgrade` should be added there rather than introducing a separate pages router abstraction first.
+- `apps/web/src/components/layout/SiteHeader.tsx` already owns shell account chrome, so premium ambient status should flow through its existing props rather than a second shell provider.
 
 Recommended web responsibilities:
 

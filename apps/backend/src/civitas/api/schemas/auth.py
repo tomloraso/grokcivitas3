@@ -26,3 +26,6 @@ class SessionResponse(BaseModel):
     user: SessionUserResponse | None
     expires_at: datetime | None
     anonymous_reason: Literal["missing", "invalid", "expired", "revoked", "signed_out"] | None
+    account_access_state: Literal["anonymous", "free", "pending", "premium"]
+    capability_keys: list[str]
+    access_epoch: str

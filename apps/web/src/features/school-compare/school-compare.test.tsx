@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getSchoolCompare } from "../../api/client";
 import { ThemeProvider } from "../../app/providers/ThemeProvider";
+import { AuthProvider } from "../auth/AuthProvider";
+import { ANONYMOUS_SESSION } from "../auth/types";
 import {
   CompareSelectionProvider,
   type CompareSelectionItem,
@@ -61,9 +63,11 @@ function renderCompare(
 
   const result = render(
     <ThemeProvider>
-      <CompareSelectionProvider initialItems={initialItems}>
-        <RouterProvider router={router} />
-      </CompareSelectionProvider>
+      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+        <CompareSelectionProvider initialItems={initialItems}>
+          <RouterProvider router={router} />
+        </CompareSelectionProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 
@@ -194,5 +198,42 @@ describe("SchoolCompareFeature", () => {
       const parsed = JSON.parse(stored ?? "[]") as CompareSelectionItem[];
       expect(parsed.map((item) => item.urn)).toEqual(["200002", "100001"]);
     });
+  });
+
+  it("renders the locked compare paywall when the backend returns a locked response", async () => {
+    const lockedResponse = structuredClone(COMPARE_RESPONSE);
+    lockedResponse.access = {
+      state: "locked",
+      capability_key: "premium_comparison",
+      reason_code: "premium_capability_missing",
+      product_codes: ["premium_launch"],
+      requires_auth: false,
+      requires_purchase: true,
+      school_name: null,
+    };
+    lockedResponse.sections = [];
+    compareMock.mockResolvedValueOnce(lockedResponse);
+
+    renderCompare("/compare?urns=100001,200002", [
+      buildSelectionItem({
+        urn: "100001",
+        name: "Primary Example",
+      }),
+      buildSelectionItem({
+        urn: "200002",
+        name: "Secondary Example",
+        phase: "Secondary",
+      }),
+    ]);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Compare schools side by side with Premium",
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View Premium plans" })).toHaveAttribute(
+      "href",
+      "/account/upgrade?capability=premium_comparison&product=premium_launch&returnTo=%2Fcompare%3Furns%3D100001%2C200002"
+    );
   });
 });

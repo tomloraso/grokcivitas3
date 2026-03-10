@@ -10,6 +10,7 @@ import { useTheme } from "./providers/useTheme";
 import { CompareSelectionProvider } from "../shared/context/CompareSelectionContext";
 import { SearchContextProvider } from "../shared/context/SearchContext";
 import { useAuth } from "../features/auth/useAuth";
+import { COMPARE_CAPABILITY_KEY } from "../features/premium-access/types";
 import { RouteTransition } from "./RouteTransition";
 import { paths } from "../shared/routing/paths";
 
@@ -34,6 +35,8 @@ export function RootLayout(): JSX.Element {
               <SiteHeader
                 accountEmail={session.user?.email ?? null}
                 isAuthenticated={session.state === "authenticated"}
+                accountAccessState={session.accountAccessState}
+                hasCompareAccess={session.capabilityKeys.includes(COMPARE_CAPABILITY_KEY)}
                 onSignOut={() => void signOut()}
                 themeMode={mode}
                 onCycleTheme={cycleMode}

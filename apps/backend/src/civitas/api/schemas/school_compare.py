@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from civitas.api.schemas.access import SectionAccessResponse
+
 
 class SchoolCompareSchoolResponse(BaseModel):
     urn: str
@@ -89,5 +91,6 @@ class SchoolCompareSectionResponse(BaseModel):
 
 
 class SchoolCompareResponse(BaseModel):
+    access: SectionAccessResponse
     schools: list[SchoolCompareSchoolResponse]
     sections: list[SchoolCompareSectionResponse]

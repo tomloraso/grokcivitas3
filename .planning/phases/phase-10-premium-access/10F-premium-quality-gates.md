@@ -1,5 +1,36 @@
 # 10F - Premium Quality Gates And Release Readiness
 
+## Tracking Update (2026-03-09)
+
+Implemented in the repository state for this phase:
+
+- premium-aware backend and web coverage from 10B through 10E is now backed by a dedicated browser journey in `apps/web/e2e/premium-access.spec.ts`
+- the E2E coverage exercises:
+  - sign in into a locked premium profile boundary
+  - checkout return plus webhook-completion polling on the upgrade route
+  - refresh into an unlocked premium profile state
+  - sign out and re-locking without reusing premium cached responses
+  - locked compare upgrading into the full compare matrix
+- release-readiness documentation now lives in `docs/runbooks/premium-access-release.md`
+- local configuration docs now expose the Stripe billing flags in `.env.example` and `docs/runbooks/local-development.md`
+
+Automated verification snapshot recorded for this implementation pass:
+
+- `uv run --project apps/backend python tools/scripts/export_openapi.py`
+- `cd apps/web && npm run generate:types`
+- `uv run --project apps/backend alembic -c apps/backend/alembic.ini upgrade head`
+- `uv run --project apps/backend pytest`
+- `cd apps/web && npm run lint`
+- `cd apps/web && npm run typecheck`
+- `cd apps/web && npm run test`
+- `cd apps/web && npm run build`
+- `cd apps/web && npm run test:e2e`
+- `make lint`
+- `make test`
+
+Manual staging rehearsal is still required before Phase 10 can be declared fully signed off.
+The checklist and rollback path now live in `docs/runbooks/premium-access-release.md`.
+
 ## Goal
 
 Close both Phase 10 stages with evidence that identity, feature-tier entitlement evaluation, payment fulfillment, and premium enforcement work together safely.

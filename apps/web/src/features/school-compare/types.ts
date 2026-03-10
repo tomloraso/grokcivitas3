@@ -1,3 +1,5 @@
+import type { SectionAccessVM } from "../premium-access/types";
+
 export type CompareCellAvailability = "available" | "unsupported" | "unavailable" | "suppressed";
 
 export interface CompareSchoolColumnVM {
@@ -36,6 +38,7 @@ export interface CompareSectionVM {
 }
 
 export interface ComparePageVM {
+  access: SectionAccessVM;
   schools: CompareSchoolColumnVM[];
   sections: CompareSectionVM[];
 }

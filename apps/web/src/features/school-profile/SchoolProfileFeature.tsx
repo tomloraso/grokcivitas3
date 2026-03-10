@@ -49,6 +49,7 @@ import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
+import { CompareActionButton } from "../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { paths } from "../../shared/routing/paths";
 import type { SearchRestoreState } from "../../shared/search/searchState";
@@ -64,10 +65,6 @@ import { ProfileSectionAccordion } from "./components/ProfileSectionAccordion";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
-
-/* ------------------------------------------------------------------ */
-/* Table of Contents — desktop sticky sidebar                          */
-/* ------------------------------------------------------------------ */
 
 const TOC_SECTIONS = [
   { id: "overview", label: "School Overview" },
@@ -101,10 +98,6 @@ function ProfileTableOfContents(): JSX.Element {
     </nav>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/* Feature                                                             */
-/* ------------------------------------------------------------------ */
 
 export function SchoolProfileFeature(): JSX.Element {
   const { urn } = useParams<{ urn: string }>();
@@ -174,23 +167,22 @@ export function SchoolProfileFeature(): JSX.Element {
                         resultsPhases: fromSearch.resultsPhases,
                         resultsSort: fromSearch.resultsSort,
                       }),
-                      state: { restoreSearch: fromSearch }
-                    }
+                      state: { restoreSearch: fromSearch },
+                    },
                   ]
                 : []),
               ...(fromCompare ? [{ label: "Compare", href: fromCompare.href }] : []),
-              { label: profile.school.name }
+              { label: profile.school.name },
             ]}
           />
 
-          {/* ── Full-width hero header (spans both columns) ────────── */}
           <div className="mb-8">
             <ProfileHeader
               school={profile.school}
               ofsted={profile.ofsted}
               ofstedCompleteness={profile.completeness.ofstedLatest}
               demographics={profile.demographics}
-              areaContext={profile.areaContext}
+              areaContext={profile.neighbourhood.areaContext}
               actions={
                 <>
                   <Button
@@ -223,43 +215,35 @@ export function SchoolProfileFeature(): JSX.Element {
                     {selected ? "Remove from compare" : "Add to compare"}
                   </Button>
                   {items.length >= 2 ? (
-                    <Button asChild variant="compare" size="none">
-                      <Link to={paths.compare(items.map((item) => item.urn))}>Open compare</Link>
-                    </Button>
+                    <CompareActionButton
+                      urns={items.map((item) => item.urn)}
+                      label="Open compare"
+                      lockedLabel="Unlock compare"
+                      variant="compare"
+                      size="none"
+                    />
                   ) : null}
                 </>
               }
             />
           </div>
 
-          {/* ── Two-column layout: sticky TOC sidebar + main content ── */}
-          {/* Desktop (lg+): 280px sticky sidebar left, content right   */}
-          {/* Mobile: single column, sidebar hidden                      */}
           <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-8">
-
-            {/* ── Desktop sticky TOC sidebar ─────────────────────── */}
-            {/* top-[3.75rem] = 60px, aligns flush below the 56px nav */}
             <aside className="hidden lg:block lg:sticky lg:top-[3.75rem] lg:self-start">
               <div className="panel-surface rounded-xl p-4">
                 <ProfileTableOfContents />
               </div>
             </aside>
 
-            {/* ── Main content column ────────────────────────────── */}
-            {/* pb-24 on mobile reserves space above the sticky CTA  */}
             <div className="space-y-5 pb-20 lg:space-y-8 lg:pb-0">
-
-              {/* School Overview — always visible, no accordion */}
               <div id="overview">
                 <SchoolOverviewSection overviewText={profile.overviewText} />
               </div>
 
-              {/* Analyst View — always visible, no accordion */}
               <div id="analyst-view">
-                <SchoolAnalystSection analystText={profile.analystText} />
+                <SchoolAnalystSection analyst={profile.analyst} />
               </div>
 
-              {/* Ofsted Profile — accordion on mobile, default OPEN */}
               <div id="ofsted-profile">
                 <ProfileSectionAccordion title="Ofsted Profile" defaultOpen={true}>
                   <OfstedProfileSection
@@ -272,7 +256,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Results & Progress — accordion on mobile, default OPEN */}
               <div id="results-progress">
                 <ProfileSectionAccordion title="Results & Progress" defaultOpen={true}>
                   <AcademicPerformanceSection
@@ -283,7 +266,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Day-to-Day — accordion on mobile, default CLOSED */}
               <div id="day-to-day">
                 <ProfileSectionAccordion title="Day-to-Day at School" defaultOpen={false}>
                   <AttendanceBehaviourSection
@@ -297,7 +279,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Pupil Demographics — accordion on mobile, default CLOSED */}
               <div id="demographics">
                 <ProfileSectionAccordion title="Pupil Demographics" defaultOpen={false}>
                   <DemographicsAndTrendsPanel
@@ -310,7 +291,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Teachers & Staff — accordion on mobile, default CLOSED */}
               <div id="teachers-staff">
                 <ProfileSectionAccordion title="Teachers & Staff" defaultOpen={false}>
                   <WorkforceLeadershipSection
@@ -324,11 +304,10 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Neighbourhood Context — accordion on mobile, default CLOSED */}
               <div id="neighbourhood">
                 <ProfileSectionAccordion title="Neighbourhood Context" defaultOpen={false}>
                   <NeighbourhoodSection
-                    areaContext={profile.areaContext}
+                    neighbourhood={profile.neighbourhood}
                     deprivationCompleteness={profile.completeness.areaDeprivation}
                     crimeCompleteness={profile.completeness.areaCrime}
                     housePriceCompleteness={profile.completeness.areaHousePrices}
@@ -336,7 +315,6 @@ export function SchoolProfileFeature(): JSX.Element {
                 </ProfileSectionAccordion>
               </div>
 
-              {/* Coverage notice — always visible, no accordion */}
               <CoverageNotice
                 unsupportedMetrics={profile.unsupportedMetrics}
                 completeness={profile.completeness}
@@ -344,9 +322,6 @@ export function SchoolProfileFeature(): JSX.Element {
             </div>
           </div>
 
-          {/* ── Mobile sticky CTA bar ──────────────────────────────── */}
-          {/* Fixed to viewport bottom on mobile only. lg+ hidden.     */}
-          {/* pb-[env()] handles iOS notch / home-indicator safe area. */}
           <div className="fixed bottom-0 left-0 right-0 z-nav lg:hidden">
             <div
               className="border-t border-border-subtle/60 bg-canvas/95 px-4 pt-3 backdrop-blur-xl"

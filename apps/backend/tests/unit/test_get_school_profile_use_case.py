@@ -4,6 +4,7 @@ import pytest
 
 from civitas.application.school_profiles.errors import SchoolProfileNotFoundError
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
+from civitas.domain.access.models import AccessDecision
 from civitas.domain.school_profiles.models import (
     SchoolAreaContext,
     SchoolAreaContextCoverage,
@@ -78,6 +79,16 @@ class FakeSummaryRepository:
     def get_summary(self, urn: str, summary_kind: str) -> SchoolSummary | None:
         self.calls.append((urn, summary_kind))
         return self._summaries.get(summary_kind)
+
+
+class FakeEvaluateAccessUseCase:
+    def __init__(self, decisions: dict[str, AccessDecision]) -> None:
+        self._decisions = decisions
+        self.calls: list[tuple[str, object | None]] = []
+
+    def execute(self, *, requirement_key: str, user_id: object | None, allow_preview: bool = True):
+        self.calls.append((requirement_key, user_id))
+        return self._decisions[requirement_key]
 
 
 def _profile(
@@ -498,7 +509,9 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.school.la_name == "Westminster"
     assert result.school.lsoa_code == "E01004736"
     assert result.overview_text is None
-    assert result.analyst_text is None
+    assert result.analyst.access.state == "unavailable"
+    assert result.analyst.access.reason_code == "artefact_not_published"
+    assert result.analyst.text is None
     assert result.demographics_latest is not None
     assert result.demographics_latest.academic_year == "2024/25"
     assert result.demographics_latest.coverage.ethnicity_supported is True
@@ -522,13 +535,14 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.coverage.is_partial_history is False
     assert result.ofsted_timeline.events[0].inspection_number == "10426709"
-    assert result.area_context is not None
-    assert result.area_context.coverage.has_deprivation is True
-    assert result.area_context.deprivation is not None
-    assert result.area_context.deprivation.imd_score == 27.1
-    assert result.area_context.deprivation.imd_rank == 4825
-    assert result.area_context.coverage.has_crime is True
-    assert result.area_context.coverage.has_house_prices is False
+    assert result.neighbourhood.access.state == "available"
+    assert result.neighbourhood.area_context is not None
+    assert result.neighbourhood.area_context.coverage.has_deprivation is True
+    assert result.neighbourhood.area_context.deprivation is not None
+    assert result.neighbourhood.area_context.deprivation.imd_score == 27.1
+    assert result.neighbourhood.area_context.deprivation.imd_rank == 4825
+    assert result.neighbourhood.area_context.coverage.has_crime is True
+    assert result.neighbourhood.area_context.coverage.has_house_prices is False
     assert result.completeness.demographics.status == "partial"
     assert result.completeness.attendance.status == "available"
     assert result.completeness.behaviour.status == "available"
@@ -561,10 +575,9 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.ofsted_latest is None
     assert result.ofsted_timeline is not None
     assert result.ofsted_timeline.events == ()
-    assert result.area_context is not None
-    assert result.area_context.deprivation is None
-    assert result.area_context.crime is None
-    assert result.area_context.house_prices is None
+    assert result.analyst.access.state == "unavailable"
+    assert result.neighbourhood.access.state == "unavailable"
+    assert result.neighbourhood.area_context is None
     assert result.completeness.demographics.status == "unavailable"
     assert result.completeness.workforce.status == "unavailable"
     assert result.completeness.leadership.status == "unavailable"
@@ -608,8 +621,114 @@ def test_get_school_profile_includes_overview_summary_when_available() -> None:
     result = use_case.execute(urn="123456")
 
     assert result.overview_text == "AI-generated overview text."
-    assert result.analyst_text == "AI-generated analyst text."
+    assert result.analyst.access.state == "available"
+    assert result.analyst.text == "AI-generated analyst text."
+    assert result.analyst.disclaimer is not None
     assert summary_repository.calls == [("123456", "overview"), ("123456", "analyst")]
+
+
+def test_get_school_profile_returns_locked_preview_sections_for_free_viewer() -> None:
+    repository = FakeSchoolProfileRepository(
+        profile=_profile(
+            area_context=SchoolAreaContext(
+                deprivation=SchoolAreaDeprivation(
+                    lsoa_code="E01004736",
+                    imd_score=27.1,
+                    imd_rank=4825,
+                    imd_decile=3,
+                    idaci_score=0.241,
+                    idaci_decile=2,
+                    income_score=None,
+                    income_rank=None,
+                    income_decile=None,
+                    employment_score=None,
+                    employment_rank=None,
+                    employment_decile=None,
+                    education_score=None,
+                    education_rank=None,
+                    education_decile=None,
+                    health_score=None,
+                    health_rank=None,
+                    health_decile=None,
+                    crime_score=None,
+                    crime_rank=None,
+                    crime_decile=None,
+                    barriers_score=None,
+                    barriers_rank=None,
+                    barriers_decile=None,
+                    living_environment_score=None,
+                    living_environment_rank=None,
+                    living_environment_decile=None,
+                    population_total=2000,
+                    local_authority_district_code="E09000033",
+                    local_authority_district_name="Westminster",
+                    source_release="IoD2025",
+                ),
+                crime=None,
+                house_prices=None,
+                coverage=SchoolAreaContextCoverage(
+                    has_deprivation=True,
+                    has_crime=False,
+                    crime_months_available=0,
+                    has_house_prices=False,
+                    house_price_months_available=0,
+                ),
+            )
+        )
+    )
+    summary_repository = FakeSummaryRepository(
+        summaries={
+            "analyst": SchoolSummary(
+                urn="123456",
+                summary_kind="analyst",
+                text="First sentence. Second sentence. Third sentence. Fourth sentence.",
+                data_version_hash="hash-456",
+                prompt_version="analyst.v1",
+                model_id="grok-test",
+                generated_at=datetime(2026, 3, 5, 12, 5, tzinfo=timezone.utc),
+                generation_duration_ms=165,
+            ),
+        }
+    )
+    evaluate_access_use_case = FakeEvaluateAccessUseCase(
+        decisions={
+            "school_profile.ai_analyst": AccessDecision(
+                requirement_key="school_profile.ai_analyst",
+                access_level="preview_only",
+                section_state="locked",
+                capability_key="premium_ai_analyst",
+                reason_code="anonymous_user",
+                available_product_codes=("premium_launch",),
+                requires_auth=True,
+                requires_purchase=False,
+            ),
+            "school_profile.neighbourhood": AccessDecision(
+                requirement_key="school_profile.neighbourhood",
+                access_level="preview_only",
+                section_state="locked",
+                capability_key="premium_neighbourhood",
+                reason_code="anonymous_user",
+                available_product_codes=("premium_launch",),
+                requires_auth=True,
+                requires_purchase=False,
+            ),
+        }
+    )
+    use_case = GetSchoolProfileUseCase(
+        school_profile_repository=repository,
+        summary_repository=summary_repository,
+        evaluate_access_use_case=evaluate_access_use_case,
+    )
+
+    result = use_case.execute(urn="123456")
+
+    assert result.analyst.access.state == "locked"
+    assert result.analyst.access.school_name == "Example School"
+    assert result.analyst.text is None
+    assert result.analyst.teaser_text == "First sentence. Second sentence. Third sentence."
+    assert result.neighbourhood.access.state == "locked"
+    assert result.neighbourhood.area_context is None
+    assert result.neighbourhood.teaser_text is not None
 
 
 def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing() -> None:
@@ -698,10 +817,10 @@ def test_get_school_profile_rehydrates_area_context_when_deprivation_is_missing(
 
     assert repository.received_urns == ["123456", "123456"]
     assert resolver.calls == ["SW1A 1AA"]
-    assert result.area_context is not None
-    assert result.area_context.coverage.has_deprivation is True
-    assert result.area_context.deprivation is not None
-    assert result.area_context.deprivation.lsoa_code == "E01004736"
+    assert result.neighbourhood.area_context is not None
+    assert result.neighbourhood.area_context.coverage.has_deprivation is True
+    assert result.neighbourhood.area_context.deprivation is not None
+    assert result.neighbourhood.area_context.deprivation.lsoa_code == "E01004736"
 
 
 def test_get_school_profile_keeps_profile_when_context_rehydrate_fails() -> None:
@@ -716,5 +835,5 @@ def test_get_school_profile_keeps_profile_when_context_rehydrate_fails() -> None
 
     assert repository.received_urns == ["123456"]
     assert resolver.calls == ["SW1A 1AA"]
-    assert result.area_context is not None
-    assert result.area_context.coverage.has_deprivation is False
+    assert result.neighbourhood.access.state == "unavailable"
+    assert result.neighbourhood.area_context is None

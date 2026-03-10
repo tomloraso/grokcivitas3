@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
+import { AuthProvider } from "../../auth/AuthProvider";
+import { ANONYMOUS_SESSION } from "../../auth/types";
 import { ToastProvider } from "../../../components/ui/Toast";
 import { CompareSelectionProvider } from "../../../shared/context/CompareSelectionContext";
 import { ResultsOverlay } from "./ResultsOverlay";
@@ -90,22 +92,24 @@ const RESULT: PostcodeSearchResult = {
 function renderOverlay() {
   return render(
     <MemoryRouter>
-      <CompareSelectionProvider>
-        <ToastProvider>
-          <ResultsOverlay
-            open
-            status="success"
-            result={RESULT}
-            errorMessage={null}
-            phases={["primary"]}
-            sort="ofsted"
-            onClose={vi.fn()}
-            onRetry={vi.fn(async () => undefined)}
-            onPhasesChange={vi.fn()}
-            onSortChange={vi.fn()}
-          />
-        </ToastProvider>
-      </CompareSelectionProvider>
+      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+        <CompareSelectionProvider>
+          <ToastProvider>
+            <ResultsOverlay
+              open
+              status="success"
+              result={RESULT}
+              errorMessage={null}
+              phases={["primary"]}
+              sort="ofsted"
+              onClose={vi.fn()}
+              onRetry={vi.fn(async () => undefined)}
+              onPhasesChange={vi.fn()}
+              onSortChange={vi.fn()}
+            />
+          </ToastProvider>
+        </CompareSelectionProvider>
+      </AuthProvider>
     </MemoryRouter>
   );
 }

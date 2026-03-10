@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   __resetApiRequestCacheForTests,
+  __setApiAccessEpochForTests,
   ApiClientError,
   getSchoolProfile,
   getSchoolTrendDashboard,
@@ -81,6 +82,7 @@ async function flushPromises(): Promise<void> {
 describe("api client school endpoint cache", () => {
   beforeEach(() => {
     __resetApiRequestCacheForTests();
+    __setApiAccessEpochForTests("anonymous:none");
     vi.restoreAllMocks();
   });
 
@@ -119,6 +121,19 @@ describe("api client school endpoint cache", () => {
     await expect(getSchoolProfile(URN)).resolves.toEqual(profilePayload);
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("varies access-sensitive cache keys by access epoch", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => jsonResponse(profilePayload));
+
+    await expect(getSchoolProfile(URN)).resolves.toEqual(profilePayload);
+
+    __setApiAccessEpochForTests("premium:premium_ai_analyst");
+    await expect(getSchoolProfile(URN)).resolves.toEqual(profilePayload);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("does not cache failed profile responses", async () => {

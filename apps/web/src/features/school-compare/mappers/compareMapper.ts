@@ -7,6 +7,7 @@ import type {
 import { formatCompletenessReasonCopy } from "../../../shared/completeness";
 import type { CompareSelectionItem } from "../../../shared/context/CompareSelectionContext";
 import { paths } from "../../../shared/routing/paths";
+import { mapSectionAccess } from "../../premium-access/mappers";
 import type {
   CompareCellVM,
   ComparePageVM,
@@ -26,6 +27,7 @@ export function mapCompareToVM(
   compareHref: string
 ): ComparePageVM {
   return {
+    access: mapSectionAccess(response.access),
     schools: (response.schools ?? []).map((school) =>
       mapSchoolColumnToVM(school, selectionByUrn.get(school.urn), compareHref)
     ),

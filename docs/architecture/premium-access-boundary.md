@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This page describes the implemented Phase 10 premium-access and billing slices as they exist in the backend today.
+This page describes the implemented Phase 10 premium-access and billing slices as they exist in the backend and web app today.
 Use it as the architecture-level source of truth for how products, capabilities, entitlements, billing checkout state, and access decisions are modelled before API paywall rendering is added.
 
 Detailed product intent still lives in:
@@ -16,7 +16,7 @@ Detailed product intent still lives in:
 - Civitas owns `PremiumProduct`, `product_capabilities`, `EntitlementGrant`, `EntitlementEvent`, and the backend access-policy registry.
 - Auth/session identifies the current user only. It does not decide product access directly.
 - Payment-provider payloads do not participate in access evaluation. Stage 10D reconciles billing state into Civitas entitlements first.
-- The web app will consume typed access outputs later in Phase 10E. 10D adds typed billing routes, but `/api/v1/session` remains auth-only in this phase.
+- The web app consumes typed access outputs from backend contracts. `/api/v1/session` carries shell-level access metadata, while richer entitlement detail lives on `GET /api/v1/account/access`.
 
 ## Backend Package Map
 
@@ -47,8 +47,10 @@ civitas/
       billing_provider_gateway.py
       billing_state_repository.py
   api/
+    account_routes.py
     billing_routes.py
     schemas/
+      access.py
       billing.py
   infrastructure/persistence/
     postgres_entitlement_repository.py
@@ -123,9 +125,24 @@ The access slice supports two evaluation modes:
 
 The returned `AccessDecision` remains transport-agnostic so API and non-HTTP callers can map it independently.
 
-## Current Scope And Deferral
+## Browser-Facing Contract
 
-Implemented in Phase 10C and 10D:
+Phase 10E adds three browser-facing access surfaces:
+
+- `GET /api/v1/session`
+  - auth-owned boot payload
+  - now includes `account_access_state`, `capability_keys`, and `access_epoch`
+- `GET /api/v1/account/access`
+  - authenticated account view of current entitlements and access state
+- premium-aware public read routes
+  - `GET /api/v1/schools/{urn}` wraps analyst and neighbourhood sections in typed `available` / `locked` / `unavailable` access blocks
+  - `GET /api/v1/schools/compare` returns either the full compare matrix or a locked payload with school context and paywall metadata
+
+The backend remains the single source of truth for locked vs available decisions. The web app consumes those typed outputs; it does not infer entitlement state from Stripe redirects or local storage.
+
+## Current Scope
+
+Implemented in Phase 10C, 10D, and 10E:
 
 - premium product catalogue lookup
 - product-to-capability mapping
@@ -136,10 +153,8 @@ Implemented in Phase 10C and 10D:
 - Stripe checkout-session creation and Stripe billing-portal handoff
 - idempotent webhook reconciliation into billing state plus entitlement state
 - payment-customer, checkout-session, subscription, and payment-event persistence
-
-Deferred to Phase 10E:
-
 - session payload access metadata
-- profile and compare contract changes
-- locked-section API responses
-- web paywall rendering and cache invalidation
+- authenticated account access endpoint
+- premium-aware profile and compare contracts
+- locked-section API responses and paywall metadata
+- web paywall rendering, checkout recovery, and access-epoch-aware cache invalidation

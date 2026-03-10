@@ -6,6 +6,7 @@ import {
   getSchoolTrendDashboard,
   getSchoolTrends
 } from "../../../api/client";
+import { useAuth } from "../../auth/useAuth";
 import { mapProfileToVM } from "../mappers/profileMapper";
 import type { SchoolProfileVM } from "../types";
 
@@ -43,10 +44,13 @@ const INITIAL_STATE: ProfileState = {
 };
 
 export function useSchoolProfile(urn: string | undefined) {
+  const { session } = useAuth();
+  const accessEpoch = session.accessEpoch;
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const requestSeqRef = useRef(0);
 
   const fetchProfile = useCallback(async () => {
+    void accessEpoch;
     if (!urn) {
       return;
     }
@@ -112,7 +116,7 @@ export function useSchoolProfile(urn: string | undefined) {
         message: err instanceof Error ? err.message : "Failed to load school profile"
       });
     }
-  }, [urn]);
+  }, [accessEpoch, urn]);
 
   useEffect(() => {
     void fetchProfile();

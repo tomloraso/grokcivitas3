@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { Crown, LockKeyhole } from "lucide-react";
 
 import { Button } from "../../components/ui/Button";
 import { cn } from "../../shared/utils/cn";
@@ -12,6 +13,8 @@ import { ThemeModeToggle } from "./ThemeModeToggle";
 interface SiteHeaderProps {
   accountEmail?: string | null;
   isAuthenticated?: boolean;
+  accountAccessState?: "anonymous" | "free" | "pending" | "premium";
+  hasCompareAccess?: boolean;
   onSignOut?: () => void;
   themeMode?: ThemeMode;
   onCycleTheme?: () => void;
@@ -20,6 +23,8 @@ interface SiteHeaderProps {
 export function SiteHeader({
   accountEmail = null,
   isAuthenticated = false,
+  accountAccessState = "anonymous",
+  hasCompareAccess = false,
   onSignOut,
   themeMode = "system",
   onCycleTheme = () => undefined,
@@ -36,10 +41,22 @@ export function SiteHeader({
       ? compareRouteState.urns
       : selectionUrns;
   const compareCount = compareUrns.length;
-  const compareHref = paths.compare(compareUrns);
   const compareLabel = `Compare ${compareCount}/4`;
   const returnTo = `${location.pathname}${location.search}`;
   const signInHref = paths.signIn(returnTo);
+  const compareActionHref = isAuthenticated
+    ? hasCompareAccess
+      ? paths.compare(compareUrns)
+      : paths.upgrade({
+          capability: "premium_comparison",
+          returnTo: paths.compare(compareUrns),
+        })
+    : paths.signIn(
+        paths.upgrade({
+          capability: "premium_comparison",
+          returnTo: paths.compare(compareUrns),
+        })
+      );
 
   return (
     <header
@@ -76,8 +93,11 @@ export function SiteHeader({
 
           {compareCount >= 2 ? (
             <Button asChild variant="secondary" size="sm">
-              <Link to={compareHref} aria-label={`${compareLabel} selected`}>
-                {compareLabel}
+              <Link to={compareActionHref} aria-label={`${compareLabel} selected`}>
+                {!hasCompareAccess ? (
+                  <LockKeyhole className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                ) : null}
+                {hasCompareAccess ? compareLabel : "Unlock compare"}
               </Link>
             </Button>
           ) : (
@@ -95,12 +115,24 @@ export function SiteHeader({
           {isAuthenticated ? (
             <>
               {accountEmail ? (
-                <div className="hidden items-center rounded-full border border-border-subtle/40 bg-surface/70 px-3 py-1 text-xs text-secondary sm:flex">
+                <Link
+                  to={paths.account}
+                  className="hidden items-center gap-2 rounded-full border border-border-subtle/40 bg-surface/70 px-3 py-1 text-xs text-secondary transition-colors hover:border-brand/40 hover:text-primary sm:flex"
+                >
                   <span className="max-w-[180px] truncate font-medium text-primary">
                     {accountEmail}
                   </span>
-                </div>
+                  {accountAccessState === "premium" ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-brand">
+                      <Crown className="h-3 w-3" aria-hidden />
+                      Premium
+                    </span>
+                  ) : null}
+                </Link>
               ) : null}
+              <Button asChild variant="ghost" size="sm">
+                <Link to={paths.account}>Account</Link>
+              </Button>
               <Button
                 type="button"
                 variant="ghost"
@@ -119,6 +151,14 @@ export function SiteHeader({
           <ThemeModeToggle mode={themeMode} onCycle={onCycleTheme} />
         </div>
       </div>
+      {compareCount >= 2 && !hasCompareAccess ? (
+        <div className="border-t border-border-subtle/60 bg-brand/5 px-4 py-2 sm:px-6 lg:px-8">
+          <div className="mx-auto flex max-w-[1200px] items-center gap-2 text-xs text-secondary">
+            <LockKeyhole className="h-3.5 w-3.5 text-brand" aria-hidden />
+            <span>Compare is included with Premium.</span>
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

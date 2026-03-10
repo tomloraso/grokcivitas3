@@ -3,7 +3,13 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from civitas.domain.access.value_objects import BillingInterval, CapabilityKey, EntitlementStatus
+from civitas.domain.access.value_objects import (
+    AccessDecisionReasonCode,
+    BillingInterval,
+    CapabilityKey,
+    EntitlementStatus,
+    SectionState,
+)
 
 AccountAccessState = Literal["anonymous", "free", "pending", "premium"]
 
@@ -38,4 +44,16 @@ class CurrentAccountAccessDto:
     state: AccountAccessState
     user_id: UUID | None
     capability_keys: tuple[CapabilityKey, ...]
+    access_epoch: str
     entitlements: tuple[EntitlementGrantDto, ...]
+
+
+@dataclass(frozen=True)
+class SectionAccessDto:
+    state: SectionState
+    capability_key: CapabilityKey | None
+    reason_code: AccessDecisionReasonCode | None
+    product_codes: tuple[str, ...]
+    requires_auth: bool
+    requires_purchase: bool
+    school_name: str | None = None

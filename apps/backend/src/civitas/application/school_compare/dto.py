@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from civitas.application.access.dto import SectionAccessDto
 from civitas.domain.school_compare.models import (
     CompareAvailability,
     CompareCompletenessReasonCode,
@@ -64,5 +65,6 @@ class SchoolCompareSectionDto:
 
 @dataclass(frozen=True)
 class SchoolCompareResponseDto:
+    access: SectionAccessDto
     schools: tuple[SchoolCompareSchoolDto, ...]
     sections: tuple[SchoolCompareSectionDto, ...]

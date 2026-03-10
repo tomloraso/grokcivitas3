@@ -27,6 +27,7 @@ describe("mapCompareToVM", () => {
       "/compare?urns=100001,200002"
     );
 
+    expect(vm.access.state).toBe("available");
     expect(vm.schools[0]).toMatchObject({
       urn: "100001",
       name: "Primary Example",
@@ -73,5 +74,24 @@ describe("mapCompareToVM", () => {
     const vm = mapCompareToVM(response, new Map(), "/compare?urns=100001,200002");
 
     expect(vm.sections[0].rows[1].cells[0].displayValue).toBe("10 Oct 2025");
+  });
+
+  it("keeps the locked compare access branch visible to the UI", () => {
+    const response = structuredClone(COMPARE_RESPONSE);
+    response.access = {
+      state: "locked",
+      capability_key: "premium_comparison",
+      reason_code: "premium_capability_missing",
+      product_codes: ["premium_launch"],
+      requires_auth: false,
+      requires_purchase: true,
+      school_name: null,
+    };
+    response.sections = [];
+
+    const vm = mapCompareToVM(response, new Map(), "/compare?urns=100001,200002");
+
+    expect(vm.access.state).toBe("locked");
+    expect(vm.sections).toEqual([]);
   });
 });

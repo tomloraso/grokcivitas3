@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import Literal
 
+from civitas.application.access.dto import SectionAccessDto
+
 SectionCompletenessStatus = Literal["available", "partial", "unavailable"]
 SectionCompletenessReasonCode = Literal[
     "source_missing",
@@ -305,6 +307,14 @@ class SchoolAreaContextDto:
 
 
 @dataclass(frozen=True)
+class SchoolProfileAnalystSectionDto:
+    access: SectionAccessDto
+    text: str | None = None
+    teaser_text: str | None = None
+    disclaimer: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolPerformanceYearDto:
     academic_year: str
     attainment8_average: float | None
@@ -353,6 +363,13 @@ class SchoolProfileBenchmarksDto:
 
 
 @dataclass(frozen=True)
+class SchoolProfileNeighbourhoodSectionDto:
+    access: SectionAccessDto
+    area_context: SchoolAreaContextDto | None = None
+    teaser_text: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolProfileSectionCompletenessDto:
     status: SectionCompletenessStatus
     reason_code: SectionCompletenessReasonCode | None
@@ -379,7 +396,7 @@ class SchoolProfileCompletenessDto:
 class SchoolProfileResponseDto:
     school: SchoolProfileSchoolDto
     overview_text: str | None
-    analyst_text: str | None
+    analyst: SchoolProfileAnalystSectionDto
     demographics_latest: SchoolDemographicsLatestDto | None
     attendance_latest: SchoolAttendanceLatestDto | None
     behaviour_latest: SchoolBehaviourLatestDto | None
@@ -388,7 +405,7 @@ class SchoolProfileResponseDto:
     performance: SchoolPerformanceDto | None
     ofsted_latest: SchoolOfstedLatestDto | None
     ofsted_timeline: SchoolOfstedTimelineDto | None
-    area_context: SchoolAreaContextDto | None
+    neighbourhood: SchoolProfileNeighbourhoodSectionDto
     completeness: SchoolProfileCompletenessDto
     benchmarks: SchoolProfileBenchmarksDto = field(
         default_factory=lambda: SchoolProfileBenchmarksDto(metrics=())

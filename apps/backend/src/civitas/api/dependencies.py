@@ -4,7 +4,11 @@ from fastapi import Depends, HTTPException, Request, Response
 
 from civitas.api.request_origins import require_allowed_cookie_origin
 from civitas.api.session_cookies import SessionCookieSettings, clear_session_cookie
-from civitas.application.access.use_cases import ListAvailablePremiumProductsUseCase
+from civitas.application.access.use_cases import (
+    EvaluateAccessUseCase,
+    GetCurrentAccountAccessUseCase,
+    ListAvailablePremiumProductsUseCase,
+)
 from civitas.application.billing.ports.billing_provider_gateway import BillingProviderGateway
 from civitas.application.billing.use_cases import (
     CreateBillingPortalSessionUseCase,
@@ -12,7 +16,7 @@ from civitas.application.billing.use_cases import (
     GetCheckoutStatusUseCase,
     ReconcilePaymentEventUseCase,
 )
-from civitas.application.identity.dto import SessionUserDto
+from civitas.application.identity.dto import CurrentSessionDto, SessionUserDto
 from civitas.application.identity.use_cases import (
     CompleteAuthCallbackUseCase,
     GetCurrentSessionUseCase,
@@ -48,7 +52,13 @@ from civitas.bootstrap.container import (
     billing_provider_gateway as build_billing_provider_gateway,
 )
 from civitas.bootstrap.container import (
+    evaluate_access_use_case as build_evaluate_access_use_case,
+)
+from civitas.bootstrap.container import (
     get_checkout_status_use_case as build_checkout_status_use_case,
+)
+from civitas.bootstrap.container import (
+    get_current_account_access_use_case as build_current_account_access_use_case,
 )
 from civitas.bootstrap.container import (
     get_current_session_use_case as build_current_session_use_case,
@@ -81,6 +91,14 @@ def get_complete_auth_callback_use_case() -> CompleteAuthCallbackUseCase:
 
 def get_current_session_use_case() -> GetCurrentSessionUseCase:
     return build_current_session_use_case()
+
+
+def get_current_account_access_use_case() -> GetCurrentAccountAccessUseCase:
+    return build_current_account_access_use_case()
+
+
+def get_evaluate_access_use_case() -> EvaluateAccessUseCase:
+    return build_evaluate_access_use_case()
 
 
 def get_sign_out_use_case() -> SignOutUseCase:
@@ -149,17 +167,32 @@ def require_authenticated_session(
     use_case: GetCurrentSessionUseCase = Depends(get_current_session_use_case),
     cookie_settings: SessionCookieSettings = Depends(get_session_cookie_settings),
 ) -> SessionUserDto:
-    session_token = request.cookies.get(cookie_settings.name)
-    result = use_case.execute(session_token=session_token)
+    result = _resolve_current_session(
+        request=request,
+        response=response,
+        use_case=use_case,
+        cookie_settings=cookie_settings,
+    )
     if result.state == "authenticated" and result.user is not None:
         return result.user
-    if session_token and result.anonymous_reason in {
-        "invalid",
-        "expired",
-        "revoked",
-    }:
-        clear_session_cookie(response, settings=cookie_settings)
     raise HTTPException(status_code=401, detail="authentication required")
+
+
+def get_optional_session_user(
+    request: Request,
+    response: Response,
+    use_case: GetCurrentSessionUseCase = Depends(get_current_session_use_case),
+    cookie_settings: SessionCookieSettings = Depends(get_session_cookie_settings),
+) -> SessionUserDto | None:
+    result = _resolve_current_session(
+        request=request,
+        response=response,
+        use_case=use_case,
+        cookie_settings=cookie_settings,
+    )
+    if result.state == "authenticated":
+        return result.user
+    return None
 
 
 def get_list_tasks_use_case() -> ListTasksUseCase:
@@ -188,3 +221,21 @@ def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
 
 def get_school_trend_dashboard_use_case() -> GetSchoolTrendDashboardUseCase:
     return build_school_trend_dashboard_use_case()
+
+
+def _resolve_current_session(
+    *,
+    request: Request,
+    response: Response,
+    use_case: GetCurrentSessionUseCase,
+    cookie_settings: SessionCookieSettings,
+) -> CurrentSessionDto:
+    session_token = request.cookies.get(cookie_settings.name)
+    result = use_case.execute(session_token=session_token)
+    if session_token and result.anonymous_reason in {
+        "invalid",
+        "expired",
+        "revoked",
+    }:
+        clear_session_cookie(response, settings=cookie_settings)
+    return result

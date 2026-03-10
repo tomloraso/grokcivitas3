@@ -8,11 +8,13 @@ from fastapi.testclient import TestClient
 from civitas.api.dependencies import (
     get_auth_allowed_origins,
     get_complete_auth_callback_use_case,
+    get_current_account_access_use_case,
     get_current_session_use_case,
     get_sign_out_use_case,
     get_start_sign_in_use_case,
 )
 from civitas.api.main import app
+from civitas.application.access.dto import CurrentAccountAccessDto
 from civitas.application.identity.dto import (
     CompleteAuthCallbackResultDto,
     CurrentSessionDto,
@@ -47,6 +49,16 @@ class FakeCurrentSessionUseCase:
 
     def execute(self, *, session_token: str | None) -> CurrentSessionDto:
         self.calls.append(session_token)
+        return self._result
+
+
+class FakeCurrentAccountAccessUseCase:
+    def __init__(self, result: CurrentAccountAccessDto) -> None:
+        self._result = result
+        self.calls: list[UUID | None] = []
+
+    def execute(self, *, user_id: UUID | None) -> CurrentAccountAccessDto:
+        self.calls.append(user_id)
         return self._result
 
 
@@ -96,7 +108,17 @@ def teardown_function() -> None:
 
 def test_get_session_returns_anonymous_contract() -> None:
     fake_use_case = FakeCurrentSessionUseCase(CurrentSessionDto.anonymous(reason="missing"))
+    fake_access_use_case = FakeCurrentAccountAccessUseCase(
+        CurrentAccountAccessDto(
+            state="anonymous",
+            user_id=None,
+            capability_keys=(),
+            access_epoch="anonymous:none",
+            entitlements=(),
+        )
+    )
     app.dependency_overrides[get_current_session_use_case] = lambda: fake_use_case
+    app.dependency_overrides[get_current_account_access_use_case] = lambda: fake_access_use_case
 
     response = client.get("/api/v1/session")
 
@@ -106,8 +128,12 @@ def test_get_session_returns_anonymous_contract() -> None:
         "user": None,
         "expires_at": None,
         "anonymous_reason": "missing",
+        "account_access_state": "anonymous",
+        "capability_keys": [],
+        "access_epoch": "anonymous:none",
     }
     assert fake_use_case.calls == [None]
+    assert fake_access_use_case.calls == [None]
 
 
 def test_start_sign_in_returns_redirect_url() -> None:
@@ -260,21 +286,43 @@ def test_auth_callback_redirects_with_callback_failed_when_provider_is_unavailab
 
 def test_get_session_clears_cookie_for_invalid_session_token() -> None:
     fake_use_case = FakeCurrentSessionUseCase(CurrentSessionDto.anonymous(reason="invalid"))
+    fake_access_use_case = FakeCurrentAccountAccessUseCase(
+        CurrentAccountAccessDto(
+            state="anonymous",
+            user_id=None,
+            capability_keys=(),
+            access_epoch="anonymous:none",
+            entitlements=(),
+        )
+    )
     app.dependency_overrides[get_current_session_use_case] = lambda: fake_use_case
+    app.dependency_overrides[get_current_account_access_use_case] = lambda: fake_access_use_case
 
     client.cookies.set("civitas_session", "bad-token")
     response = client.get("/api/v1/session")
 
     assert response.status_code == 200
     assert response.json()["anonymous_reason"] == "invalid"
+    assert response.json()["account_access_state"] == "anonymous"
     assert "civitas_session=" in response.headers["set-cookie"]
     assert fake_use_case.calls == ["bad-token"]
+    assert fake_access_use_case.calls == [None]
 
 
 def test_sign_out_clears_cookie_and_returns_anonymous_state() -> None:
     fake_use_case = FakeSignOutUseCase(CurrentSessionDto.anonymous(reason="signed_out"))
+    fake_access_use_case = FakeCurrentAccountAccessUseCase(
+        CurrentAccountAccessDto(
+            state="anonymous",
+            user_id=None,
+            capability_keys=(),
+            access_epoch="anonymous:none",
+            entitlements=(),
+        )
+    )
     app.dependency_overrides[get_auth_allowed_origins] = lambda: ("http://testserver",)
     app.dependency_overrides[get_sign_out_use_case] = lambda: fake_use_case
+    app.dependency_overrides[get_current_account_access_use_case] = lambda: fake_access_use_case
 
     client.cookies.set("civitas_session", "session-token")
     response = client.post(
@@ -288,10 +336,14 @@ def test_sign_out_clears_cookie_and_returns_anonymous_state() -> None:
         "user": None,
         "expires_at": None,
         "anonymous_reason": "signed_out",
+        "account_access_state": "anonymous",
+        "capability_keys": [],
+        "access_epoch": "anonymous:none",
     }
     assert "civitas_session=" in response.headers["set-cookie"]
     assert "HttpOnly" in response.headers["set-cookie"]
     assert fake_use_case.calls == ["session-token"]
+    assert fake_access_use_case.calls == [None]
 
 
 def test_sign_out_rejects_untrusted_origin_when_session_cookie_present() -> None:

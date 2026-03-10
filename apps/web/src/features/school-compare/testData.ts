@@ -1,6 +1,15 @@
 import type { SchoolCompareResponse } from "../../api/types";
 
 export const COMPARE_RESPONSE: SchoolCompareResponse = {
+  access: {
+    state: "available",
+    capability_key: "premium_comparison",
+    reason_code: null,
+    product_codes: [],
+    requires_auth: false,
+    requires_purchase: false,
+    school_name: null,
+  },
   schools: [
     {
       urn: "100001",

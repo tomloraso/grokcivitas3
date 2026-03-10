@@ -1,3 +1,13 @@
+import re
+from uuid import UUID
+
+from civitas.application.access.dto import SectionAccessDto
+from civitas.application.access.policies import (
+    SCHOOL_PROFILE_AI_ANALYST_REQUIREMENT,
+    SCHOOL_PROFILE_NEIGHBOURHOOD_REQUIREMENT,
+    get_access_requirement,
+)
+from civitas.application.access.use_cases import EvaluateAccessUseCase
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
@@ -21,9 +31,11 @@ from civitas.application.school_profiles.dto import (
     SchoolOfstedTimelineEventDto,
     SchoolPerformanceDto,
     SchoolPerformanceYearDto,
+    SchoolProfileAnalystSectionDto,
     SchoolProfileBenchmarksDto,
     SchoolProfileCompletenessDto,
     SchoolProfileMetricBenchmarkDto,
+    SchoolProfileNeighbourhoodSectionDto,
     SchoolProfileResponseDto,
     SchoolProfileSchoolDto,
     SchoolProfileSectionCompletenessDto,
@@ -40,8 +52,14 @@ from civitas.application.school_summaries.ports.summary_repository import Summar
 from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
+from civitas.domain.access.value_objects import AccessDecisionReasonCode
 from civitas.domain.school_profiles.models import SchoolProfile
 from civitas.domain.school_trends.models import SchoolMetricBenchmarkYearlyRow
+
+ANALYST_DISCLAIMER = (
+    "This analyst view is AI-generated from public government data. "
+    "It highlights patterns in the published evidence, but it is not official advice or a recommendation."
+)
 
 
 class GetSchoolProfileUseCase:
@@ -51,13 +69,20 @@ class GetSchoolProfileUseCase:
         postcode_context_resolver: PostcodeContextResolver | None = None,
         school_trends_repository: SchoolTrendsRepository | None = None,
         summary_repository: SummaryRepository | None = None,
+        evaluate_access_use_case: EvaluateAccessUseCase | None = None,
     ) -> None:
         self._school_profile_repository = school_profile_repository
         self._postcode_context_resolver = postcode_context_resolver
         self._school_trends_repository = school_trends_repository
         self._summary_repository = summary_repository
+        self._evaluate_access_use_case = evaluate_access_use_case
 
-    def execute(self, *, urn: str) -> SchoolProfileResponseDto:
+    def execute(
+        self,
+        *,
+        urn: str,
+        viewer_user_id: UUID | None = None,
+    ) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
         profile = self._school_profile_repository.get_school_profile(normalized_urn)
         if profile is None:
@@ -451,6 +476,18 @@ class GetSchoolProfileUseCase:
         if self._summary_repository is not None:
             overview_summary = self._summary_repository.get_summary(normalized_urn, "overview")
             analyst_summary = self._summary_repository.get_summary(normalized_urn, "analyst")
+        analyst = _build_analyst_section(
+            school_name=profile.school.name,
+            analyst_text=analyst_summary.text if analyst_summary is not None else None,
+            viewer_user_id=viewer_user_id,
+            evaluate_access_use_case=self._evaluate_access_use_case,
+        )
+        neighbourhood = _build_neighbourhood_section(
+            school_name=profile.school.name,
+            area_context=area_context,
+            viewer_user_id=viewer_user_id,
+            evaluate_access_use_case=self._evaluate_access_use_case,
+        )
 
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
@@ -497,7 +534,7 @@ class GetSchoolProfileUseCase:
                 lng=profile.school.lng,
             ),
             overview_text=overview_summary.text if overview_summary is not None else None,
-            analyst_text=analyst_summary.text if analyst_summary is not None else None,
+            analyst=analyst,
             demographics_latest=demographics_latest,
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,
@@ -506,7 +543,7 @@ class GetSchoolProfileUseCase:
             performance=performance,
             ofsted_latest=ofsted_latest,
             ofsted_timeline=ofsted_timeline,
-            area_context=area_context,
+            neighbourhood=neighbourhood,
             benchmarks=benchmarks,
             completeness=completeness,
         )
@@ -588,3 +625,190 @@ def _to_optional_delta(
     if school_value is None or benchmark_value is None:
         return None
     return float(school_value) - float(benchmark_value)
+
+
+def _build_analyst_section(
+    *,
+    school_name: str,
+    analyst_text: str | None,
+    viewer_user_id: UUID | None,
+    evaluate_access_use_case: EvaluateAccessUseCase | None,
+) -> SchoolProfileAnalystSectionDto:
+    normalized_text = _normalize_text(analyst_text)
+    if normalized_text is None:
+        return SchoolProfileAnalystSectionDto(
+            access=_unavailable_section_access(
+                requirement_key=SCHOOL_PROFILE_AI_ANALYST_REQUIREMENT,
+                reason_code="artefact_not_published",
+            ),
+        )
+
+    access = _resolve_section_access(
+        requirement_key=SCHOOL_PROFILE_AI_ANALYST_REQUIREMENT,
+        viewer_user_id=viewer_user_id,
+        evaluate_access_use_case=evaluate_access_use_case,
+        school_name=school_name,
+    )
+    if access.state == "available":
+        return SchoolProfileAnalystSectionDto(
+            access=access,
+            text=normalized_text,
+            disclaimer=ANALYST_DISCLAIMER,
+        )
+
+    return SchoolProfileAnalystSectionDto(
+        access=access,
+        teaser_text=_build_analyst_teaser_text(normalized_text),
+        disclaimer=ANALYST_DISCLAIMER,
+    )
+
+
+def _build_neighbourhood_section(
+    *,
+    school_name: str,
+    area_context: SchoolAreaContextDto | None,
+    viewer_user_id: UUID | None,
+    evaluate_access_use_case: EvaluateAccessUseCase | None,
+) -> SchoolProfileNeighbourhoodSectionDto:
+    if not _has_neighbourhood_content(area_context):
+        return SchoolProfileNeighbourhoodSectionDto(
+            access=_unavailable_section_access(
+                requirement_key=SCHOOL_PROFILE_NEIGHBOURHOOD_REQUIREMENT,
+                reason_code="artefact_not_published",
+            ),
+        )
+
+    access = _resolve_section_access(
+        requirement_key=SCHOOL_PROFILE_NEIGHBOURHOOD_REQUIREMENT,
+        viewer_user_id=viewer_user_id,
+        evaluate_access_use_case=evaluate_access_use_case,
+        school_name=school_name,
+    )
+    if access.state == "available":
+        return SchoolProfileNeighbourhoodSectionDto(
+            access=access,
+            area_context=area_context,
+        )
+
+    return SchoolProfileNeighbourhoodSectionDto(
+        access=access,
+        teaser_text=_build_neighbourhood_teaser_text(
+            school_name=school_name,
+            area_context=area_context,
+        ),
+    )
+
+
+def _resolve_section_access(
+    *,
+    requirement_key: str,
+    viewer_user_id: UUID | None,
+    evaluate_access_use_case: EvaluateAccessUseCase | None,
+    school_name: str,
+) -> SectionAccessDto:
+    requirement = get_access_requirement(requirement_key)
+    if evaluate_access_use_case is None:
+        return SectionAccessDto(
+            state="available",
+            capability_key=requirement.capability_key,
+            reason_code=None,
+            product_codes=(),
+            requires_auth=False,
+            requires_purchase=False,
+        )
+
+    decision = evaluate_access_use_case.execute(
+        requirement_key=requirement_key,
+        user_id=viewer_user_id,
+    )
+    return SectionAccessDto(
+        state=decision.section_state,
+        capability_key=decision.capability_key,
+        reason_code=decision.reason_code,
+        product_codes=decision.available_product_codes,
+        requires_auth=decision.requires_auth,
+        requires_purchase=decision.requires_purchase,
+        school_name=school_name if decision.section_state == "locked" else None,
+    )
+
+
+def _unavailable_section_access(
+    *,
+    requirement_key: str,
+    reason_code: AccessDecisionReasonCode,
+) -> SectionAccessDto:
+    requirement = get_access_requirement(requirement_key)
+    return SectionAccessDto(
+        state="unavailable",
+        capability_key=requirement.capability_key,
+        reason_code=reason_code,
+        product_codes=(),
+        requires_auth=False,
+        requires_purchase=False,
+    )
+
+
+def _has_neighbourhood_content(area_context: SchoolAreaContextDto | None) -> bool:
+    if area_context is None:
+        return False
+    return (
+        area_context.deprivation is not None
+        or area_context.crime is not None
+        or area_context.house_prices is not None
+    )
+
+
+def _build_neighbourhood_teaser_text(
+    *,
+    school_name: str,
+    area_context: SchoolAreaContextDto | None,
+) -> str:
+    segments: list[str] = []
+    if area_context is not None:
+        if area_context.deprivation is not None:
+            segments.append("deprivation context")
+        if area_context.crime is not None:
+            segments.append("local crime context")
+        if area_context.house_prices is not None:
+            segments.append("house-price context")
+
+    if not segments:
+        return f"Premium neighbourhood context is available for {school_name}."
+    return (
+        f"Premium neighbourhood context is available for {school_name}, including "
+        f"{_join_with_commas(segments)}."
+    )
+
+
+def _build_analyst_teaser_text(text: str) -> str:
+    sentences = [item.strip() for item in re.split(r"(?<=[.!?])\s+", text) if item.strip()]
+    if not sentences:
+        return text
+    if len(sentences) == 1:
+        return _truncate_text(sentences[0], limit=240)
+
+    teaser = " ".join(sentences[:2])
+    if len(teaser) < 220 and len(sentences) > 2:
+        teaser = " ".join(sentences[:3])
+    return teaser
+
+
+def _join_with_commas(parts: list[str]) -> str:
+    if len(parts) == 1:
+        return parts[0]
+    if len(parts) == 2:
+        return f"{parts[0]} and {parts[1]}"
+    return f"{', '.join(parts[:-1])}, and {parts[-1]}"
+
+
+def _normalize_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
+def _truncate_text(value: str, *, limit: int) -> str:
+    if len(value) <= limit:
+        return value
+    return f"{value[: limit - 3].rstrip()}..."

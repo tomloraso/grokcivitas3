@@ -8,6 +8,7 @@ from fastapi.responses import RedirectResponse
 from civitas.api.dependencies import (
     get_auth_callback_error_path,
     get_complete_auth_callback_use_case,
+    get_current_account_access_use_case,
     get_current_session_use_case,
     get_session_cookie_settings,
     get_sign_out_use_case,
@@ -25,6 +26,7 @@ from civitas.api.session_cookies import (
     clear_session_cookie,
     set_session_cookie,
 )
+from civitas.application.access.use_cases import GetCurrentAccountAccessUseCase
 from civitas.application.identity.dto import CurrentSessionDto
 from civitas.application.identity.errors import (
     IdentityProviderUnavailableError,
@@ -114,6 +116,9 @@ def get_session(
     request: Request,
     response: Response,
     use_case: GetCurrentSessionUseCase = Depends(get_current_session_use_case),
+    account_access_use_case: GetCurrentAccountAccessUseCase = Depends(
+        get_current_account_access_use_case
+    ),
     cookie_settings: SessionCookieSettings = Depends(get_session_cookie_settings),
 ) -> SessionResponse:
     session_token = request.cookies.get(cookie_settings.name)
@@ -129,7 +134,10 @@ def get_session(
         }
     ):
         clear_session_cookie(response, settings=cookie_settings)
-    return _to_session_response(result)
+    return _to_session_response(
+        result,
+        account_access_use_case=account_access_use_case,
+    )
 
 
 @router.post(
@@ -141,15 +149,28 @@ def sign_out(
     response: Response,
     _: None = Depends(require_valid_auth_origin),
     use_case: SignOutUseCase = Depends(get_sign_out_use_case),
+    account_access_use_case: GetCurrentAccountAccessUseCase = Depends(
+        get_current_account_access_use_case
+    ),
     cookie_settings: SessionCookieSettings = Depends(get_session_cookie_settings),
 ) -> SessionResponse:
     session_token = request.cookies.get(cookie_settings.name)
     result = use_case.execute(session_token=session_token)
     clear_session_cookie(response, settings=cookie_settings)
-    return _to_session_response(result)
+    return _to_session_response(
+        result,
+        account_access_use_case=account_access_use_case,
+    )
 
 
-def _to_session_response(result: CurrentSessionDto) -> SessionResponse:
+def _to_session_response(
+    result: CurrentSessionDto,
+    *,
+    account_access_use_case: GetCurrentAccountAccessUseCase,
+) -> SessionResponse:
+    access = account_access_use_case.execute(
+        user_id=result.user.id if result.user is not None else None
+    )
     user = None
     if result.user is not None:
         user = SessionUserResponse(
@@ -161,6 +182,9 @@ def _to_session_response(result: CurrentSessionDto) -> SessionResponse:
         user=user,
         expires_at=result.expires_at,
         anonymous_reason=result.anonymous_reason,
+        account_access_state=access.state,
+        capability_keys=list(access.capability_keys),
+        access_epoch=access.access_epoch,
     )
 
 

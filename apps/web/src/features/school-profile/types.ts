@@ -1,4 +1,5 @@
 import type { MetricSectionKey, MetricUnit } from "./metricCatalog";
+import type { SectionAccessVM } from "../premium-access/types";
 
 export interface SchoolIdentityVM {
   urn: string;
@@ -392,10 +393,23 @@ export interface UnsupportedMetricVM {
   label: string;
 }
 
+export interface AnalystSectionVM {
+  access: SectionAccessVM;
+  text: string | null;
+  teaserText: string | null;
+  disclaimer: string | null;
+}
+
+export interface NeighbourhoodSectionVM {
+  access: SectionAccessVM;
+  areaContext: AreaContextVM | null;
+  teaserText: string | null;
+}
+
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
   overviewText: string | null;
-  analystText: string | null;
+  analyst: AnalystSectionVM;
   demographics: DemographicsVM | null;
   attendance: AttendanceLatestVM | null;
   behaviour: BehaviourLatestVM | null;
@@ -404,7 +418,7 @@ export interface SchoolProfileVM {
   performance: PerformanceVM | null;
   ofsted: OfstedVM | null;
   ofstedTimeline: OfstedTimelineVM;
-  areaContext: AreaContextVM;
+  neighbourhood: NeighbourhoodSectionVM;
   trends: TrendsVM | null;
   benchmarkDashboard: BenchmarkDashboardVM | null;
   completeness: ProfileCompletenessVM;

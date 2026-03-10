@@ -7,7 +7,9 @@
   "paths": {
     "/api/v1/auth/start": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Start Sign In",
         "operationId": "start_sign_in_api_v1_auth_start_post",
         "requestBody": {
@@ -46,7 +48,9 @@
     },
     "/api/v1/auth/callback": {
       "get": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Auth Callback",
         "operationId": "auth_callback_api_v1_auth_callback_get",
         "responses": {
@@ -63,7 +67,9 @@
     },
     "/api/v1/session": {
       "get": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Get Session",
         "operationId": "get_session_api_v1_session_get",
         "responses": {
@@ -82,7 +88,9 @@
     },
     "/api/v1/auth/signout": {
       "post": {
-        "tags": ["auth"],
+        "tags": [
+          "auth"
+        ],
         "summary": "Sign Out",
         "operationId": "sign_out_api_v1_auth_signout_post",
         "responses": {
@@ -99,9 +107,32 @@
         }
       }
     },
+    "/api/v1/account/access": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get Account Access",
+        "operationId": "get_account_access_api_v1_account_access_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountAccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/billing/products": {
       "get": {
-        "tags": ["billing"],
+        "tags": [
+          "billing"
+        ],
         "summary": "List Billing Products",
         "operationId": "list_billing_products_api_v1_billing_products_get",
         "responses": {
@@ -120,7 +151,9 @@
     },
     "/api/v1/billing/checkout-sessions": {
       "post": {
-        "tags": ["billing"],
+        "tags": [
+          "billing"
+        ],
         "summary": "Create Checkout Session",
         "operationId": "create_checkout_session_api_v1_billing_checkout_sessions_post",
         "requestBody": {
@@ -159,7 +192,9 @@
     },
     "/api/v1/billing/checkout-sessions/{checkout_id}": {
       "get": {
-        "tags": ["billing"],
+        "tags": [
+          "billing"
+        ],
         "summary": "Get Checkout Status",
         "operationId": "get_checkout_status_api_v1_billing_checkout_sessions__checkout_id__get",
         "parameters": [
@@ -200,7 +235,9 @@
     },
     "/api/v1/billing/portal-sessions": {
       "post": {
-        "tags": ["billing"],
+        "tags": [
+          "billing"
+        ],
         "summary": "Create Billing Portal Session",
         "operationId": "create_billing_portal_session_api_v1_billing_portal_sessions_post",
         "requestBody": {
@@ -239,7 +276,9 @@
     },
     "/api/v1/billing/webhooks/stripe": {
       "post": {
-        "tags": ["billing"],
+        "tags": [
+          "billing"
+        ],
         "summary": "Stripe Webhook",
         "operationId": "stripe_webhook_api_v1_billing_webhooks_stripe_post",
         "responses": {
@@ -258,7 +297,9 @@
     },
     "/api/v1/health": {
       "get": {
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "summary": "Health",
         "operationId": "health_api_v1_health_get",
         "responses": {
@@ -281,7 +322,9 @@
     },
     "/api/v1/tasks": {
       "get": {
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "summary": "List Tasks",
         "operationId": "list_tasks_api_v1_tasks_get",
         "responses": {
@@ -302,7 +345,9 @@
         }
       },
       "post": {
-        "tags": ["tasks"],
+        "tags": [
+          "tasks"
+        ],
         "summary": "Create Task",
         "operationId": "create_task_api_v1_tasks_post",
         "requestBody": {
@@ -341,7 +386,10 @@
     },
     "/api/v1/schools": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Search Schools",
         "operationId": "search_schools_api_v1_schools_get",
         "parameters": [
@@ -441,7 +489,10 @@
     },
     "/api/v1/schools/search": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Search Schools By Name",
         "operationId": "search_schools_by_name_api_v1_schools_search_get",
         "parameters": [
@@ -485,7 +536,10 @@
     },
     "/api/v1/schools/compare": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Get School Compare",
         "operationId": "get_school_compare_api_v1_schools_compare_get",
         "parameters": [
@@ -541,7 +595,10 @@
     },
     "/api/v1/schools/{urn}": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Get School Profile",
         "operationId": "get_school_profile_api_v1_schools__urn__get",
         "parameters": [
@@ -587,7 +644,10 @@
     },
     "/api/v1/schools/{urn}/trends": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Get School Trends",
         "operationId": "get_school_trends_api_v1_schools__urn__trends_get",
         "parameters": [
@@ -633,7 +693,10 @@
     },
     "/api/v1/schools/{urn}/trends/dashboard": {
       "get": {
-        "tags": ["tasks", "schools"],
+        "tags": [
+          "tasks",
+          "schools"
+        ],
         "summary": "Get School Trend Dashboard",
         "operationId": "get_school_trend_dashboard_api_v1_schools__urn__trends_dashboard_get",
         "parameters": [
@@ -680,6 +743,130 @@
   },
   "components": {
     "schemas": {
+      "AccountAccessResponse": {
+        "properties": {
+          "account_access_state": {
+            "type": "string",
+            "enum": [
+              "anonymous",
+              "free",
+              "pending",
+              "premium"
+            ],
+            "title": "Account Access State"
+          },
+          "capability_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capability Keys"
+          },
+          "access_epoch": {
+            "type": "string",
+            "title": "Access Epoch"
+          },
+          "entitlements": {
+            "items": {
+              "$ref": "#/components/schemas/AccountEntitlementResponse"
+            },
+            "type": "array",
+            "title": "Entitlements"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_access_state",
+          "access_epoch"
+        ],
+        "title": "AccountAccessResponse"
+      },
+      "AccountEntitlementResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code"
+          },
+          "product_display_name": {
+            "type": "string",
+            "title": "Product Display Name"
+          },
+          "capability_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capability Keys"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "expired",
+              "revoked"
+            ],
+            "title": "Status"
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "revoked_reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked Reason Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "product_code",
+          "product_display_name",
+          "status",
+          "starts_at",
+          "ends_at",
+          "revoked_at",
+          "revoked_reason_code"
+        ],
+        "title": "AccountEntitlementResponse"
+      },
       "AuthStartRequest": {
         "properties": {
           "email": {
@@ -699,7 +886,9 @@
           }
         },
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "title": "AuthStartRequest"
       },
       "AuthStartResponse": {
@@ -710,7 +899,9 @@
           }
         },
         "type": "object",
-        "required": ["redirect_url"],
+        "required": [
+          "redirect_url"
+        ],
         "title": "AuthStartResponse"
       },
       "BillingPortalSessionCreateRequest": {
@@ -738,7 +929,9 @@
           }
         },
         "type": "object",
-        "required": ["redirect_url"],
+        "required": [
+          "redirect_url"
+        ],
         "title": "BillingPortalSessionCreateResponse"
       },
       "BillingProductResponse": {
@@ -766,7 +959,11 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["monthly", "annual", "one_time"]
+                "enum": [
+                  "monthly",
+                  "annual",
+                  "one_time"
+                ]
               },
               {
                 "type": "null"
@@ -815,7 +1012,9 @@
           }
         },
         "type": "object",
-        "required": ["products"],
+        "required": [
+          "products"
+        ],
         "title": "BillingProductsResponse"
       },
       "BillingWebhookResponse": {
@@ -826,7 +1025,12 @@
           },
           "reconciliation_status": {
             "type": "string",
-            "enum": ["applied", "duplicate", "ignored", "failed"],
+            "enum": [
+              "applied",
+              "duplicate",
+              "ignored",
+              "failed"
+            ],
             "title": "Reconciliation Status"
           },
           "checkout_id": {
@@ -857,7 +1061,12 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["anonymous", "free", "pending", "premium"]
+                "enum": [
+                  "anonymous",
+                  "free",
+                  "pending",
+                  "premium"
+                ]
               },
               {
                 "type": "null"
@@ -906,7 +1115,9 @@
           }
         },
         "type": "object",
-        "required": ["product_code"],
+        "required": [
+          "product_code"
+        ],
         "title": "CheckoutSessionCreateRequest"
       },
       "CheckoutSessionCreateResponse": {
@@ -929,7 +1140,10 @@
           },
           "status": {
             "type": "string",
-            "enum": ["open", "already_covered"],
+            "enum": [
+              "open",
+              "already_covered"
+            ],
             "title": "Status"
           },
           "redirect_url": {
@@ -957,7 +1171,12 @@
           },
           "account_access_state": {
             "type": "string",
-            "enum": ["anonymous", "free", "pending", "premium"],
+            "enum": [
+              "anonymous",
+              "free",
+              "pending",
+              "premium"
+            ],
             "title": "Account Access State"
           }
         },
@@ -1021,7 +1240,12 @@
           },
           "account_access_state": {
             "type": "string",
-            "enum": ["anonymous", "free", "pending", "premium"],
+            "enum": [
+              "anonymous",
+              "free",
+              "pending",
+              "premium"
+            ],
             "title": "Account Access State"
           }
         },
@@ -1204,7 +1428,10 @@
           },
           "local_scope": {
             "type": "string",
-            "enum": ["local_authority_district", "phase"],
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
             "title": "Local Scope"
           },
           "local_area_code": {
@@ -1286,12 +1513,21 @@
           },
           "availability": {
             "type": "string",
-            "enum": ["available", "unsupported", "unavailable", "suppressed"],
+            "enum": [
+              "available",
+              "unsupported",
+              "unavailable",
+              "suppressed"
+            ],
             "title": "Availability"
           },
           "completeness_status": {
             "type": "string",
-            "enum": ["available", "partial", "unavailable"],
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
             "title": "Completeness Status"
           },
           "completeness_reason_code": {
@@ -1348,6 +1584,9 @@
       },
       "SchoolCompareResponse": {
         "properties": {
+          "access": {
+            "$ref": "#/components/schemas/SectionAccessResponse"
+          },
           "schools": {
             "items": {
               "$ref": "#/components/schemas/SchoolCompareSchoolResponse"
@@ -1364,7 +1603,11 @@
           }
         },
         "type": "object",
-        "required": ["schools", "sections"],
+        "required": [
+          "access",
+          "schools",
+          "sections"
+        ],
         "title": "SchoolCompareResponse"
       },
       "SchoolCompareRowResponse": {
@@ -1403,7 +1646,12 @@
           }
         },
         "type": "object",
-        "required": ["metric_key", "label", "unit", "cells"],
+        "required": [
+          "metric_key",
+          "label",
+          "unit",
+          "cells"
+        ],
         "title": "SchoolCompareRowResponse"
       },
       "SchoolCompareSchoolResponse": {
@@ -1493,7 +1741,11 @@
           }
         },
         "type": "object",
-        "required": ["key", "label", "rows"],
+        "required": [
+          "key",
+          "label",
+          "rows"
+        ],
         "title": "SchoolCompareSectionResponse"
       },
       "SchoolNameSearchResponse": {
@@ -1511,8 +1763,59 @@
           }
         },
         "type": "object",
-        "required": ["count", "schools"],
+        "required": [
+          "count",
+          "schools"
+        ],
         "title": "SchoolNameSearchResponse"
+      },
+      "SchoolProfileAnalystSectionResponse": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/SectionAccessResponse"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "teaser_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teaser Text"
+          },
+          "disclaimer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access",
+          "text",
+          "teaser_text",
+          "disclaimer"
+        ],
+        "title": "SchoolProfileAnalystSectionResponse"
       },
       "SchoolProfileAreaContextCoverageResponse": {
         "properties": {
@@ -1584,7 +1887,12 @@
           }
         },
         "type": "object",
-        "required": ["deprivation", "crime", "house_prices", "coverage"],
+        "required": [
+          "deprivation",
+          "crime",
+          "house_prices",
+          "coverage"
+        ],
         "title": "SchoolProfileAreaContextResponse"
       },
       "SchoolProfileAreaCrimeAnnualRateResponse": {
@@ -1610,7 +1918,11 @@
           }
         },
         "type": "object",
-        "required": ["year", "total_incidents", "incidents_per_1000"],
+        "required": [
+          "year",
+          "total_incidents",
+          "incidents_per_1000"
+        ],
         "title": "SchoolProfileAreaCrimeAnnualRateResponse"
       },
       "SchoolProfileAreaCrimeCategoryResponse": {
@@ -1625,7 +1937,10 @@
           }
         },
         "type": "object",
-        "required": ["category", "incident_count"],
+        "required": [
+          "category",
+          "incident_count"
+        ],
         "title": "SchoolProfileAreaCrimeCategoryResponse"
       },
       "SchoolProfileAreaCrimeResponse": {
@@ -2388,7 +2703,12 @@
           }
         },
         "type": "object",
-        "required": ["key", "label", "percentage", "count"],
+        "required": [
+          "key",
+          "label",
+          "percentage",
+          "count"
+        ],
         "title": "SchoolProfileDemographicsEthnicityGroupResponse"
       },
       "SchoolProfileDemographicsHomeLanguageResponse": {
@@ -2429,7 +2749,13 @@
           }
         },
         "type": "object",
-        "required": ["key", "label", "rank", "percentage", "count"],
+        "required": [
+          "key",
+          "label",
+          "rank",
+          "percentage",
+          "count"
+        ],
         "title": "SchoolProfileDemographicsHomeLanguageResponse"
       },
       "SchoolProfileDemographicsLatestResponse": {
@@ -2632,7 +2958,12 @@
           }
         },
         "type": "object",
-        "required": ["key", "label", "percentage", "count"],
+        "required": [
+          "key",
+          "label",
+          "percentage",
+          "count"
+        ],
         "title": "SchoolProfileDemographicsSendPrimaryNeedResponse"
       },
       "SchoolProfileLeadershipSnapshotResponse": {
@@ -2762,7 +3093,10 @@
           },
           "local_scope": {
             "type": "string",
-            "enum": ["local_authority_district", "phase"],
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
             "title": "Local Scope"
           },
           "local_area_code": {
@@ -2788,6 +3122,41 @@
           "local_area_label"
         ],
         "title": "SchoolProfileMetricBenchmarkResponse"
+      },
+      "SchoolProfileNeighbourhoodSectionResponse": {
+        "properties": {
+          "access": {
+            "$ref": "#/components/schemas/SectionAccessResponse"
+          },
+          "area_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileAreaContextResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "teaser_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teaser Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access",
+          "area_context",
+          "teaser_text"
+        ],
+        "title": "SchoolProfileNeighbourhoodSectionResponse"
       },
       "SchoolProfileOfstedLatestResponse": {
         "properties": {
@@ -3186,7 +3555,10 @@
           }
         },
         "type": "object",
-        "required": ["events", "coverage"],
+        "required": [
+          "events",
+          "coverage"
+        ],
         "title": "SchoolProfileOfstedTimelineResponse"
       },
       "SchoolProfilePerformanceResponse": {
@@ -3210,7 +3582,9 @@
           }
         },
         "type": "object",
-        "required": ["latest"],
+        "required": [
+          "latest"
+        ],
         "title": "SchoolProfilePerformanceResponse"
       },
       "SchoolProfilePerformanceYearResponse": {
@@ -3458,16 +3832,8 @@
             ],
             "title": "Overview Text"
           },
-          "analyst_text": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Analyst Text"
+          "analyst": {
+            "$ref": "#/components/schemas/SchoolProfileAnalystSectionResponse"
           },
           "demographics_latest": {
             "anyOf": [
@@ -3542,8 +3908,8 @@
           "ofsted_timeline": {
             "$ref": "#/components/schemas/SchoolProfileOfstedTimelineResponse"
           },
-          "area_context": {
-            "$ref": "#/components/schemas/SchoolProfileAreaContextResponse"
+          "neighbourhood": {
+            "$ref": "#/components/schemas/SchoolProfileNeighbourhoodSectionResponse"
           },
           "benchmarks": {
             "$ref": "#/components/schemas/SchoolProfileBenchmarksResponse"
@@ -3556,7 +3922,7 @@
         "required": [
           "school",
           "overview_text",
-          "analyst_text",
+          "analyst",
           "demographics_latest",
           "attendance_latest",
           "behaviour_latest",
@@ -3565,7 +3931,7 @@
           "performance",
           "ofsted_latest",
           "ofsted_timeline",
-          "area_context",
+          "neighbourhood",
           "completeness"
         ],
         "title": "SchoolProfileResponse"
@@ -4047,7 +4413,11 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["available", "partial", "unavailable"],
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
             "title": "Status"
           },
           "reason_code": {
@@ -4105,7 +4475,11 @@
           }
         },
         "type": "object",
-        "required": ["status", "reason_code", "last_updated_at"],
+        "required": [
+          "status",
+          "reason_code",
+          "last_updated_at"
+        ],
         "title": "SchoolProfileSectionCompletenessResponse"
       },
       "SchoolProfileWorkforceLatestResponse": {
@@ -4353,7 +4727,11 @@
           }
         },
         "type": "object",
-        "required": ["label", "sort_rank", "availability"],
+        "required": [
+          "label",
+          "sort_rank",
+          "availability"
+        ],
         "title": "SchoolSearchLatestOfstedResponse"
       },
       "SchoolTrendBenchmarkPointResponse": {
@@ -4422,7 +4800,10 @@
           },
           "local_scope": {
             "type": "string",
-            "enum": ["local_authority_district", "phase"],
+            "enum": [
+              "local_authority_district",
+              "phase"
+            ],
             "title": "Local Scope"
           },
           "local_area_code": {
@@ -4471,7 +4852,12 @@
           }
         },
         "type": "object",
-        "required": ["metric_key", "label", "unit", "points"],
+        "required": [
+          "metric_key",
+          "label",
+          "unit",
+          "points"
+        ],
         "title": "SchoolTrendDashboardMetricResponse"
       },
       "SchoolTrendDashboardResponse": {
@@ -4499,7 +4885,12 @@
           }
         },
         "type": "object",
-        "required": ["urn", "years_available", "sections", "completeness"],
+        "required": [
+          "urn",
+          "years_available",
+          "sections",
+          "completeness"
+        ],
         "title": "SchoolTrendDashboardResponse"
       },
       "SchoolTrendDashboardSectionResponse": {
@@ -4525,7 +4916,10 @@
           }
         },
         "type": "object",
-        "required": ["key", "metrics"],
+        "required": [
+          "key",
+          "metrics"
+        ],
         "title": "SchoolTrendDashboardSectionResponse"
       },
       "SchoolTrendPointResponse": {
@@ -4563,7 +4957,11 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["up", "down", "flat"]
+                "enum": [
+                  "up",
+                  "down",
+                  "flat"
+                ]
               },
               {
                 "type": "null"
@@ -4573,7 +4971,12 @@
           }
         },
         "type": "object",
-        "required": ["academic_year", "value", "delta", "direction"],
+        "required": [
+          "academic_year",
+          "value",
+          "delta",
+          "direction"
+        ],
         "title": "SchoolTrendPointResponse"
       },
       "SchoolTrendsBenchmarksResponse": {
@@ -4780,7 +5183,11 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["available", "partial", "unavailable"],
+            "enum": [
+              "available",
+              "partial",
+              "unavailable"
+            ],
             "title": "Status"
           },
           "reason_code": {
@@ -4835,7 +5242,11 @@
           }
         },
         "type": "object",
-        "required": ["status", "reason_code", "last_updated_at"],
+        "required": [
+          "status",
+          "reason_code",
+          "last_updated_at"
+        ],
         "title": "SchoolTrendsCompletenessResponse"
       },
       "SchoolTrendsHistoryQualityResponse": {
@@ -4918,7 +5329,12 @@
           }
         },
         "type": "object",
-        "required": ["demographics", "attendance", "behaviour", "workforce"],
+        "required": [
+          "demographics",
+          "attendance",
+          "behaviour",
+          "workforce"
+        ],
         "title": "SchoolTrendsSectionCompletenessResponse"
       },
       "SchoolTrendsSeriesResponse": {
@@ -5133,7 +5549,10 @@
           }
         },
         "type": "object",
-        "required": ["lat", "lng"],
+        "required": [
+          "lat",
+          "lng"
+        ],
         "title": "SchoolsSearchCenterResponse"
       },
       "SchoolsSearchQueryResponse": {
@@ -5159,7 +5578,12 @@
           }
         },
         "type": "object",
-        "required": ["postcode", "radius_miles", "phases", "sort"],
+        "required": [
+          "postcode",
+          "radius_miles",
+          "phases",
+          "sort"
+        ],
         "title": "SchoolsSearchQueryResponse"
       },
       "SchoolsSearchResponse": {
@@ -5183,14 +5607,101 @@
           }
         },
         "type": "object",
-        "required": ["query", "center", "count", "schools"],
+        "required": [
+          "query",
+          "center",
+          "count",
+          "schools"
+        ],
         "title": "SchoolsSearchResponse"
+      },
+      "SectionAccessResponse": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "available",
+              "locked",
+              "unavailable"
+            ],
+            "title": "State"
+          },
+          "capability_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capability Key"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "free_baseline",
+                  "premium_capability_missing",
+                  "anonymous_user",
+                  "artefact_not_published",
+                  "artefact_not_supported",
+                  "entitlement_expired",
+                  "entitlement_revoked"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code"
+          },
+          "product_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Product Codes"
+          },
+          "requires_auth": {
+            "type": "boolean",
+            "title": "Requires Auth"
+          },
+          "requires_purchase": {
+            "type": "boolean",
+            "title": "Requires Purchase"
+          },
+          "school_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "state",
+          "capability_key",
+          "reason_code",
+          "requires_auth",
+          "requires_purchase"
+        ],
+        "title": "SectionAccessResponse"
       },
       "SessionResponse": {
         "properties": {
           "state": {
             "type": "string",
-            "enum": ["anonymous", "authenticated"],
+            "enum": [
+              "anonymous",
+              "authenticated"
+            ],
             "title": "State"
           },
           "user": {
@@ -5232,10 +5743,39 @@
               }
             ],
             "title": "Anonymous Reason"
+          },
+          "account_access_state": {
+            "type": "string",
+            "enum": [
+              "anonymous",
+              "free",
+              "pending",
+              "premium"
+            ],
+            "title": "Account Access State"
+          },
+          "capability_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capability Keys"
+          },
+          "access_epoch": {
+            "type": "string",
+            "title": "Access Epoch"
           }
         },
         "type": "object",
-        "required": ["state", "user", "expires_at", "anonymous_reason"],
+        "required": [
+          "state",
+          "user",
+          "expires_at",
+          "anonymous_reason",
+          "account_access_state",
+          "capability_keys",
+          "access_epoch"
+        ],
         "title": "SessionResponse"
       },
       "SessionUserResponse": {
@@ -5251,7 +5791,10 @@
           }
         },
         "type": "object",
-        "required": ["id", "email"],
+        "required": [
+          "id",
+          "email"
+        ],
         "title": "SessionUserResponse"
       },
       "TaskCreateRequest": {
@@ -5264,7 +5807,9 @@
           }
         },
         "type": "object",
-        "required": ["title"],
+        "required": [
+          "title"
+        ],
         "title": "TaskCreateRequest"
       },
       "TaskResponse": {
@@ -5285,7 +5830,11 @@
           }
         },
         "type": "object",
-        "required": ["id", "title", "created_at"],
+        "required": [
+          "id",
+          "title",
+          "created_at"
+        ],
         "title": "TaskResponse"
       },
       "ValidationError": {
@@ -5321,7 +5870,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     }
