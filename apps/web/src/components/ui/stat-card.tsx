@@ -69,27 +69,20 @@ export interface BenchmarkSlot {
 /* Internal helpers — benchmark bars                                   */
 /* ------------------------------------------------------------------ */
 
-function deltaColorClass(delta: number | null): string {
-  if (delta === null) return "text-secondary";
-  if (delta > 0) return "text-trend-up";
-  if (delta < 0) return "text-trend-down";
-  return "text-trend-flat";
-}
-
 function BarRow({
   label,
   barClass,
   widthPct,
   valueFormatted,
-  delta,
   deltaFormatted,
+  neutralDelta,
 }: {
   label: string;
   barClass: string;
   widthPct: number;
   valueFormatted: string | null;
-  delta: number | null;
   deltaFormatted: string | null;
+  neutralDelta?: boolean;
 }): JSX.Element {
   return (
     <div className="space-y-0.5">
@@ -104,7 +97,7 @@ function BarRow({
         ) : null}
         {deltaFormatted ? (
           <span
-            className={`shrink-0 text-[10px] tabular-nums leading-none ${deltaColorClass(delta)}`}
+            className={`shrink-0 text-[10px] tabular-nums leading-none ${neutralDelta ? "text-[#94A3B8]" : "text-secondary"}`}
           >
             {deltaFormatted}
           </span>
@@ -144,7 +137,6 @@ function BenchmarkBlock({ benchmark }: { benchmark: BenchmarkSlot }): JSX.Elemen
           barClass="bg-benchmark-school"
           widthPct={pct(schoolRaw)}
           valueFormatted={benchmark.schoolValueFormatted}
-          delta={null}
           deltaFormatted={null}
         />
         {localRaw !== null ? (
@@ -153,8 +145,8 @@ function BenchmarkBlock({ benchmark }: { benchmark: BenchmarkSlot }): JSX.Elemen
             barClass="bg-benchmark-local"
             widthPct={pct(localRaw)}
             valueFormatted={benchmark.localValueFormatted}
-            delta={benchmark.schoolVsLocalDelta}
             deltaFormatted={benchmark.schoolVsLocalDeltaFormatted}
+            neutralDelta
           />
         ) : null}
         {nationalRaw !== null ? (
@@ -163,8 +155,8 @@ function BenchmarkBlock({ benchmark }: { benchmark: BenchmarkSlot }): JSX.Elemen
             barClass="bg-benchmark-national"
             widthPct={pct(nationalRaw)}
             valueFormatted={benchmark.nationalValueFormatted}
-            delta={benchmark.schoolVsNationalDelta}
             deltaFormatted={benchmark.schoolVsNationalDeltaFormatted}
+            neutralDelta
           />
         ) : null}
       </div>
@@ -288,7 +280,7 @@ export function StatCard({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 space-y-1 min-h-[40px]">
           <div className="flex items-center gap-1">
-            <span className="min-w-0 text-xs font-medium uppercase tracking-[0.08em] leading-tight text-secondary">
+            <span className="min-w-0 text-xs font-medium tracking-[0.04em] leading-tight text-secondary">
               {label}
             </span>
             {infoText ? (

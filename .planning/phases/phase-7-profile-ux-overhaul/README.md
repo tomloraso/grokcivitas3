@@ -2,7 +2,7 @@
 
 ## Document Control
 
-- Status: Extended — P12 complete (2026-03-10)
+- Status: Extended — P13 complete (2026-03-10)
 - Last updated: 2026-03-10
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
@@ -78,6 +78,7 @@ SchoolProfileFeature
 | P10 | `P10-statcard-shadcn-standardisation.md` | Complete (2026-03-09) |
 | P11 | `P11-trend-indicator-direction-triangles.md` | Complete (2026-03-10) |
 | P12 | Demographics benchmark wiring | Complete (2026-03-10) |
+| P13 | Compare page rebuild | Complete (2026-03-10) |
 
 ## Execution Sequence
 
@@ -105,6 +106,20 @@ SchoolProfileFeature
 - Rollback available per deliverable via `git checkout -- <file>`.
 
 ## Tracking Log
+
+- 2026-03-10 (P13 — Compare page rebuild):
+  - **`SchoolCompareFeature.tsx`** — full rewrite. Extracted inline components into dedicated files. Slim header with share button (clipboard copy). Premium gate replaced with compact `ComparePremiumBanner` (slim Panel). Dev premium bypass extracted to `isDevUnlocked` boolean. Section matrix replaced with `CompareMetricTable`.
+  - **`CompareSchoolStrip.tsx`** (new) — horizontal scrollable school cards with `snap-x snap-mandatory`, badges (phase/type/postcode), `StatCard variant="mini"` for age range and distance, `X` remove button.
+  - **`CompareMetricTable.tsx`** (new) — core comparison grid. Sections separated by teal-accented centred dividers (`bg-brand/20` rules). Sticky metric label column (`left-0 z-10 bg-surface/95 backdrop-blur`). Row hover `bg-brand/[0.03]`. Cell availability tinting. Unit labels in Title Case at `text-[10px]`.
+  - **`CompareTableHeader.tsx`** (new) — sticky header row with school names and URN links.
+  - **`apps/web/README.md`** — added Compare page design system section (P13).
+
+- 2026-03-10 (P11.1 — StatCard Title Case migration):
+  - **`stat-card.tsx`** — removed `uppercase tracking-[0.08em]` from label `<span>`, replaced with `tracking-[0.04em]`. Labels now render in their natural Title Case from `metricCatalog.ts` (e.g. "Free School Meals", "English as Additional Language") instead of ALL CAPS. No section component changes needed — source strings were already Title Case.
+  - **`apps/web/README.md`** — added "Title case rule" to StatCard design system section.
+
+- 2026-03-11 (P12.1 — Benchmark delta neutrality):
+  - **`stat-card.tsx`** — removed conditional teal/red colouring (`deltaColorClass`) from regional/national benchmark delta values; all deltas now render in neutral gray (`#94A3B8`). "This school" bar stays teal. Facts-only Loira Voss style.
 
 - 2026-03-10 (P12 — Demographics benchmark wiring):
   - **`DemographicsAndTrendsPanel.tsx`** — added `benchmarkDashboard: BenchmarkDashboardVM | null` prop; added `barDecimals` / `toBenchmarkSlot` helpers (same pattern as Workforce/Academic sections); builds `benchmarkLookup` Map; passes `benchmark={bm ? toBenchmarkSlot(bm) : undefined}` to each demographics `StatCard`. Now shows school/local/national comparison bars for all demographics metrics (FSM, EAL, SEN, EHCP, etc.) where benchmark data is available.

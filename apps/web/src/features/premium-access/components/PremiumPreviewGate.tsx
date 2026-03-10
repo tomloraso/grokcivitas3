@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import { Button } from "../../../components/ui/Button";
 import { cn } from "../../../shared/utils/cn";
+import { useAuth } from "../../auth/useAuth";
 import { buildAccessActionHref, getPremiumPaywallCopy } from "../copy";
 import type { SectionAccessVM } from "../types";
 
@@ -24,12 +25,21 @@ export function PremiumPreviewGate({
 }: PremiumPreviewGateProps): JSX.Element {
   const location = useLocation();
   const returnTo = `${location.pathname}${location.search}`;
+  const { session } = useAuth();
+
+  // Dev override: if session says premium and the capability matches, unlock
+  const devUnlocked =
+    !import.meta.env.PROD &&
+    session.accountAccessState === "premium" &&
+    access.state === "locked" &&
+    access.capabilityKey !== null &&
+    session.capabilityKeys.includes(access.capabilityKey);
 
   if (access.state === "unavailable") {
     return <>{unavailable}</>;
   }
 
-  if (access.state === "available") {
+  if (access.state === "available" || devUnlocked) {
     return (
       <div
         className={cn(
