@@ -16,6 +16,7 @@ from civitas.application.favourites.ports.saved_school_state_resolver import (
     SavedSchoolStateResolver,
 )
 from civitas.application.school_profiles.dto import (
+    SchoolAdmissionsLatestDto,
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
     SchoolAreaCrimeAnnualRateDto,
@@ -305,6 +306,21 @@ class GetSchoolProfileUseCase:
                 ),
             )
 
+        admissions_latest = None
+        if profile.admissions_latest is not None:
+            admissions_latest = SchoolAdmissionsLatestDto(
+                academic_year=profile.admissions_latest.academic_year,
+                places_offered_total=profile.admissions_latest.places_offered_total,
+                applications_any_preference=profile.admissions_latest.applications_any_preference,
+                applications_first_preference=(
+                    profile.admissions_latest.applications_first_preference
+                ),
+                oversubscription_ratio=profile.admissions_latest.oversubscription_ratio,
+                first_preference_offer_rate=profile.admissions_latest.first_preference_offer_rate,
+                any_preference_offer_rate=profile.admissions_latest.any_preference_offer_rate,
+                admissions_policy=profile.admissions_latest.admissions_policy,
+            )
+
         leadership_snapshot = None
         if profile.leadership_snapshot is not None:
             leadership_snapshot = SchoolLeadershipSnapshotDto(
@@ -551,6 +567,12 @@ class GetSchoolProfileUseCase:
                 last_updated_at=profile.completeness.workforce.last_updated_at,
                 years_available=profile.completeness.workforce.years_available,
             ),
+            admissions=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.admissions.status,
+                reason_code=profile.completeness.admissions.reason_code,
+                last_updated_at=profile.completeness.admissions.last_updated_at,
+                years_available=profile.completeness.admissions.years_available,
+            ),
             finance=SchoolProfileSectionCompletenessDto(
                 status=profile.completeness.finance.status,
                 reason_code=profile.completeness.finance.reason_code,
@@ -675,6 +697,7 @@ class GetSchoolProfileUseCase:
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
+            admissions_latest=admissions_latest,
             finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,

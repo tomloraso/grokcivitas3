@@ -112,6 +112,8 @@ def _ensure_schema(engine: Engine) -> None:
                 """
                 CREATE TABLE IF NOT EXISTS schools (
                     urn text PRIMARY KEY,
+                    establishment_number text NULL,
+                    school_laestab text NULL,
                     name text NOT NULL,
                     phase text NULL,
                     type text NULL,
@@ -165,6 +167,8 @@ def _ensure_schema(engine: Engine) -> None:
         for statement in (
             "ALTER TABLE schools ADD COLUMN IF NOT EXISTS website text NULL",
             "ALTER TABLE schools ADD COLUMN IF NOT EXISTS telephone text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS establishment_number text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS school_laestab text NULL",
             "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_title text NULL",
             "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_first_name text NULL",
             "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_last_name text NULL",
@@ -360,6 +364,8 @@ def test_gias_pipeline_stage_and_promote_are_idempotent(engine: Engine, tmp_path
                 text(
                     """
                 SELECT
+                    establishment_number,
+                    school_laestab,
                     website,
                     telephone,
                     statutory_low_age,
@@ -376,6 +382,8 @@ def test_gias_pipeline_stage_and_promote_are_idempotent(engine: Engine, tmp_path
             .mappings()
             .one()
         )
+        assert enriched_school["establishment_number"] == "6007"
+        assert enriched_school["school_laestab"] == "2136007"
         assert enriched_school["website"] == "https://alphaprimary.example"
         assert enriched_school["telephone"] == "+442079460123"
         assert enriched_school["statutory_low_age"] == 4

@@ -206,6 +206,18 @@ class SchoolFinanceLatestDto:
 
 
 @dataclass(frozen=True)
+class SchoolAdmissionsLatestDto:
+    academic_year: str
+    places_offered_total: int | None
+    applications_any_preference: int | None
+    applications_first_preference: int | None
+    oversubscription_ratio: float | None
+    first_preference_offer_rate: float | None
+    any_preference_offer_rate: float | None
+    admissions_policy: str | None
+
+
+@dataclass(frozen=True)
 class SchoolLeadershipSnapshotDto:
     headteacher_name: str | None
     headteacher_start_date: date | None
@@ -436,6 +448,7 @@ class SchoolProfileCompletenessDto:
     attendance: SchoolProfileSectionCompletenessDto
     behaviour: SchoolProfileSectionCompletenessDto
     workforce: SchoolProfileSectionCompletenessDto
+    admissions: SchoolProfileSectionCompletenessDto
     finance: SchoolProfileSectionCompletenessDto
     leadership: SchoolProfileSectionCompletenessDto
     performance: SchoolProfileSectionCompletenessDto
@@ -455,6 +468,7 @@ class SchoolProfileResponseDto:
     attendance_latest: SchoolAttendanceLatestDto | None
     behaviour_latest: SchoolBehaviourLatestDto | None
     workforce_latest: SchoolWorkforceLatestDto | None
+    admissions_latest: SchoolAdmissionsLatestDto | None
     finance_latest: SchoolFinanceLatestDto | None
     leadership_snapshot: SchoolLeadershipSnapshotDto | None
     performance: SchoolPerformanceDto | None

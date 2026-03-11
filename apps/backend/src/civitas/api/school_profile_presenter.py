@@ -3,6 +3,7 @@ from __future__ import annotations
 from civitas.api.favourites_presenter import to_saved_school_state_response
 from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.school_profiles import (
+    SchoolProfileAdmissionsLatestResponse,
     SchoolProfileAnalystSectionResponse,
     SchoolProfileAreaContextCoverageResponse,
     SchoolProfileAreaContextResponse,
@@ -237,6 +238,19 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             ),
         )
 
+    admissions_latest = None
+    if result.admissions_latest is not None:
+        admissions_latest = SchoolProfileAdmissionsLatestResponse(
+            academic_year=result.admissions_latest.academic_year,
+            places_offered_total=result.admissions_latest.places_offered_total,
+            applications_any_preference=result.admissions_latest.applications_any_preference,
+            applications_first_preference=result.admissions_latest.applications_first_preference,
+            oversubscription_ratio=result.admissions_latest.oversubscription_ratio,
+            first_preference_offer_rate=result.admissions_latest.first_preference_offer_rate,
+            any_preference_offer_rate=result.admissions_latest.any_preference_offer_rate,
+            admissions_policy=result.admissions_latest.admissions_policy,
+        )
+
     leadership_snapshot = None
     if result.leadership_snapshot is not None:
         leadership_snapshot = SchoolProfileLeadershipSnapshotResponse(
@@ -411,6 +425,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
         attendance_latest=attendance_latest,
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
+        admissions_latest=admissions_latest,
         finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
@@ -444,6 +459,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             attendance=_to_section_completeness_response(result.completeness.attendance),
             behaviour=_to_section_completeness_response(result.completeness.behaviour),
             workforce=_to_section_completeness_response(result.completeness.workforce),
+            admissions=_to_section_completeness_response(result.completeness.admissions),
             finance=_to_section_completeness_response(result.completeness.finance),
             leadership=_to_section_completeness_response(result.completeness.leadership),
             performance=_to_section_completeness_response(result.completeness.performance),

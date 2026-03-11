@@ -7,6 +7,7 @@ DataQualitySection = Literal[
     "attendance",
     "behaviour",
     "workforce",
+    "admissions",
     "finance",
     "leadership",
     "school_performance",

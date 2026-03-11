@@ -42,6 +42,7 @@ class FakePipelineRunner:
             "dfe_behaviour",
             "dfe_workforce",
             "dfe_performance",
+            "school_admissions",
             "ofsted_latest",
             "ofsted_timeline",
             "ons_imd",
@@ -247,6 +248,20 @@ def test_pipeline_run_dfe_performance_source_success(monkeypatch: pytest.MonkeyP
     assert result.exit_code == 0
     assert fake_runner.ran_source == "dfe_performance"
     assert "dfe_performance: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_school_admissions_source_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "school_admissions"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "school_admissions"
+    assert "school_admissions: succeeded" in result.stdout.lower()
 
 
 def test_pipeline_run_ofsted_timeline_source_success(monkeypatch: pytest.MonkeyPatch) -> None:

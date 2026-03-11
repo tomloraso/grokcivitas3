@@ -12,6 +12,8 @@ from civitas.application.school_trends.errors import SchoolTrendsDataUnavailable
 from civitas.application.school_trends.ports.school_trends_repository import SchoolTrendsRepository
 from civitas.domain.school_trends.models import (
     BenchmarkScope,
+    SchoolAdmissionsSeries,
+    SchoolAdmissionsYearlyRow,
     SchoolAttendanceSeries,
     SchoolAttendanceYearlyRow,
     SchoolBehaviourSeries,
@@ -383,6 +385,59 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             ),
             latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
             is_applicable=is_applicable,
+        )
+
+    def get_admissions_series(self, urn: str) -> SchoolAdmissionsSeries | None:
+        try:
+            with self._engine.connect() as connection:
+                if not _school_exists(connection, urn):
+                    return None
+
+                rows = (
+                    connection.execute(
+                        text(
+                            """
+                            SELECT
+                                academic_year,
+                                oversubscription_ratio,
+                                first_preference_offer_rate,
+                                any_preference_offer_rate,
+                                cross_la_applications,
+                                cross_la_offers,
+                                updated_at
+                            FROM school_admissions_yearly
+                            WHERE urn = :urn
+                            ORDER BY
+                                substring(academic_year from 1 for 4)::integer ASC,
+                                academic_year ASC
+                            """
+                        ),
+                        {"urn": urn},
+                    )
+                    .mappings()
+                    .all()
+                )
+        except SQLAlchemyError as exc:
+            raise SchoolTrendsDataUnavailableError(
+                "School trends datastore is unavailable."
+            ) from exc
+
+        return SchoolAdmissionsSeries(
+            urn=urn,
+            rows=tuple(
+                SchoolAdmissionsYearlyRow(
+                    academic_year=str(row["academic_year"]),
+                    oversubscription_ratio=_to_optional_float(row["oversubscription_ratio"]),
+                    first_preference_offer_rate=_to_optional_float(
+                        row["first_preference_offer_rate"]
+                    ),
+                    any_preference_offer_rate=_to_optional_float(row["any_preference_offer_rate"]),
+                    cross_la_applications=_to_optional_int(row["cross_la_applications"]),
+                    cross_la_offers=_to_optional_int(row["cross_la_offers"]),
+                )
+                for row in rows
+            ),
+            latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
         )
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
@@ -800,6 +855,34 @@ def _get_metric_benchmark_rows_from_cache(
                     UNION ALL
 
                     SELECT
+                        admissions.academic_year,
+                        metric.metric_key,
+                        metric.metric_value AS school_value
+                    FROM school_admissions_yearly AS admissions
+                    CROSS JOIN LATERAL (
+                        VALUES
+                            (
+                                'admissions_oversubscription_ratio',
+                                admissions.oversubscription_ratio::double precision
+                            ),
+                            (
+                                'admissions_first_preference_offer_rate',
+                                admissions.first_preference_offer_rate::double precision
+                            ),
+                            (
+                                'admissions_any_preference_offer_rate',
+                                admissions.any_preference_offer_rate::double precision
+                            ),
+                            (
+                                'admissions_cross_la_applications',
+                                admissions.cross_la_applications::double precision
+                            )
+                    ) AS metric(metric_key, metric_value)
+                    WHERE admissions.urn = :urn
+
+                    UNION ALL
+
+                    SELECT
                         performance.academic_year,
                         metric.metric_key,
                         metric.metric_value AS school_value
@@ -1201,6 +1284,38 @@ def _compute_metric_benchmark_rows(
                             (
                                 'finance_supply_staff_costs_pct_of_staff_costs',
                                 finance.supply_staff_costs_pct_of_staff_costs::double precision
+                            )
+                    ) AS metric(metric_key, metric_value)
+
+                    UNION ALL
+
+                    SELECT
+                        admissions.urn,
+                        admissions.academic_year,
+                        geo.phase,
+                        geo.lad_code,
+                        metric.metric_key,
+                        metric.metric_value
+                    FROM school_admissions_yearly AS admissions
+                    INNER JOIN school_geo AS geo
+                        ON geo.urn = admissions.urn
+                    CROSS JOIN LATERAL (
+                        VALUES
+                            (
+                                'admissions_oversubscription_ratio',
+                                admissions.oversubscription_ratio::double precision
+                            ),
+                            (
+                                'admissions_first_preference_offer_rate',
+                                admissions.first_preference_offer_rate::double precision
+                            ),
+                            (
+                                'admissions_any_preference_offer_rate',
+                                admissions.any_preference_offer_rate::double precision
+                            ),
+                            (
+                                'admissions_cross_la_applications',
+                                admissions.cross_la_applications::double precision
                             )
                     ) AS metric(metric_key, metric_value)
 
@@ -1767,6 +1882,39 @@ def _rebuild_metric_benchmark_rows(connection: Connection) -> int:
                         (
                             'finance_teaching_staff_costs_per_pupil_gbp',
                             finance.teaching_staff_costs_per_pupil_gbp::double precision
+                        )
+                ) AS metric(metric_key, metric_value)
+
+                UNION ALL
+
+                SELECT
+                    admissions.urn,
+                    admissions.academic_year,
+                    geo.phase,
+                    geo.lad_code,
+                    geo.lad_name,
+                    metric.metric_key,
+                    metric.metric_value
+                FROM school_admissions_yearly AS admissions
+                INNER JOIN school_geo AS geo
+                    ON geo.urn = admissions.urn
+                CROSS JOIN LATERAL (
+                    VALUES
+                        (
+                            'admissions_oversubscription_ratio',
+                            admissions.oversubscription_ratio::double precision
+                        ),
+                        (
+                            'admissions_first_preference_offer_rate',
+                            admissions.first_preference_offer_rate::double precision
+                        ),
+                        (
+                            'admissions_any_preference_offer_rate',
+                            admissions.any_preference_offer_rate::double precision
+                        ),
+                        (
+                            'admissions_cross_la_applications',
+                            admissions.cross_la_applications::double precision
                         )
                 ) AS metric(metric_key, metric_value)
 

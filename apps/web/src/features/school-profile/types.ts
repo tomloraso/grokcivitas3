@@ -155,6 +155,17 @@ export interface FinanceLatestVM {
   supplyStaffCostsPctOfStaffCosts: number | null;
 }
 
+export interface AdmissionsLatestVM {
+  academicYear: string;
+  placesOfferedTotal: number | null;
+  applicationsAnyPreference: number | null;
+  applicationsFirstPreference: number | null;
+  oversubscriptionRatio: number | null;
+  firstPreferenceOfferRate: number | null;
+  anyPreferenceOfferRate: number | null;
+  admissionsPolicy: string | null;
+}
+
 export interface LeadershipSnapshotVM {
   headteacherName: string | null;
   headteacherStartDate: string | null;
@@ -332,6 +343,7 @@ export interface TrendsSectionCompletenessVM {
   attendance: SectionCompletenessVM;
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
+  admissions: SectionCompletenessVM;
   finance: SectionCompletenessVM;
 }
 
@@ -428,6 +440,7 @@ export interface ProfileCompletenessVM {
   attendance: SectionCompletenessVM;
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
+  admissions: SectionCompletenessVM;
   finance: SectionCompletenessVM;
   leadership: SectionCompletenessVM;
   performance: SectionCompletenessVM;
@@ -465,6 +478,7 @@ export interface SchoolProfileVM {
   attendance: AttendanceLatestVM | null;
   behaviour: BehaviourLatestVM | null;
   workforce: WorkforceLatestVM | null;
+  admissions: AdmissionsLatestVM | null;
   finance: FinanceLatestVM | null;
   leadership: LeadershipSnapshotVM | null;
   performance: PerformanceVM | null;

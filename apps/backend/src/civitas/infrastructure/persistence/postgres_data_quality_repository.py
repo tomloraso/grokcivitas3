@@ -53,6 +53,11 @@ _SECTIONS: tuple[_SectionDefinition, ...] = (
         section="workforce",
     ),
     _SectionDefinition(
+        source=PipelineSource.SCHOOL_ADMISSIONS.value,
+        dataset="school_admissions_yearly",
+        section="admissions",
+    ),
+    _SectionDefinition(
         source=PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS.value,
         dataset="school_financials_yearly",
         section="finance",
@@ -146,6 +151,7 @@ class PostgresDataQualityRepository(DataQualityRepository):
                 "attendance": self._query_attendance_metrics(connection=connection),
                 "behaviour": self._query_behaviour_metrics(connection=connection),
                 "workforce": self._query_workforce_metrics(connection=connection),
+                "admissions": self._query_admissions_metrics(connection=connection),
                 "finance": self._query_finance_metrics(connection=connection),
                 "leadership": self._query_leadership_metrics(connection=connection),
                 "school_performance": self._query_school_performance_metrics(connection=connection),
@@ -569,6 +575,23 @@ class PostgresDataQualityRepository(DataQualityRepository):
         )
         return count, updated_at
 
+    def _query_admissions_metrics(
+        self,
+        *,
+        connection: Connection,
+    ) -> tuple[int, datetime | None]:
+        count = int(
+            connection.execute(
+                text("SELECT COUNT(DISTINCT urn) FROM school_admissions_yearly")
+            ).scalar_one()
+        )
+        updated_at = _to_optional_datetime(
+            connection.execute(
+                text("SELECT MAX(updated_at) FROM school_admissions_yearly")
+            ).scalar_one()
+        )
+        return count, updated_at
+
     def _query_leadership_metrics(
         self,
         *,
@@ -801,6 +824,7 @@ def _to_section(value: object) -> DataQualitySection:
         "attendance",
         "behaviour",
         "workforce",
+        "admissions",
         "finance",
         "leadership",
         "school_performance",

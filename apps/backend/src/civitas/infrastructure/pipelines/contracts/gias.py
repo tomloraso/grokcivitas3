@@ -4,10 +4,11 @@ from datetime import date, datetime
 from typing import Mapping, Sequence, TypedDict
 from urllib.parse import urlparse
 
-CONTRACT_VERSION = "gias.v2"
+CONTRACT_VERSION = "gias.v3"
 
 REQUIRED_HEADERS: tuple[str, ...] = (
     "URN",
+    "EstablishmentNumber",
     "EstablishmentName",
     "TypeOfEstablishment (name)",
     "PhaseOfEducation (name)",
@@ -69,6 +70,8 @@ class NormalizationWarning(TypedDict):
 
 class NormalizedGiasRow(TypedDict):
     urn: str
+    establishment_number: str | None
+    school_laestab: str | None
     name: str
     phase: str | None
     school_type: str | None
@@ -240,6 +243,11 @@ def normalize_row(
     return (
         NormalizedGiasRow(
             urn=urn,
+            establishment_number=strip_or_none(raw_row["EstablishmentNumber"]),
+            school_laestab=build_school_laestab(
+                la_code=raw_row["LA (code)"],
+                establishment_number=raw_row["EstablishmentNumber"],
+            ),
             name=raw_row["EstablishmentName"].strip(),
             phase=strip_or_none(raw_row["PhaseOfEducation (name)"]),
             school_type=strip_or_none(raw_row["TypeOfEstablishment (name)"]),
@@ -288,6 +296,19 @@ def normalize_row(
         None,
         tuple(warnings),
     )
+
+
+def build_school_laestab(*, la_code: str | None, establishment_number: str | None) -> str | None:
+    normalized_la_code = strip_or_none(la_code)
+    normalized_establishment_number = strip_or_none(establishment_number)
+    if (
+        normalized_la_code is None
+        or normalized_establishment_number is None
+        or not normalized_la_code.isdigit()
+        or not normalized_establishment_number.isdigit()
+    ):
+        return None
+    return f"{normalized_la_code}{normalized_establishment_number.zfill(4)}"
 
 
 def is_coordinate_in_range(easting: float, northing: float) -> bool:

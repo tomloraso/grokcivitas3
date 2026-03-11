@@ -67,6 +67,11 @@ class SchoolTrendsSeriesResponse(BaseModel):
     teacher_tempfilled_vacancy_count: list[SchoolTrendPointResponse]
     teacher_tempfilled_vacancy_rate: list[SchoolTrendPointResponse]
     third_party_support_staff_headcount: list[SchoolTrendPointResponse]
+    admissions_oversubscription_ratio: list[SchoolTrendPointResponse]
+    admissions_first_preference_offer_rate: list[SchoolTrendPointResponse]
+    admissions_any_preference_offer_rate: list[SchoolTrendPointResponse]
+    admissions_cross_la_applications: list[SchoolTrendPointResponse]
+    admissions_cross_la_offers: list[SchoolTrendPointResponse]
     income_per_pupil_gbp: list[SchoolTrendPointResponse]
     expenditure_per_pupil_gbp: list[SchoolTrendPointResponse]
     staff_costs_pct_of_expenditure: list[SchoolTrendPointResponse]
@@ -117,6 +122,10 @@ class SchoolTrendsBenchmarksResponse(BaseModel):
     teacher_tempfilled_vacancy_count: list[SchoolTrendBenchmarkPointResponse]
     teacher_tempfilled_vacancy_rate: list[SchoolTrendBenchmarkPointResponse]
     third_party_support_staff_headcount: list[SchoolTrendBenchmarkPointResponse]
+    admissions_oversubscription_ratio: list[SchoolTrendBenchmarkPointResponse]
+    admissions_first_preference_offer_rate: list[SchoolTrendBenchmarkPointResponse]
+    admissions_any_preference_offer_rate: list[SchoolTrendBenchmarkPointResponse]
+    admissions_cross_la_applications: list[SchoolTrendBenchmarkPointResponse]
     income_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
     expenditure_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
     staff_costs_pct_of_expenditure: list[SchoolTrendBenchmarkPointResponse]
@@ -158,6 +167,7 @@ class SchoolTrendsSectionCompletenessResponse(BaseModel):
     attendance: SchoolTrendsCompletenessResponse
     behaviour: SchoolTrendsCompletenessResponse
     workforce: SchoolTrendsCompletenessResponse
+    admissions: SchoolTrendsCompletenessResponse
     finance: SchoolTrendsCompletenessResponse
 
 
@@ -181,6 +191,7 @@ class SchoolTrendDashboardMetricResponse(BaseModel):
 class SchoolTrendDashboardSectionResponse(BaseModel):
     key: Literal[
         "demographics",
+        "admissions",
         "finance",
         "attendance",
         "behaviour",

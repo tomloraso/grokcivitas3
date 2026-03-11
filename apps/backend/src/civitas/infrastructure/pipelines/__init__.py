@@ -13,6 +13,7 @@ from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
 from .ons_imd import OnsImdPipeline
 from .police_crime_context import PoliceCrimeContextPipeline
+from .school_admissions import SchoolAdmissionsPipeline
 from .school_financial_benchmarks import SchoolFinancialBenchmarksPipeline
 from .uk_house_prices import UkHousePricesPipeline
 
@@ -62,6 +63,11 @@ def pipeline_registry(
             ks4_dataset_id=pipeline_settings.dfe_performance_ks4_dataset_id,
             lookback_years=pipeline_settings.dfe_performance_lookback_years,
             page_size=pipeline_settings.dfe_performance_page_size,
+        ),
+        PipelineSource.SCHOOL_ADMISSIONS: SchoolAdmissionsPipeline(
+            engine=engine,
+            source_csv=pipeline_settings.school_admissions_source_csv,
+            source_url=pipeline_settings.school_admissions_source_url,
         ),
         PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: SchoolFinancialBenchmarksPipeline(
             engine=engine,

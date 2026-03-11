@@ -66,6 +66,7 @@ import { OfstedProfileSection } from "./components/OfstedProfileSection";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileSectionAccordion } from "./components/ProfileSectionAccordion";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
+import { SchoolAdmissionsSection } from "./components/SchoolAdmissionsSection";
 import { SchoolFinanceSection } from "./components/SchoolFinanceSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
@@ -77,6 +78,7 @@ const TOC_SECTIONS = [
   { id: "results-progress", label: "Results & Progress" },
   { id: "day-to-day", label: "Day-to-Day" },
   { id: "demographics", label: "Pupil Demographics" },
+  { id: "admissions", label: "Admissions" },
   { id: "teachers-staff", label: "Teachers & Staff" },
   { id: "finance", label: "Finance" },
   { id: "neighbourhood", label: "Neighbourhood" },
@@ -321,6 +323,17 @@ export function SchoolProfileFeature(): JSX.Element {
                     trends={profile.trends}
                     demographicsCompleteness={profile.completeness.demographics}
                     trendsCompleteness={profile.completeness.trends}
+                    benchmarkDashboard={profile.benchmarkDashboard}
+                  />
+                </ProfileSectionAccordion>
+              </div>
+
+              <div id="admissions">
+                <ProfileSectionAccordion title="School Admissions" defaultOpen={false}>
+                  <SchoolAdmissionsSection
+                    admissions={profile.admissions}
+                    trends={profile.trends}
+                    completeness={profile.completeness.admissions}
                     benchmarkDashboard={profile.benchmarkDashboard}
                   />
                 </ProfileSectionAccordion>

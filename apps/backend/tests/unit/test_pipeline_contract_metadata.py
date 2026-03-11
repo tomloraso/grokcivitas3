@@ -39,6 +39,9 @@ from civitas.infrastructure.pipelines.contracts import (
     police as police_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
+    school_admissions as admissions_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
     school_financial_benchmarks as finance_contract,
 )
 from civitas.infrastructure.pipelines.demographics_release_files import (
@@ -98,6 +101,12 @@ from civitas.infrastructure.pipelines.police_crime_context import (
 )
 from civitas.infrastructure.pipelines.police_crime_context import (
     PoliceCrimeContextPipeline,
+)
+from civitas.infrastructure.pipelines.school_admissions import (
+    BRONZE_MANIFEST_FILE_NAME as SCHOOL_ADMISSIONS_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.school_admissions import (
+    SchoolAdmissionsPipeline,
 )
 from civitas.infrastructure.pipelines.school_financial_benchmarks import (
     BRONZE_MANIFEST_FILE_NAME as SCHOOL_FINANCIAL_BENCHMARKS_MANIFEST_FILE_NAME,
@@ -466,6 +475,39 @@ def test_dfe_workforce_download_writes_contract_version_to_manifest(tmp_path: Pa
     asset_statuses = {asset["asset_kind"]: asset["source_status"] for asset in payload["assets"]}
     assert asset_statuses["teacher_turnover"] == "empty"
     assert asset_statuses["workforce_size"] == "empty"
+
+
+def test_school_admissions_download_writes_contract_version_to_manifest(tmp_path: Path) -> None:
+    csv_path = tmp_path / "school_admissions.csv"
+    csv_path.write_text(
+        "time_period,time_identifier,geographic_level,country_code,country_name,region_code,"
+        "region_name,old_la_code,new_la_code,la_name,school_phase,school_laestab_as_used,"
+        "number_preferences_la,school_name,total_number_places_offered,"
+        "number_preferred_offers,number_1st_preference_offers,number_2nd_preference_offers,"
+        "number_3rd_preference_offers,times_put_as_any_preferred_school,"
+        "times_put_as_1st_preference,times_put_as_2nd_preference,times_put_as_3rd_preference,"
+        "proportion_1stprefs_v_1stprefoffers,proportion_1stprefs_v_totaloffers,"
+        "all_applications_from_another_LA,offers_to_applicants_from_another_LA,"
+        "establishment_type,denomination,FSM_eligible_percent,admissions_policy,urban_rural,"
+        "allthrough_school,parliamentary_constituency_code,parliamentary_constituency_name,"
+        "school_urn,entry_year\n"
+        "202526,Academic year,School,E92000001,England,E12000007,London,213,E09000033,"
+        "Westminster,Primary,2136007,6,Alpha Primary School,60,57,49,6,2,95,72,15,8,"
+        "1.4694,1.2000,33,18,Community school,None,18.5,Comprehensive,"
+        "Urban major conurbation,No,E14000639,Westminster,100001,R\n",
+        encoding="utf-8",
+    )
+
+    pipeline = SchoolAdmissionsPipeline(engine=None, source_csv=str(csv_path))
+    context = _context(PipelineSource.SCHOOL_ADMISSIONS, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / SCHOOL_ADMISSIONS_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert payload["normalization_contract_version"] == admissions_contract.CONTRACT_VERSION
+    assert len(payload["assets"]) == 1
+    assert payload["assets"][0]["bronze_file_name"] == "school_admissions.csv"
 
 
 def test_school_financial_benchmarks_download_writes_contract_version_to_manifest(

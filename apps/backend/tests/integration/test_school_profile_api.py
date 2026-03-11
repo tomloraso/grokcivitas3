@@ -11,6 +11,7 @@ from civitas.application.access.dto import SectionAccessDto
 from civitas.application.favourites.dto import SavedSchoolStateDto
 from civitas.application.identity.dto import CurrentSessionDto
 from civitas.application.school_profiles.dto import (
+    SchoolAdmissionsLatestDto,
     SchoolAreaContextCoverageDto,
     SchoolAreaContextDto,
     SchoolAreaCrimeDto,
@@ -269,6 +270,16 @@ def _profile_response() -> SchoolProfileResponseDto:
                 ),
             ),
         ),
+        admissions_latest=SchoolAdmissionsLatestDto(
+            academic_year="2024/25",
+            places_offered_total=90,
+            applications_any_preference=126,
+            applications_first_preference=98,
+            oversubscription_ratio=1.4,
+            first_preference_offer_rate=0.918,
+            any_preference_offer_rate=0.714,
+            admissions_policy="Not applicable",
+        ),
         finance_latest=SchoolFinanceLatestDto(
             academic_year="2023/24",
             total_income_gbp=2070000.0,
@@ -429,6 +440,12 @@ def _profile_response() -> SchoolProfileResponseDto:
                 last_updated_at=timestamp,
                 years_available=None,
             ),
+            admissions=SchoolProfileSectionCompletenessDto(
+                status="available",
+                reason_code=None,
+                last_updated_at=timestamp,
+                years_available=None,
+            ),
             finance=SchoolProfileSectionCompletenessDto(
                 status="available",
                 reason_code=None,
@@ -529,9 +546,12 @@ def test_get_school_profile_returns_expected_contract() -> None:
     assert payload["workforce_latest"]["teacher_ethnicity_breakdown"][0]["label"] == "White"
     assert payload["workforce_latest"]["teacher_qualification_breakdown"][0]["headcount"] == 40.0
     assert payload["workforce_latest"]["support_staff_post_mix"][0]["label"] == "Teaching assistant"
+    assert payload["admissions_latest"]["oversubscription_ratio"] == 1.4
+    assert payload["admissions_latest"]["applications_any_preference"] == 126
     assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
     assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
     assert payload["benchmarks"] == {"metrics": []}
+    assert payload["completeness"]["admissions"]["status"] == "available"
     assert payload["completeness"]["finance"]["status"] == "available"
     assert payload["completeness"]["performance"]["years_available"] == ["2023/24", "2024/25"]
     assert fake_use_case.calls == [("123456", None)]
@@ -556,6 +576,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
         attendance_latest=None,
         behaviour_latest=None,
         workforce_latest=None,
+        admissions_latest=None,
         finance_latest=None,
         leadership_snapshot=None,
         performance=None,
@@ -589,6 +610,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert payload["demographics_latest"] is None
     assert payload["attendance_latest"] is None
     assert payload["performance"] is None
+    assert payload["admissions_latest"] is None
     assert payload["finance_latest"] is None
     assert payload["ofsted_timeline"] == {
         "events": [],

@@ -16,6 +16,7 @@ from civitas.infrastructure.pipelines.gias import (
 def _row(**overrides: str) -> dict[str, str]:
     row = {
         "URN": "100001",
+        "EstablishmentNumber": "2001",
         "EstablishmentName": "Alpha Primary School",
         "TypeOfEstablishment (name)": "Community school",
         "PhaseOfEducation (name)": "Primary",
@@ -84,6 +85,8 @@ def test_normalize_gias_row_returns_typed_record_for_valid_input() -> None:
     assert normalized is not None
     assert warnings == ()
     assert normalized.urn == "100001"
+    assert normalized.establishment_number == "2001"
+    assert normalized.school_laestab == "2132001"
     assert normalized.postcode == "SW1A 1AA"
     assert normalized.easting == 529090.0
     assert normalized.northing == 179645.0
@@ -183,6 +186,7 @@ def test_csv_with_cp1252_characters_parses_without_error(tmp_path: Path) -> None
     row = ",".join(
         [
             "300001",
+            "4001",
             "St Mary\u2019s Church of England Primary",
             "Community school",
             "Primary",

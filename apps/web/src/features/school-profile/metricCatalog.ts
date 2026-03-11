@@ -2,6 +2,7 @@ export type MetricUnit = "percent" | "count" | "ratio" | "score" | "currency" | 
 
 export type MetricSectionKey =
   | "demographics"
+  | "admissions"
   | "finance"
   | "attendance"
   | "behaviour"
@@ -20,6 +21,7 @@ export interface MetricCatalogEntry {
 
 export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
   "demographics",
+  "admissions",
   "finance",
   "attendance",
   "behaviour",
@@ -30,6 +32,7 @@ export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
 
 export const METRIC_SECTION_LABELS: Record<MetricSectionKey, string> = {
   demographics: "Demographics",
+  admissions: "Admissions",
   finance: "Finance",
   attendance: "Attendance",
   behaviour: "Behaviour",
@@ -113,6 +116,44 @@ export const METRIC_CATALOG: Record<string, MetricCatalogEntry> = {
     description: "Pupils who joined or left the school mid-year, excluding those who moved at the normal transition point. High mobility can indicate instability in the school community.",
     section: "demographics",
     unit: "percent"
+  },
+  admissions_oversubscription_ratio: {
+    key: "admissions_oversubscription_ratio",
+    label: "Oversubscription Ratio",
+    description: "Applications with any preference divided by places offered. Values above 1 suggest demand exceeded available places.",
+    section: "admissions",
+    unit: "ratio",
+    decimals: 2
+  },
+  admissions_first_preference_offer_rate: {
+    key: "admissions_first_preference_offer_rate",
+    label: "First Preference Offer Rate",
+    description: "Places offered divided by first-preference applications. Lower values suggest tighter competition among first-choice applicants.",
+    section: "admissions",
+    unit: "ratio",
+    decimals: 2
+  },
+  admissions_any_preference_offer_rate: {
+    key: "admissions_any_preference_offer_rate",
+    label: "Any Preference Offer Rate",
+    description: "Places offered divided by total applications listing the school at any preference level.",
+    section: "admissions",
+    unit: "ratio",
+    decimals: 2
+  },
+  admissions_cross_la_applications: {
+    key: "admissions_cross_la_applications",
+    label: "Cross-LA Applications",
+    description: "Applications received from outside the school's home local authority.",
+    section: "admissions",
+    unit: "count"
+  },
+  admissions_cross_la_offers: {
+    key: "admissions_cross_la_offers",
+    label: "Cross-LA Offers",
+    description: "Offers made to applicants from outside the school's home local authority.",
+    section: "admissions",
+    unit: "count"
   },
   income_per_pupil_gbp: {
     key: "income_per_pupil_gbp",
@@ -590,6 +631,14 @@ export const DEMOGRAPHICS_METRIC_KEYS = [
   "pupil_mobility_pct",
   "first_language_english_pct",
   "first_language_unclassified_pct"
+];
+
+export const ADMISSIONS_METRIC_KEYS = [
+  "admissions_oversubscription_ratio",
+  "admissions_first_preference_offer_rate",
+  "admissions_any_preference_offer_rate",
+  "admissions_cross_la_applications",
+  "admissions_cross_la_offers"
 ];
 
 export const ATTENDANCE_METRIC_KEYS = [

@@ -7,6 +7,7 @@ from civitas.application.school_profiles.errors import SchoolProfileNotFoundErro
 from civitas.application.school_profiles.use_cases import GetSchoolProfileUseCase
 from civitas.domain.access.models import AccessDecision
 from civitas.domain.school_profiles.models import (
+    SchoolAdmissionsLatest,
     SchoolAreaContext,
     SchoolAreaContextCoverage,
     SchoolAreaCrime,
@@ -118,6 +119,7 @@ def _profile(
     attendance_latest: SchoolAttendanceLatest | None = None,
     behaviour_latest: SchoolBehaviourLatest | None = None,
     workforce_latest: SchoolWorkforceLatest | None = None,
+    admissions_latest: SchoolAdmissionsLatest | None = None,
     finance_latest: SchoolFinanceLatest | None = None,
     leadership_snapshot: SchoolLeadershipSnapshot | None = None,
     performance: SchoolPerformance | None = None,
@@ -179,6 +181,12 @@ def _profile(
             workforce=SchoolProfileSectionCompleteness(
                 status="available" if workforce_latest is not None else "unavailable",
                 reason_code=None if workforce_latest is not None else "source_missing",
+                last_updated_at=None,
+                years_available=None,
+            ),
+            admissions=SchoolProfileSectionCompleteness(
+                status="available" if admissions_latest is not None else "unavailable",
+                reason_code=None if admissions_latest is not None else "source_missing",
                 last_updated_at=None,
                 years_available=None,
             ),
@@ -279,6 +287,7 @@ def _profile(
         attendance_latest=attendance_latest,
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
+        admissions_latest=admissions_latest,
         finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
@@ -336,6 +345,16 @@ def test_get_school_profile_returns_contract_dto() -> None:
                 teacher_turnover_pct=9.8,
                 qts_pct=95.2,
                 qualifications_level6_plus_pct=81.1,
+            ),
+            admissions_latest=SchoolAdmissionsLatest(
+                academic_year="2024/25",
+                places_offered_total=90,
+                applications_any_preference=126,
+                applications_first_preference=98,
+                oversubscription_ratio=1.4,
+                first_preference_offer_rate=0.918,
+                any_preference_offer_rate=0.714,
+                admissions_policy="Not applicable",
             ),
             leadership_snapshot=SchoolLeadershipSnapshot(
                 headteacher_name="A. Jones",
@@ -478,6 +497,12 @@ def test_get_school_profile_returns_contract_dto() -> None:
                     last_updated_at=None,
                     years_available=None,
                 ),
+                admissions=SchoolProfileSectionCompleteness(
+                    status="available",
+                    reason_code=None,
+                    last_updated_at=None,
+                    years_available=None,
+                ),
                 finance=SchoolProfileSectionCompleteness(
                     status="unavailable",
                     reason_code="not_applicable",
@@ -559,6 +584,9 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.behaviour_latest.suspensions_count == 121
     assert result.workforce_latest is not None
     assert result.workforce_latest.pupil_teacher_ratio == 16.3
+    assert result.admissions_latest is not None
+    assert result.admissions_latest.oversubscription_ratio == pytest.approx(1.4)
+    assert result.admissions_latest.admissions_policy == "Not applicable"
     assert result.leadership_snapshot is not None
     assert result.leadership_snapshot.headteacher_name == "A. Jones"
     assert result.ofsted_latest is not None
@@ -583,6 +611,7 @@ def test_get_school_profile_returns_contract_dto() -> None:
     assert result.completeness.attendance.status == "available"
     assert result.completeness.behaviour.status == "available"
     assert result.completeness.workforce.status == "available"
+    assert result.completeness.admissions.status == "available"
     assert result.completeness.leadership.status == "available"
     assert result.completeness.performance.status == "available"
     assert result.completeness.demographics.reason_code == "partial_metric_coverage"
@@ -607,6 +636,7 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.attendance_latest is None
     assert result.behaviour_latest is None
     assert result.workforce_latest is None
+    assert result.admissions_latest is None
     assert result.leadership_snapshot is None
     assert result.ofsted_latest is None
     assert result.ofsted_timeline is not None
@@ -616,6 +646,7 @@ def test_get_school_profile_preserves_null_subsections() -> None:
     assert result.neighbourhood.area_context is None
     assert result.completeness.demographics.status == "unavailable"
     assert result.completeness.workforce.status == "unavailable"
+    assert result.completeness.admissions.status == "unavailable"
     assert result.completeness.leadership.status == "unavailable"
     assert result.completeness.performance.status == "unavailable"
     assert result.completeness.ofsted_timeline.status == "unavailable"

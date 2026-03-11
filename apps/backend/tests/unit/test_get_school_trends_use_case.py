@@ -8,6 +8,8 @@ from civitas.application.school_trends.use_cases import (
     GetSchoolTrendsUseCase,
 )
 from civitas.domain.school_trends.models import (
+    SchoolAdmissionsSeries,
+    SchoolAdmissionsYearlyRow,
     SchoolAttendanceSeries,
     SchoolAttendanceYearlyRow,
     SchoolBehaviourSeries,
@@ -30,6 +32,7 @@ class FakeSchoolTrendsRepository:
         attendance: SchoolAttendanceSeries | None,
         behaviour: SchoolBehaviourSeries | None,
         workforce: SchoolWorkforceSeries | None,
+        admissions: SchoolAdmissionsSeries | None = None,
         finance: SchoolFinanceSeries | None = None,
         benchmarks: SchoolMetricBenchmarkSeries | None = None,
     ) -> None:
@@ -37,6 +40,25 @@ class FakeSchoolTrendsRepository:
         self._attendance = attendance
         self._behaviour = behaviour
         self._workforce = workforce
+        self._admissions = (
+            admissions
+            if admissions is not None or demographics is None
+            else SchoolAdmissionsSeries(
+                urn=demographics.urn,
+                rows=tuple(
+                    SchoolAdmissionsYearlyRow(
+                        academic_year=row.academic_year,
+                        oversubscription_ratio=1.2,
+                        first_preference_offer_rate=0.72,
+                        any_preference_offer_rate=0.88,
+                        cross_la_applications=18,
+                        cross_la_offers=9,
+                    )
+                    for row in demographics.rows
+                ),
+                latest_updated_at=None,
+            )
+        )
         self._finance = (
             finance
             if finance is not None or demographics is None
@@ -62,6 +84,9 @@ class FakeSchoolTrendsRepository:
 
     def get_workforce_series(self, urn: str) -> SchoolWorkforceSeries | None:
         return self._workforce
+
+    def get_admissions_series(self, urn: str) -> SchoolAdmissionsSeries | None:
+        return self._admissions
 
     def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None:
         return self._finance
@@ -204,6 +229,36 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
             ),
             latest_updated_at=None,
         ),
+        admissions=SchoolAdmissionsSeries(
+            urn="123456",
+            rows=(
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2022/23",
+                    oversubscription_ratio=1.18,
+                    first_preference_offer_rate=0.71,
+                    any_preference_offer_rate=0.88,
+                    cross_la_applications=14,
+                    cross_la_offers=9,
+                ),
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2023/24",
+                    oversubscription_ratio=1.21,
+                    first_preference_offer_rate=0.69,
+                    any_preference_offer_rate=0.86,
+                    cross_la_applications=16,
+                    cross_la_offers=10,
+                ),
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2024/25",
+                    oversubscription_ratio=1.27,
+                    first_preference_offer_rate=0.67,
+                    any_preference_offer_rate=0.84,
+                    cross_la_applications=19,
+                    cross_la_offers=11,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
         benchmarks=SchoolMetricBenchmarkSeries(
             urn="123456",
             rows=(
@@ -266,6 +321,9 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
     assert result.series.suspensions_count[1].delta == 14.0
     assert result.series.pupil_teacher_ratio[2].delta == pytest.approx(-0.4)
     assert result.series.qts_pct[2].delta == pytest.approx(0.1)
+    assert result.series.admissions_oversubscription_ratio[2].delta == pytest.approx(0.06)
+    assert result.series.admissions_cross_la_applications[2].value == 19
+    assert result.section_completeness.admissions.status == "available"
 
     assert result.benchmarks.disadvantaged_pct[2].school_vs_national_delta == pytest.approx(3.0)
     assert result.benchmarks.disadvantaged_pct[2].school_vs_local_delta == pytest.approx(2.8)
@@ -360,6 +418,7 @@ def test_get_school_trends_marks_partial_history_when_only_one_year_is_available
     assert result.history_quality.is_partial_history is True
     assert result.completeness.status == "partial"
     assert result.completeness.reason_code == "insufficient_years_published"
+    assert result.section_completeness.admissions.reason_code == "insufficient_years_published"
     assert result.series.disadvantaged_pct[0].delta is None
 
 
@@ -399,6 +458,7 @@ def test_get_school_trends_returns_empty_series_for_school_without_any_rows() ->
     assert result.years_available == ()
     assert result.completeness.status == "unavailable"
     assert result.series.disadvantaged_pct == ()
+    assert result.series.admissions_oversubscription_ratio == ()
     assert result.benchmarks.disadvantaged_pct == ()
 
 
@@ -478,6 +538,20 @@ def test_get_school_trend_dashboard_groups_metrics_by_section() -> None:
             ),
             latest_updated_at=None,
         ),
+        admissions=SchoolAdmissionsSeries(
+            urn="123456",
+            rows=(
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2024/25",
+                    oversubscription_ratio=1.14,
+                    first_preference_offer_rate=0.73,
+                    any_preference_offer_rate=0.87,
+                    cross_la_applications=13,
+                    cross_la_offers=8,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
         benchmarks=SchoolMetricBenchmarkSeries(
             urn="123456",
             rows=(
@@ -497,6 +571,16 @@ def test_get_school_trend_dashboard_groups_metrics_by_section() -> None:
                     school_value=93.2,
                     national_value=92.0,
                     local_value=92.7,
+                    local_scope="local_authority_district",
+                    local_area_code="E09000033",
+                    local_area_label="Westminster",
+                ),
+                SchoolMetricBenchmarkYearlyRow(
+                    metric_key="admissions_oversubscription_ratio",
+                    academic_year="2024/25",
+                    school_value=1.14,
+                    national_value=1.08,
+                    local_value=1.1,
                     local_scope="local_authority_district",
                     local_area_code="E09000033",
                     local_area_label="Westminster",
@@ -531,15 +615,18 @@ def test_get_school_trend_dashboard_groups_metrics_by_section() -> None:
 
     sections = {section.key: section for section in result.sections}
     assert "demographics" in sections
+    assert "admissions" in sections
     assert "attendance" in sections
     assert "performance" in sections
     assert "area" in sections
 
     demographics_metrics = {metric.metric_key for metric in sections["demographics"].metrics}
+    admissions_metrics = {metric.metric_key for metric in sections["admissions"].metrics}
     performance_metrics = {metric.metric_key for metric in sections["performance"].metrics}
     area_metrics = {metric.metric_key for metric in sections["area"].metrics}
 
     assert "fsm_pct" in demographics_metrics
+    assert "admissions_oversubscription_ratio" in admissions_metrics
     assert "attainment8_average" in performance_metrics
     assert "area_crime_incidents_per_1000" in area_metrics
     assert result.completeness.status == "partial"

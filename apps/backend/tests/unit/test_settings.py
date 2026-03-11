@@ -54,6 +54,7 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_POLICE_CRIME_SOURCE_MODE,
     DEFAULT_POSTCODE_CACHE_TTL_DAYS,
     DEFAULT_POSTCODES_IO_BASE_URL,
+    DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL,
     DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS,
     DEFAULT_SCHOOL_PROFILE_CACHE_INVALIDATION_POLL_SECONDS,
     DEFAULT_SCHOOL_PROFILE_CACHE_TTL_SECONDS,
@@ -97,6 +98,8 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DFE_PERFORMANCE_KS4_DATASET_ID",
         "CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS",
         "CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
+        "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_CSV",
+        "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_URL",
         "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
         "CIVITAS_IMD_SOURCE_CSV",
         "CIVITAS_IMD_RELEASE",
@@ -114,6 +117,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_BEHAVIOUR",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_WORKFORCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_ADMISSIONS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
@@ -139,6 +143,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_BEHAVIOUR",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_WORKFORCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_ADMISSIONS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
@@ -226,6 +231,8 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         settings.pipeline.dfe_performance_lookback_years == DEFAULT_DFE_PERFORMANCE_LOOKBACK_YEARS
     )
     assert settings.pipeline.dfe_performance_page_size == DEFAULT_DFE_PERFORMANCE_PAGE_SIZE
+    assert settings.pipeline.school_admissions_source_csv is None
+    assert settings.pipeline.school_admissions_source_url == DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL
     assert (
         settings.pipeline.school_financial_benchmarks_workbook_urls
         == DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS
@@ -250,6 +257,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.max_reject_ratio_dfe_behaviour == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_workforce == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_performance == 1.0
+    assert settings.pipeline.max_reject_ratio_school_admissions == 1.0
     assert settings.pipeline.max_reject_ratio_school_financial_benchmarks == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_latest == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_timeline == 1.0
@@ -292,6 +300,10 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert (
         settings.data_quality.freshness_sla_hours_dfe_performance
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_school_admissions
         == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
     )
     assert (
@@ -404,6 +416,14 @@ def test_app_settings_reads_environment_overrides(
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_LOOKBACK_YEARS", "4")
     monkeypatch.setenv("CIVITAS_DFE_PERFORMANCE_PAGE_SIZE", "5000")
     monkeypatch.setenv(
+        "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_CSV",
+        "  https://example.com/school_admissions.csv  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_URL",
+        "  https://content.example.test/release/file  ",
+    )
+    monkeypatch.setenv(
         "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
         " https://example.com/AAR_2022-23_download.xlsx, https://example.com/AAR_2023-24_download.xlsx ",
     )
@@ -512,6 +532,14 @@ def test_app_settings_reads_environment_overrides(
     )
     assert settings.pipeline.dfe_performance_lookback_years == 4
     assert settings.pipeline.dfe_performance_page_size == 5000
+    assert (
+        settings.pipeline.school_admissions_source_csv
+        == "https://example.com/school_admissions.csv"
+    )
+    assert (
+        settings.pipeline.school_admissions_source_url
+        == "https://content.example.test/release/file"
+    )
     assert settings.pipeline.school_financial_benchmarks_workbook_urls == (
         "https://example.com/AAR_2022-23_download.xlsx",
         "https://example.com/AAR_2023-24_download.xlsx",

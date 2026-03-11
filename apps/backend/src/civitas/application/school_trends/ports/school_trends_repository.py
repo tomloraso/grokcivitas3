@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from civitas.domain.school_trends.models import (
+    SchoolAdmissionsSeries,
     SchoolAttendanceSeries,
     SchoolBehaviourSeries,
     SchoolDemographicsSeries,
@@ -20,5 +21,7 @@ class SchoolTrendsRepository(Protocol):
     def get_workforce_series(self, urn: str) -> SchoolWorkforceSeries | None: ...
 
     def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None: ...
+
+    def get_admissions_series(self, urn: str) -> SchoolAdmissionsSeries | None: ...
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None: ...

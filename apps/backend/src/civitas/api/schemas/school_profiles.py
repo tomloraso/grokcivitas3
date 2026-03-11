@@ -187,6 +187,17 @@ class SchoolProfileFinanceLatestResponse(BaseModel):
     supply_staff_costs_pct_of_staff_costs: float | None
 
 
+class SchoolProfileAdmissionsLatestResponse(BaseModel):
+    academic_year: str
+    places_offered_total: int | None
+    applications_any_preference: int | None
+    applications_first_preference: int | None
+    oversubscription_ratio: float | None
+    first_preference_offer_rate: float | None
+    any_preference_offer_rate: float | None
+    admissions_policy: str | None
+
+
 class SchoolProfileOfstedLatestResponse(BaseModel):
     overall_effectiveness_code: str | None
     overall_effectiveness_label: str | None
@@ -408,6 +419,7 @@ class SchoolProfileCompletenessResponse(BaseModel):
     attendance: SchoolProfileSectionCompletenessResponse
     behaviour: SchoolProfileSectionCompletenessResponse
     workforce: SchoolProfileSectionCompletenessResponse
+    admissions: SchoolProfileSectionCompletenessResponse
     finance: SchoolProfileSectionCompletenessResponse
     leadership: SchoolProfileSectionCompletenessResponse
     performance: SchoolProfileSectionCompletenessResponse
@@ -426,6 +438,7 @@ class SchoolProfileResponse(BaseModel):
     attendance_latest: SchoolProfileAttendanceLatestResponse | None
     behaviour_latest: SchoolProfileBehaviourLatestResponse | None
     workforce_latest: SchoolProfileWorkforceLatestResponse | None
+    admissions_latest: SchoolProfileAdmissionsLatestResponse | None
     finance_latest: SchoolProfileFinanceLatestResponse | None
     leadership_snapshot: SchoolProfileLeadershipSnapshotResponse | None
     performance: SchoolProfilePerformanceResponse | None

@@ -75,6 +75,11 @@ DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS = (
     "https://financial-benchmarking-and-insights-tool.education.gov.uk/files/"
     "AAR_2023-24_download.xlsx",
 )
+DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL = (
+    "https://content.explore-education-statistics.service.gov.uk/api/releases/"
+    "5ed40264-1835-4848-a29b-446ed6c075c2/files/"
+    "7c9894e4-9038-4213-823c-bf50bc993cec"
+)
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_HOUSE_PRICES_SOURCE_URL = (
     "https://publicdata.landregistry.gov.uk/market-trend-data/"
@@ -165,6 +170,8 @@ class PipelineSettings(BaseModel):
     dfe_performance_ks4_dataset_id: str
     dfe_performance_lookback_years: PositiveInt
     dfe_performance_page_size: PositiveInt
+    school_admissions_source_csv: str | None = None
+    school_admissions_source_url: str | None = None
     school_financial_benchmarks_workbook_urls: tuple[str, ...]
     imd_source_csv: str | None = None
     imd_release: str
@@ -184,6 +191,7 @@ class PipelineSettings(BaseModel):
     max_reject_ratio_dfe_behaviour: float
     max_reject_ratio_dfe_workforce: float
     max_reject_ratio_dfe_performance: float
+    max_reject_ratio_school_admissions: float
     max_reject_ratio_school_financial_benchmarks: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
@@ -219,6 +227,7 @@ class DataQualitySettings(BaseModel):
     freshness_sla_hours_dfe_behaviour: PositiveInt
     freshness_sla_hours_dfe_workforce: PositiveInt
     freshness_sla_hours_dfe_performance: PositiveInt
+    freshness_sla_hours_school_admissions: PositiveInt
     freshness_sla_hours_school_financial_benchmarks: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
@@ -238,6 +247,7 @@ class DataQualitySettings(BaseModel):
             "dfe_behaviour": float(self.freshness_sla_hours_dfe_behaviour),
             "dfe_workforce": float(self.freshness_sla_hours_dfe_workforce),
             "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
+            "school_admissions": float(self.freshness_sla_hours_school_admissions),
             "school_financial_benchmarks": float(
                 self.freshness_sla_hours_school_financial_benchmarks
             ),
@@ -424,6 +434,14 @@ class AppSettings(BaseSettings):
         le=10_000,
         validation_alias="CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
     )
+    school_admissions_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_SCHOOL_ADMISSIONS_SOURCE_CSV",
+    )
+    school_admissions_source_url: str | None = Field(
+        default=DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL,
+        validation_alias="CIVITAS_SCHOOL_ADMISSIONS_SOURCE_URL",
+    )
     school_financial_benchmarks_workbook_urls: str | None = Field(
         default=",".join(DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS),
         validation_alias="CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
@@ -514,6 +532,12 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
+    )
+    pipeline_max_reject_ratio_school_admissions: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_ADMISSIONS",
     )
     pipeline_max_reject_ratio_school_financial_benchmarks: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -631,6 +655,10 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_dfe_performance: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
+    )
+    data_quality_freshness_sla_hours_school_admissions: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_ADMISSIONS",
     )
     data_quality_freshness_sla_hours_school_financial_benchmarks: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -827,6 +855,8 @@ class AppSettings(BaseSettings):
             dfe_performance_ks4_dataset_id=self.dfe_performance_ks4_dataset_id,
             dfe_performance_lookback_years=self.dfe_performance_lookback_years,
             dfe_performance_page_size=self.dfe_performance_page_size,
+            school_admissions_source_csv=self.school_admissions_source_csv,
+            school_admissions_source_url=self.school_admissions_source_url,
             school_financial_benchmarks_workbook_urls=_parse_csv_tokens(
                 self.school_financial_benchmarks_workbook_urls
             ),
@@ -852,6 +882,7 @@ class AppSettings(BaseSettings):
             max_reject_ratio_dfe_behaviour=self.pipeline_max_reject_ratio_dfe_behaviour,
             max_reject_ratio_dfe_workforce=self.pipeline_max_reject_ratio_dfe_workforce,
             max_reject_ratio_dfe_performance=self.pipeline_max_reject_ratio_dfe_performance,
+            max_reject_ratio_school_admissions=self.pipeline_max_reject_ratio_school_admissions,
             max_reject_ratio_school_financial_benchmarks=(
                 self.pipeline_max_reject_ratio_school_financial_benchmarks
             ),
@@ -902,6 +933,9 @@ class AppSettings(BaseSettings):
             freshness_sla_hours_dfe_workforce=self.data_quality_freshness_sla_hours_dfe_workforce,
             freshness_sla_hours_dfe_performance=(
                 self.data_quality_freshness_sla_hours_dfe_performance
+            ),
+            freshness_sla_hours_school_admissions=(
+                self.data_quality_freshness_sla_hours_school_admissions
             ),
             freshness_sla_hours_school_financial_benchmarks=(
                 self.data_quality_freshness_sla_hours_school_financial_benchmarks
@@ -968,6 +1002,8 @@ class AppSettings(BaseSettings):
         "dfe_attendance_release_slugs",
         "dfe_behaviour_release_slugs",
         "dfe_workforce_release_slugs",
+        "school_admissions_source_csv",
+        "school_admissions_source_url",
         "school_financial_benchmarks_workbook_urls",
         "imd_source_csv",
         "house_prices_source_csv",

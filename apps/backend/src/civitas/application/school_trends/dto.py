@@ -80,6 +80,11 @@ class SchoolTrendsSeriesDto:
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     supply_staff_costs_pct_of_staff_costs: tuple[SchoolTrendPointDto, ...]
+    admissions_oversubscription_ratio: tuple[SchoolTrendPointDto, ...] = ()
+    admissions_first_preference_offer_rate: tuple[SchoolTrendPointDto, ...] = ()
+    admissions_any_preference_offer_rate: tuple[SchoolTrendPointDto, ...] = ()
+    admissions_cross_la_applications: tuple[SchoolTrendPointDto, ...] = ()
+    admissions_cross_la_offers: tuple[SchoolTrendPointDto, ...] = ()
     teacher_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
     teacher_fte_total: tuple[SchoolTrendPointDto, ...] = ()
     support_staff_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
@@ -131,6 +136,10 @@ class SchoolTrendsBenchmarksDto:
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
     supply_staff_costs_pct_of_staff_costs: tuple[SchoolTrendBenchmarkPointDto, ...]
+    admissions_oversubscription_ratio: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    admissions_first_preference_offer_rate: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    admissions_any_preference_offer_rate: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
+    admissions_cross_la_applications: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
     teacher_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
     teacher_fte_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
     support_staff_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
@@ -164,6 +173,7 @@ class SchoolTrendsSectionCompletenessDto:
     attendance: SchoolTrendsCompletenessDto
     behaviour: SchoolTrendsCompletenessDto
     workforce: SchoolTrendsCompletenessDto
+    admissions: SchoolTrendsCompletenessDto
     finance: SchoolTrendsCompletenessDto
 
 
@@ -190,6 +200,7 @@ class SchoolTrendDashboardMetricDto:
 class SchoolTrendDashboardSectionDto:
     key: Literal[
         "demographics",
+        "admissions",
         "finance",
         "attendance",
         "behaviour",

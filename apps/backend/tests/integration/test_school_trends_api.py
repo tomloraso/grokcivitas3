@@ -449,6 +449,46 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     ),
                 ),
                 teaching_staff_costs_per_pupil_gbp=(),
+                admissions_oversubscription_ratio=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=1.18,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                admissions_first_preference_offer_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=0.73,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                admissions_any_preference_offer_rate=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=0.86,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                admissions_cross_la_applications=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=18,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
+                admissions_cross_la_offers=(
+                    SchoolTrendPointDto(
+                        academic_year="2024/25",
+                        value=9,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=(
@@ -568,6 +608,58 @@ def test_get_school_trends_returns_expected_contract() -> None:
                 staff_costs_pct_of_expenditure=(),
                 revenue_reserve_per_pupil_gbp=(),
                 teaching_staff_costs_per_pupil_gbp=(),
+                admissions_oversubscription_ratio=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=1.18,
+                        national_value=1.1,
+                        local_value=1.14,
+                        school_vs_national_delta=0.08,
+                        school_vs_local_delta=0.04,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                admissions_first_preference_offer_rate=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=0.73,
+                        national_value=0.76,
+                        local_value=0.74,
+                        school_vs_national_delta=-0.03,
+                        school_vs_local_delta=-0.01,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                admissions_any_preference_offer_rate=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=0.86,
+                        national_value=0.82,
+                        local_value=0.84,
+                        school_vs_national_delta=0.04,
+                        school_vs_local_delta=0.02,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
+                admissions_cross_la_applications=(
+                    SchoolTrendBenchmarkPointDto(
+                        academic_year="2024/25",
+                        school_value=18,
+                        national_value=12.0,
+                        local_value=15.0,
+                        school_vs_national_delta=6.0,
+                        school_vs_local_delta=3.0,
+                        local_scope="local_authority_district",
+                        local_area_code="E09000033",
+                        local_area_label="Westminster",
+                    ),
+                ),
             ),
             completeness=SchoolTrendsCompletenessDto(
                 status="partial",
@@ -600,6 +692,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     last_updated_at=None,
                     years_available=("2024/25",),
                 ),
+                admissions=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="insufficient_years_published",
+                    last_updated_at=None,
+                    years_available=("2024/25",),
+                ),
                 finance=SchoolTrendsCompletenessDto(
                     status="partial",
                     reason_code="insufficient_years_published",
@@ -623,11 +721,14 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["series"]["teacher_average_mean_salary_gbp"][0]["value"] == 46850.0
     assert payload["series"]["teacher_vacancy_rate"][0]["value"] == 1.7
     assert payload["series"]["third_party_support_staff_headcount"][0]["value"] == 3.0
+    assert payload["series"]["admissions_oversubscription_ratio"][0]["value"] == pytest.approx(1.18)
+    assert payload["series"]["admissions_cross_la_offers"][0]["value"] == 9
     assert payload["series"]["income_per_pupil_gbp"][0]["value"] == 6634.62
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
     assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"
     assert payload["benchmarks"]["teacher_headcount_total"][0]["school_value"] == 42.0
+    assert payload["benchmarks"]["admissions_cross_la_applications"][0]["school_value"] == 18
     assert payload["benchmarks"]["teacher_average_mean_salary_gbp"][0][
         "school_vs_national_delta"
     ] == pytest.approx(1640.0)
@@ -636,6 +737,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["benchmarks"]["income_per_pupil_gbp"][0][
         "school_vs_local_delta"
     ] == pytest.approx(184.52)
+    assert payload["section_completeness"]["admissions"]["years_available"] == ["2024/25"]
     assert payload["section_completeness"]["finance"]["years_available"] == ["2023/24"]
     assert fake_use_case.calls == ["123456"]
 
@@ -683,6 +785,29 @@ def test_get_school_trend_dashboard_returns_expected_contract() -> None:
                                     local_value=16.2,
                                     school_vs_national_delta=1.8,
                                     school_vs_local_delta=0.7,
+                                    local_scope="local_authority_district",
+                                    local_area_code="E09000033",
+                                    local_area_label="Westminster",
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+                SchoolTrendDashboardSectionDto(
+                    key="admissions",
+                    metrics=(
+                        SchoolTrendDashboardMetricDto(
+                            metric_key="admissions_oversubscription_ratio",
+                            label="Oversubscription Ratio",
+                            unit="ratio",
+                            points=(
+                                SchoolTrendBenchmarkPointDto(
+                                    academic_year="2024/25",
+                                    school_value=1.18,
+                                    national_value=1.1,
+                                    local_value=1.14,
+                                    school_vs_national_delta=0.08,
+                                    school_vs_local_delta=0.04,
                                     local_scope="local_authority_district",
                                     local_area_code="E09000033",
                                     local_area_label="Westminster",
@@ -760,9 +885,11 @@ def test_get_school_trend_dashboard_returns_expected_contract() -> None:
     assert payload["years_available"] == ["2023/24", "2024", "2024/25"]
     assert payload["sections"][0]["key"] == "demographics"
     assert payload["sections"][0]["metrics"][0]["metric_key"] == "fsm_pct"
-    assert payload["sections"][1]["key"] == "finance"
-    assert payload["sections"][1]["metrics"][0]["metric_key"] == "finance_income_per_pupil_gbp"
-    assert payload["sections"][2]["metrics"][0]["points"][0][
+    assert payload["sections"][1]["key"] == "admissions"
+    assert payload["sections"][1]["metrics"][0]["metric_key"] == "admissions_oversubscription_ratio"
+    assert payload["sections"][2]["key"] == "finance"
+    assert payload["sections"][2]["metrics"][0]["metric_key"] == "finance_income_per_pupil_gbp"
+    assert payload["sections"][3]["metrics"][0]["points"][0][
         "school_vs_national_delta"
     ] == pytest.approx(5.4)
     assert fake_use_case.calls == ["123456"]

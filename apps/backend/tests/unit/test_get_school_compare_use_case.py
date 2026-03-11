@@ -9,6 +9,7 @@ from civitas.application.school_compare.errors import (
 from civitas.application.school_compare.use_cases import GetSchoolCompareUseCase
 from civitas.domain.access.models import AccessDecision
 from civitas.domain.school_profiles.models import (
+    SchoolAdmissionsLatest,
     SchoolAreaContext,
     SchoolAreaContextCoverage,
     SchoolAreaCrime,
@@ -85,6 +86,7 @@ def _completeness(
     attendance: tuple[str, str | None] = ("available", None),
     behaviour: tuple[str, str | None] = ("available", None),
     workforce: tuple[str, str | None] = ("available", None),
+    admissions: tuple[str, str | None] = ("unavailable", "source_missing"),
     finance: tuple[str, str | None] = ("available", None),
     leadership: tuple[str, str | None] = ("available", None),
     performance: tuple[str, str | None] = ("available", None),
@@ -98,6 +100,7 @@ def _completeness(
         attendance=_section(*attendance),
         behaviour=_section(*behaviour),
         workforce=_section(*workforce),
+        admissions=_section(*admissions),
         finance=_section(*finance),
         leadership=_section(*leadership),
         performance=_section(*performance),
@@ -120,6 +123,7 @@ def _profile(
     attendance_latest: SchoolAttendanceLatest | None,
     behaviour_latest: SchoolBehaviourLatest | None,
     workforce_latest: SchoolWorkforceLatest | None,
+    admissions_latest: SchoolAdmissionsLatest | None,
     leadership_snapshot: SchoolLeadershipSnapshot | None,
     performance: SchoolPerformance | None,
     ofsted_latest: SchoolOfstedLatest | None,
@@ -175,6 +179,7 @@ def _profile(
         attendance_latest=attendance_latest,
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
+        admissions_latest=admissions_latest,
         finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
@@ -282,6 +287,7 @@ def _primary_profile() -> SchoolProfile:
             qts_pct=96.0,
             qualifications_level6_plus_pct=82.0,
         ),
+        admissions_latest=None,
         leadership_snapshot=SchoolLeadershipSnapshot(
             headteacher_name="Ada Jones",
             headteacher_start_date=date(2021, 9, 1),
@@ -452,6 +458,7 @@ def _secondary_profile() -> SchoolProfile:
             qts_pct=95.2,
             qualifications_level6_plus_pct=81.1,
         ),
+        admissions_latest=None,
         leadership_snapshot=SchoolLeadershipSnapshot(
             headteacher_name="Ben Smith",
             headteacher_start_date=date(2020, 9, 1),
@@ -671,6 +678,7 @@ def test_get_school_compare_hides_ks2_rows_when_no_school_publishes_ks2_data() -
         attendance_latest=secondary_b.attendance_latest,
         behaviour_latest=secondary_b.behaviour_latest,
         workforce_latest=secondary_b.workforce_latest,
+        admissions_latest=secondary_b.admissions_latest,
         leadership_snapshot=secondary_b.leadership_snapshot,
         performance=secondary_b.performance,
         ofsted_latest=secondary_b.ofsted_latest,

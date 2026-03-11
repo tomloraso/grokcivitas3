@@ -11,6 +11,8 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "attendance_latest",
         "behaviour_latest",
         "workforce_latest",
+        "admissions_latest",
+        "finance_latest",
         "leadership_snapshot",
         "performance",
         "ofsted_latest",

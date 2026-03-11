@@ -39,6 +39,8 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class GiasStagedRow:
     urn: str
+    establishment_number: str | None
+    school_laestab: str | None
     name: str
     phase: str | None
     school_type: str | None
@@ -102,6 +104,8 @@ def normalize_gias_row(
     return (
         GiasStagedRow(
             urn=normalized_row["urn"],
+            establishment_number=normalized_row["establishment_number"],
+            school_laestab=normalized_row["school_laestab"],
             name=normalized_row["name"],
             phase=normalized_row["phase"],
             school_type=normalized_row["school_type"],
@@ -221,6 +225,8 @@ class GiasPipeline:
                     f"""
                     CREATE TABLE staging.{staging_table_name} (
                         urn text PRIMARY KEY,
+                        establishment_number text NULL,
+                        school_laestab text NULL,
                         name text NOT NULL,
                         phase text NULL,
                         type text NULL,
@@ -275,6 +281,8 @@ class GiasPipeline:
                     f"""
                     INSERT INTO staging.{staging_table_name} (
                         urn,
+                        establishment_number,
+                        school_laestab,
                         name,
                         phase,
                         type,
@@ -321,6 +329,8 @@ class GiasPipeline:
                         last_changed_date
                     ) VALUES (
                         :urn,
+                        :establishment_number,
+                        :school_laestab,
                         :name,
                         :phase,
                         :type,
@@ -374,6 +384,8 @@ class GiasPipeline:
                         [
                             {
                                 "urn": row.urn,
+                                "establishment_number": row.establishment_number,
+                                "school_laestab": row.school_laestab,
                                 "name": row.name,
                                 "phase": row.phase,
                                 "type": row.school_type,
@@ -523,6 +535,8 @@ class GiasPipeline:
                         WITH upserted AS (
                             INSERT INTO schools (
                                 urn,
+                                establishment_number,
+                                school_laestab,
                                 name,
                                 phase,
                                 type,
@@ -572,6 +586,8 @@ class GiasPipeline:
                             )
                             SELECT
                                 urn,
+                                establishment_number,
+                                school_laestab,
                                 name,
                                 phase,
                                 type,
@@ -624,6 +640,8 @@ class GiasPipeline:
                             FROM staging.{staging_table_name}
                             ON CONFLICT (urn) DO UPDATE SET
                                 name = EXCLUDED.name,
+                                establishment_number = EXCLUDED.establishment_number,
+                                school_laestab = EXCLUDED.school_laestab,
                                 phase = EXCLUDED.phase,
                                 type = EXCLUDED.type,
                                 status = EXCLUDED.status,

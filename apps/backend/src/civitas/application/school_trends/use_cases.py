@@ -28,6 +28,7 @@ from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
 from civitas.domain.school_trends.models import (
+    SchoolAdmissionsYearlyRow,
     SchoolAttendanceYearlyRow,
     SchoolBehaviourYearlyRow,
     SchoolDemographicsYearlyRow,
@@ -41,6 +42,7 @@ MIN_YEARS_FOR_DELTA = 2
 MIN_YEARS_FOR_COMPLETE_HISTORY = 3
 DashboardSectionKey = Literal[
     "demographics",
+    "admissions",
     "finance",
     "attendance",
     "behaviour",
@@ -51,6 +53,7 @@ DashboardSectionKey = Literal[
 
 DASHBOARD_SECTION_ORDER = (
     "demographics",
+    "admissions",
     "finance",
     "attendance",
     "behaviour",
@@ -69,6 +72,30 @@ DASHBOARD_METRIC_CATALOG: tuple[tuple[str, str, str, str], ...] = (
     ("demographics", "male_pct", "Male Pupils (%)", "percent"),
     ("demographics", "female_pct", "Female Pupils (%)", "percent"),
     ("demographics", "pupil_mobility_pct", "Pupil Mobility (%)", "percent"),
+    (
+        "admissions",
+        "admissions_oversubscription_ratio",
+        "Oversubscription Ratio",
+        "ratio",
+    ),
+    (
+        "admissions",
+        "admissions_first_preference_offer_rate",
+        "First Preference Offer Rate",
+        "ratio",
+    ),
+    (
+        "admissions",
+        "admissions_any_preference_offer_rate",
+        "Any Preference Offer Rate",
+        "ratio",
+    ),
+    (
+        "admissions",
+        "admissions_cross_la_applications",
+        "Cross-LA Applications",
+        "count",
+    ),
     ("finance", "finance_income_per_pupil_gbp", "Income per Pupil", "currency"),
     (
         "finance",
@@ -224,6 +251,7 @@ class GetSchoolTrendsUseCase:
         attendance_series = self._school_trends_repository.get_attendance_series(normalized_urn)
         behaviour_series = self._school_trends_repository.get_behaviour_series(normalized_urn)
         workforce_series = self._school_trends_repository.get_workforce_series(normalized_urn)
+        admissions_series = self._school_trends_repository.get_admissions_series(normalized_urn)
         finance_series = self._school_trends_repository.get_finance_series(normalized_urn)
         benchmark_series = self._school_trends_repository.get_metric_benchmark_series(
             normalized_urn
@@ -232,6 +260,7 @@ class GetSchoolTrendsUseCase:
             attendance_series is None
             or behaviour_series is None
             or workforce_series is None
+            or admissions_series is None
             or finance_series is None
             or benchmark_series is None
         ):
@@ -241,6 +270,7 @@ class GetSchoolTrendsUseCase:
         attendance_rows = attendance_series.rows
         behaviour_rows = behaviour_series.rows
         workforce_rows = workforce_series.rows
+        admissions_rows = admissions_series.rows
         finance_rows = finance_series.rows
 
         years_available = _merge_years_available(
@@ -248,6 +278,7 @@ class GetSchoolTrendsUseCase:
             attendance_rows=attendance_rows,
             behaviour_rows=behaviour_rows,
             workforce_rows=workforce_rows,
+            admissions_rows=admissions_rows,
             finance_rows=finance_rows,
         )
         years_count = len(years_available)
@@ -278,6 +309,12 @@ class GetSchoolTrendsUseCase:
             last_updated_at=workforce_series.latest_updated_at,
             has_partial_metric_coverage=_has_partial_metric_coverage_workforce(workforce_rows),
             has_source_not_provided=_has_source_not_provided_workforce(workforce_rows),
+        )
+        admissions_completeness = _build_completeness(
+            years_count=len(tuple(row.academic_year for row in admissions_rows)),
+            years_available=tuple(row.academic_year for row in admissions_rows),
+            last_updated_at=admissions_series.latest_updated_at,
+            has_partial_metric_coverage=_has_partial_metric_coverage_admissions(admissions_rows),
         )
         finance_completeness = _build_finance_completeness(finance_series)
         benchmark_rows_by_metric = _group_benchmark_rows_by_metric(benchmark_series.rows)
@@ -454,6 +491,26 @@ class GetSchoolTrendsUseCase:
                 third_party_support_staff_headcount=_build_metric_series(
                     rows=workforce_rows,
                     metric_value=lambda row: row.third_party_support_staff_headcount,
+                ),
+                admissions_oversubscription_ratio=_build_metric_series(
+                    rows=admissions_rows,
+                    metric_value=lambda row: row.oversubscription_ratio,
+                ),
+                admissions_first_preference_offer_rate=_build_metric_series(
+                    rows=admissions_rows,
+                    metric_value=lambda row: row.first_preference_offer_rate,
+                ),
+                admissions_any_preference_offer_rate=_build_metric_series(
+                    rows=admissions_rows,
+                    metric_value=lambda row: row.any_preference_offer_rate,
+                ),
+                admissions_cross_la_applications=_build_metric_series(
+                    rows=admissions_rows,
+                    metric_value=lambda row: row.cross_la_applications,
+                ),
+                admissions_cross_la_offers=_build_metric_series(
+                    rows=admissions_rows,
+                    metric_value=lambda row: row.cross_la_offers,
                 ),
                 income_per_pupil_gbp=_build_metric_series(
                     rows=finance_rows,
@@ -645,6 +702,22 @@ class GetSchoolTrendsUseCase:
                     rows_by_metric=benchmark_rows_by_metric,
                     metric_key="third_party_support_staff_headcount",
                 ),
+                admissions_oversubscription_ratio=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="admissions_oversubscription_ratio",
+                ),
+                admissions_first_preference_offer_rate=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="admissions_first_preference_offer_rate",
+                ),
+                admissions_any_preference_offer_rate=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="admissions_any_preference_offer_rate",
+                ),
+                admissions_cross_la_applications=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="admissions_cross_la_applications",
+                ),
                 income_per_pupil_gbp=_build_metric_benchmark_series(
                     rows_by_metric=benchmark_rows_by_metric,
                     metric_key="finance_income_per_pupil_gbp",
@@ -676,6 +749,7 @@ class GetSchoolTrendsUseCase:
                 attendance=attendance_completeness,
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
+                admissions=admissions_completeness,
                 finance=finance_completeness,
             ),
             section_completeness=SchoolTrendsSectionCompletenessDto(
@@ -683,6 +757,7 @@ class GetSchoolTrendsUseCase:
                 attendance=attendance_completeness,
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
+                admissions=admissions_completeness,
                 finance=finance_completeness,
             ),
         )
@@ -899,6 +974,7 @@ def _build_overall_completeness(
     attendance: SchoolTrendsCompletenessDto,
     behaviour: SchoolTrendsCompletenessDto,
     workforce: SchoolTrendsCompletenessDto,
+    admissions: SchoolTrendsCompletenessDto,
     finance: SchoolTrendsCompletenessDto,
 ) -> SchoolTrendsCompletenessDto:
     if len(years_available) == 0:
@@ -911,7 +987,7 @@ def _build_overall_completeness(
 
     sections = tuple(
         section
-        for section in (demographics, attendance, behaviour, workforce, finance)
+        for section in (demographics, attendance, behaviour, workforce, admissions, finance)
         if section.reason_code != "not_applicable"
     )
     if all(section.status == "available" for section in sections):
@@ -945,6 +1021,7 @@ def _merge_years_available(
     attendance_rows: Sequence[SchoolAttendanceYearlyRow],
     behaviour_rows: Sequence[SchoolBehaviourYearlyRow],
     workforce_rows: Sequence[SchoolWorkforceYearlyRow],
+    admissions_rows: Sequence[SchoolAdmissionsYearlyRow],
     finance_rows: Sequence[SchoolFinanceYearlyRow],
 ) -> tuple[str, ...]:
     years = {
@@ -952,6 +1029,7 @@ def _merge_years_available(
         *(row.academic_year for row in attendance_rows),
         *(row.academic_year for row in behaviour_rows),
         *(row.academic_year for row in workforce_rows),
+        *(row.academic_year for row in admissions_rows),
         *(row.academic_year for row in finance_rows),
     }
     return tuple(sorted(years, key=_academic_year_sort_key))
@@ -1034,6 +1112,22 @@ def _has_partial_metric_coverage_workforce(rows: Sequence[SchoolWorkforceYearlyR
                 row.teacher_tempfilled_vacancy_count,
                 row.teacher_tempfilled_vacancy_rate,
                 row.third_party_support_staff_headcount,
+            )
+        ):
+            return True
+    return False
+
+
+def _has_partial_metric_coverage_admissions(rows: Sequence[SchoolAdmissionsYearlyRow]) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.oversubscription_ratio,
+                row.first_preference_offer_rate,
+                row.any_preference_offer_rate,
+                row.cross_la_applications,
+                row.cross_la_offers,
             )
         ):
             return True

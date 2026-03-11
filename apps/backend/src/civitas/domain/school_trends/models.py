@@ -118,6 +118,16 @@ class SchoolFinanceYearlyRow:
 
 
 @dataclass(frozen=True)
+class SchoolAdmissionsYearlyRow:
+    academic_year: str
+    oversubscription_ratio: float | None
+    first_preference_offer_rate: float | None
+    any_preference_offer_rate: float | None
+    cross_la_applications: int | None
+    cross_la_offers: int | None
+
+
+@dataclass(frozen=True)
 class SchoolWorkforceSeries:
     urn: str
     rows: tuple[SchoolWorkforceYearlyRow, ...]
@@ -130,6 +140,13 @@ class SchoolFinanceSeries:
     rows: tuple[SchoolFinanceYearlyRow, ...]
     latest_updated_at: datetime | None
     is_applicable: bool
+
+
+@dataclass(frozen=True)
+class SchoolAdmissionsSeries:
+    urn: str
+    rows: tuple[SchoolAdmissionsYearlyRow, ...]
+    latest_updated_at: datetime | None
 
 
 @dataclass(frozen=True)

@@ -253,6 +253,16 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
       }
     ]
   },
+  admissions_latest: {
+    academic_year: "2024/25",
+    places_offered_total: 90,
+    applications_any_preference: 126,
+    applications_first_preference: 98,
+    oversubscription_ratio: 1.4,
+    first_preference_offer_rate: 0.92,
+    any_preference_offer_rate: 0.71,
+    admissions_policy: "Not applicable"
+  },
   finance_latest: {
     academic_year: "2023/24",
     total_income_gbp: 2070000,
@@ -532,6 +542,54 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
         local_area_label: "Camden"
       },
       {
+        metric_key: "admissions_oversubscription_ratio",
+        academic_year: "2024/25",
+        school_value: 1.4,
+        national_value: 1.18,
+        local_value: 1.27,
+        school_vs_national_delta: 0.22,
+        school_vs_local_delta: 0.13,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "admissions_first_preference_offer_rate",
+        academic_year: "2024/25",
+        school_value: 0.92,
+        national_value: 0.87,
+        local_value: 0.89,
+        school_vs_national_delta: 0.05,
+        school_vs_local_delta: 0.03,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "admissions_any_preference_offer_rate",
+        academic_year: "2024/25",
+        school_value: 0.71,
+        national_value: 0.76,
+        local_value: 0.73,
+        school_vs_national_delta: -0.05,
+        school_vs_local_delta: -0.02,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
+        metric_key: "admissions_cross_la_applications",
+        academic_year: "2024/25",
+        school_value: 22,
+        national_value: 14,
+        local_value: 18,
+        school_vs_national_delta: 8,
+        school_vs_local_delta: 4,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      },
+      {
         metric_key: "overall_attendance_pct",
         academic_year: "2024/25",
         school_value: 94.7,
@@ -737,6 +795,12 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
       reason_code: "partial_metric_coverage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2022/23", "2023/24", "2024/25"]
+    },
+    admissions: {
+      status: "available",
+      reason_code: null,
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
     },
     finance: {
       status: "available",
@@ -956,6 +1020,26 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       { academic_year: "2023/24", value: 2, delta: null, direction: null },
       { academic_year: "2024/25", value: 3, delta: 1, direction: "up" }
     ],
+    admissions_oversubscription_ratio: [
+      { academic_year: "2023/24", value: 1.32, delta: null, direction: null },
+      { academic_year: "2024/25", value: 1.4, delta: 0.08, direction: "up" }
+    ],
+    admissions_first_preference_offer_rate: [
+      { academic_year: "2023/24", value: 0.89, delta: null, direction: null },
+      { academic_year: "2024/25", value: 0.92, delta: 0.03, direction: "up" }
+    ],
+    admissions_any_preference_offer_rate: [
+      { academic_year: "2023/24", value: 0.74, delta: null, direction: null },
+      { academic_year: "2024/25", value: 0.71, delta: -0.03, direction: "down" }
+    ],
+    admissions_cross_la_applications: [
+      { academic_year: "2023/24", value: 18, delta: null, direction: null },
+      { academic_year: "2024/25", value: 22, delta: 4, direction: "up" }
+    ],
+    admissions_cross_la_offers: [
+      { academic_year: "2023/24", value: 9, delta: null, direction: null },
+      { academic_year: "2024/25", value: 11, delta: 2, direction: "up" }
+    ],
     income_per_pupil_gbp: [
       { academic_year: "2023/24", value: 10350, delta: null, direction: null }
     ],
@@ -1113,6 +1197,58 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
         local_area_label: "Camden"
       }
     ],
+    admissions_oversubscription_ratio: [
+      {
+        academic_year: "2024/25",
+        school_value: 1.4,
+        national_value: 1.18,
+        local_value: 1.27,
+        school_vs_national_delta: 0.22,
+        school_vs_local_delta: 0.13,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    admissions_first_preference_offer_rate: [
+      {
+        academic_year: "2024/25",
+        school_value: 0.92,
+        national_value: 0.87,
+        local_value: 0.89,
+        school_vs_national_delta: 0.05,
+        school_vs_local_delta: 0.03,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    admissions_any_preference_offer_rate: [
+      {
+        academic_year: "2024/25",
+        school_value: 0.71,
+        national_value: 0.76,
+        local_value: 0.73,
+        school_vs_national_delta: -0.05,
+        school_vs_local_delta: -0.02,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    admissions_cross_la_applications: [
+      {
+        academic_year: "2024/25",
+        school_value: 22,
+        national_value: 14,
+        local_value: 18,
+        school_vs_national_delta: 8,
+        school_vs_local_delta: 4,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
     income_per_pupil_gbp: [
       {
         academic_year: "2023/24",
@@ -1223,6 +1359,12 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2023/24", "2024/25"]
     },
+    admissions: {
+      status: "partial",
+      reason_code: "insufficient_years_published",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
+    },
     finance: {
       status: "partial",
       reason_code: "insufficient_years_published",
@@ -1262,6 +1404,127 @@ export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
               local_value: 18.1,
               school_vs_national_delta: -6.6,
               school_vs_local_delta: -0.9,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      key: "admissions",
+      metrics: [
+        {
+          metric_key: "admissions_oversubscription_ratio",
+          label: "Oversubscription Ratio",
+          unit: "ratio",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 1.32,
+              national_value: 1.14,
+              local_value: 1.22,
+              school_vs_national_delta: 0.18,
+              school_vs_local_delta: 0.1,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 1.4,
+              national_value: 1.18,
+              local_value: 1.27,
+              school_vs_national_delta: 0.22,
+              school_vs_local_delta: 0.13,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "admissions_first_preference_offer_rate",
+          label: "First Preference Offer Rate",
+          unit: "ratio",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 0.89,
+              national_value: 0.84,
+              local_value: 0.87,
+              school_vs_national_delta: 0.05,
+              school_vs_local_delta: 0.02,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 0.92,
+              national_value: 0.87,
+              local_value: 0.89,
+              school_vs_national_delta: 0.05,
+              school_vs_local_delta: 0.03,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "admissions_any_preference_offer_rate",
+          label: "Any Preference Offer Rate",
+          unit: "ratio",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 0.74,
+              national_value: 0.79,
+              local_value: 0.76,
+              school_vs_national_delta: -0.05,
+              school_vs_local_delta: -0.02,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 0.71,
+              national_value: 0.76,
+              local_value: 0.73,
+              school_vs_national_delta: -0.05,
+              school_vs_local_delta: -0.02,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            }
+          ]
+        },
+        {
+          metric_key: "admissions_cross_la_applications",
+          label: "Cross-LA Applications",
+          unit: "count",
+          points: [
+            {
+              academic_year: "2023/24",
+              school_value: 18,
+              national_value: 12,
+              local_value: 16,
+              school_vs_national_delta: 6,
+              school_vs_local_delta: 2,
+              local_scope: "local_authority_district",
+              local_area_code: "E09000007",
+              local_area_label: "Camden"
+            },
+            {
+              academic_year: "2024/25",
+              school_value: 22,
+              national_value: 14,
+              local_value: 18,
+              school_vs_national_delta: 8,
+              school_vs_local_delta: 4,
               local_scope: "local_authority_district",
               local_area_code: "E09000007",
               local_area_label: "Camden"

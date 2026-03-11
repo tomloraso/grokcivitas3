@@ -133,6 +133,7 @@ _BENCHMARK_AFFECTING_PIPELINE_SOURCES = frozenset(
         PipelineSource.DFE_BEHAVIOUR,
         PipelineSource.DFE_WORKFORCE,
         PipelineSource.DFE_PERFORMANCE,
+        PipelineSource.SCHOOL_ADMISSIONS,
         PipelineSource.ONS_IMD,
         PipelineSource.UK_HOUSE_PRICES,
         PipelineSource.POLICE_CRIME_CONTEXT,
@@ -635,6 +636,9 @@ def pipeline_runner() -> PipelineRunner:
         ),
         PipelineSource.DFE_PERFORMANCE: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_dfe_performance
+        ),
+        PipelineSource.SCHOOL_ADMISSIONS: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_school_admissions
         ),
         PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_school_financial_benchmarks

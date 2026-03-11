@@ -68,7 +68,8 @@ describe("mapProfileToVM", () => {
     expect(vm.ofsted?.providerPageUrl).toBe("https://reports.ofsted.gov.uk/provider/21/100001");
     expect(vm.neighbourhood.areaContext?.housePrices?.areaName).toBe("Camden");
     expect(vm.neighbourhood.areaContext?.crime?.annualIncidentsPer1000).toHaveLength(3);
-    expect(vm.benchmarkDashboard?.sections).toHaveLength(7);
+    expect(vm.benchmarkDashboard?.sections).toHaveLength(8);
+    expect(vm.benchmarkDashboard?.sections.some((section) => section.key === "admissions")).toBe(true);
     expect(vm.trends?.series.some((series) => series.metricKey === "teacher_vacancy_rate")).toBe(true);
   });
 

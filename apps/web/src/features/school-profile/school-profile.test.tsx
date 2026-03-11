@@ -84,6 +84,7 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByRole("heading", { name: "Analyst View" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Day-to-Day at School" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Teachers & Staff" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "School Admissions" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "School Finance" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
 
@@ -98,6 +99,9 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByText("Overall Attendance")).toBeInTheDocument();
       expect(screen.getAllByText("Suspension Rate").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Pupil to Teacher Ratio").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Oversubscription Ratio").length).toBeGreaterThan(0);
+      expect(screen.getByText("Places Offered")).toBeInTheDocument();
+      expect(screen.getByText("Cross-LA Offers")).toBeInTheDocument();
       expect(screen.getAllByText("Teacher Headcount").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Average Teacher Salary").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);

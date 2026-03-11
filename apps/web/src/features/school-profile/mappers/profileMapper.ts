@@ -19,6 +19,7 @@ import {
   type MetricUnit
 } from "../metricCatalog";
 import type {
+  AdmissionsLatestVM,
   AreaContextVM,
   AreaDeprivationDomainVM,
   BenchmarkDashboardVM,
@@ -415,6 +416,24 @@ function mapFinance(profile: SchoolProfileResponse): FinanceLatestVM | null {
   };
 }
 
+function mapAdmissions(profile: SchoolProfileResponse): AdmissionsLatestVM | null {
+  const admissions = profile.admissions_latest;
+  if (!admissions) {
+    return null;
+  }
+
+  return {
+    academicYear: admissions.academic_year,
+    placesOfferedTotal: admissions.places_offered_total,
+    applicationsAnyPreference: admissions.applications_any_preference,
+    applicationsFirstPreference: admissions.applications_first_preference,
+    oversubscriptionRatio: admissions.oversubscription_ratio,
+    firstPreferenceOfferRate: admissions.first_preference_offer_rate,
+    anyPreferenceOfferRate: admissions.any_preference_offer_rate,
+    admissionsPolicy: toOptionalText(admissions.admissions_policy)
+  };
+}
+
 function mapLeadership(profile: SchoolProfileResponse): LeadershipSnapshotVM | null {
   const leadership = profile.leadership_snapshot;
   if (!leadership) {
@@ -675,6 +694,7 @@ function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
       attendance: mapSectionCompleteness(trends.section_completeness.attendance),
       behaviour: mapSectionCompleteness(trends.section_completeness.behaviour),
       workforce: mapSectionCompleteness(trends.section_completeness.workforce),
+      admissions: mapSectionCompleteness(trends.section_completeness.admissions),
       finance: mapSectionCompleteness(trends.section_completeness.finance)
     }
   };
@@ -829,6 +849,7 @@ function mapCompleteness(
     attendance: mapSectionCompleteness(profile.completeness.attendance),
     behaviour: mapSectionCompleteness(profile.completeness.behaviour),
     workforce: mapSectionCompleteness(profile.completeness.workforce),
+    admissions: mapSectionCompleteness(profile.completeness.admissions),
     finance: mapSectionCompleteness(profile.completeness.finance),
     leadership: mapSectionCompleteness(profile.completeness.leadership),
     performance: mapSectionCompleteness(profile.completeness.performance),
@@ -887,6 +908,7 @@ export function mapProfileToVM(
     attendance: mapAttendance(profile),
     behaviour: mapBehaviour(profile),
     workforce: mapWorkforce(profile),
+    admissions: mapAdmissions(profile),
     finance: mapFinance(profile),
     leadership: mapLeadership(profile),
     performance: mapPerformance(profile),

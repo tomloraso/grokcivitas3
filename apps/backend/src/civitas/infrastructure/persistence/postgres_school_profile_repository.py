@@ -13,6 +13,7 @@ from civitas.application.school_profiles.ports.school_profile_repository import 
     SchoolProfileRepository,
 )
 from civitas.domain.school_profiles.models import (
+    SchoolAdmissionsLatest,
     SchoolAreaContext,
     SchoolAreaContextCoverage,
     SchoolAreaCrime,
@@ -238,6 +239,15 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                             ethnicity.unclassified_pct,
                             ethnicity.unclassified_count,
                             demographics.updated_at AS demographics_updated_at,
+                            admissions.academic_year AS admissions_academic_year,
+                            admissions.places_offered_total,
+                            admissions.applications_any_preference,
+                            admissions.applications_first_preference,
+                            admissions.oversubscription_ratio,
+                            admissions.first_preference_offer_rate,
+                            admissions.any_preference_offer_rate,
+                            admissions.admissions_policy AS admissions_latest_policy,
+                            admissions.updated_at AS admissions_updated_at,
                             ofsted.urn AS ofsted_urn,
                             ofsted.overall_effectiveness_code,
                             ofsted.overall_effectiveness_label,
@@ -335,6 +345,24 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 AND school_ethnicity_yearly.academic_year = demographics.academic_year
                             LIMIT 1
                         ) AS ethnicity ON TRUE
+                        LEFT JOIN LATERAL (
+                            SELECT
+                                academic_year,
+                                places_offered_total,
+                                applications_any_preference,
+                                applications_first_preference,
+                                oversubscription_ratio,
+                                first_preference_offer_rate,
+                                any_preference_offer_rate,
+                                admissions_policy,
+                                updated_at
+                            FROM school_admissions_yearly
+                            WHERE school_admissions_yearly.urn = schools.urn
+                            ORDER BY
+                                substring(academic_year from 1 for 4)::integer DESC,
+                                academic_year DESC
+                            LIMIT 1
+                        ) AS admissions ON TRUE
                         LEFT JOIN school_ofsted_latest AS ofsted
                             ON ofsted.urn = schools.urn
                         WHERE schools.urn = :urn
@@ -1159,6 +1187,21 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 ),
             )
 
+        admissions_latest = None
+        if row["admissions_academic_year"] is not None:
+            admissions_latest = SchoolAdmissionsLatest(
+                academic_year=str(row["admissions_academic_year"]),
+                places_offered_total=_to_optional_int(row["places_offered_total"]),
+                applications_any_preference=_to_optional_int(row["applications_any_preference"]),
+                applications_first_preference=_to_optional_int(
+                    row["applications_first_preference"]
+                ),
+                oversubscription_ratio=_to_optional_float(row["oversubscription_ratio"]),
+                first_preference_offer_rate=_to_optional_float(row["first_preference_offer_rate"]),
+                any_preference_offer_rate=_to_optional_float(row["any_preference_offer_rate"]),
+                admissions_policy=_to_optional_str(row["admissions_latest_policy"]),
+            )
+
         leadership_snapshot = None
         if leadership_row is not None:
             leadership_snapshot = SchoolLeadershipSnapshot(
@@ -1559,6 +1602,10 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 workforce_latest=workforce_latest,
                 workforce_updated_at=workforce_updated_at,
             ),
+            admissions=_build_admissions_completeness(
+                admissions_latest=admissions_latest,
+                admissions_updated_at=_to_optional_datetime(row["admissions_updated_at"]),
+            ),
             finance=_build_finance_completeness(
                 finance_latest=finance_latest,
                 finance_updated_at=_to_optional_datetime(
@@ -1663,6 +1710,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             attendance_latest=attendance_latest,
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
+            admissions_latest=admissions_latest,
             finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,
@@ -2041,6 +2089,42 @@ def _build_workforce_completeness(
         status="available",
         reason_code=None,
         last_updated_at=workforce_updated_at,
+    )
+
+
+def _build_admissions_completeness(
+    *,
+    admissions_latest: SchoolAdmissionsLatest | None,
+    admissions_updated_at: datetime | None,
+) -> SchoolProfileSectionCompleteness:
+    if admissions_latest is None:
+        return _section_completeness(
+            status="unavailable",
+            reason_code="source_missing",
+            last_updated_at=None,
+        )
+
+    if any(
+        value is None
+        for value in (
+            admissions_latest.places_offered_total,
+            admissions_latest.applications_any_preference,
+            admissions_latest.applications_first_preference,
+            admissions_latest.oversubscription_ratio,
+            admissions_latest.first_preference_offer_rate,
+            admissions_latest.any_preference_offer_rate,
+        )
+    ):
+        return _section_completeness(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=admissions_updated_at,
+        )
+
+    return _section_completeness(
+        status="available",
+        reason_code=None,
+        last_updated_at=admissions_updated_at,
     )
 
 

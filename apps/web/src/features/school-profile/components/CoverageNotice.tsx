@@ -16,6 +16,7 @@ const SECTION_LABELS: { key: keyof ProfileCompletenessVM; label: string }[] = [
   { key: "attendance", label: "Attendance" },
   { key: "behaviour", label: "Behaviour" },
   { key: "workforce", label: "Workforce" },
+  { key: "admissions", label: "Admissions" },
   { key: "finance", label: "Finance" },
   { key: "leadership", label: "Leadership" },
   { key: "performance", label: "Performance" },

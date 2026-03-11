@@ -323,6 +323,9 @@ def get_school_trends(
             workforce=_to_school_trends_completeness_response(
                 result.section_completeness.workforce
             ),
+            admissions=_to_school_trends_completeness_response(
+                result.section_completeness.admissions
+            ),
             finance=_to_school_trends_completeness_response(result.section_completeness.finance),
         ),
     )
