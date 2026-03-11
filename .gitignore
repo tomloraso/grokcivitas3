@@ -31,6 +31,10 @@ apps/web/coverage/
 # Tooling
 playwright-report/
 test-results/
+.tmp/
+tmp/
+*.tmp
+*.temp
 
 # Local pipeline artifacts (bronze CSVs at repo root and apps/backend)
 data/
