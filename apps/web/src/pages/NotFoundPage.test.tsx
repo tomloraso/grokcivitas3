@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { NotFoundPage } from "./NotFoundPage";
+import { expectHeadAttribute } from "../test/head";
 import { renderWithProviders } from "../test/render";
 
 describe("NotFoundPage", () => {
@@ -18,5 +19,15 @@ describe("NotFoundPage", () => {
     expect(
       screen.getByText(/doesn.t exist or has been moved/)
     ).toBeInTheDocument();
+  });
+
+  it("marks the page as noindex", async () => {
+    renderWithProviders(<NotFoundPage />);
+
+    await expectHeadAttribute(
+      'meta[name="robots"]',
+      "content",
+      "noindex, nofollow"
+    );
   });
 });

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { HelmetProvider } from "react-helmet-async";
 
 import { SignInFeature } from "./SignInFeature";
 import { useAuth } from "./useAuth";
@@ -55,13 +56,15 @@ describe("SignInFeature", () => {
     });
 
     render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/sign-in?returnTo=%2Fcompare"]}>
-          <Routes>
-            <Route path="/sign-in" element={<SignInFeature />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/sign-in?returnTo=%2Fcompare"]}>
+            <Routes>
+              <Route path="/sign-in" element={<SignInFeature />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </HelmetProvider>
     );
 
     await user.type(screen.getByLabelText(/Email address/i), "person@example.com");
@@ -74,13 +77,15 @@ describe("SignInFeature", () => {
 
   it("renders an auth error banner from the callback redirect query string", () => {
     render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/sign-in?error=invalid_state"]}>
-          <Routes>
-            <Route path="/sign-in" element={<SignInFeature />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/sign-in?error=invalid_state"]}>
+            <Routes>
+              <Route path="/sign-in" element={<SignInFeature />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </HelmetProvider>
     );
 
     expect(
@@ -90,17 +95,42 @@ describe("SignInFeature", () => {
 
   it("renders an explicit message when the provider does not verify the email address", () => {
     render(
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/sign-in?error=unverified_email"]}>
-          <Routes>
-            <Route path="/sign-in" element={<SignInFeature />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/sign-in?error=unverified_email"]}>
+            <Routes>
+              <Route path="/sign-in" element={<SignInFeature />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </HelmetProvider>
     );
 
     expect(
       screen.getByText("Your identity provider did not confirm this email address.")
     ).toBeInTheDocument();
+  });
+
+  it("renders privacy and terms links before auth starts", () => {
+    render(
+      <HelmetProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/sign-in"]}>
+            <Routes>
+              <Route path="/sign-in" element={<SignInFeature />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </HelmetProvider>
+    );
+
+    expect(screen.getByRole("link", { name: "Terms of Use" })).toHaveAttribute(
+      "href",
+      "/terms"
+    );
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toHaveAttribute(
+      "href",
+      "/privacy"
+    );
   });
 });

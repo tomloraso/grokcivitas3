@@ -6,7 +6,13 @@ import { LoadingSkeleton } from "../components/ui/LoadingSkeleton";
 import { SignInFeature } from "../features/auth/SignInFeature";
 import { RootLayout } from "./RootLayout";
 import { SchoolsSearchFeature } from "../features/schools-search/SchoolsSearchFeature";
+import { AboutPage } from "../pages/AboutPage";
+import { AccessibilityPage } from "../pages/AccessibilityPage";
+import { ContactPage } from "../pages/ContactPage";
+import { DataSourcesPage } from "../pages/DataSourcesPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { PrivacyPage } from "../pages/PrivacyPage";
+import { TermsPage } from "../pages/TermsPage";
 
 const SchoolProfileFeature = lazy(async () => {
   const module = await import("../features/school-profile/SchoolProfileFeature");
@@ -44,6 +50,30 @@ const routes: RouteObject[] = [
       {
         path: "sign-in",
         element: <SignInFeature />
+      },
+      {
+        path: "about",
+        element: <AboutPage />
+      },
+      {
+        path: "data-sources",
+        element: <DataSourcesPage />
+      },
+      {
+        path: "contact",
+        element: <ContactPage />
+      },
+      {
+        path: "privacy",
+        element: <PrivacyPage />
+      },
+      {
+        path: "terms",
+        element: <TermsPage />
+      },
+      {
+        path: "accessibility",
+        element: <AccessibilityPage />
       },
       {
         path: "account",

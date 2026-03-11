@@ -7,6 +7,7 @@ import {
   formatMetricValue,
   getMetricCatalogEntry
 } from "../metricCatalog";
+import { siteConfig } from "../../../shared/config/site";
 import { SectionCompletenessNotice } from "./SectionCompletenessNotice";
 import type {
   SchoolDestinationStageLatestVM,
@@ -253,7 +254,8 @@ export function SchoolDestinationsSection({
 
       {completeness.reasonCode === "unsupported_stage" && destinations?.study16To18 === null ? (
         <div className="rounded-lg border border-border-subtle/60 bg-surface/40 px-4 py-3 text-sm text-secondary">
-          16 to 18 study destinations are present in the source data for some schools, but this stage is not yet shown in Civitas.
+          16 to 18 study destinations are present in the source data for some schools,
+          but this stage is not yet shown in {siteConfig.productName}.
         </div>
       ) : null}
     </section>

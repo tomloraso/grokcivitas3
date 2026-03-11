@@ -3,7 +3,10 @@ import { useLocation, useSearchParams } from "react-router-dom";
 
 import { prefetchSchoolProfile } from "../../api/client";
 import { MapOverlayLayout } from "../../components/layout/MapOverlayLayout";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { useSearchContext } from "../../shared/context/SearchContext";
+import { siteConfig } from "../../shared/config/site";
+import { paths } from "../../shared/routing/paths";
 import type { SavedSchoolStateVM } from "../favourites/types";
 import {
   DEFAULT_SEARCH_SORT_MODE,
@@ -201,9 +204,24 @@ export function SchoolsSearchFeature(): JSX.Element {
 
   const hasResults = (state.status === "success" || state.status === "error") && state.result;
   const isPostcodeMode = postcodeResult != null;
+  const pageTitle = postcodeResult
+    ? `Schools near ${postcodeResult.query.postcode}`
+    : nameResult
+      ? `Search results for “${nameResult.nameQuery}”`
+      : "Find schools near you";
+  const pageDescription = postcodeResult
+    ? `Explore schools within ${postcodeResult.query.radius_miles} miles of ${postcodeResult.query.postcode} on ${siteConfig.productName}.`
+    : nameResult
+      ? `View school search results for ${nameResult.nameQuery} on ${siteConfig.productName}.`
+      : `Search by postcode or school name to explore official school data on ${siteConfig.productName}.`;
 
   return (
     <>
+      <PageMeta
+        title={pageTitle}
+        description={pageDescription}
+        canonicalPath={paths.home}
+      />
       <MapOverlayLayout
         map={
           <SchoolsMap

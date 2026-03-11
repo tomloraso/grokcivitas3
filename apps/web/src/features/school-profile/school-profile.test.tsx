@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,19 +46,21 @@ function renderProfileAtUrn(urn: string) {
   );
 
   return render(
-    <ThemeProvider>
-      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
-        <SearchContextProvider>
-          <CompareSelectionProvider>
-            <TooltipProvider>
-              <ToastProvider>
-                <RouterProvider router={router} />
-              </ToastProvider>
-            </TooltipProvider>
-          </CompareSelectionProvider>
-        </SearchContextProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+          <SearchContextProvider>
+            <CompareSelectionProvider>
+              <TooltipProvider>
+                <ToastProvider>
+                  <RouterProvider router={router} />
+                </ToastProvider>
+              </TooltipProvider>
+            </CompareSelectionProvider>
+          </SearchContextProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

@@ -4,11 +4,13 @@ import { Link } from "react-router-dom";
 import { createBillingPortalSession } from "../../api/client";
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { Card, Panel } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import { useAuth } from "../auth/useAuth";
 import { getCapabilityDisplayLabel } from "./copy";
@@ -78,6 +80,12 @@ export function AccountFeature(): JSX.Element {
   if (session.state !== "authenticated") {
     return (
       <PageContainer className="space-y-8">
+        <PageMeta
+          title="Account"
+          description={`Manage your ${siteConfig.productName} account, access state, and saved research.`}
+          canonicalPath={paths.account}
+          noIndex
+        />
         <Breadcrumbs segments={[{ label: "Account" }]} />
         <Panel className="space-y-4">
           <h1 className="text-3xl font-semibold text-primary sm:text-4xl">Your account</h1>
@@ -99,6 +107,12 @@ export function AccountFeature(): JSX.Element {
 
   return (
     <PageContainer className="space-y-8">
+      <PageMeta
+        title="Account"
+        description={`Manage your ${siteConfig.productName} account, access state, entitlements, and billing.`}
+        canonicalPath={paths.account}
+        noIndex
+      />
       <Breadcrumbs segments={[{ label: "Account" }]} />
 
       <header className="space-y-3">
@@ -107,7 +121,7 @@ export function AccountFeature(): JSX.Element {
           Access and billing
         </h1>
         <p className="max-w-3xl text-sm text-secondary sm:text-base">
-          Civitas resolves Premium access from backend entitlement state. This page shows the current account view rather than optimistic browser state.
+          {siteConfig.productName} resolves Premium access from backend entitlement state. This page shows the current account view rather than optimistic browser state.
         </p>
       </header>
 

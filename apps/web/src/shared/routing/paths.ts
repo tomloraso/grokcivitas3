@@ -12,6 +12,12 @@ import {
  */
 export const paths = {
   home: "/",
+  about: "/about",
+  dataSources: "/data-sources",
+  contact: "/contact",
+  privacy: "/privacy",
+  terms: "/terms",
+  accessibility: "/accessibility",
   account: "/account",
   accountFavourites: "/account/favourites",
   homeSearch: ({

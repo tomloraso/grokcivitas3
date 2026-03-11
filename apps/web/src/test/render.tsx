@@ -1,5 +1,6 @@
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "../app/providers/ThemeProvider";
 import { AuthProvider } from "../features/auth/AuthProvider";
@@ -23,11 +24,13 @@ export function renderWithProviders(
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <ThemeProvider>
-        <AuthProvider autoLoad={false} initialSession={initialSession}>
-          <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
-        </AuthProvider>
-      </ThemeProvider>
+      <HelmetProvider>
+        <ThemeProvider>
+          <AuthProvider autoLoad={false} initialSession={initialSession}>
+            <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>
+          </AuthProvider>
+        </ThemeProvider>
+      </HelmetProvider>
     );
   }
 

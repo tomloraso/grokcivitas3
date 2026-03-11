@@ -2,10 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { Panel } from "../../components/ui/Card";
 import { TextInput } from "../../components/ui/TextInput";
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import { useAuth } from "./useAuth";
 
@@ -76,16 +78,22 @@ export function SignInFeature(): JSX.Element {
 
   return (
     <PageContainer className="max-w-3xl">
+      <PageMeta
+        title="Sign in"
+        description={`Sign in to ${siteConfig.productName} to continue with account and Premium workflows.`}
+        canonicalPath={paths.signIn()}
+        noIndex
+      />
       <div className="mx-auto max-w-xl space-y-6">
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">
             Account
           </p>
           <h1 className="text-3xl font-display font-semibold tracking-tight text-primary sm:text-4xl">
-            Sign in to Civitas
+            Sign in to {siteConfig.productName}
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-secondary sm:text-base">
-            Use your email address to start a Civitas-managed session. Premium access and
+            Use your email address to start a {siteConfig.productName}-managed session. Premium access and
             billing are not part of this slice yet.
           </p>
         </div>
@@ -146,6 +154,16 @@ export function SignInFeature(): JSX.Element {
                   <Link to={paths.home}>Back to search</Link>
                 </Button>
               </div>
+              <p className="text-xs leading-6 text-secondary">
+                By continuing, you agree to the{" "}
+                <Link className="text-brand underline underline-offset-2" to={paths.terms}>
+                  Terms of Use
+                </Link>{" "}
+                and acknowledge the{" "}
+                <Link className="text-brand underline underline-offset-2" to={paths.privacy}>
+                  Privacy Policy
+                </Link>.
+              </p>
             </form>
           </Panel>
         )}

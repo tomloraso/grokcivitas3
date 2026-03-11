@@ -46,14 +46,17 @@ import { Link, useLocation, useParams } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
+import { SchoolJsonLd } from "../../components/seo/SchoolJsonLd";
 import { useToast } from "../../components/ui/ToastContext";
 import { SaveSchoolButton } from "../favourites/components/SaveSchoolButton";
 import type { SavedSchoolStateVM } from "../favourites/types";
 import { CompareActionButton } from "../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import type { SearchRestoreState } from "../../shared/search/searchState";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
@@ -124,6 +127,10 @@ export function SchoolProfileFeature(): JSX.Element {
     useState<SavedSchoolStateVM | null>(null);
   const selected = profile ? hasSchool(profile.school.urn) : false;
   const savedState = savedStateOverride ?? profile?.savedState ?? null;
+  const pageTitle = profile?.school.name ?? "School profile";
+  const pageDescription = profile
+    ? `${profile.school.name} - ${profile.school.type}, ${profile.school.phase}. ${profile.ofsted?.ratingLabel ? `Latest Ofsted: ${profile.ofsted.ratingLabel}. ` : ""}Explore official data, trends, and local context on ${siteConfig.productName}.`
+    : `Explore official school profile data, trends, and local context on ${siteConfig.productName}.`;
 
   const handleCompareToggle = useCallback(() => {
     if (!profile) return;
@@ -154,6 +161,11 @@ export function SchoolProfileFeature(): JSX.Element {
 
   return (
     <PageContainer>
+      <PageMeta
+        title={pageTitle}
+        description={pageDescription}
+        canonicalPath={urn ? paths.schoolProfile(urn) : undefined}
+      />
       {(status === "idle" || status === "loading") ? (
         <>
           <Breadcrumbs segments={[{ label: "Loading..." }]} />
@@ -195,6 +207,7 @@ export function SchoolProfileFeature(): JSX.Element {
 
       {status === "success" && profile ? (
         <>
+          <SchoolJsonLd school={profile.school} ofsted={profile.ofsted} />
           <Breadcrumbs
             segments={[
               ...(fromSearch

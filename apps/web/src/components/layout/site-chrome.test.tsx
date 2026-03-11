@@ -7,6 +7,7 @@ import { SiteFooter } from "./SiteFooter";
 import { SkipToContent } from "./SkipToContent";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { CompareSelectionProvider } from "../../shared/context/CompareSelectionContext";
+import { siteConfig } from "../../shared/config/site";
 import { SearchContextProvider } from "../../shared/context/SearchContext";
 import { renderWithProviders } from "../../test/render";
 import { runA11yAudit } from "../../test/accessibility";
@@ -16,8 +17,10 @@ describe("SiteHeader", () => {
     renderWithProviders(<SiteHeader />);
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
-    expect(screen.getByLabelText("[BRAND] - return to home")).toBeInTheDocument();
-    expect(screen.getByText("[BRAND]")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(`${siteConfig.productName} - return to home`)
+    ).toBeInTheDocument();
+    expect(screen.getByText(siteConfig.shortName)).toBeInTheDocument();
   });
 
   it("passes accessibility smoke check", async () => {
@@ -60,15 +63,26 @@ describe("SiteFooter", () => {
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Footer" })).toBeInTheDocument();
-    expect(screen.getByText(/\[BRAND\]. All data sourced/)).toBeInTheDocument();
+    expect(
+      screen.getByText(new RegExp(`${siteConfig.productName}. All data sourced`, "i"))
+    ).toBeInTheDocument();
   });
 
   it("renders footer links", () => {
     renderWithProviders(<SiteFooter />);
 
-    expect(screen.getByText("About")).toBeInTheDocument();
-    expect(screen.getByText("Contact")).toBeInTheDocument();
-    expect(screen.getByText("Privacy")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute("href", "/about");
+    expect(screen.getByRole("link", { name: "Data Sources" })).toHaveAttribute(
+      "href",
+      "/data-sources"
+    );
+    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("link", { name: "Accessibility" })).toHaveAttribute(
+      "href",
+      "/accessibility"
+    );
   });
 
   it("passes accessibility smoke check", async () => {

@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented
+- Last updated: 2026-03-11
 - Depends on:
   - `L1-content-page-foundation.md` (ContentPageLayout, PageMeta, prose styles, route paths)
   - `.planning/project-brief.md` (editorial stance and product positioning)
@@ -33,6 +33,7 @@ Create the three user-facing content pages that establish trust and transparency
 2. **Data Sources page references canonical source URLs.** Each data source entry links to the publisher's page so users can verify provenance independently.
 3. **Contact page uses a mailto link**, not a contact form. A form requires backend work and spam protection; a simple email link is sufficient for launch. A form can be added in a later phase if volume warrants it.
 4. **Editorial stance language follows the project brief.** Civitas presents facts without editorial commentary. The About page makes this explicit.
+5. **Contact and operator details are configuration-backed.** Launch content can ship before the final brand/domain decision, but support emails and operator identity still need real production values before launch.
 
 ## Content Outline
 

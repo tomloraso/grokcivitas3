@@ -12,6 +12,7 @@ import { ApiClientError, getSchoolCompare } from "../../api/client";
 import type { SchoolCompareResponse } from "../../api/types";
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { Panel } from "../../components/ui/Card";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -291,6 +292,12 @@ export function SchoolCompareFeature(): JSX.Element {
 
   return (
     <PageContainer className="space-y-6">
+      <PageMeta
+        title="Compare schools"
+        description="Compare up to four schools side by side across inspection, performance, demographics, staffing, and local context."
+        canonicalPath={paths.compare()}
+        noIndex
+      />
       <Breadcrumbs segments={[{ label: "Compare" }]} />
 
       {/* Header */}

@@ -1,3 +1,4 @@
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import type { SectionAccessVM } from "./types";
 import {
@@ -45,7 +46,7 @@ export function getPremiumPaywallCopy({
     return {
       title: `Sign in to unlock ${subject}`,
       description:
-        "Civitas keeps Premium access on your account, then re-checks entitlement state from the backend before unlocking data.",
+        `${siteConfig.productName} keeps Premium access on your account, then re-checks entitlement state from the backend before unlocking data.`,
       buttonLabel: "Sign in to continue",
     };
   }

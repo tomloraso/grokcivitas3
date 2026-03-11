@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
@@ -7,6 +8,7 @@ import { runA11yAudit } from "./test/accessibility";
 import { ThemeProvider } from "./app/providers/ThemeProvider";
 import { AuthProvider } from "./features/auth/AuthProvider";
 import { ANONYMOUS_SESSION } from "./features/auth/types";
+import { siteConfig } from "./shared/config/site";
 
 vi.mock("./components/maps/MapPanelChromeless", () => ({
   MapPanelChromeless: ({ markers }: { markers: Array<{ id: string }> }) => (
@@ -44,11 +46,13 @@ async function renderAppAtRoute(initialEntry = "/") {
   );
 
   return render(
-    <ThemeProvider>
-      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
@@ -67,11 +71,13 @@ describe("App", () => {
     expect(screen.getByTestId("map-panel-mock")).toHaveTextContent("Chromeless map: 0 markers");
   }, 10000);
 
-  it("renders site header with Civitas brand on all routes", async () => {
+  it("renders site header with configured brand on all routes", async () => {
     await renderAppAtRoute("/");
 
-    expect(screen.getAllByLabelText("[BRAND] - return to home").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("[BRAND]").length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByLabelText(`${siteConfig.productName} - return to home`).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText(siteConfig.shortName).length).toBeGreaterThan(0);
   });
 
   it("hides site footer on the search/map page", async () => {
@@ -84,7 +90,9 @@ describe("App", () => {
     await renderAppAtRoute("/schools/100001");
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
-    expect(screen.getByText(/\[BRAND\]. All data sourced/)).toBeInTheDocument();
+    expect(
+      screen.getByText(new RegExp(`${siteConfig.productName}. All data sourced`, "i"))
+    ).toBeInTheDocument();
   });
 
   it("skip-to-content link is the first focusable element", async () => {
