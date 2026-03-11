@@ -32,6 +32,8 @@ from civitas.application.school_profiles.dto import (
     SchoolDemographicsHomeLanguageDto,
     SchoolDemographicsLatestDto,
     SchoolDemographicsSendPrimaryNeedDto,
+    SchoolDestinationsLatestDto,
+    SchoolDestinationStageLatestDto,
     SchoolFinanceLatestDto,
     SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
@@ -63,13 +65,14 @@ from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
 from civitas.domain.access.value_objects import AccessDecisionReasonCode
-from civitas.domain.school_profiles.models import SchoolProfile
+from civitas.domain.school_profiles.models import SchoolDestinationStageLatest, SchoolProfile
 from civitas.domain.school_trends.models import SchoolMetricBenchmarkYearlyRow
 
 ANALYST_DISCLAIMER = (
     "This analyst view is AI-generated from public government data. "
     "It highlights patterns in the published evidence, but it is not official advice or a recommendation."
 )
+STUDY_16_18_DESTINATIONS_ENABLED = False
 
 
 class GetSchoolProfileUseCase:
@@ -319,6 +322,17 @@ class GetSchoolProfileUseCase:
                 first_preference_offer_rate=profile.admissions_latest.first_preference_offer_rate,
                 any_preference_offer_rate=profile.admissions_latest.any_preference_offer_rate,
                 admissions_policy=profile.admissions_latest.admissions_policy,
+            )
+
+        destinations_latest = None
+        if profile.destinations_latest is not None:
+            destinations_latest = SchoolDestinationsLatestDto(
+                ks4=_to_destination_stage_latest_dto(profile.destinations_latest.ks4),
+                study_16_18=(
+                    _to_destination_stage_latest_dto(profile.destinations_latest.study_16_18)
+                    if STUDY_16_18_DESTINATIONS_ENABLED
+                    else None
+                ),
             )
 
         leadership_snapshot = None
@@ -573,6 +587,12 @@ class GetSchoolProfileUseCase:
                 last_updated_at=profile.completeness.admissions.last_updated_at,
                 years_available=profile.completeness.admissions.years_available,
             ),
+            destinations=SchoolProfileSectionCompletenessDto(
+                status=profile.completeness.destinations.status,
+                reason_code=profile.completeness.destinations.reason_code,
+                last_updated_at=profile.completeness.destinations.last_updated_at,
+                years_available=profile.completeness.destinations.years_available,
+            ),
             finance=SchoolProfileSectionCompletenessDto(
                 status=profile.completeness.finance.status,
                 reason_code=profile.completeness.finance.reason_code,
@@ -698,6 +718,7 @@ class GetSchoolProfileUseCase:
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
             admissions_latest=admissions_latest,
+            destinations_latest=destinations_latest,
             finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,
@@ -789,6 +810,30 @@ def _to_optional_delta(
     if school_value is None or benchmark_value is None:
         return None
     return float(school_value) - float(benchmark_value)
+
+
+def _to_destination_stage_latest_dto(
+    stage: SchoolDestinationStageLatest | None,
+) -> SchoolDestinationStageLatestDto | None:
+    if stage is None:
+        return None
+    return SchoolDestinationStageLatestDto(
+        academic_year=stage.academic_year,
+        cohort_count=stage.cohort_count,
+        qualification_group=stage.qualification_group,
+        qualification_level=stage.qualification_level,
+        overall_pct=stage.overall_pct,
+        education_pct=stage.education_pct,
+        apprenticeship_pct=stage.apprenticeship_pct,
+        employment_pct=stage.employment_pct,
+        not_sustained_pct=stage.not_sustained_pct,
+        activity_unknown_pct=stage.activity_unknown_pct,
+        fe_pct=stage.fe_pct,
+        other_education_pct=stage.other_education_pct,
+        school_sixth_form_pct=stage.school_sixth_form_pct,
+        sixth_form_college_pct=stage.sixth_form_college_pct,
+        higher_education_pct=stage.higher_education_pct,
+    )
 
 
 def _build_analyst_section(

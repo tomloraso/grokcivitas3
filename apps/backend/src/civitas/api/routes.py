@@ -326,6 +326,9 @@ def get_school_trends(
             admissions=_to_school_trends_completeness_response(
                 result.section_completeness.admissions
             ),
+            destinations=_to_school_trends_completeness_response(
+                result.section_completeness.destinations
+            ),
             finance=_to_school_trends_completeness_response(result.section_completeness.finance),
         ),
     )

@@ -16,6 +16,7 @@ TrendCompletenessReasonCode = Literal[
     "not_joined_yet",
     "pipeline_failed_recently",
     "not_applicable",
+    "unsupported_stage",
 ]
 
 
@@ -147,6 +148,32 @@ class SchoolAdmissionsSeries:
     urn: str
     rows: tuple[SchoolAdmissionsYearlyRow, ...]
     latest_updated_at: datetime | None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationYearlyRow:
+    academic_year: str
+    overall_pct: float | None
+    education_pct: float | None
+    apprenticeship_pct: float | None
+    employment_pct: float | None
+    not_sustained_pct: float | None
+    activity_unknown_pct: float | None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationStageSeries:
+    rows: tuple[SchoolDestinationYearlyRow, ...]
+    latest_updated_at: datetime | None
+    is_applicable: bool
+    has_any_rows: bool
+
+
+@dataclass(frozen=True)
+class SchoolDestinationsSeries:
+    urn: str
+    ks4: SchoolDestinationStageSeries
+    study_16_18: SchoolDestinationStageSeries
 
 
 @dataclass(frozen=True)

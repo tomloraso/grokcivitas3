@@ -67,6 +67,18 @@ class SchoolTrendsSeriesResponse(BaseModel):
     teacher_tempfilled_vacancy_count: list[SchoolTrendPointResponse]
     teacher_tempfilled_vacancy_rate: list[SchoolTrendPointResponse]
     third_party_support_staff_headcount: list[SchoolTrendPointResponse]
+    ks4_overall_pct: list[SchoolTrendPointResponse]
+    ks4_education_pct: list[SchoolTrendPointResponse]
+    ks4_apprenticeship_pct: list[SchoolTrendPointResponse]
+    ks4_employment_pct: list[SchoolTrendPointResponse]
+    ks4_not_sustained_pct: list[SchoolTrendPointResponse]
+    ks4_activity_unknown_pct: list[SchoolTrendPointResponse]
+    study_16_18_overall_pct: list[SchoolTrendPointResponse]
+    study_16_18_education_pct: list[SchoolTrendPointResponse]
+    study_16_18_apprenticeship_pct: list[SchoolTrendPointResponse]
+    study_16_18_employment_pct: list[SchoolTrendPointResponse]
+    study_16_18_not_sustained_pct: list[SchoolTrendPointResponse]
+    study_16_18_activity_unknown_pct: list[SchoolTrendPointResponse]
     admissions_oversubscription_ratio: list[SchoolTrendPointResponse]
     admissions_first_preference_offer_rate: list[SchoolTrendPointResponse]
     admissions_any_preference_offer_rate: list[SchoolTrendPointResponse]
@@ -155,6 +167,7 @@ class SchoolTrendsCompletenessResponse(BaseModel):
             "not_joined_yet",
             "pipeline_failed_recently",
             "not_applicable",
+            "unsupported_stage",
         ]
         | None
     )
@@ -168,6 +181,7 @@ class SchoolTrendsSectionCompletenessResponse(BaseModel):
     behaviour: SchoolTrendsCompletenessResponse
     workforce: SchoolTrendsCompletenessResponse
     admissions: SchoolTrendsCompletenessResponse
+    destinations: SchoolTrendsCompletenessResponse
     finance: SchoolTrendsCompletenessResponse
 
 

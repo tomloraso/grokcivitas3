@@ -80,6 +80,30 @@ DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL = (
     "5ed40264-1835-4848-a29b-446ed6c075c2/files/"
     "7c9894e4-9038-4213-823c-bf50bc993cec"
 )
+DEFAULT_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL = (
+    "https://explore-education-statistics.service.gov.uk/find-statistics/"
+    "key-stage-4-destination-measures/2023-24"
+)
+DEFAULT_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "7be58881-d49f-4e3b-b2b6-0877a1a0fe6e"
+)
+DEFAULT_LEAVER_DESTINATIONS_KS4_SOURCE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "7be58881-d49f-4e3b-b2b6-0877a1a0fe6e/csv"
+)
+DEFAULT_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL = (
+    "https://explore-education-statistics.service.gov.uk/find-statistics/"
+    "16-18-destination-measures/2023-24"
+)
+DEFAULT_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "bbee3278-589b-436f-a031-adeb0368e49f"
+)
+DEFAULT_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "bbee3278-589b-436f-a031-adeb0368e49f/csv"
+)
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_HOUSE_PRICES_SOURCE_URL = (
     "https://publicdata.landregistry.gov.uk/market-trend-data/"
@@ -172,6 +196,14 @@ class PipelineSettings(BaseModel):
     dfe_performance_page_size: PositiveInt
     school_admissions_source_csv: str | None = None
     school_admissions_source_url: str | None = None
+    leaver_destinations_ks4_source_csv: str | None = None
+    leaver_destinations_ks4_source_url: str
+    leaver_destinations_ks4_release_page_url: str
+    leaver_destinations_ks4_data_catalogue_url: str
+    leaver_destinations_16_to_18_source_csv: str | None = None
+    leaver_destinations_16_to_18_source_url: str
+    leaver_destinations_16_to_18_release_page_url: str
+    leaver_destinations_16_to_18_data_catalogue_url: str
     school_financial_benchmarks_workbook_urls: tuple[str, ...]
     imd_source_csv: str | None = None
     imd_release: str
@@ -192,6 +224,7 @@ class PipelineSettings(BaseModel):
     max_reject_ratio_dfe_workforce: float
     max_reject_ratio_dfe_performance: float
     max_reject_ratio_school_admissions: float
+    max_reject_ratio_leaver_destinations: float
     max_reject_ratio_school_financial_benchmarks: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
@@ -228,6 +261,7 @@ class DataQualitySettings(BaseModel):
     freshness_sla_hours_dfe_workforce: PositiveInt
     freshness_sla_hours_dfe_performance: PositiveInt
     freshness_sla_hours_school_admissions: PositiveInt
+    freshness_sla_hours_leaver_destinations: PositiveInt
     freshness_sla_hours_school_financial_benchmarks: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
@@ -248,6 +282,7 @@ class DataQualitySettings(BaseModel):
             "dfe_workforce": float(self.freshness_sla_hours_dfe_workforce),
             "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
             "school_admissions": float(self.freshness_sla_hours_school_admissions),
+            "leaver_destinations": float(self.freshness_sla_hours_leaver_destinations),
             "school_financial_benchmarks": float(
                 self.freshness_sla_hours_school_financial_benchmarks
             ),
@@ -442,6 +477,38 @@ class AppSettings(BaseSettings):
         default=DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL,
         validation_alias="CIVITAS_SCHOOL_ADMISSIONS_SOURCE_URL",
     )
+    leaver_destinations_ks4_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_CSV",
+    )
+    leaver_destinations_ks4_source_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_KS4_SOURCE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_URL",
+    )
+    leaver_destinations_ks4_release_page_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL",
+    )
+    leaver_destinations_ks4_data_catalogue_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL",
+    )
+    leaver_destinations_16_to_18_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_CSV",
+    )
+    leaver_destinations_16_to_18_source_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL",
+    )
+    leaver_destinations_16_to_18_release_page_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL",
+    )
+    leaver_destinations_16_to_18_data_catalogue_url: str = Field(
+        default=DEFAULT_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL,
+        validation_alias="CIVITAS_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL",
+    )
     school_financial_benchmarks_workbook_urls: str | None = Field(
         default=",".join(DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS),
         validation_alias="CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
@@ -538,6 +605,12 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_ADMISSIONS",
+    )
+    pipeline_max_reject_ratio_leaver_destinations: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_LEAVER_DESTINATIONS",
     )
     pipeline_max_reject_ratio_school_financial_benchmarks: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -659,6 +732,10 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_school_admissions: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_ADMISSIONS",
+    )
+    data_quality_freshness_sla_hours_leaver_destinations: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_LEAVER_DESTINATIONS",
     )
     data_quality_freshness_sla_hours_school_financial_benchmarks: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -857,6 +934,22 @@ class AppSettings(BaseSettings):
             dfe_performance_page_size=self.dfe_performance_page_size,
             school_admissions_source_csv=self.school_admissions_source_csv,
             school_admissions_source_url=self.school_admissions_source_url,
+            leaver_destinations_ks4_source_csv=self.leaver_destinations_ks4_source_csv,
+            leaver_destinations_ks4_source_url=self.leaver_destinations_ks4_source_url,
+            leaver_destinations_ks4_release_page_url=(
+                self.leaver_destinations_ks4_release_page_url
+            ),
+            leaver_destinations_ks4_data_catalogue_url=(
+                self.leaver_destinations_ks4_data_catalogue_url
+            ),
+            leaver_destinations_16_to_18_source_csv=(self.leaver_destinations_16_to_18_source_csv),
+            leaver_destinations_16_to_18_source_url=(self.leaver_destinations_16_to_18_source_url),
+            leaver_destinations_16_to_18_release_page_url=(
+                self.leaver_destinations_16_to_18_release_page_url
+            ),
+            leaver_destinations_16_to_18_data_catalogue_url=(
+                self.leaver_destinations_16_to_18_data_catalogue_url
+            ),
             school_financial_benchmarks_workbook_urls=_parse_csv_tokens(
                 self.school_financial_benchmarks_workbook_urls
             ),
@@ -883,6 +976,9 @@ class AppSettings(BaseSettings):
             max_reject_ratio_dfe_workforce=self.pipeline_max_reject_ratio_dfe_workforce,
             max_reject_ratio_dfe_performance=self.pipeline_max_reject_ratio_dfe_performance,
             max_reject_ratio_school_admissions=self.pipeline_max_reject_ratio_school_admissions,
+            max_reject_ratio_leaver_destinations=(
+                self.pipeline_max_reject_ratio_leaver_destinations
+            ),
             max_reject_ratio_school_financial_benchmarks=(
                 self.pipeline_max_reject_ratio_school_financial_benchmarks
             ),
@@ -936,6 +1032,9 @@ class AppSettings(BaseSettings):
             ),
             freshness_sla_hours_school_admissions=(
                 self.data_quality_freshness_sla_hours_school_admissions
+            ),
+            freshness_sla_hours_leaver_destinations=(
+                self.data_quality_freshness_sla_hours_leaver_destinations
             ),
             freshness_sla_hours_school_financial_benchmarks=(
                 self.data_quality_freshness_sla_hours_school_financial_benchmarks
@@ -1004,6 +1103,14 @@ class AppSettings(BaseSettings):
         "dfe_workforce_release_slugs",
         "school_admissions_source_csv",
         "school_admissions_source_url",
+        "leaver_destinations_ks4_source_csv",
+        "leaver_destinations_ks4_source_url",
+        "leaver_destinations_ks4_release_page_url",
+        "leaver_destinations_ks4_data_catalogue_url",
+        "leaver_destinations_16_to_18_source_csv",
+        "leaver_destinations_16_to_18_source_url",
+        "leaver_destinations_16_to_18_release_page_url",
+        "leaver_destinations_16_to_18_data_catalogue_url",
         "school_financial_benchmarks_workbook_urls",
         "imd_source_csv",
         "house_prices_source_csv",

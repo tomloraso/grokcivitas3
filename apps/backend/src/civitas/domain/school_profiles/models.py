@@ -18,6 +18,7 @@ SectionCompletenessReasonCode = Literal[
     "source_coverage_gap",
     "stale_after_school_refresh",
     "no_incidents_in_radius",
+    "unsupported_stage",
 ]
 
 
@@ -209,6 +210,31 @@ class SchoolAdmissionsLatest:
     first_preference_offer_rate: float | None
     any_preference_offer_rate: float | None
     admissions_policy: str | None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationStageLatest:
+    academic_year: str
+    cohort_count: int | None
+    qualification_group: str | None
+    qualification_level: str | None
+    overall_pct: float | None
+    education_pct: float | None
+    apprenticeship_pct: float | None
+    employment_pct: float | None
+    not_sustained_pct: float | None
+    activity_unknown_pct: float | None
+    fe_pct: float | None
+    other_education_pct: float | None
+    school_sixth_form_pct: float | None = None
+    sixth_form_college_pct: float | None = None
+    higher_education_pct: float | None = None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationsLatest:
+    ks4: SchoolDestinationStageLatest | None
+    study_16_18: SchoolDestinationStageLatest | None
 
 
 @dataclass(frozen=True)
@@ -409,6 +435,7 @@ class SchoolProfileCompleteness:
     behaviour: SchoolProfileSectionCompleteness
     workforce: SchoolProfileSectionCompleteness
     admissions: SchoolProfileSectionCompleteness
+    destinations: SchoolProfileSectionCompleteness
     finance: SchoolProfileSectionCompleteness
     leadership: SchoolProfileSectionCompleteness
     performance: SchoolProfileSectionCompleteness
@@ -427,6 +454,7 @@ class SchoolProfile:
     behaviour_latest: SchoolBehaviourLatest | None
     workforce_latest: SchoolWorkforceLatest | None
     admissions_latest: SchoolAdmissionsLatest | None
+    destinations_latest: SchoolDestinationsLatest | None
     finance_latest: SchoolFinanceLatest | None
     leadership_snapshot: SchoolLeadershipSnapshot | None
     performance: SchoolPerformance | None

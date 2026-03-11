@@ -65,6 +65,9 @@ def _ensure_schema(engine: Engine) -> None:
                     type text NULL,
                     status text NULL,
                     postcode text NULL,
+                    statutory_low_age integer NULL,
+                    statutory_high_age integer NULL,
+                    sixth_form text NULL,
                     easting double precision NOT NULL,
                     northing double precision NOT NULL,
                     location geography(Point, 4326) NOT NULL,
@@ -76,6 +79,15 @@ def _ensure_schema(engine: Engine) -> None:
                 )
                 """
             )
+        )
+        connection.execute(
+            text("ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_low_age integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE schools ADD COLUMN IF NOT EXISTS statutory_high_age integer NULL")
+        )
+        connection.execute(
+            text("ALTER TABLE schools ADD COLUMN IF NOT EXISTS sixth_form text NULL")
         )
         connection.execute(
             text(
@@ -106,6 +118,62 @@ def _ensure_schema(engine: Engine) -> None:
                     source_dataset_version text NULL,
                     updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
                     PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_leaver_destinations_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    destination_stage text NOT NULL,
+                    qualification_group text NOT NULL DEFAULT '',
+                    qualification_level text NOT NULL DEFAULT '',
+                    breakdown_topic text NOT NULL,
+                    breakdown text NOT NULL,
+                    school_name text NOT NULL,
+                    school_laestab text NULL,
+                    admission_policy text NULL,
+                    entry_gender text NULL,
+                    institution_group text NULL,
+                    institution_type text NULL,
+                    cohort_count integer NULL,
+                    overall_count integer NULL,
+                    overall_pct numeric(7,4) NULL,
+                    education_count integer NULL,
+                    education_pct numeric(7,4) NULL,
+                    apprenticeship_count integer NULL,
+                    apprenticeship_pct numeric(7,4) NULL,
+                    employment_count integer NULL,
+                    employment_pct numeric(7,4) NULL,
+                    not_sustained_count integer NULL,
+                    not_sustained_pct numeric(7,4) NULL,
+                    activity_unknown_count integer NULL,
+                    activity_unknown_pct numeric(7,4) NULL,
+                    fe_count integer NULL,
+                    fe_pct numeric(7,4) NULL,
+                    other_education_count integer NULL,
+                    other_education_pct numeric(7,4) NULL,
+                    school_sixth_form_count integer NULL,
+                    school_sixth_form_pct numeric(7,4) NULL,
+                    sixth_form_college_count integer NULL,
+                    sixth_form_college_pct numeric(7,4) NULL,
+                    higher_education_count integer NULL,
+                    higher_education_pct numeric(7,4) NULL,
+                    source_file_url text NOT NULL,
+                    source_updated_at_utc timestamptz NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (
+                        urn,
+                        academic_year,
+                        destination_stage,
+                        qualification_group,
+                        qualification_level,
+                        breakdown_topic,
+                        breakdown
+                    )
                 )
                 """
             )
@@ -772,6 +840,33 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                UPDATE schools
+                SET
+                    statutory_low_age = CASE urn
+                        WHEN '920001' THEN 11
+                        WHEN '920002' THEN 4
+                        WHEN '920003' THEN 11
+                        ELSE statutory_low_age
+                    END,
+                    statutory_high_age = CASE urn
+                        WHEN '920001' THEN 18
+                        WHEN '920002' THEN 11
+                        WHEN '920003' THEN 18
+                        ELSE statutory_high_age
+                    END,
+                    sixth_form = CASE urn
+                        WHEN '920001' THEN 'Has a sixth form'
+                        WHEN '920002' THEN 'Does not have a sixth form'
+                        WHEN '920003' THEN 'Has a sixth form'
+                        ELSE sixth_form
+                    END
+                WHERE urn IN ('920001', '920002', '920003')
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_demographics_yearly (
                     urn,
                     academic_year,
@@ -1206,6 +1301,180 @@ def _seed_data(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_leaver_destinations_yearly (
+                    urn,
+                    academic_year,
+                    destination_stage,
+                    qualification_group,
+                    qualification_level,
+                    breakdown_topic,
+                    breakdown,
+                    school_name,
+                    school_laestab,
+                    admission_policy,
+                    entry_gender,
+                    institution_group,
+                    institution_type,
+                    cohort_count,
+                    overall_pct,
+                    education_pct,
+                    apprenticeship_pct,
+                    employment_pct,
+                    not_sustained_pct,
+                    activity_unknown_pct,
+                    fe_pct,
+                    other_education_pct,
+                    school_sixth_form_pct,
+                    sixth_form_college_pct,
+                    higher_education_pct,
+                    source_file_url,
+                    source_updated_at_utc
+                ) VALUES
+                (
+                    '920001',
+                    '2023/24',
+                    'ks4',
+                    '',
+                    '',
+                    'Total',
+                    'Total',
+                    'Trends Test School',
+                    '2136007',
+                    'Comprehensive',
+                    'Mixed',
+                    'Academy trust',
+                    'Academy',
+                    182,
+                    91.1,
+                    73.2,
+                    5.1,
+                    12.8,
+                    4.6,
+                    3.4,
+                    41.7,
+                    5.8,
+                    39.2,
+                    26.1,
+                    NULL,
+                    'https://example.com/leaver-destinations-ks4-2024.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920001',
+                    '2024/25',
+                    'ks4',
+                    '',
+                    '',
+                    'Total',
+                    'Total',
+                    'Trends Test School',
+                    '2136007',
+                    'Comprehensive',
+                    'Mixed',
+                    'Academy trust',
+                    'Academy',
+                    188,
+                    92.0,
+                    74.3,
+                    5.4,
+                    12.1,
+                    3.9,
+                    2.9,
+                    42.5,
+                    5.9,
+                    40.8,
+                    25.8,
+                    NULL,
+                    'https://example.com/leaver-destinations-ks4-2025.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920001',
+                    '2023/24',
+                    '16_to_18',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Trends Test School',
+                    '2136007',
+                    'Comprehensive',
+                    'Mixed',
+                    'Academy trust',
+                    'Academy',
+                    160,
+                    94.4,
+                    82.1,
+                    6.8,
+                    5.5,
+                    2.2,
+                    1.2,
+                    29.4,
+                    6.2,
+                    NULL,
+                    NULL,
+                    46.5,
+                    'https://example.com/leaver-destinations-16to18-2024.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '920001',
+                    '2024/25',
+                    '16_to_18',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Trends Test School',
+                    '2136007',
+                    'Comprehensive',
+                    'Mixed',
+                    'Academy trust',
+                    'Academy',
+                    167,
+                    95.1,
+                    83.3,
+                    6.1,
+                    5.7,
+                    1.9,
+                    1.0,
+                    30.2,
+                    6.1,
+                    NULL,
+                    NULL,
+                    47.0,
+                    'https://example.com/leaver-destinations-16to18-2025.csv',
+                    '2026-03-10T10:00:00+00:00'
+                )
+                ON CONFLICT (
+                    urn,
+                    academic_year,
+                    destination_stage,
+                    qualification_group,
+                    qualification_level,
+                    breakdown_topic,
+                    breakdown
+                ) DO UPDATE SET
+                    cohort_count = EXCLUDED.cohort_count,
+                    overall_pct = EXCLUDED.overall_pct,
+                    education_pct = EXCLUDED.education_pct,
+                    apprenticeship_pct = EXCLUDED.apprenticeship_pct,
+                    employment_pct = EXCLUDED.employment_pct,
+                    not_sustained_pct = EXCLUDED.not_sustained_pct,
+                    activity_unknown_pct = EXCLUDED.activity_unknown_pct,
+                    fe_pct = EXCLUDED.fe_pct,
+                    other_education_pct = EXCLUDED.other_education_pct,
+                    school_sixth_form_pct = EXCLUDED.school_sixth_form_pct,
+                    sixth_form_college_pct = EXCLUDED.sixth_form_college_pct,
+                    higher_education_pct = EXCLUDED.higher_education_pct,
+                    source_file_url = EXCLUDED.source_file_url,
+                    source_updated_at_utc = EXCLUDED.source_updated_at_utc
+                """
+            )
+        )
 
 
 def _cleanup_data(engine: Engine) -> None:
@@ -1223,6 +1492,12 @@ def _cleanup_data(engine: Engine) -> None:
         connection.execute(
             text(
                 "DELETE FROM school_performance_yearly WHERE urn IN ('920001', '920002', '920003')"
+            )
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_leaver_destinations_yearly "
+                "WHERE urn IN ('920001', '920002', '920003')"
             )
         )
         connection.execute(
@@ -1322,6 +1597,25 @@ def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
     assert finance.rows[1].staff_costs_pct_of_expenditure == pytest.approx(0.7708)
     assert finance.rows[1].revenue_reserve_per_pupil_gbp == pytest.approx(848.48)
     assert finance.latest_updated_at is not None
+
+    destinations = repository.get_destinations_series("920001")
+    assert destinations is not None
+    assert destinations.urn == "920001"
+    assert destinations.ks4.is_applicable is True
+    assert destinations.ks4.has_any_rows is True
+    assert [row.academic_year for row in destinations.ks4.rows] == ["2023/24", "2024/25"]
+    assert destinations.ks4.rows[0].overall_pct == pytest.approx(91.1)
+    assert destinations.ks4.rows[1].education_pct == pytest.approx(74.3)
+    assert destinations.ks4.latest_updated_at is not None
+    assert destinations.study_16_18.is_applicable is True
+    assert destinations.study_16_18.has_any_rows is True
+    assert [row.academic_year for row in destinations.study_16_18.rows] == [
+        "2023/24",
+        "2024/25",
+    ]
+    assert destinations.study_16_18.rows[0].overall_pct == pytest.approx(94.4)
+    assert destinations.study_16_18.rows[1].education_pct == pytest.approx(83.3)
+    assert destinations.study_16_18.latest_updated_at is not None
 
 
 def test_school_trends_repository_returns_partial_metric_benchmarks_without_persisting_on_miss(
@@ -1549,6 +1843,7 @@ def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     behaviour = repository.get_behaviour_series("920002")
     workforce = repository.get_workforce_series("920002")
     finance = repository.get_finance_series("920002")
+    destinations = repository.get_destinations_series("920002")
 
     assert demographics is not None
     assert demographics.urn == "920002"
@@ -1576,6 +1871,17 @@ def test_school_trends_repository_returns_empty_rows_for_school_without_history(
     assert finance.rows == ()
     assert finance.latest_updated_at is None
 
+    assert destinations is not None
+    assert destinations.urn == "920002"
+    assert destinations.ks4.is_applicable is False
+    assert destinations.ks4.has_any_rows is False
+    assert destinations.ks4.rows == ()
+    assert destinations.ks4.latest_updated_at is None
+    assert destinations.study_16_18.is_applicable is False
+    assert destinations.study_16_18.has_any_rows is False
+    assert destinations.study_16_18.rows == ()
+    assert destinations.study_16_18.latest_updated_at is None
+
 
 def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine) -> None:
     repository = PostgresSchoolTrendsRepository(engine=engine)
@@ -1585,6 +1891,7 @@ def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine
     behaviour = repository.get_behaviour_series("999999")
     workforce = repository.get_workforce_series("999999")
     finance = repository.get_finance_series("999999")
+    destinations = repository.get_destinations_series("999999")
     benchmarks = repository.get_metric_benchmark_series("999999")
 
     assert demographics is None
@@ -1592,4 +1899,5 @@ def test_school_trends_repository_returns_none_for_unknown_school(engine: Engine
     assert behaviour is None
     assert workforce is None
     assert finance is None
+    assert destinations is None
     assert benchmarks is None

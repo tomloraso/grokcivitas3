@@ -1360,6 +1360,8 @@ def _pipeline_event_dimensions(source: PipelineSource) -> tuple[str, str | None]
         return ("school_performance_yearly", "school_performance")
     if source == PipelineSource.SCHOOL_ADMISSIONS:
         return ("school_admissions_yearly", "admissions")
+    if source == PipelineSource.LEAVER_DESTINATIONS:
+        return ("school_leaver_destinations_yearly", "leaver_destinations")
     if source == PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS:
         return ("school_financials_yearly", "finance")
     if source == PipelineSource.OFSTED_LATEST:

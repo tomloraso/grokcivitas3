@@ -117,6 +117,7 @@ uv run --project apps/backend civitas pipeline run --source dfe_attendance
 uv run --project apps/backend civitas pipeline run --source dfe_behaviour
 uv run --project apps/backend civitas pipeline run --source dfe_workforce
 uv run --project apps/backend civitas pipeline run --source dfe_performance
+uv run --project apps/backend civitas pipeline run --source leaver_destinations
 uv run --project apps/backend civitas pipeline run --source ons_imd
 uv run --project apps/backend civitas pipeline run --source uk_house_prices
 uv run --project apps/backend civitas pipeline run --source police_crime_context
@@ -151,6 +152,7 @@ uv run --project apps/backend civitas pipeline run --source school_financial_ben
 - `dfe_workforce` full refreshes now prefilter off-window academic years before Silver load, use Postgres COPY-backed staging when available, and persist aggregated rejection counts with bounded samples instead of one row per rejected record.
 - `school_financial_benchmarks` promotes academy finance rows into `school_financials_yearly`.
 - `dfe_performance` ingests KS2 + KS4 School Performance Tables payloads and promotes merged yearly rows to `school_performance_yearly`.
+- `leaver_destinations` promotes school-level destination outcomes into `school_leaver_destinations_yearly`, keeping KS4 and 16-to-18 total-row stages distinct for profile and trends reads.
 - `uk_house_prices` promotes monthly LAD context rows into `area_house_price_context`.
 - Successful runs of `gias`, `dfe_characteristics`, `dfe_attendance`, `dfe_behaviour`,
   `dfe_workforce`, `school_financial_benchmarks`, `dfe_performance`, `ons_imd`,

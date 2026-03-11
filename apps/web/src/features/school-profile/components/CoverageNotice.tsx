@@ -17,6 +17,7 @@ const SECTION_LABELS: { key: keyof ProfileCompletenessVM; label: string }[] = [
   { key: "behaviour", label: "Behaviour" },
   { key: "workforce", label: "Workforce" },
   { key: "admissions", label: "Admissions" },
+  { key: "destinations", label: "Destinations" },
   { key: "finance", label: "Finance" },
   { key: "leadership", label: "Leadership" },
   { key: "performance", label: "Performance" },
@@ -51,13 +52,25 @@ export function CoverageNotice({
   completeness
 }: CoverageNoticeProps): JSX.Element | null {
   const incompleteNames = SECTION_LABELS
-    .filter(({ key }) => completeness[key].status !== "available")
+    .filter(
+      ({ key }) =>
+        completeness[key]?.status !== "available" &&
+        completeness[key]?.reasonCode !== "unsupported_stage"
+    )
+    .map(({ label }) => label);
+  const limitedNames = SECTION_LABELS
+    .filter(({ key }) => completeness[key]?.reasonCode === "unsupported_stage")
     .map(({ label }) => label);
 
   const latestRefresh = formatRefreshed(completeness);
 
   // Nothing to report at all
-  if (incompleteNames.length === 0 && unsupportedMetrics.length === 0 && !latestRefresh) {
+  if (
+    incompleteNames.length === 0 &&
+    limitedNames.length === 0 &&
+    unsupportedMetrics.length === 0 &&
+    !latestRefresh
+  ) {
     return null;
   }
 
@@ -71,6 +84,13 @@ export function CoverageNotice({
         <span className="inline-flex items-center gap-1.5">
           <Info className="h-3.5 w-3.5 shrink-0" aria-hidden />
           Not yet published: {incompleteNames.join(", ")}
+        </span>
+      ) : null}
+
+      {limitedNames.length > 0 ? (
+        <span className="inline-flex items-center gap-1.5">
+          <Info className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          Limited in this view: {limitedNames.join(", ")}
         </span>
       ) : null}
 

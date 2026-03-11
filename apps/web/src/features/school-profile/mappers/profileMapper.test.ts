@@ -42,6 +42,9 @@ describe("mapCompletenessReasonToMessageKey", () => {
     expect(mapCompletenessReasonToMessageKey("stale_after_school_refresh")).toBe(
       "staleAfterSchoolRefresh"
     );
+    expect(mapCompletenessReasonToMessageKey("unsupported_stage")).toBe(
+      "unsupportedStage"
+    );
     expect(mapCompletenessReasonToMessageKey(null)).toBeNull();
   });
 });
@@ -64,6 +67,8 @@ describe("mapProfileToVM", () => {
     expect(vm.workforce?.teacherSexBreakdown[0]?.label).toBe("Female");
     expect(vm.workforce?.supportStaffPostMix[0]?.label).toBe("Teaching assistant");
     expect(vm.finance?.incomePerPupilGbp).toBe(10350);
+    expect(vm.destinations?.ks4?.overallPct).toBe(92.0);
+    expect(vm.destinations?.study16To18).toBeNull();
     expect(vm.leadership?.headteacherName).toBe("A. Smith");
     expect(vm.ofsted?.providerPageUrl).toBe("https://reports.ofsted.gov.uk/provider/21/100001");
     expect(vm.neighbourhood.areaContext?.housePrices?.areaName).toBe("Camden");
@@ -87,9 +92,11 @@ describe("mapProfileToVM", () => {
 
     expect(vm.completeness.attendance.status).toBe("available");
     expect(vm.completeness.finance.status).toBe("available");
+    expect(vm.completeness.destinations.messageKey).toBe("unsupportedStage");
     expect(vm.completeness.workforce.messageKey).toBe("partialMetricCoverage");
     expect(vm.completeness.areaHousePrices.status).toBe("available");
     expect(vm.trends?.sectionCompleteness.behaviour.status).toBe("available");
+    expect(vm.trends?.sectionCompleteness.destinations.messageKey).toBe("unsupportedStage");
     expect(vm.trends?.sectionCompleteness.finance.messageKey).toBe("insufficientYearsPublished");
   });
 

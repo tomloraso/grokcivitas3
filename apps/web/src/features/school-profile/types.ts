@@ -166,6 +166,29 @@ export interface AdmissionsLatestVM {
   admissionsPolicy: string | null;
 }
 
+export interface SchoolDestinationStageLatestVM {
+  academicYear: string;
+  cohortCount: number | null;
+  qualificationGroup: string | null;
+  qualificationLevel: string | null;
+  overallPct: number | null;
+  educationPct: number | null;
+  apprenticeshipPct: number | null;
+  employmentPct: number | null;
+  notSustainedPct: number | null;
+  activityUnknownPct: number | null;
+  fePct: number | null;
+  otherEducationPct: number | null;
+  schoolSixthFormPct: number | null;
+  sixthFormCollegePct: number | null;
+  higherEducationPct: number | null;
+}
+
+export interface SchoolDestinationsVM {
+  ks4: SchoolDestinationStageLatestVM | null;
+  study16To18: SchoolDestinationStageLatestVM | null;
+}
+
 export interface LeadershipSnapshotVM {
   headteacherName: string | null;
   headteacherStartDate: string | null;
@@ -344,6 +367,7 @@ export interface TrendsSectionCompletenessVM {
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
   admissions: SectionCompletenessVM;
+  destinations: SectionCompletenessVM;
   finance: SectionCompletenessVM;
 }
 
@@ -409,7 +433,8 @@ export type SectionCompletenessReasonCode =
   | "not_applicable"
   | "source_coverage_gap"
   | "stale_after_school_refresh"
-  | "no_incidents_in_radius";
+  | "no_incidents_in_radius"
+  | "unsupported_stage";
 
 export type SectionCompletenessMessageKey =
   | "missing"
@@ -425,7 +450,8 @@ export type SectionCompletenessMessageKey =
   | "notApplicable"
   | "sourceCoverageGap"
   | "staleAfterSchoolRefresh"
-  | "noIncidentsInRadius";
+  | "noIncidentsInRadius"
+  | "unsupportedStage";
 
 export interface SectionCompletenessVM {
   status: SectionCompletenessStatus;
@@ -441,6 +467,7 @@ export interface ProfileCompletenessVM {
   behaviour: SectionCompletenessVM;
   workforce: SectionCompletenessVM;
   admissions: SectionCompletenessVM;
+  destinations: SectionCompletenessVM;
   finance: SectionCompletenessVM;
   leadership: SectionCompletenessVM;
   performance: SectionCompletenessVM;
@@ -479,6 +506,7 @@ export interface SchoolProfileVM {
   behaviour: BehaviourLatestVM | null;
   workforce: WorkforceLatestVM | null;
   admissions: AdmissionsLatestVM | null;
+  destinations: SchoolDestinationsVM | null;
   finance: FinanceLatestVM | null;
   leadership: LeadershipSnapshotVM | null;
   performance: PerformanceVM | null;

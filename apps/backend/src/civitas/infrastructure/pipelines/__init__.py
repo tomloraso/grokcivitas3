@@ -9,6 +9,7 @@ from .dfe_behaviour import DfeBehaviourPipeline
 from .dfe_performance import DfePerformancePipeline
 from .dfe_workforce import DfeWorkforcePipeline
 from .gias import GiasPipeline
+from .leaver_destinations import LeaverDestinationsPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
 from .ons_imd import OnsImdPipeline
@@ -68,6 +69,21 @@ def pipeline_registry(
             engine=engine,
             source_csv=pipeline_settings.school_admissions_source_csv,
             source_url=pipeline_settings.school_admissions_source_url,
+        ),
+        PipelineSource.LEAVER_DESTINATIONS: LeaverDestinationsPipeline(
+            engine=engine,
+            ks4_source_csv=pipeline_settings.leaver_destinations_ks4_source_csv,
+            ks4_source_url=pipeline_settings.leaver_destinations_ks4_source_url,
+            ks4_release_page_url=pipeline_settings.leaver_destinations_ks4_release_page_url,
+            ks4_data_catalogue_url=pipeline_settings.leaver_destinations_ks4_data_catalogue_url,
+            study_16_to_18_source_csv=(pipeline_settings.leaver_destinations_16_to_18_source_csv),
+            study_16_to_18_source_url=(pipeline_settings.leaver_destinations_16_to_18_source_url),
+            study_16_to_18_release_page_url=(
+                pipeline_settings.leaver_destinations_16_to_18_release_page_url
+            ),
+            study_16_to_18_data_catalogue_url=(
+                pipeline_settings.leaver_destinations_16_to_18_data_catalogue_url
+            ),
         ),
         PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: SchoolFinancialBenchmarksPipeline(
             engine=engine,

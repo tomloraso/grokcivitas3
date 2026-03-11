@@ -67,6 +67,7 @@ import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileSectionAccordion } from "./components/ProfileSectionAccordion";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { SchoolAdmissionsSection } from "./components/SchoolAdmissionsSection";
+import { SchoolDestinationsSection } from "./components/SchoolDestinationsSection";
 import { SchoolFinanceSection } from "./components/SchoolFinanceSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
@@ -76,6 +77,7 @@ const TOC_SECTIONS = [
   { id: "analyst-view", label: "Analyst View" },
   { id: "ofsted-profile", label: "Ofsted Profile" },
   { id: "results-progress", label: "Results & Progress" },
+  { id: "leaver-destinations", label: "Leaver Destinations" },
   { id: "day-to-day", label: "Day-to-Day" },
   { id: "demographics", label: "Pupil Demographics" },
   { id: "admissions", label: "Admissions" },
@@ -299,6 +301,17 @@ export function SchoolProfileFeature(): JSX.Element {
                     performance={profile.performance}
                     completeness={profile.completeness.performance}
                     benchmarkDashboard={profile.benchmarkDashboard}
+                  />
+                </ProfileSectionAccordion>
+              </div>
+
+              <div id="leaver-destinations">
+                <ProfileSectionAccordion title="Leaver Destinations" defaultOpen={false}>
+                  <SchoolDestinationsSection
+                    destinations={profile.destinations}
+                    trends={profile.trends}
+                    completeness={profile.completeness.destinations}
+                    trendsCompleteness={profile.trends?.sectionCompleteness.destinations ?? profile.completeness.trends}
                   />
                 </ProfileSectionAccordion>
               </div>

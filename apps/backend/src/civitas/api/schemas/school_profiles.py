@@ -198,6 +198,29 @@ class SchoolProfileAdmissionsLatestResponse(BaseModel):
     admissions_policy: str | None
 
 
+class SchoolProfileDestinationStageLatestResponse(BaseModel):
+    academic_year: str
+    cohort_count: int | None
+    qualification_group: str | None
+    qualification_level: str | None
+    overall_pct: float | None
+    education_pct: float | None
+    apprenticeship_pct: float | None
+    employment_pct: float | None
+    not_sustained_pct: float | None
+    activity_unknown_pct: float | None
+    fe_pct: float | None
+    other_education_pct: float | None
+    school_sixth_form_pct: float | None = None
+    sixth_form_college_pct: float | None = None
+    higher_education_pct: float | None = None
+
+
+class SchoolProfileDestinationsLatestResponse(BaseModel):
+    ks4: SchoolProfileDestinationStageLatestResponse | None
+    study_16_18: SchoolProfileDestinationStageLatestResponse | None
+
+
 class SchoolProfileOfstedLatestResponse(BaseModel):
     overall_effectiveness_code: str | None
     overall_effectiveness_label: str | None
@@ -407,6 +430,7 @@ class SchoolProfileSectionCompletenessResponse(BaseModel):
             "source_coverage_gap",
             "stale_after_school_refresh",
             "no_incidents_in_radius",
+            "unsupported_stage",
         ]
         | None
     )
@@ -420,6 +444,7 @@ class SchoolProfileCompletenessResponse(BaseModel):
     behaviour: SchoolProfileSectionCompletenessResponse
     workforce: SchoolProfileSectionCompletenessResponse
     admissions: SchoolProfileSectionCompletenessResponse
+    destinations: SchoolProfileSectionCompletenessResponse
     finance: SchoolProfileSectionCompletenessResponse
     leadership: SchoolProfileSectionCompletenessResponse
     performance: SchoolProfileSectionCompletenessResponse
@@ -439,6 +464,7 @@ class SchoolProfileResponse(BaseModel):
     behaviour_latest: SchoolProfileBehaviourLatestResponse | None
     workforce_latest: SchoolProfileWorkforceLatestResponse | None
     admissions_latest: SchoolProfileAdmissionsLatestResponse | None
+    destinations_latest: SchoolProfileDestinationsLatestResponse | None
     finance_latest: SchoolProfileFinanceLatestResponse | None
     leadership_snapshot: SchoolProfileLeadershipSnapshotResponse | None
     performance: SchoolProfilePerformanceResponse | None

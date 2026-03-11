@@ -263,6 +263,26 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     any_preference_offer_rate: 0.71,
     admissions_policy: "Not applicable"
   },
+  destinations_latest: {
+    ks4: {
+      academic_year: "2024/25",
+      cohort_count: 181,
+      qualification_group: null,
+      qualification_level: null,
+      overall_pct: 92.0,
+      education_pct: 74.0,
+      apprenticeship_pct: 5.2,
+      employment_pct: 11.9,
+      not_sustained_pct: 4.1,
+      activity_unknown_pct: 2.9,
+      fe_pct: 42.1,
+      other_education_pct: 5.8,
+      school_sixth_form_pct: 41.0,
+      sixth_form_college_pct: 25.2,
+      higher_education_pct: null
+    },
+    study_16_18: null
+  },
   finance_latest: {
     academic_year: "2023/24",
     total_income_gbp: 2070000,
@@ -802,6 +822,12 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2023/24", "2024/25"]
     },
+    destinations: {
+      status: "partial",
+      reason_code: "unsupported_stage",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
+    },
     finance: {
       status: "available",
       reason_code: null,
@@ -1040,6 +1066,36 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       { academic_year: "2023/24", value: 9, delta: null, direction: null },
       { academic_year: "2024/25", value: 11, delta: 2, direction: "up" }
     ],
+    ks4_overall_pct: [
+      { academic_year: "2023/24", value: 90.8, delta: null, direction: null },
+      { academic_year: "2024/25", value: 92.0, delta: 1.2, direction: "up" }
+    ],
+    ks4_education_pct: [
+      { academic_year: "2023/24", value: 72.2, delta: null, direction: null },
+      { academic_year: "2024/25", value: 74.0, delta: 1.8, direction: "up" }
+    ],
+    ks4_apprenticeship_pct: [
+      { academic_year: "2023/24", value: 4.9, delta: null, direction: null },
+      { academic_year: "2024/25", value: 5.2, delta: 0.3, direction: "up" }
+    ],
+    ks4_employment_pct: [
+      { academic_year: "2023/24", value: 13.1, delta: null, direction: null },
+      { academic_year: "2024/25", value: 11.9, delta: -1.2, direction: "down" }
+    ],
+    ks4_not_sustained_pct: [
+      { academic_year: "2023/24", value: 4.8, delta: null, direction: null },
+      { academic_year: "2024/25", value: 4.1, delta: -0.7, direction: "down" }
+    ],
+    ks4_activity_unknown_pct: [
+      { academic_year: "2023/24", value: 4.0, delta: null, direction: null },
+      { academic_year: "2024/25", value: 2.9, delta: -1.1, direction: "down" }
+    ],
+    study_16_18_overall_pct: EMPTY_SERIES,
+    study_16_18_education_pct: EMPTY_SERIES,
+    study_16_18_apprenticeship_pct: EMPTY_SERIES,
+    study_16_18_employment_pct: EMPTY_SERIES,
+    study_16_18_not_sustained_pct: EMPTY_SERIES,
+    study_16_18_activity_unknown_pct: EMPTY_SERIES,
     income_per_pupil_gbp: [
       { academic_year: "2023/24", value: 10350, delta: null, direction: null }
     ],
@@ -1362,6 +1418,12 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
     admissions: {
       status: "partial",
       reason_code: "insufficient_years_published",
+      last_updated_at: "2026-01-31T09:00:00Z",
+      years_available: ["2023/24", "2024/25"]
+    },
+    destinations: {
+      status: "partial",
+      reason_code: "unsupported_stage",
       last_updated_at: "2026-01-31T09:00:00Z",
       years_available: ["2023/24", "2024/25"]
     },

@@ -490,6 +490,14 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         direction=None,
                     ),
                 ),
+                ks4_overall_pct=(
+                    SchoolTrendPointDto(
+                        academic_year="2023/24",
+                        value=92.0,
+                        delta=None,
+                        direction=None,
+                    ),
+                ),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=(
@@ -700,6 +708,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     last_updated_at=None,
                     years_available=("2024/25",),
                 ),
+                destinations=SchoolTrendsCompletenessDto(
+                    status="partial",
+                    reason_code="unsupported_stage",
+                    last_updated_at=None,
+                    years_available=("2023/24",),
+                ),
                 finance=SchoolTrendsCompletenessDto(
                     status="partial",
                     reason_code="insufficient_years_published",
@@ -725,6 +739,8 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["series"]["third_party_support_staff_headcount"][0]["value"] == 3.0
     assert payload["series"]["admissions_oversubscription_ratio"][0]["value"] == pytest.approx(1.18)
     assert payload["series"]["admissions_cross_la_offers"][0]["value"] == 9
+    assert payload["series"]["ks4_overall_pct"][0]["value"] == 92.0
+    assert payload["series"]["study_16_18_overall_pct"] == []
     assert payload["series"]["income_per_pupil_gbp"][0]["value"] == 6634.62
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
@@ -740,6 +756,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
         "school_vs_local_delta"
     ] == pytest.approx(184.52)
     assert payload["section_completeness"]["admissions"]["years_available"] == ["2024/25"]
+    assert payload["section_completeness"]["destinations"]["reason_code"] == "unsupported_stage"
     assert payload["section_completeness"]["finance"]["years_available"] == ["2023/24"]
     assert fake_use_case.calls == ["123456"]
 

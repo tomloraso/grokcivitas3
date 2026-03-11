@@ -160,6 +160,12 @@ export type SchoolProfileDemographicsLatest =
 export type SchoolProfileDemographicsCoverage =
   components["schemas"]["SchoolProfileDemographicsCoverageResponse"];
 
+export type SchoolProfileDestinationStageLatest =
+  components["schemas"]["SchoolProfileDestinationStageLatestResponse"];
+
+export type SchoolProfileDestinationsLatest =
+  components["schemas"]["SchoolProfileDestinationsLatestResponse"];
+
 export type SchoolProfileOfstedLatest =
   components["schemas"]["SchoolProfileOfstedLatestResponse"];
 

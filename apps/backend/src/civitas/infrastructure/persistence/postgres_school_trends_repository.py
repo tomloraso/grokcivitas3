@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy import text
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import Connection, Engine, RowMapping
 from sqlalchemy.exc import SQLAlchemyError
 
 from civitas.application.school_trends.errors import SchoolTrendsDataUnavailableError
@@ -20,6 +21,9 @@ from civitas.domain.school_trends.models import (
     SchoolBehaviourYearlyRow,
     SchoolDemographicsSeries,
     SchoolDemographicsYearlyRow,
+    SchoolDestinationsSeries,
+    SchoolDestinationStageSeries,
+    SchoolDestinationYearlyRow,
     SchoolFinanceSeries,
     SchoolFinanceYearlyRow,
     SchoolMetricBenchmarkSeries,
@@ -440,6 +444,138 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             latest_updated_at=_max_optional_updated_at(tuple(row["updated_at"] for row in rows)),
         )
 
+    def get_destinations_series(self, urn: str) -> SchoolDestinationsSeries | None:
+        try:
+            with self._engine.connect() as connection:
+                school_row = _get_school_destinations_context(connection, urn)
+                if school_row is None:
+                    return None
+
+                destination_rows: Sequence[RowMapping] = ()
+                stage_rows: Sequence[RowMapping] = ()
+                if _table_exists(connection, "school_leaver_destinations_yearly"):
+                    destination_rows = (
+                        connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    academic_year,
+                                    destination_stage,
+                                    overall_pct,
+                                    education_pct,
+                                    apprenticeship_pct,
+                                    employment_pct,
+                                    not_sustained_pct,
+                                    activity_unknown_pct,
+                                    updated_at
+                                FROM school_leaver_destinations_yearly
+                                WHERE urn = :urn
+                                  AND breakdown_topic = 'Total'
+                                  AND breakdown = 'Total'
+                                  AND (
+                                      (
+                                          destination_stage = 'ks4'
+                                          AND qualification_group = ''
+                                          AND qualification_level = ''
+                                      )
+                                      OR (
+                                          destination_stage = '16_to_18'
+                                          AND qualification_group = 'Total'
+                                          AND qualification_level = 'Total'
+                                      )
+                                  )
+                                ORDER BY
+                                    destination_stage ASC,
+                                    substring(academic_year from 1 for 4)::integer ASC,
+                                    academic_year ASC
+                                """
+                            ),
+                            {"urn": urn},
+                        )
+                        .mappings()
+                        .all()
+                    )
+                    stage_rows = (
+                        connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    destination_stage,
+                                    count(*) AS row_count,
+                                    max(updated_at) AS latest_updated_at
+                                FROM school_leaver_destinations_yearly
+                                WHERE urn = :urn
+                                GROUP BY destination_stage
+                                """
+                            ),
+                            {"urn": urn},
+                        )
+                        .mappings()
+                        .all()
+                    )
+        except SQLAlchemyError as exc:
+            raise SchoolTrendsDataUnavailableError(
+                "School trends datastore is unavailable."
+            ) from exc
+
+        rows_by_stage: dict[str, list[SchoolDestinationYearlyRow]] = {"ks4": [], "16_to_18": []}
+        for row in destination_rows:
+            destination_stage = str(row["destination_stage"])
+            rows_by_stage.setdefault(destination_stage, []).append(
+                SchoolDestinationYearlyRow(
+                    academic_year=str(row["academic_year"]),
+                    overall_pct=_to_optional_float(row["overall_pct"]),
+                    education_pct=_to_optional_float(row["education_pct"]),
+                    apprenticeship_pct=_to_optional_float(row["apprenticeship_pct"]),
+                    employment_pct=_to_optional_float(row["employment_pct"]),
+                    not_sustained_pct=_to_optional_float(row["not_sustained_pct"]),
+                    activity_unknown_pct=_to_optional_float(row["activity_unknown_pct"]),
+                )
+            )
+
+        stage_meta = {
+            str(stage_row["destination_stage"]): {
+                "has_any_rows": (_to_optional_int(stage_row["row_count"]) or 0) > 0,
+                "latest_updated_at": _to_optional_datetime(stage_row["latest_updated_at"]),
+            }
+            for stage_row in stage_rows
+        }
+        statutory_low_age = _to_optional_int(school_row.get("statutory_low_age"))
+        statutory_high_age = _to_optional_int(school_row.get("statutory_high_age"))
+        sixth_form = _to_optional_str(school_row.get("sixth_form"))
+
+        return SchoolDestinationsSeries(
+            urn=urn,
+            ks4=_build_destination_stage_series(
+                rows=tuple(rows_by_stage["ks4"]),
+                is_applicable=_school_destinations_stage_is_applicable(
+                    destination_stage="ks4",
+                    statutory_low_age=statutory_low_age,
+                    statutory_high_age=statutory_high_age,
+                    sixth_form=sixth_form,
+                ),
+                has_any_rows=bool(stage_meta.get("ks4", {}).get("has_any_rows", False)),
+                latest_updated_at=cast(
+                    datetime | None,
+                    stage_meta.get("ks4", {}).get("latest_updated_at"),
+                ),
+            ),
+            study_16_18=_build_destination_stage_series(
+                rows=tuple(rows_by_stage["16_to_18"]),
+                is_applicable=_school_destinations_stage_is_applicable(
+                    destination_stage="16_to_18",
+                    statutory_low_age=statutory_low_age,
+                    statutory_high_age=statutory_high_age,
+                    sixth_form=sixth_form,
+                ),
+                has_any_rows=bool(stage_meta.get("16_to_18", {}).get("has_any_rows", False)),
+                latest_updated_at=cast(
+                    datetime | None,
+                    stage_meta.get("16_to_18", {}).get("latest_updated_at"),
+                ),
+            ),
+        )
+
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         try:
             with self._engine.connect() as connection:
@@ -554,6 +690,30 @@ def _get_school_finance_context(connection: Connection, urn: str) -> Mapping[str
     return dict(row) if row is not None else None
 
 
+def _get_school_destinations_context(
+    connection: Connection,
+    urn: str,
+) -> Mapping[str, object] | None:
+    row = (
+        connection.execute(
+            text(
+                """
+                SELECT
+                    statutory_low_age,
+                    statutory_high_age,
+                    sixth_form
+                FROM schools
+                WHERE urn = :urn
+                """
+            ),
+            {"urn": urn},
+        )
+        .mappings()
+        .first()
+    )
+    return dict(row) if row is not None else None
+
+
 def _to_optional_float(value: object) -> float | None:
     if value is None:
         return None
@@ -564,6 +724,14 @@ def _to_optional_int(value: object) -> int | None:
     if value is None:
         return None
     return int(float(str(value)))
+
+
+def _to_optional_datetime(value: object) -> datetime | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    return None
 
 
 def _max_optional_updated_at(values: tuple[object, ...]) -> datetime | None:
@@ -598,6 +766,52 @@ def _school_finance_is_applicable(
         "academy" in normalized_type
         or bool((trust_name or "").strip())
         or bool((trust_flag or "").strip())
+    )
+
+
+def _school_destinations_stage_is_applicable(
+    *,
+    destination_stage: str,
+    statutory_low_age: int | None,
+    statutory_high_age: int | None,
+    sixth_form: str | None,
+) -> bool:
+    if destination_stage == "ks4":
+        if statutory_low_age is not None and statutory_high_age is not None:
+            return statutory_low_age < 16 and statutory_high_age >= 16
+        if statutory_high_age is not None:
+            return statutory_high_age >= 16
+        return False
+
+    if statutory_high_age is not None:
+        return statutory_high_age >= 18
+    return _school_has_sixth_form(sixth_form)
+
+
+def _school_has_sixth_form(value: str | None) -> bool:
+    normalized = (value or "").strip().casefold()
+    if not normalized:
+        return False
+    return normalized not in {
+        "does not have a sixth form",
+        "no sixth form",
+        "not applicable",
+    }
+
+
+def _build_destination_stage_series(
+    *,
+    rows: tuple[SchoolDestinationYearlyRow, ...],
+    is_applicable: bool,
+    has_any_rows: bool,
+    latest_updated_at: datetime | None,
+) -> SchoolDestinationStageSeries:
+    effective_is_applicable = is_applicable or has_any_rows
+    return SchoolDestinationStageSeries(
+        rows=rows,
+        latest_updated_at=latest_updated_at,
+        is_applicable=effective_is_applicable,
+        has_any_rows=has_any_rows,
     )
 
 

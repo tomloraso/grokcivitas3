@@ -3,6 +3,7 @@ export type MetricUnit = "percent" | "count" | "ratio" | "score" | "currency" | 
 export type MetricSectionKey =
   | "demographics"
   | "admissions"
+  | "destinations"
   | "finance"
   | "attendance"
   | "behaviour"
@@ -22,6 +23,7 @@ export interface MetricCatalogEntry {
 export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
   "demographics",
   "admissions",
+  "destinations",
   "finance",
   "attendance",
   "behaviour",
@@ -33,6 +35,7 @@ export const METRIC_SECTION_ORDER: MetricSectionKey[] = [
 export const METRIC_SECTION_LABELS: Record<MetricSectionKey, string> = {
   demographics: "Demographics",
   admissions: "Admissions",
+  destinations: "Destinations",
   finance: "Finance",
   attendance: "Attendance",
   behaviour: "Behaviour",
@@ -154,6 +157,139 @@ export const METRIC_CATALOG: Record<string, MetricCatalogEntry> = {
     description: "Offers made to applicants from outside the school's home local authority.",
     section: "admissions",
     unit: "count"
+  },
+  ks4_overall_pct: {
+    key: "ks4_overall_pct",
+    label: "Overall Sustained Destinations",
+    description: "The share of KS4 leavers in a sustained education, apprenticeship, or employment destination.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_education_pct: {
+    key: "ks4_education_pct",
+    label: "Education",
+    description: "KS4 leavers in any sustained education destination.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_apprenticeship_pct: {
+    key: "ks4_apprenticeship_pct",
+    label: "Apprenticeships",
+    description: "KS4 leavers in sustained apprenticeships.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_employment_pct: {
+    key: "ks4_employment_pct",
+    label: "Employment",
+    description: "KS4 leavers in sustained employment.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_not_sustained_pct: {
+    key: "ks4_not_sustained_pct",
+    label: "Not Sustained",
+    description: "KS4 leavers whose destination was not sustained across the reporting window.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_activity_unknown_pct: {
+    key: "ks4_activity_unknown_pct",
+    label: "Activity Unknown",
+    description: "KS4 leavers whose activity could not be matched in the destination dataset.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_fe_pct: {
+    key: "ks4_fe_pct",
+    label: "Further Education",
+    description: "KS4 leavers continuing in further education.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_other_education_pct: {
+    key: "ks4_other_education_pct",
+    label: "Other Education",
+    description: "KS4 leavers in other sustained education destinations outside FE or sixth form routes.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_school_sixth_form_pct: {
+    key: "ks4_school_sixth_form_pct",
+    label: "School Sixth Form",
+    description: "KS4 leavers staying on in a school sixth form.",
+    section: "destinations",
+    unit: "percent"
+  },
+  ks4_sixth_form_college_pct: {
+    key: "ks4_sixth_form_college_pct",
+    label: "Sixth Form College",
+    description: "KS4 leavers continuing in a sixth form college.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_overall_pct: {
+    key: "study_16_18_overall_pct",
+    label: "Overall Sustained Destinations",
+    description: "The share of 16 to 18 study leavers in a sustained education, apprenticeship, or employment destination.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_education_pct: {
+    key: "study_16_18_education_pct",
+    label: "Education",
+    description: "16 to 18 study leavers continuing in sustained education.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_apprenticeship_pct: {
+    key: "study_16_18_apprenticeship_pct",
+    label: "Apprenticeships",
+    description: "16 to 18 study leavers moving into sustained apprenticeships.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_employment_pct: {
+    key: "study_16_18_employment_pct",
+    label: "Employment",
+    description: "16 to 18 study leavers moving into sustained employment.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_not_sustained_pct: {
+    key: "study_16_18_not_sustained_pct",
+    label: "Not Sustained",
+    description: "16 to 18 study leavers whose destination was not sustained across the reporting window.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_activity_unknown_pct: {
+    key: "study_16_18_activity_unknown_pct",
+    label: "Activity Unknown",
+    description: "16 to 18 study leavers whose activity could not be matched in the destination dataset.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_fe_pct: {
+    key: "study_16_18_fe_pct",
+    label: "Further Education",
+    description: "16 to 18 study leavers continuing in further education.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_other_education_pct: {
+    key: "study_16_18_other_education_pct",
+    label: "Other Education",
+    description: "16 to 18 study leavers in other sustained education routes outside FE or higher education.",
+    section: "destinations",
+    unit: "percent"
+  },
+  study_16_18_higher_education_pct: {
+    key: "study_16_18_higher_education_pct",
+    label: "Higher Education",
+    description: "16 to 18 study leavers continuing into higher education.",
+    section: "destinations",
+    unit: "percent"
   },
   income_per_pupil_gbp: {
     key: "income_per_pupil_gbp",
@@ -639,6 +775,24 @@ export const ADMISSIONS_METRIC_KEYS = [
   "admissions_any_preference_offer_rate",
   "admissions_cross_la_applications",
   "admissions_cross_la_offers"
+];
+
+export const DESTINATION_KS4_METRIC_KEYS = [
+  "ks4_overall_pct",
+  "ks4_education_pct",
+  "ks4_apprenticeship_pct",
+  "ks4_employment_pct",
+  "ks4_not_sustained_pct",
+  "ks4_activity_unknown_pct"
+];
+
+export const DESTINATION_STUDY_16_18_METRIC_KEYS = [
+  "study_16_18_overall_pct",
+  "study_16_18_education_pct",
+  "study_16_18_apprenticeship_pct",
+  "study_16_18_employment_pct",
+  "study_16_18_not_sustained_pct",
+  "study_16_18_activity_unknown_pct"
 ];
 
 export const ATTENDANCE_METRIC_KEYS = [

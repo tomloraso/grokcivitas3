@@ -13,6 +13,7 @@ REQUIRED_SCHOOL_PROFILE_PROPERTIES = frozenset(
         "workforce_latest",
         "admissions_latest",
         "finance_latest",
+        "destinations_latest",
         "leadership_snapshot",
         "performance",
         "ofsted_latest",

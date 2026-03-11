@@ -51,6 +51,7 @@ class SchoolCompareCellResponse(BaseModel):
             "source_coverage_gap",
             "stale_after_school_refresh",
             "no_incidents_in_radius",
+            "unsupported_stage",
         ]
         | None
     )
