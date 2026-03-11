@@ -1923,7 +1923,8 @@
                   "not_applicable",
                   "source_coverage_gap",
                   "stale_after_school_refresh",
-                  "no_incidents_in_radius"
+                  "no_incidents_in_radius",
+                  "unsupported_stage"
                 ]
               },
               {
@@ -3064,6 +3065,9 @@
           "admissions": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           },
+          "destinations": {
+            "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
+          },
           "finance": {
             "$ref": "#/components/schemas/SchoolProfileSectionCompletenessResponse"
           },
@@ -3096,6 +3100,7 @@
           "behaviour",
           "workforce",
           "admissions",
+          "destinations",
           "finance",
           "leadership",
           "performance",
@@ -3446,6 +3451,214 @@
           "count"
         ],
         "title": "SchoolProfileDemographicsSendPrimaryNeedResponse"
+      },
+      "SchoolProfileDestinationStageLatestResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "cohort_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Count"
+          },
+          "qualification_group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qualification Group"
+          },
+          "qualification_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qualification Level"
+          },
+          "overall_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Pct"
+          },
+          "education_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Education Pct"
+          },
+          "apprenticeship_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apprenticeship Pct"
+          },
+          "employment_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employment Pct"
+          },
+          "not_sustained_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Not Sustained Pct"
+          },
+          "activity_unknown_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Unknown Pct"
+          },
+          "fe_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fe Pct"
+          },
+          "other_education_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Education Pct"
+          },
+          "school_sixth_form_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Sixth Form Pct"
+          },
+          "sixth_form_college_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sixth Form College Pct"
+          },
+          "higher_education_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Higher Education Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "cohort_count",
+          "qualification_group",
+          "qualification_level",
+          "overall_pct",
+          "education_pct",
+          "apprenticeship_pct",
+          "employment_pct",
+          "not_sustained_pct",
+          "activity_unknown_pct",
+          "fe_pct",
+          "other_education_pct"
+        ],
+        "title": "SchoolProfileDestinationStageLatestResponse"
+      },
+      "SchoolProfileDestinationsLatestResponse": {
+        "properties": {
+          "ks4": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileDestinationStageLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "study_16_18": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileDestinationStageLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "ks4",
+          "study_16_18"
+        ],
+        "title": "SchoolProfileDestinationsLatestResponse"
       },
       "SchoolProfileFinanceLatestResponse": {
         "properties": {
@@ -4619,6 +4832,16 @@
               }
             ]
           },
+          "destinations_latest": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolProfileDestinationsLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "finance_latest": {
             "anyOf": [
               {
@@ -4685,6 +4908,7 @@
           "behaviour_latest",
           "workforce_latest",
           "admissions_latest",
+          "destinations_latest",
           "finance_latest",
           "leadership_snapshot",
           "performance",
@@ -5198,7 +5422,8 @@
                   "not_applicable",
                   "source_coverage_gap",
                   "stale_after_school_refresh",
-                  "no_incidents_in_radius"
+                  "no_incidents_in_radius",
+                  "unsupported_stage"
                 ]
               },
               {
@@ -6398,7 +6623,8 @@
                   "rejected_by_validation",
                   "not_joined_yet",
                   "pipeline_failed_recently",
-                  "not_applicable"
+                  "not_applicable",
+                  "unsupported_stage"
                 ]
               },
               {
@@ -6523,6 +6749,9 @@
           "admissions": {
             "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
           },
+          "destinations": {
+            "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
+          },
           "finance": {
             "$ref": "#/components/schemas/SchoolTrendsCompletenessResponse"
           }
@@ -6534,6 +6763,7 @@
           "behaviour",
           "workforce",
           "admissions",
+          "destinations",
           "finance"
         ],
         "title": "SchoolTrendsSectionCompletenessResponse"
@@ -6827,6 +7057,90 @@
             "type": "array",
             "title": "Third Party Support Staff Headcount"
           },
+          "ks4_overall_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Overall Pct"
+          },
+          "ks4_education_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Education Pct"
+          },
+          "ks4_apprenticeship_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Apprenticeship Pct"
+          },
+          "ks4_employment_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Employment Pct"
+          },
+          "ks4_not_sustained_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Not Sustained Pct"
+          },
+          "ks4_activity_unknown_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Ks4 Activity Unknown Pct"
+          },
+          "study_16_18_overall_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Overall Pct"
+          },
+          "study_16_18_education_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Education Pct"
+          },
+          "study_16_18_apprenticeship_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Apprenticeship Pct"
+          },
+          "study_16_18_employment_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Employment Pct"
+          },
+          "study_16_18_not_sustained_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Not Sustained Pct"
+          },
+          "study_16_18_activity_unknown_pct": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Study 16 18 Activity Unknown Pct"
+          },
           "admissions_oversubscription_ratio": {
             "items": {
               "$ref": "#/components/schemas/SchoolTrendPointResponse"
@@ -6948,6 +7262,18 @@
           "teacher_tempfilled_vacancy_count",
           "teacher_tempfilled_vacancy_rate",
           "third_party_support_staff_headcount",
+          "ks4_overall_pct",
+          "ks4_education_pct",
+          "ks4_apprenticeship_pct",
+          "ks4_employment_pct",
+          "ks4_not_sustained_pct",
+          "ks4_activity_unknown_pct",
+          "study_16_18_overall_pct",
+          "study_16_18_education_pct",
+          "study_16_18_apprenticeship_pct",
+          "study_16_18_employment_pct",
+          "study_16_18_not_sustained_pct",
+          "study_16_18_activity_unknown_pct",
           "admissions_oversubscription_ratio",
           "admissions_first_preference_offer_rate",
           "admissions_any_preference_offer_rate",

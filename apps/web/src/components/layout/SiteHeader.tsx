@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { cn } from "../../shared/utils/cn";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
 import { useSearchContext } from "../../shared/context/SearchContext";
+import { siteConfig } from "../../shared/config/site";
 import { readCompareUrlState } from "../../shared/routing/compareUrns";
 import { paths } from "../../shared/routing/paths";
 import type { ThemeMode } from "../../shared/theme/theme-mode";
@@ -72,9 +73,9 @@ export function SiteHeader({
         <Link
           to={paths.home}
           className="text-sm font-display font-semibold tracking-[0.18em] text-primary transition-opacity duration-fast hover:opacity-80"
-          aria-label="[BRAND] - return to home"
+          aria-label={`${siteConfig.productName} - return to home`}
         >
-          [BRAND]
+          {siteConfig.shortName}
         </Link>
 
         <div className="flex items-center gap-3">

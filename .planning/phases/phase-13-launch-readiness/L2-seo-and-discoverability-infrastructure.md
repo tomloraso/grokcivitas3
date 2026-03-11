@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented
+- Last updated: 2026-03-11
 - Depends on:
   - `L1-content-page-foundation.md` (PageMeta component and react-helmet-async provider)
   - `docs/architecture/frontend-conventions.md`
@@ -40,6 +40,7 @@ Deliver the baseline SEO infrastructure that the current Vite SPA can support wi
 3. **SVG-first favicon.** Ship a single `favicon.svg` with `<link rel="icon">` fallbacks to `favicon-32x32.png` and `favicon-16x16.png` for older browsers. Include `apple-touch-icon.png` (180x180).
 4. **Structured data uses Schema.org `School` type.** Properties: `name`, `identifier` (URN), `address` (from GIAS), and `url` (canonical). Extended properties such as `aggregateRating` are not included because Civitas does not assign ratings.
 5. **Canonical base URL comes from configuration.** `PageMeta` reads the site origin from `VITE_PUBLIC_URL`, which is documented in `apps/web/.env.example`.
+6. **No fake production domain.** If `VITE_PUBLIC_URL` is unset because the production domain is not yet fixed, canonical tags are omitted, `robots.txt` disallows crawling, and `sitemap.xml` emits no public URLs.
 
 ## Frontend Design
 
@@ -52,7 +53,7 @@ Allow: /
 Sitemap: https://civitas.uk/sitemap.xml
 ```
 
-Served from `apps/web/public/robots.txt`. The production domain is used in the Sitemap directive; local development ignores this file.
+Served from generated build output. The production domain is used in the Sitemap directive only when `VITE_PUBLIC_URL` is configured. When it is unset, the generated file disallows crawling.
 
 ### `sitemap.xml`
 
@@ -69,11 +70,11 @@ Served from `apps/web/public/robots.txt`. The production domain is used in the S
 </urlset>
 ```
 
-Served from `apps/web/public/sitemap.xml`. School profile URLs are intentionally omitted from the launch sitemap. When school-profile discoverability becomes in scope, add a generated sitemap process that emits concrete `/schools/{urn}` URLs.
+Served from generated build output. School profile URLs are intentionally omitted from the launch sitemap. When `VITE_PUBLIC_URL` is unset, the file remains valid XML but contains no public URLs.
 
 ### Favicon and web manifest
 
-Files placed in `apps/web/public/`:
+Brand-neutral image assets are placed in `apps/web/public/`, while `site.webmanifest` is generated from shared site configuration:
 
 | File | Purpose |
 |---|---|

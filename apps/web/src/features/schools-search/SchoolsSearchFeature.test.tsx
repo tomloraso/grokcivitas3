@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
@@ -125,11 +126,13 @@ function renderFeature() {
   );
 
   return render(
-    <ThemeProvider>
-      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

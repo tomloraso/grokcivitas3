@@ -10,11 +10,13 @@ import {
 import type { BillingProduct, CheckoutSessionStatusResponse } from "../../api/types";
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { Card, Panel } from "../../components/ui/Card";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
 import { useToast } from "../../components/ui/ToastContext";
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import { useAuth } from "../auth/useAuth";
 import { getCapabilityDisplayLabel, getPremiumPaywallCopy } from "./copy";
@@ -57,7 +59,7 @@ function checkoutStatusCopy(
     case "completed":
       return "Premium access is now active for this account.";
     case "processing_payment":
-      return "Payment has returned from checkout. Civitas is waiting for provider reconciliation before unlocking access.";
+      return `Payment has returned from checkout. ${siteConfig.productName} is waiting for provider reconciliation before unlocking access.`;
     case "open":
       return "Checkout is still open. You can resume the hosted payment flow.";
     case "already_covered":
@@ -277,6 +279,12 @@ export function UpgradeFeature(): JSX.Element {
 
   return (
     <PageContainer className="space-y-8">
+      <PageMeta
+        title="Premium plans"
+        description={`Review Premium access plans and checkout flows for ${siteConfig.productName}.`}
+        canonicalPath={paths.upgrade()}
+        noIndex
+      />
       <Breadcrumbs
         segments={[
           { label: "Account", href: paths.account },
@@ -391,7 +399,7 @@ export function UpgradeFeature(): JSX.Element {
             {session.state !== "authenticated" ? (
               <>
                 <p className="text-sm text-secondary">
-                  Sign in first so Civitas can attach checkout and entitlement state to the correct account.
+                  Sign in first so {siteConfig.productName} can attach checkout and entitlement state to the correct account.
                 </p>
                 <Button asChild>
                   <Link
@@ -424,7 +432,7 @@ export function UpgradeFeature(): JSX.Element {
             ) : (
               <>
                 <p className="text-sm text-secondary">
-                  Checkout is hosted by the payment provider, but Civitas only unlocks Premium after backend reconciliation updates your entitlements.
+                  Checkout is hosted by the payment provider, but {siteConfig.productName} only unlocks Premium after backend reconciliation updates your entitlements.
                 </p>
                 <Button
                   type="button"

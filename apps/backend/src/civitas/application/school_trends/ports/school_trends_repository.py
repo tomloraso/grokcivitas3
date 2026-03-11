@@ -5,6 +5,7 @@ from civitas.domain.school_trends.models import (
     SchoolAttendanceSeries,
     SchoolBehaviourSeries,
     SchoolDemographicsSeries,
+    SchoolDestinationsSeries,
     SchoolFinanceSeries,
     SchoolMetricBenchmarkSeries,
     SchoolWorkforceSeries,
@@ -23,5 +24,7 @@ class SchoolTrendsRepository(Protocol):
     def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None: ...
 
     def get_admissions_series(self, urn: str) -> SchoolAdmissionsSeries | None: ...
+
+    def get_destinations_series(self, urn: str) -> SchoolDestinationsSeries | None: ...
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None: ...

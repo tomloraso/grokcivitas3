@@ -29,6 +29,8 @@ from civitas.domain.school_profiles.models import (
     SchoolDemographicsHomeLanguage,
     SchoolDemographicsLatest,
     SchoolDemographicsSendPrimaryNeed,
+    SchoolDestinationsLatest,
+    SchoolDestinationStageLatest,
     SchoolFinanceLatest,
     SchoolLeadershipSnapshot,
     SchoolOfstedLatest,
@@ -47,6 +49,7 @@ from civitas.domain.school_profiles.models import (
 
 HISTORICAL_TIMELINE_BASELINE_DATE = date(2015, 9, 14)
 METERS_PER_MILE = 1609.344
+STUDY_16_18_DESTINATIONS_ENABLED = False
 SECTION_COMPLETENESS_STATUS = Literal["available", "partial", "unavailable"]
 SECTION_COMPLETENESS_REASON = Literal[
     "source_missing",
@@ -63,6 +66,7 @@ SECTION_COMPLETENESS_REASON = Literal[
     "source_coverage_gap",
     "stale_after_school_refresh",
     "no_incidents_in_radius",
+    "unsupported_stage",
 ]
 ETHNICITY_GROUP_COLUMNS: tuple[tuple[str, str, str, str], ...] = (
     ("white_british", "White British", "white_british_pct", "white_british_count"),
@@ -553,6 +557,78 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     .mappings()
                     .first()
                 )
+                destination_latest_rows: list[dict[str, object]] = []
+                destination_stage_rows: list[dict[str, object]] = []
+                if _table_exists(connection, "school_leaver_destinations_yearly"):
+                    destination_latest_rows = [
+                        dict(raw_row)
+                        for raw_row in connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    academic_year,
+                                    destination_stage,
+                                    qualification_group,
+                                    qualification_level,
+                                    cohort_count,
+                                    overall_pct,
+                                    education_pct,
+                                    apprenticeship_pct,
+                                    employment_pct,
+                                    not_sustained_pct,
+                                    activity_unknown_pct,
+                                    fe_pct,
+                                    other_education_pct,
+                                    school_sixth_form_pct,
+                                    sixth_form_college_pct,
+                                    higher_education_pct,
+                                    updated_at
+                                FROM school_leaver_destinations_yearly
+                                WHERE urn = :urn
+                                  AND breakdown_topic = 'Total'
+                                  AND breakdown = 'Total'
+                                  AND (
+                                      (
+                                          destination_stage = 'ks4'
+                                          AND qualification_group = ''
+                                          AND qualification_level = ''
+                                      )
+                                      OR (
+                                          destination_stage = '16_to_18'
+                                          AND qualification_group = 'Total'
+                                          AND qualification_level = 'Total'
+                                      )
+                                  )
+                                ORDER BY
+                                    destination_stage ASC,
+                                    substring(academic_year from 1 for 4)::integer DESC,
+                                    academic_year DESC
+                                """
+                            ),
+                            {"urn": urn},
+                        )
+                        .mappings()
+                        .all()
+                    ]
+                    destination_stage_rows = [
+                        dict(raw_row)
+                        for raw_row in connection.execute(
+                            text(
+                                """
+                                SELECT
+                                    destination_stage,
+                                    count(*) AS row_count,
+                                    max(updated_at) AS latest_updated_at
+                                FROM school_leaver_destinations_yearly
+                                WHERE urn = :urn
+                                GROUP BY destination_stage
+                                """
+                            ),
+                            {"urn": urn},
+                        )
+                        .mappings()
+                        .all()
+                    ]
                 leadership_row = (
                     connection.execute(
                         text(
@@ -1200,6 +1276,27 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 admissions_policy=_to_optional_str(row["admissions_latest_policy"]),
             )
 
+        destination_latest_rows_by_stage: dict[str, dict[str, object]] = {}
+        for destination_row in destination_latest_rows:
+            destination_stage = str(destination_row["destination_stage"])
+            if destination_stage not in destination_latest_rows_by_stage:
+                destination_latest_rows_by_stage[destination_stage] = destination_row
+
+        ks4_destinations_latest = _build_destination_stage_latest(
+            destination_latest_rows_by_stage.get("ks4"),
+            destination_stage="ks4",
+        )
+        study_16_18_destinations_latest = _build_destination_stage_latest(
+            destination_latest_rows_by_stage.get("16_to_18"),
+            destination_stage="16_to_18",
+        )
+        destinations_latest = None
+        if ks4_destinations_latest is not None or study_16_18_destinations_latest is not None:
+            destinations_latest = SchoolDestinationsLatest(
+                ks4=ks4_destinations_latest,
+                study_16_18=study_16_18_destinations_latest,
+            )
+
         leadership_snapshot = None
         if leadership_row is not None:
             leadership_snapshot = SchoolLeadershipSnapshot(
@@ -1582,6 +1679,48 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             trust_name=_to_optional_str(row["trust_name"]),
             trust_flag=_to_optional_str(row["trust_flag"]),
         )
+        destination_stage_meta = {
+            str(stage_row["destination_stage"]): {
+                "has_any_rows": (_to_optional_int(stage_row["row_count"]) or 0) > 0,
+                "latest_updated_at": _to_optional_datetime(stage_row["latest_updated_at"]),
+            }
+            for stage_row in destination_stage_rows
+        }
+        statutory_low_age = _to_optional_int(row["statutory_low_age"])
+        statutory_high_age = _to_optional_int(row["statutory_high_age"])
+        sixth_form = _to_optional_str(row["sixth_form"])
+        ks4_destinations_has_any_rows = bool(
+            destination_stage_meta.get("ks4", {}).get("has_any_rows", False)
+        )
+        study_16_18_destinations_has_any_rows = bool(
+            destination_stage_meta.get("16_to_18", {}).get("has_any_rows", False)
+        )
+        ks4_destinations_updated_at = cast(
+            datetime | None,
+            destination_stage_meta.get("ks4", {}).get("latest_updated_at"),
+        )
+        study_16_18_destinations_updated_at = cast(
+            datetime | None,
+            destination_stage_meta.get("16_to_18", {}).get("latest_updated_at"),
+        )
+        ks4_destinations_applicable = (
+            _destinations_stage_is_applicable(
+                destination_stage="ks4",
+                statutory_low_age=statutory_low_age,
+                statutory_high_age=statutory_high_age,
+                sixth_form=sixth_form,
+            )
+            or ks4_destinations_has_any_rows
+        )
+        study_16_18_destinations_applicable = (
+            _destinations_stage_is_applicable(
+                destination_stage="16_to_18",
+                statutory_low_age=statutory_low_age,
+                statutory_high_age=statutory_high_age,
+                sixth_form=sixth_form,
+            )
+            or study_16_18_destinations_has_any_rows
+        )
 
         completeness = SchoolProfileCompleteness(
             demographics=_build_demographics_completeness(
@@ -1603,6 +1742,17 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             admissions=_build_admissions_completeness(
                 admissions_latest=admissions_latest,
                 admissions_updated_at=_to_optional_datetime(row["admissions_updated_at"]),
+            ),
+            destinations=_build_destinations_completeness(
+                ks4_latest=ks4_destinations_latest,
+                ks4_updated_at=ks4_destinations_updated_at,
+                ks4_is_applicable=ks4_destinations_applicable,
+                ks4_has_any_rows=ks4_destinations_has_any_rows,
+                study_16_18_latest=study_16_18_destinations_latest,
+                study_16_18_updated_at=study_16_18_destinations_updated_at,
+                study_16_18_is_applicable=study_16_18_destinations_applicable,
+                study_16_18_has_any_rows=study_16_18_destinations_has_any_rows,
+                include_study_16_18=STUDY_16_18_DESTINATIONS_ENABLED,
             ),
             finance=_build_finance_completeness(
                 finance_latest=finance_latest,
@@ -1709,6 +1859,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
             behaviour_latest=behaviour_latest,
             workforce_latest=workforce_latest,
             admissions_latest=admissions_latest,
+            destinations_latest=destinations_latest,
             finance_latest=finance_latest,
             leadership_snapshot=leadership_snapshot,
             performance=performance,
@@ -2126,6 +2277,147 @@ def _build_admissions_completeness(
     )
 
 
+def _build_destinations_completeness(
+    *,
+    ks4_latest: SchoolDestinationStageLatest | None,
+    ks4_updated_at: datetime | None,
+    ks4_is_applicable: bool,
+    ks4_has_any_rows: bool,
+    study_16_18_latest: SchoolDestinationStageLatest | None,
+    study_16_18_updated_at: datetime | None,
+    study_16_18_is_applicable: bool,
+    study_16_18_has_any_rows: bool,
+    include_study_16_18: bool,
+) -> SchoolProfileSectionCompleteness:
+    stage_sections = tuple(
+        section
+        for section in (
+            _build_destination_stage_completeness(
+                destination_stage="ks4",
+                latest=ks4_latest,
+                updated_at=ks4_updated_at,
+                is_applicable=ks4_is_applicable,
+                has_any_rows=ks4_has_any_rows,
+            ),
+            _build_destination_stage_completeness(
+                destination_stage="16_to_18",
+                latest=study_16_18_latest,
+                updated_at=study_16_18_updated_at,
+                is_applicable=study_16_18_is_applicable,
+                has_any_rows=study_16_18_has_any_rows,
+                include_stage=include_study_16_18,
+            ),
+        )
+        if section is not None
+    )
+    if len(stage_sections) == 0:
+        return _section_completeness(
+            status="unavailable",
+            reason_code="not_applicable",
+            last_updated_at=None,
+        )
+
+    last_updated_at = _max_optional_datetime(
+        tuple(section.last_updated_at for section in stage_sections)
+    )
+    if all(section.status == "available" for section in stage_sections):
+        return _section_completeness(
+            status="available",
+            reason_code=None,
+            last_updated_at=last_updated_at,
+        )
+
+    reason_code: SECTION_COMPLETENESS_REASON = next(
+        (section.reason_code for section in stage_sections if section.reason_code is not None),
+        "partial_metric_coverage",
+    )
+    status: SECTION_COMPLETENESS_STATUS = (
+        "unavailable"
+        if all(section.status == "unavailable" for section in stage_sections)
+        else "partial"
+    )
+    return _section_completeness(
+        status=status,
+        reason_code=reason_code,
+        last_updated_at=last_updated_at,
+    )
+
+
+def _build_destination_stage_completeness(
+    *,
+    destination_stage: str,
+    latest: SchoolDestinationStageLatest | None,
+    updated_at: datetime | None,
+    is_applicable: bool,
+    has_any_rows: bool,
+    include_stage: bool = True,
+) -> SchoolProfileSectionCompleteness | None:
+    if not is_applicable:
+        return None
+    if not include_stage:
+        return _section_completeness(
+            status="unavailable",
+            reason_code="unsupported_stage",
+            last_updated_at=updated_at,
+        )
+    if latest is None:
+        return _section_completeness(
+            status="partial" if has_any_rows else "unavailable",
+            reason_code=(
+                "partial_metric_coverage" if has_any_rows else "source_file_missing_for_year"
+            ),
+            last_updated_at=updated_at if has_any_rows else None,
+        )
+    if _destination_stage_has_partial_metric_coverage(
+        destination_stage=destination_stage,
+        latest=latest,
+    ):
+        return _section_completeness(
+            status="partial",
+            reason_code="partial_metric_coverage",
+            last_updated_at=updated_at,
+        )
+    return _section_completeness(
+        status="available",
+        reason_code=None,
+        last_updated_at=updated_at,
+    )
+
+
+def _destination_stage_has_partial_metric_coverage(
+    *,
+    destination_stage: str,
+    latest: SchoolDestinationStageLatest,
+) -> bool:
+    metrics: tuple[float | None, ...]
+    if destination_stage == "ks4":
+        metrics = (
+            latest.overall_pct,
+            latest.education_pct,
+            latest.apprenticeship_pct,
+            latest.employment_pct,
+            latest.not_sustained_pct,
+            latest.activity_unknown_pct,
+            latest.fe_pct,
+            latest.other_education_pct,
+            latest.school_sixth_form_pct,
+            latest.sixth_form_college_pct,
+        )
+    else:
+        metrics = (
+            latest.overall_pct,
+            latest.education_pct,
+            latest.apprenticeship_pct,
+            latest.employment_pct,
+            latest.not_sustained_pct,
+            latest.activity_unknown_pct,
+            latest.fe_pct,
+            latest.other_education_pct,
+            latest.higher_education_pct,
+        )
+    return any(value is None for value in metrics)
+
+
 def _build_finance_completeness(
     *,
     finance_latest: SchoolFinanceLatest | None,
@@ -2502,6 +2794,76 @@ def _finance_is_applicable(
         or bool((trust_name or "").strip())
         or bool((trust_flag or "").strip())
     )
+
+
+def _build_destination_stage_latest(
+    row: Mapping[str, object] | None,
+    *,
+    destination_stage: str,
+) -> SchoolDestinationStageLatest | None:
+    if row is None:
+        return None
+    qualification_group = _to_optional_str(row.get("qualification_group")) or None
+    qualification_level = _to_optional_str(row.get("qualification_level")) or None
+    return SchoolDestinationStageLatest(
+        academic_year=str(row["academic_year"]),
+        cohort_count=_to_optional_int(row.get("cohort_count")),
+        qualification_group=qualification_group,
+        qualification_level=qualification_level,
+        overall_pct=_to_optional_float(row.get("overall_pct")),
+        education_pct=_to_optional_float(row.get("education_pct")),
+        apprenticeship_pct=_to_optional_float(row.get("apprenticeship_pct")),
+        employment_pct=_to_optional_float(row.get("employment_pct")),
+        not_sustained_pct=_to_optional_float(row.get("not_sustained_pct")),
+        activity_unknown_pct=_to_optional_float(row.get("activity_unknown_pct")),
+        fe_pct=_to_optional_float(row.get("fe_pct")),
+        other_education_pct=_to_optional_float(row.get("other_education_pct")),
+        school_sixth_form_pct=(
+            _to_optional_float(row.get("school_sixth_form_pct"))
+            if destination_stage == "ks4"
+            else None
+        ),
+        sixth_form_college_pct=(
+            _to_optional_float(row.get("sixth_form_college_pct"))
+            if destination_stage == "ks4"
+            else None
+        ),
+        higher_education_pct=(
+            _to_optional_float(row.get("higher_education_pct"))
+            if destination_stage == "16_to_18"
+            else None
+        ),
+    )
+
+
+def _destinations_stage_is_applicable(
+    *,
+    destination_stage: str,
+    statutory_low_age: int | None,
+    statutory_high_age: int | None,
+    sixth_form: str | None,
+) -> bool:
+    if destination_stage == "ks4":
+        if statutory_low_age is not None and statutory_high_age is not None:
+            return statutory_low_age < 16 and statutory_high_age >= 16
+        if statutory_high_age is not None:
+            return statutory_high_age >= 16
+        return False
+
+    if statutory_high_age is not None:
+        return statutory_high_age >= 18
+    return _school_has_sixth_form(sixth_form)
+
+
+def _school_has_sixth_form(value: str | None) -> bool:
+    normalized = (value or "").strip().casefold()
+    if not normalized:
+        return False
+    return normalized not in {
+        "does not have a sixth form",
+        "no sixth form",
+        "not applicable",
+    }
 
 
 def _supports_direct_fsm(*, source_dataset_id: object, fsm_pct: object) -> bool:

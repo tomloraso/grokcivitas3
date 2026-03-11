@@ -32,6 +32,8 @@ from civitas.domain.school_trends.models import (
     SchoolAttendanceYearlyRow,
     SchoolBehaviourYearlyRow,
     SchoolDemographicsYearlyRow,
+    SchoolDestinationStageSeries,
+    SchoolDestinationYearlyRow,
     SchoolFinanceSeries,
     SchoolFinanceYearlyRow,
     SchoolMetricBenchmarkYearlyRow,
@@ -40,6 +42,7 @@ from civitas.domain.school_trends.models import (
 
 MIN_YEARS_FOR_DELTA = 2
 MIN_YEARS_FOR_COMPLETE_HISTORY = 3
+STUDY_16_18_DESTINATIONS_ENABLED = False
 DashboardSectionKey = Literal[
     "demographics",
     "admissions",
@@ -252,6 +255,7 @@ class GetSchoolTrendsUseCase:
         behaviour_series = self._school_trends_repository.get_behaviour_series(normalized_urn)
         workforce_series = self._school_trends_repository.get_workforce_series(normalized_urn)
         admissions_series = self._school_trends_repository.get_admissions_series(normalized_urn)
+        destinations_series = self._school_trends_repository.get_destinations_series(normalized_urn)
         finance_series = self._school_trends_repository.get_finance_series(normalized_urn)
         benchmark_series = self._school_trends_repository.get_metric_benchmark_series(
             normalized_urn
@@ -261,6 +265,7 @@ class GetSchoolTrendsUseCase:
             or behaviour_series is None
             or workforce_series is None
             or admissions_series is None
+            or destinations_series is None
             or finance_series is None
             or benchmark_series is None
         ):
@@ -271,6 +276,10 @@ class GetSchoolTrendsUseCase:
         behaviour_rows = behaviour_series.rows
         workforce_rows = workforce_series.rows
         admissions_rows = admissions_series.rows
+        ks4_destination_rows = destinations_series.ks4.rows
+        study_16_18_destination_rows = (
+            destinations_series.study_16_18.rows if STUDY_16_18_DESTINATIONS_ENABLED else ()
+        )
         finance_rows = finance_series.rows
 
         years_available = _merge_years_available(
@@ -279,6 +288,8 @@ class GetSchoolTrendsUseCase:
             behaviour_rows=behaviour_rows,
             workforce_rows=workforce_rows,
             admissions_rows=admissions_rows,
+            ks4_destination_rows=ks4_destination_rows,
+            study_16_18_destination_rows=study_16_18_destination_rows,
             finance_rows=finance_rows,
         )
         years_count = len(years_available)
@@ -315,6 +326,11 @@ class GetSchoolTrendsUseCase:
             years_available=tuple(row.academic_year for row in admissions_rows),
             last_updated_at=admissions_series.latest_updated_at,
             has_partial_metric_coverage=_has_partial_metric_coverage_admissions(admissions_rows),
+        )
+        destinations_completeness = _build_destinations_completeness(
+            ks4=destinations_series.ks4,
+            study_16_18=destinations_series.study_16_18,
+            include_study_16_18=STUDY_16_18_DESTINATIONS_ENABLED,
         )
         finance_completeness = _build_finance_completeness(finance_series)
         benchmark_rows_by_metric = _group_benchmark_rows_by_metric(benchmark_series.rows)
@@ -536,6 +552,54 @@ class GetSchoolTrendsUseCase:
                     rows=finance_rows,
                     metric_value=lambda row: row.supply_staff_costs_pct_of_staff_costs,
                 ),
+                ks4_overall_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.overall_pct,
+                ),
+                ks4_education_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.education_pct,
+                ),
+                ks4_apprenticeship_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.apprenticeship_pct,
+                ),
+                ks4_employment_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.employment_pct,
+                ),
+                ks4_not_sustained_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.not_sustained_pct,
+                ),
+                ks4_activity_unknown_pct=_build_metric_series(
+                    rows=ks4_destination_rows,
+                    metric_value=lambda row: row.activity_unknown_pct,
+                ),
+                study_16_18_overall_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.overall_pct,
+                ),
+                study_16_18_education_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.education_pct,
+                ),
+                study_16_18_apprenticeship_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.apprenticeship_pct,
+                ),
+                study_16_18_employment_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.employment_pct,
+                ),
+                study_16_18_not_sustained_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.not_sustained_pct,
+                ),
+                study_16_18_activity_unknown_pct=_build_metric_series(
+                    rows=study_16_18_destination_rows,
+                    metric_value=lambda row: row.activity_unknown_pct,
+                ),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=_build_metric_benchmark_series(
@@ -750,6 +814,7 @@ class GetSchoolTrendsUseCase:
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
                 admissions=admissions_completeness,
+                destinations=destinations_completeness,
                 finance=finance_completeness,
             ),
             section_completeness=SchoolTrendsSectionCompletenessDto(
@@ -758,6 +823,7 @@ class GetSchoolTrendsUseCase:
                 behaviour=behaviour_completeness,
                 workforce=workforce_completeness,
                 admissions=admissions_completeness,
+                destinations=destinations_completeness,
                 finance=finance_completeness,
             ),
         )
@@ -967,6 +1033,98 @@ def _build_completeness(
     )
 
 
+def _build_destinations_completeness(
+    *,
+    ks4: SchoolDestinationStageSeries,
+    study_16_18: SchoolDestinationStageSeries,
+    include_study_16_18: bool,
+) -> SchoolTrendsCompletenessDto:
+    stage_sections = tuple(
+        section
+        for section in (
+            _build_destination_stage_completeness(ks4),
+            _build_destination_stage_completeness(
+                study_16_18,
+                include_stage=include_study_16_18,
+            ),
+        )
+        if section is not None
+    )
+    if len(stage_sections) == 0:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="not_applicable",
+            last_updated_at=None,
+            years_available=None,
+        )
+
+    years_available = tuple(
+        sorted(
+            {year for section in stage_sections for year in (section.years_available or ())},
+            key=_academic_year_sort_key,
+        )
+    )
+    last_updated_at = _max_optional_datetime(
+        tuple(section.last_updated_at for section in stage_sections)
+    )
+    if all(section.status == "available" for section in stage_sections):
+        return SchoolTrendsCompletenessDto(
+            status="available",
+            reason_code=None,
+            last_updated_at=last_updated_at,
+            years_available=years_available or None,
+        )
+
+    reason_code: TrendCompletenessReasonCode = next(
+        (section.reason_code for section in stage_sections if section.reason_code is not None),
+        "partial_metric_coverage",
+    )
+    status: Literal["partial", "unavailable"] = (
+        "unavailable"
+        if all(section.status == "unavailable" for section in stage_sections)
+        else "partial"
+    )
+    return SchoolTrendsCompletenessDto(
+        status=status,
+        reason_code=reason_code,
+        last_updated_at=last_updated_at,
+        years_available=years_available or None,
+    )
+
+
+def _build_destination_stage_completeness(
+    stage: SchoolDestinationStageSeries,
+    *,
+    include_stage: bool = True,
+) -> SchoolTrendsCompletenessDto | None:
+    if not stage.is_applicable:
+        return None
+
+    years_available = tuple(row.academic_year for row in stage.rows)
+    if not include_stage:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="unsupported_stage",
+            last_updated_at=stage.latest_updated_at,
+            years_available=years_available or None,
+        )
+    if len(stage.rows) == 0:
+        return SchoolTrendsCompletenessDto(
+            status="partial" if stage.has_any_rows else "unavailable",
+            reason_code=(
+                "partial_metric_coverage" if stage.has_any_rows else "source_file_missing_for_year"
+            ),
+            last_updated_at=stage.latest_updated_at if stage.has_any_rows else None,
+            years_available=years_available or None,
+        )
+    return _build_completeness(
+        years_count=len(stage.rows),
+        years_available=years_available,
+        last_updated_at=stage.latest_updated_at,
+        has_partial_metric_coverage=_has_partial_metric_coverage_destinations(stage.rows),
+    )
+
+
 def _build_overall_completeness(
     *,
     years_available: tuple[str, ...],
@@ -975,6 +1133,7 @@ def _build_overall_completeness(
     behaviour: SchoolTrendsCompletenessDto,
     workforce: SchoolTrendsCompletenessDto,
     admissions: SchoolTrendsCompletenessDto,
+    destinations: SchoolTrendsCompletenessDto,
     finance: SchoolTrendsCompletenessDto,
 ) -> SchoolTrendsCompletenessDto:
     if len(years_available) == 0:
@@ -987,9 +1146,24 @@ def _build_overall_completeness(
 
     sections = tuple(
         section
-        for section in (demographics, attendance, behaviour, workforce, admissions, finance)
+        for section in (
+            demographics,
+            attendance,
+            behaviour,
+            workforce,
+            admissions,
+            destinations,
+            finance,
+        )
         if section.reason_code != "not_applicable"
     )
+    if len(sections) == 0:
+        return SchoolTrendsCompletenessDto(
+            status="unavailable",
+            reason_code="not_applicable",
+            last_updated_at=None,
+            years_available=None,
+        )
     if all(section.status == "available" for section in sections):
         return SchoolTrendsCompletenessDto(
             status="available",
@@ -1005,8 +1179,11 @@ def _build_overall_completeness(
         (section.reason_code for section in sections if section.reason_code is not None),
         fallback_reason_code,
     )
+    status: Literal["partial", "unavailable"] = (
+        "unavailable" if all(section.status == "unavailable" for section in sections) else "partial"
+    )
     return SchoolTrendsCompletenessDto(
-        status="partial",
+        status=status,
         reason_code=reason_code,
         last_updated_at=_max_optional_datetime(
             tuple(section.last_updated_at for section in sections)
@@ -1022,6 +1199,8 @@ def _merge_years_available(
     behaviour_rows: Sequence[SchoolBehaviourYearlyRow],
     workforce_rows: Sequence[SchoolWorkforceYearlyRow],
     admissions_rows: Sequence[SchoolAdmissionsYearlyRow],
+    ks4_destination_rows: Sequence[SchoolDestinationYearlyRow],
+    study_16_18_destination_rows: Sequence[SchoolDestinationYearlyRow],
     finance_rows: Sequence[SchoolFinanceYearlyRow],
 ) -> tuple[str, ...]:
     years = {
@@ -1030,6 +1209,8 @@ def _merge_years_available(
         *(row.academic_year for row in behaviour_rows),
         *(row.academic_year for row in workforce_rows),
         *(row.academic_year for row in admissions_rows),
+        *(row.academic_year for row in ks4_destination_rows),
+        *(row.academic_year for row in study_16_18_destination_rows),
         *(row.academic_year for row in finance_rows),
     }
     return tuple(sorted(years, key=_academic_year_sort_key))
@@ -1128,6 +1309,25 @@ def _has_partial_metric_coverage_admissions(rows: Sequence[SchoolAdmissionsYearl
                 row.any_preference_offer_rate,
                 row.cross_la_applications,
                 row.cross_la_offers,
+            )
+        ):
+            return True
+    return False
+
+
+def _has_partial_metric_coverage_destinations(
+    rows: Sequence[SchoolDestinationYearlyRow],
+) -> bool:
+    for row in rows:
+        if any(
+            value is None
+            for value in (
+                row.overall_pct,
+                row.education_pct,
+                row.apprenticeship_pct,
+                row.employment_pct,
+                row.not_sustained_pct,
+                row.activity_unknown_pct,
             )
         ):
             return True

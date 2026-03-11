@@ -790,6 +790,62 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                CREATE TABLE IF NOT EXISTS school_leaver_destinations_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    destination_stage text NOT NULL,
+                    qualification_group text NOT NULL DEFAULT '',
+                    qualification_level text NOT NULL DEFAULT '',
+                    breakdown_topic text NOT NULL,
+                    breakdown text NOT NULL,
+                    school_name text NOT NULL,
+                    school_laestab text NULL,
+                    admission_policy text NULL,
+                    entry_gender text NULL,
+                    institution_group text NULL,
+                    institution_type text NULL,
+                    cohort_count integer NULL,
+                    overall_count integer NULL,
+                    overall_pct numeric(7,4) NULL,
+                    education_count integer NULL,
+                    education_pct numeric(7,4) NULL,
+                    apprenticeship_count integer NULL,
+                    apprenticeship_pct numeric(7,4) NULL,
+                    employment_count integer NULL,
+                    employment_pct numeric(7,4) NULL,
+                    not_sustained_count integer NULL,
+                    not_sustained_pct numeric(7,4) NULL,
+                    activity_unknown_count integer NULL,
+                    activity_unknown_pct numeric(7,4) NULL,
+                    fe_count integer NULL,
+                    fe_pct numeric(7,4) NULL,
+                    other_education_count integer NULL,
+                    other_education_pct numeric(7,4) NULL,
+                    school_sixth_form_count integer NULL,
+                    school_sixth_form_pct numeric(7,4) NULL,
+                    sixth_form_college_count integer NULL,
+                    sixth_form_college_pct numeric(7,4) NULL,
+                    higher_education_count integer NULL,
+                    higher_education_pct numeric(7,4) NULL,
+                    source_file_url text NOT NULL,
+                    source_updated_at_utc timestamptz NOT NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (
+                        urn,
+                        academic_year,
+                        destination_stage,
+                        qualification_group,
+                        qualification_level,
+                        breakdown_topic,
+                        breakdown
+                    )
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 CREATE TABLE IF NOT EXISTS school_leadership_snapshot (
                     urn text PRIMARY KEY REFERENCES schools(urn) ON DELETE CASCADE,
                     headteacher_name text NULL,
@@ -1526,6 +1582,180 @@ def _seed_data(engine: Engine) -> None:
         connection.execute(
             text(
                 """
+                INSERT INTO school_leaver_destinations_yearly (
+                    urn,
+                    academic_year,
+                    destination_stage,
+                    qualification_group,
+                    qualification_level,
+                    breakdown_topic,
+                    breakdown,
+                    school_name,
+                    school_laestab,
+                    admission_policy,
+                    entry_gender,
+                    institution_group,
+                    institution_type,
+                    cohort_count,
+                    overall_pct,
+                    education_pct,
+                    apprenticeship_pct,
+                    employment_pct,
+                    not_sustained_pct,
+                    activity_unknown_pct,
+                    fe_pct,
+                    other_education_pct,
+                    school_sixth_form_pct,
+                    sixth_form_college_pct,
+                    higher_education_pct,
+                    source_file_url,
+                    source_updated_at_utc
+                ) VALUES
+                (
+                    '910001',
+                    '2023/24',
+                    'ks4',
+                    '',
+                    '',
+                    'Total',
+                    'Total',
+                    'Profile Test School',
+                    '2136007',
+                    'Not applicable',
+                    'Mixed',
+                    'Local authority maintained',
+                    'Community school',
+                    176,
+                    90.8,
+                    72.2,
+                    4.9,
+                    13.1,
+                    4.8,
+                    4.0,
+                    40.4,
+                    5.7,
+                    38.1,
+                    26.1,
+                    NULL,
+                    'https://example.com/profile-leaver-destinations-ks4-2024.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    'ks4',
+                    '',
+                    '',
+                    'Total',
+                    'Total',
+                    'Profile Test School',
+                    '2136007',
+                    'Not applicable',
+                    'Mixed',
+                    'Local authority maintained',
+                    'Community school',
+                    181,
+                    92.0,
+                    74.0,
+                    5.2,
+                    11.9,
+                    4.1,
+                    2.9,
+                    42.1,
+                    5.8,
+                    41.0,
+                    25.2,
+                    NULL,
+                    'https://example.com/profile-leaver-destinations-ks4-2025.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '910001',
+                    '2023/24',
+                    '16_to_18',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Profile Test School',
+                    '2136007',
+                    'Not applicable',
+                    'Mixed',
+                    'Local authority maintained',
+                    'Community school',
+                    148,
+                    94.2,
+                    81.4,
+                    6.4,
+                    5.9,
+                    2.1,
+                    1.4,
+                    28.9,
+                    5.9,
+                    NULL,
+                    NULL,
+                    45.8,
+                    'https://example.com/profile-leaver-destinations-16to18-2024.csv',
+                    '2026-03-10T10:00:00+00:00'
+                ),
+                (
+                    '910001',
+                    '2024/25',
+                    '16_to_18',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Total',
+                    'Profile Test School',
+                    '2136007',
+                    'Not applicable',
+                    'Mixed',
+                    'Local authority maintained',
+                    'Community school',
+                    152,
+                    95.0,
+                    82.6,
+                    6.0,
+                    5.6,
+                    1.8,
+                    1.1,
+                    29.8,
+                    5.8,
+                    NULL,
+                    NULL,
+                    47.3,
+                    'https://example.com/profile-leaver-destinations-16to18-2025.csv',
+                    '2026-03-10T10:00:00+00:00'
+                )
+                ON CONFLICT (
+                    urn,
+                    academic_year,
+                    destination_stage,
+                    qualification_group,
+                    qualification_level,
+                    breakdown_topic,
+                    breakdown
+                ) DO UPDATE SET
+                    cohort_count = EXCLUDED.cohort_count,
+                    overall_pct = EXCLUDED.overall_pct,
+                    education_pct = EXCLUDED.education_pct,
+                    apprenticeship_pct = EXCLUDED.apprenticeship_pct,
+                    employment_pct = EXCLUDED.employment_pct,
+                    not_sustained_pct = EXCLUDED.not_sustained_pct,
+                    activity_unknown_pct = EXCLUDED.activity_unknown_pct,
+                    fe_pct = EXCLUDED.fe_pct,
+                    other_education_pct = EXCLUDED.other_education_pct,
+                    school_sixth_form_pct = EXCLUDED.school_sixth_form_pct,
+                    sixth_form_college_pct = EXCLUDED.sixth_form_college_pct,
+                    higher_education_pct = EXCLUDED.higher_education_pct,
+                    source_file_url = EXCLUDED.source_file_url,
+                    source_updated_at_utc = EXCLUDED.source_updated_at_utc
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
                 INSERT INTO school_leadership_snapshot (
                     urn,
                     headteacher_name,
@@ -2005,6 +2235,9 @@ def _cleanup_data(engine: Engine) -> None:
             text("DELETE FROM school_attendance_yearly WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
+            text("DELETE FROM school_leaver_destinations_yearly WHERE urn IN ('910001', '910002')")
+        )
+        connection.execute(
             text("DELETE FROM school_performance_yearly WHERE urn IN ('910001', '910002')")
         )
         connection.execute(
@@ -2121,6 +2354,22 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.leadership_snapshot.headteacher_start_date == date(2020, 9, 1)
     assert result.leadership_snapshot.headteacher_tenure_years == pytest.approx(4.5)
     assert result.leadership_snapshot.leadership_turnover_score == pytest.approx(1.2)
+    assert result.destinations_latest is not None
+    assert result.destinations_latest.ks4 is not None
+    assert result.destinations_latest.ks4.academic_year == "2024/25"
+    assert result.destinations_latest.ks4.qualification_group is None
+    assert result.destinations_latest.ks4.qualification_level is None
+    assert result.destinations_latest.ks4.overall_pct == pytest.approx(92.0)
+    assert result.destinations_latest.ks4.education_pct == pytest.approx(74.0)
+    assert result.destinations_latest.ks4.school_sixth_form_pct == pytest.approx(41.0)
+    assert result.destinations_latest.ks4.higher_education_pct is None
+    assert result.destinations_latest.study_16_18 is not None
+    assert result.destinations_latest.study_16_18.academic_year == "2024/25"
+    assert result.destinations_latest.study_16_18.qualification_group == "Total"
+    assert result.destinations_latest.study_16_18.qualification_level == "Total"
+    assert result.destinations_latest.study_16_18.overall_pct == pytest.approx(95.0)
+    assert result.destinations_latest.study_16_18.higher_education_pct == pytest.approx(47.3)
+    assert result.destinations_latest.study_16_18.school_sixth_form_pct is None
 
     assert result.ofsted_latest is not None
     assert result.ofsted_latest.overall_effectiveness_code == "2"
@@ -2203,6 +2452,9 @@ def test_school_profile_repository_returns_profile_with_latest_demographics(engi
     assert result.completeness.behaviour.reason_code is None
     assert result.completeness.workforce.status == "available"
     assert result.completeness.workforce.reason_code is None
+    assert result.completeness.destinations.status == "partial"
+    assert result.completeness.destinations.reason_code == "unsupported_stage"
+    assert result.completeness.destinations.last_updated_at is not None
     assert result.completeness.finance.status == "available"
     assert result.completeness.finance.reason_code is None
     assert result.completeness.leadership.status == "available"

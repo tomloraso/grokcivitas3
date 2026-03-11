@@ -648,7 +648,7 @@ export interface components {
              */
             completeness_status: "available" | "partial" | "unavailable";
             /** Completeness Reason Code */
-            completeness_reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            completeness_reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius" | "unsupported_stage") | null;
             benchmark: components["schemas"]["SchoolCompareBenchmarkResponse"] | null;
         };
         /** SchoolCompareResponse */
@@ -920,6 +920,7 @@ export interface components {
             behaviour: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             workforce: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             admissions: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
+            destinations: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             finance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             leadership: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
             performance: components["schemas"]["SchoolProfileSectionCompletenessResponse"];
@@ -1014,6 +1015,44 @@ export interface components {
             percentage: number | null;
             /** Count */
             count: number | null;
+        };
+        /** SchoolProfileDestinationStageLatestResponse */
+        SchoolProfileDestinationStageLatestResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /** Cohort Count */
+            cohort_count: number | null;
+            /** Qualification Group */
+            qualification_group: string | null;
+            /** Qualification Level */
+            qualification_level: string | null;
+            /** Overall Pct */
+            overall_pct: number | null;
+            /** Education Pct */
+            education_pct: number | null;
+            /** Apprenticeship Pct */
+            apprenticeship_pct: number | null;
+            /** Employment Pct */
+            employment_pct: number | null;
+            /** Not Sustained Pct */
+            not_sustained_pct: number | null;
+            /** Activity Unknown Pct */
+            activity_unknown_pct: number | null;
+            /** Fe Pct */
+            fe_pct: number | null;
+            /** Other Education Pct */
+            other_education_pct: number | null;
+            /** School Sixth Form Pct */
+            school_sixth_form_pct?: number | null;
+            /** Sixth Form College Pct */
+            sixth_form_college_pct?: number | null;
+            /** Higher Education Pct */
+            higher_education_pct?: number | null;
+        };
+        /** SchoolProfileDestinationsLatestResponse */
+        SchoolProfileDestinationsLatestResponse: {
+            ks4: components["schemas"]["SchoolProfileDestinationStageLatestResponse"] | null;
+            study_16_18: components["schemas"]["SchoolProfileDestinationStageLatestResponse"] | null;
         };
         /** SchoolProfileFinanceLatestResponse */
         SchoolProfileFinanceLatestResponse: {
@@ -1244,6 +1283,7 @@ export interface components {
             behaviour_latest: components["schemas"]["SchoolProfileBehaviourLatestResponse"] | null;
             workforce_latest: components["schemas"]["SchoolProfileWorkforceLatestResponse"] | null;
             admissions_latest: components["schemas"]["SchoolProfileAdmissionsLatestResponse"] | null;
+            destinations_latest: components["schemas"]["SchoolProfileDestinationsLatestResponse"] | null;
             finance_latest: components["schemas"]["SchoolProfileFinanceLatestResponse"] | null;
             leadership_snapshot: components["schemas"]["SchoolProfileLeadershipSnapshotResponse"] | null;
             performance: components["schemas"]["SchoolProfilePerformanceResponse"] | null;
@@ -1347,7 +1387,7 @@ export interface components {
              */
             status: "available" | "partial" | "unavailable";
             /** Reason Code */
-            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius") | null;
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "source_coverage_gap" | "stale_after_school_refresh" | "no_incidents_in_radius" | "unsupported_stage") | null;
             /** Last Updated At */
             last_updated_at: string | null;
             /** Years Available */
@@ -1634,7 +1674,7 @@ export interface components {
              */
             status: "available" | "partial" | "unavailable";
             /** Reason Code */
-            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable") | null;
+            reason_code: ("source_missing" | "insufficient_years_published" | "source_not_in_catalog" | "source_file_missing_for_year" | "source_schema_incompatible_for_year" | "partial_metric_coverage" | "source_not_provided" | "rejected_by_validation" | "not_joined_yet" | "pipeline_failed_recently" | "not_applicable" | "unsupported_stage") | null;
             /** Last Updated At */
             last_updated_at: string | null;
             /** Years Available */
@@ -1668,6 +1708,7 @@ export interface components {
             behaviour: components["schemas"]["SchoolTrendsCompletenessResponse"];
             workforce: components["schemas"]["SchoolTrendsCompletenessResponse"];
             admissions: components["schemas"]["SchoolTrendsCompletenessResponse"];
+            destinations: components["schemas"]["SchoolTrendsCompletenessResponse"];
             finance: components["schemas"]["SchoolTrendsCompletenessResponse"];
         };
         /** SchoolTrendsSeriesResponse */
@@ -1754,6 +1795,30 @@ export interface components {
             teacher_tempfilled_vacancy_rate: components["schemas"]["SchoolTrendPointResponse"][];
             /** Third Party Support Staff Headcount */
             third_party_support_staff_headcount: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Overall Pct */
+            ks4_overall_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Education Pct */
+            ks4_education_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Apprenticeship Pct */
+            ks4_apprenticeship_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Employment Pct */
+            ks4_employment_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Not Sustained Pct */
+            ks4_not_sustained_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Ks4 Activity Unknown Pct */
+            ks4_activity_unknown_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Overall Pct */
+            study_16_18_overall_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Education Pct */
+            study_16_18_education_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Apprenticeship Pct */
+            study_16_18_apprenticeship_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Employment Pct */
+            study_16_18_employment_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Not Sustained Pct */
+            study_16_18_not_sustained_pct: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Study 16 18 Activity Unknown Pct */
+            study_16_18_activity_unknown_pct: components["schemas"]["SchoolTrendPointResponse"][];
             /** Admissions Oversubscription Ratio */
             admissions_oversubscription_ratio: components["schemas"]["SchoolTrendPointResponse"][];
             /** Admissions First Preference Offer Rate */

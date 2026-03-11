@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented
+- Last updated: 2026-03-11
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Legacy workstream IDs: `L1` through `L5`
@@ -25,6 +25,12 @@ As of 2026-03-09:
 - No published cookie disclosure exists for planned authenticated sessions, and no future-ready preferences flow is defined for any non-essential cookies that may be added later.
 - No structured data or sitemap infrastructure exists for crawler entry points.
 - School profile pages have no page-level title, description, canonical URL, or structured data.
+
+Implementation note added 2026-03-11:
+
+- Brand name, operator details, support emails, and canonical origin are now treated as configuration, not hardcoded product constants.
+- If `VITE_PUBLIC_URL` is unset because the production domain is not yet purchased, canonical tags are omitted and generated crawler assets stay non-indexable rather than pointing at a fake domain.
+- Launch content now includes the leaver-destinations source datasets and the legal/accessibility pages are aligned with the structural requirements in `L4-legal-and-compliance.md`.
 
 ## Relationship To Other Phases
 
@@ -118,6 +124,7 @@ Phase 13 is split into five deliverables:
 - Accessibility statement is published.
 - `make lint`, `make test`, and `cd apps/web && npm run build` pass.
 - No new horizontal overflow or layout regression at 375px.
+- Sign-off evidence is recorded in `signoff-2026-03-11.md`.
 
 ## Change Management
 

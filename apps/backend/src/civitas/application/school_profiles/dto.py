@@ -24,6 +24,7 @@ SectionCompletenessReasonCode = Literal[
     "source_coverage_gap",
     "stale_after_school_refresh",
     "no_incidents_in_radius",
+    "unsupported_stage",
 ]
 
 
@@ -215,6 +216,31 @@ class SchoolAdmissionsLatestDto:
     first_preference_offer_rate: float | None
     any_preference_offer_rate: float | None
     admissions_policy: str | None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationStageLatestDto:
+    academic_year: str
+    cohort_count: int | None
+    qualification_group: str | None
+    qualification_level: str | None
+    overall_pct: float | None
+    education_pct: float | None
+    apprenticeship_pct: float | None
+    employment_pct: float | None
+    not_sustained_pct: float | None
+    activity_unknown_pct: float | None
+    fe_pct: float | None
+    other_education_pct: float | None
+    school_sixth_form_pct: float | None = None
+    sixth_form_college_pct: float | None = None
+    higher_education_pct: float | None = None
+
+
+@dataclass(frozen=True)
+class SchoolDestinationsLatestDto:
+    ks4: SchoolDestinationStageLatestDto | None
+    study_16_18: SchoolDestinationStageLatestDto | None
 
 
 @dataclass(frozen=True)
@@ -449,6 +475,7 @@ class SchoolProfileCompletenessDto:
     behaviour: SchoolProfileSectionCompletenessDto
     workforce: SchoolProfileSectionCompletenessDto
     admissions: SchoolProfileSectionCompletenessDto
+    destinations: SchoolProfileSectionCompletenessDto
     finance: SchoolProfileSectionCompletenessDto
     leadership: SchoolProfileSectionCompletenessDto
     performance: SchoolProfileSectionCompletenessDto
@@ -469,6 +496,7 @@ class SchoolProfileResponseDto:
     behaviour_latest: SchoolBehaviourLatestDto | None
     workforce_latest: SchoolWorkforceLatestDto | None
     admissions_latest: SchoolAdmissionsLatestDto | None
+    destinations_latest: SchoolDestinationsLatestDto | None
     finance_latest: SchoolFinanceLatestDto | None
     leadership_snapshot: SchoolLeadershipSnapshotDto | None
     performance: SchoolPerformanceDto | None

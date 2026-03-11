@@ -17,6 +17,7 @@ TrendCompletenessReasonCode = Literal[
     "not_joined_yet",
     "pipeline_failed_recently",
     "not_applicable",
+    "unsupported_stage",
 ]
 
 
@@ -80,6 +81,18 @@ class SchoolTrendsSeriesDto:
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     supply_staff_costs_pct_of_staff_costs: tuple[SchoolTrendPointDto, ...]
+    ks4_overall_pct: tuple[SchoolTrendPointDto, ...] = ()
+    ks4_education_pct: tuple[SchoolTrendPointDto, ...] = ()
+    ks4_apprenticeship_pct: tuple[SchoolTrendPointDto, ...] = ()
+    ks4_employment_pct: tuple[SchoolTrendPointDto, ...] = ()
+    ks4_not_sustained_pct: tuple[SchoolTrendPointDto, ...] = ()
+    ks4_activity_unknown_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_overall_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_education_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_apprenticeship_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_employment_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_not_sustained_pct: tuple[SchoolTrendPointDto, ...] = ()
+    study_16_18_activity_unknown_pct: tuple[SchoolTrendPointDto, ...] = ()
     admissions_oversubscription_ratio: tuple[SchoolTrendPointDto, ...] = ()
     admissions_first_preference_offer_rate: tuple[SchoolTrendPointDto, ...] = ()
     admissions_any_preference_offer_rate: tuple[SchoolTrendPointDto, ...] = ()
@@ -174,6 +187,7 @@ class SchoolTrendsSectionCompletenessDto:
     behaviour: SchoolTrendsCompletenessDto
     workforce: SchoolTrendsCompletenessDto
     admissions: SchoolTrendsCompletenessDto
+    destinations: SchoolTrendsCompletenessDto
     finance: SchoolTrendsCompletenessDto
 
 

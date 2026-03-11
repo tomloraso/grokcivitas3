@@ -42,6 +42,12 @@ from civitas.infrastructure.config.settings import (
     DEFAULT_DFE_WORKFORCE_PUBLICATION_SLUG,
     DEFAULT_DFE_WORKFORCE_RELEASE_SLUGS,
     DEFAULT_IMD_RELEASE,
+    DEFAULT_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL,
+    DEFAULT_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL,
+    DEFAULT_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL,
+    DEFAULT_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL,
+    DEFAULT_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL,
+    DEFAULT_LEAVER_DESTINATIONS_KS4_SOURCE_URL,
     DEFAULT_OFSTED_TIMELINE_YEARS,
     DEFAULT_PIPELINE_HTTP_TIMEOUT_SECONDS,
     DEFAULT_PIPELINE_MAX_CONCURRENT_SOURCES,
@@ -100,6 +106,14 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DFE_PERFORMANCE_PAGE_SIZE",
         "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_CSV",
         "CIVITAS_SCHOOL_ADMISSIONS_SOURCE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_CSV",
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_CSV",
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL",
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL",
         "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
         "CIVITAS_IMD_SOURCE_CSV",
         "CIVITAS_IMD_RELEASE",
@@ -118,6 +132,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_WORKFORCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_DFE_PERFORMANCE",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_ADMISSIONS",
+        "CIVITAS_PIPELINE_MAX_REJECT_RATIO_LEAVER_DESTINATIONS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_LATEST",
         "CIVITAS_PIPELINE_MAX_REJECT_RATIO_OFSTED_TIMELINE",
@@ -144,6 +159,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_WORKFORCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_DFE_PERFORMANCE",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_ADMISSIONS",
+        "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_LEAVER_DESTINATIONS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SCHOOL_FINANCIAL_BENCHMARKS",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_LATEST",
         "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_OFSTED_TIMELINE",
@@ -233,6 +249,32 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.dfe_performance_page_size == DEFAULT_DFE_PERFORMANCE_PAGE_SIZE
     assert settings.pipeline.school_admissions_source_csv is None
     assert settings.pipeline.school_admissions_source_url == DEFAULT_SCHOOL_ADMISSIONS_SOURCE_URL
+    assert settings.pipeline.leaver_destinations_ks4_source_csv is None
+    assert (
+        settings.pipeline.leaver_destinations_ks4_source_url
+        == DEFAULT_LEAVER_DESTINATIONS_KS4_SOURCE_URL
+    )
+    assert (
+        settings.pipeline.leaver_destinations_ks4_release_page_url
+        == DEFAULT_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL
+    )
+    assert (
+        settings.pipeline.leaver_destinations_ks4_data_catalogue_url
+        == DEFAULT_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL
+    )
+    assert settings.pipeline.leaver_destinations_16_to_18_source_csv is None
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_source_url
+        == DEFAULT_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_release_page_url
+        == DEFAULT_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_data_catalogue_url
+        == DEFAULT_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL
+    )
     assert (
         settings.pipeline.school_financial_benchmarks_workbook_urls
         == DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS
@@ -258,6 +300,7 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.pipeline.max_reject_ratio_dfe_workforce == 1.0
     assert settings.pipeline.max_reject_ratio_dfe_performance == 1.0
     assert settings.pipeline.max_reject_ratio_school_admissions == 1.0
+    assert settings.pipeline.max_reject_ratio_leaver_destinations == 1.0
     assert settings.pipeline.max_reject_ratio_school_financial_benchmarks == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_latest == 1.0
     assert settings.pipeline.max_reject_ratio_ofsted_timeline == 1.0
@@ -304,6 +347,10 @@ def test_app_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     assert (
         settings.data_quality.freshness_sla_hours_school_admissions
+        == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
+    )
+    assert (
+        settings.data_quality.freshness_sla_hours_leaver_destinations
         == DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS
     )
     assert (
@@ -424,6 +471,38 @@ def test_app_settings_reads_environment_overrides(
         "  https://content.example.test/release/file  ",
     )
     monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_CSV",
+        "  https://example.com/ks4.csv  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_SOURCE_URL",
+        "  https://content.example.test/ks4  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_RELEASE_PAGE_URL",
+        "  https://example.com/ks4-release  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_KS4_DATA_CATALOGUE_URL",
+        "  https://example.com/ks4-catalogue  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_CSV",
+        "  https://example.com/16-to-18.csv  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL",
+        "  https://content.example.test/16-to-18  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_RELEASE_PAGE_URL",
+        "  https://example.com/16-to-18-release  ",
+    )
+    monkeypatch.setenv(
+        "CIVITAS_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL",
+        "  https://example.com/16-to-18-catalogue  ",
+    )
+    monkeypatch.setenv(
         "CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
         " https://example.com/AAR_2022-23_download.xlsx, https://example.com/AAR_2023-24_download.xlsx ",
     )
@@ -539,6 +618,34 @@ def test_app_settings_reads_environment_overrides(
     assert (
         settings.pipeline.school_admissions_source_url
         == "https://content.example.test/release/file"
+    )
+    assert settings.pipeline.leaver_destinations_ks4_source_csv == "https://example.com/ks4.csv"
+    assert (
+        settings.pipeline.leaver_destinations_ks4_source_url == "https://content.example.test/ks4"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_ks4_release_page_url
+        == "https://example.com/ks4-release"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_ks4_data_catalogue_url
+        == "https://example.com/ks4-catalogue"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_source_csv
+        == "https://example.com/16-to-18.csv"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_source_url
+        == "https://content.example.test/16-to-18"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_release_page_url
+        == "https://example.com/16-to-18-release"
+    )
+    assert (
+        settings.pipeline.leaver_destinations_16_to_18_data_catalogue_url
+        == "https://example.com/16-to-18-catalogue"
     )
     assert settings.pipeline.school_financial_benchmarks_workbook_urls == (
         "https://example.com/AAR_2022-23_download.xlsx",

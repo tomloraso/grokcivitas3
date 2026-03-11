@@ -1,5 +1,10 @@
 # L5 - Quality Gates
 
+## Document Control
+
+- Status: Implemented
+- Last updated: 2026-03-11
+
 ## Goal
 
 Define the sign-off evidence required before Phase 13 (Product Foundation and Launch Readiness) is considered complete.

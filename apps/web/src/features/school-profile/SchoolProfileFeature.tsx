@@ -46,14 +46,17 @@ import { Link, useLocation, useParams } from "react-router-dom";
 
 import { Breadcrumbs } from "../../components/layout/Breadcrumbs";
 import { PageContainer } from "../../components/layout/PageContainer";
+import { PageMeta } from "../../components/layout/PageMeta";
 import { Button } from "../../components/ui/Button";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { LoadingSkeleton } from "../../components/ui/LoadingSkeleton";
+import { SchoolJsonLd } from "../../components/seo/SchoolJsonLd";
 import { useToast } from "../../components/ui/ToastContext";
 import { SaveSchoolButton } from "../favourites/components/SaveSchoolButton";
 import type { SavedSchoolStateVM } from "../favourites/types";
 import { CompareActionButton } from "../premium-access/components/CompareActionButton";
 import { useCompareSelection } from "../../shared/context/CompareSelectionContext";
+import { siteConfig } from "../../shared/config/site";
 import { paths } from "../../shared/routing/paths";
 import type { SearchRestoreState } from "../../shared/search/searchState";
 import { AcademicPerformanceSection } from "./components/AcademicPerformanceSection";
@@ -67,6 +70,7 @@ import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileSectionAccordion } from "./components/ProfileSectionAccordion";
 import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { SchoolAdmissionsSection } from "./components/SchoolAdmissionsSection";
+import { SchoolDestinationsSection } from "./components/SchoolDestinationsSection";
 import { SchoolFinanceSection } from "./components/SchoolFinanceSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
@@ -76,6 +80,7 @@ const TOC_SECTIONS = [
   { id: "analyst-view", label: "Analyst View" },
   { id: "ofsted-profile", label: "Ofsted Profile" },
   { id: "results-progress", label: "Results & Progress" },
+  { id: "leaver-destinations", label: "Leaver Destinations" },
   { id: "day-to-day", label: "Day-to-Day" },
   { id: "demographics", label: "Pupil Demographics" },
   { id: "admissions", label: "Admissions" },
@@ -122,6 +127,10 @@ export function SchoolProfileFeature(): JSX.Element {
     useState<SavedSchoolStateVM | null>(null);
   const selected = profile ? hasSchool(profile.school.urn) : false;
   const savedState = savedStateOverride ?? profile?.savedState ?? null;
+  const pageTitle = profile?.school.name ?? "School profile";
+  const pageDescription = profile
+    ? `${profile.school.name} - ${profile.school.type}, ${profile.school.phase}. ${profile.ofsted?.ratingLabel ? `Latest Ofsted: ${profile.ofsted.ratingLabel}. ` : ""}Explore official data, trends, and local context on ${siteConfig.productName}.`
+    : `Explore official school profile data, trends, and local context on ${siteConfig.productName}.`;
 
   const handleCompareToggle = useCallback(() => {
     if (!profile) return;
@@ -152,6 +161,11 @@ export function SchoolProfileFeature(): JSX.Element {
 
   return (
     <PageContainer>
+      <PageMeta
+        title={pageTitle}
+        description={pageDescription}
+        canonicalPath={urn ? paths.schoolProfile(urn) : undefined}
+      />
       {(status === "idle" || status === "loading") ? (
         <>
           <Breadcrumbs segments={[{ label: "Loading..." }]} />
@@ -193,6 +207,7 @@ export function SchoolProfileFeature(): JSX.Element {
 
       {status === "success" && profile ? (
         <>
+          <SchoolJsonLd school={profile.school} ofsted={profile.ofsted} />
           <Breadcrumbs
             segments={[
               ...(fromSearch
@@ -299,6 +314,17 @@ export function SchoolProfileFeature(): JSX.Element {
                     performance={profile.performance}
                     completeness={profile.completeness.performance}
                     benchmarkDashboard={profile.benchmarkDashboard}
+                  />
+                </ProfileSectionAccordion>
+              </div>
+
+              <div id="leaver-destinations">
+                <ProfileSectionAccordion title="Leaver Destinations" defaultOpen={false}>
+                  <SchoolDestinationsSection
+                    destinations={profile.destinations}
+                    trends={profile.trends}
+                    completeness={profile.completeness.destinations}
+                    trendsCompleteness={profile.trends?.sectionCompleteness.destinations ?? profile.completeness.trends}
                   />
                 </ProfileSectionAccordion>
               </div>

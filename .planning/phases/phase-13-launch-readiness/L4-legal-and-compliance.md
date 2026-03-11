@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented
+- Last updated: 2026-03-11
 - Depends on:
   - `L1-content-page-foundation.md` (ContentPageLayout, PageMeta, prose styles, route paths)
   - `.planning/phases/phase-10-premium-access/10A-provider-boundary-gate.md` (session cookie scope)
@@ -49,6 +49,7 @@ Deliver the legal and transparency pages required or strongly recommended for a 
 3. **Privacy Policy and Terms of Use are prose pages.** They use `ContentPageLayout` from L1. Content is maintained inline in the component files. If legal text changes frequently, a Markdown or MDX source can be evaluated later.
 4. **Accessibility Statement follows the GDS model.** Civitas uses the GDS structure as a launch transparency document, without claiming public-sector status.
 5. **The sign-in flow must surface document links before auth starts.** Footer links alone are not sufficient once the product begins collecting account data.
+6. **Legal identity fields are configuration-driven.** Operator name, support email, privacy email, and public origin should come from shared site configuration so the legal pages can ship before the final naming/domain decision, but those placeholders must be replaced before public launch.
 
 ## Content Outline
 

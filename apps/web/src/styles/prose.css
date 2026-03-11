@@ -1,0 +1,174 @@
+@layer components {
+  .content-prose {
+    color: var(--color-text-primary);
+  }
+
+  .content-prose > * + * {
+    margin-top: 1rem;
+  }
+
+  .content-prose h2,
+  .content-prose h3,
+  .content-prose h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--color-text-primary);
+  }
+
+  .content-prose h2::before,
+  .content-prose h3::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    border-radius: 999px;
+    background: var(--color-text-brand);
+  }
+
+  .content-prose h2::before {
+    height: 1.25rem;
+  }
+
+  .content-prose h3::before {
+    height: 1rem;
+  }
+
+  .content-prose h2 {
+    margin-top: 2rem;
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .content-prose h3 {
+    margin-top: 1.5rem;
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .content-prose p,
+  .content-prose li,
+  .content-prose dd {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    line-height: 1.75;
+  }
+
+  .content-prose strong {
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .content-prose a {
+    color: var(--color-text-brand);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .content-prose a:hover {
+    color: color-mix(in srgb, var(--color-text-brand) 82%, white);
+  }
+
+  .content-prose ul,
+  .content-prose ol {
+    padding-left: 1.25rem;
+  }
+
+  .content-prose li + li {
+    margin-top: 0.5rem;
+  }
+
+  .content-prose blockquote {
+    margin: 1.5rem 0;
+    border-left: 3px solid color-mix(in srgb, var(--color-text-brand) 60%, transparent);
+    padding: 0.875rem 1rem;
+    background: color-mix(in srgb, var(--color-bg-surface) 78%, transparent);
+    color: var(--color-text-secondary);
+  }
+
+  .content-prose hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  }
+
+  .content-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+    background: color-mix(in srgb, var(--color-bg-surface) 84%, transparent);
+  }
+
+  .content-prose thead {
+    background: color-mix(in srgb, var(--color-bg-elevated) 88%, transparent);
+  }
+
+  .content-prose th,
+  .content-prose td {
+    padding: 0.875rem 1rem;
+    text-align: left;
+    vertical-align: top;
+    border-top: 1px solid color-mix(in srgb, var(--color-border-default) 65%, transparent);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+  }
+
+  .content-prose th {
+    border-top: 0;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .content-prose td {
+    color: var(--color-text-secondary);
+  }
+
+  .content-prose .content-callout {
+    border: 1px solid color-mix(in srgb, var(--color-text-brand) 28%, transparent);
+    background: color-mix(in srgb, var(--color-text-brand) 6%, transparent);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+  }
+
+  .content-prose .content-callout p {
+    color: var(--color-text-secondary);
+  }
+
+  @media (max-width: 639px) {
+    .content-prose table,
+    .content-prose thead,
+    .content-prose tbody,
+    .content-prose th,
+    .content-prose td,
+    .content-prose tr {
+      display: block;
+    }
+
+    .content-prose thead {
+      display: none;
+    }
+
+    .content-prose tr + tr {
+      border-top: 1px solid color-mix(in srgb, var(--color-border-default) 65%, transparent);
+    }
+
+    .content-prose td {
+      border-top: 0;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .content-prose td::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 0.2rem;
+      color: var(--color-text-primary);
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  }
+}

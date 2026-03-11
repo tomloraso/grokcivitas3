@@ -16,6 +16,9 @@ from civitas.domain.school_trends.models import (
     SchoolBehaviourYearlyRow,
     SchoolDemographicsSeries,
     SchoolDemographicsYearlyRow,
+    SchoolDestinationsSeries,
+    SchoolDestinationStageSeries,
+    SchoolDestinationYearlyRow,
     SchoolFinanceSeries,
     SchoolMetricBenchmarkSeries,
     SchoolMetricBenchmarkYearlyRow,
@@ -33,6 +36,7 @@ class FakeSchoolTrendsRepository:
         behaviour: SchoolBehaviourSeries | None,
         workforce: SchoolWorkforceSeries | None,
         admissions: SchoolAdmissionsSeries | None = None,
+        destinations: SchoolDestinationsSeries | None = None,
         finance: SchoolFinanceSeries | None = None,
         benchmarks: SchoolMetricBenchmarkSeries | None = None,
     ) -> None:
@@ -58,6 +62,11 @@ class FakeSchoolTrendsRepository:
                 ),
                 latest_updated_at=None,
             )
+        )
+        self._destinations = (
+            destinations
+            if destinations is not None or demographics is None
+            else _default_destinations_series(demographics)
         )
         self._finance = (
             finance
@@ -88,11 +97,46 @@ class FakeSchoolTrendsRepository:
     def get_admissions_series(self, urn: str) -> SchoolAdmissionsSeries | None:
         return self._admissions
 
+    def get_destinations_series(self, urn: str) -> SchoolDestinationsSeries | None:
+        return self._destinations
+
     def get_finance_series(self, urn: str) -> SchoolFinanceSeries | None:
         return self._finance
 
     def get_metric_benchmark_series(self, urn: str) -> SchoolMetricBenchmarkSeries | None:
         return self._benchmarks
+
+
+def _default_destinations_series(
+    demographics: SchoolDemographicsSeries,
+) -> SchoolDestinationsSeries:
+    ks4_rows = tuple(
+        SchoolDestinationYearlyRow(
+            academic_year=row.academic_year,
+            overall_pct=90.0 + index,
+            education_pct=60.0 + index,
+            apprenticeship_pct=5.0 + index,
+            employment_pct=20.0 + index,
+            not_sustained_pct=3.0,
+            activity_unknown_pct=2.0,
+        )
+        for index, row in enumerate(demographics.rows)
+    )
+    return SchoolDestinationsSeries(
+        urn=demographics.urn,
+        ks4=SchoolDestinationStageSeries(
+            rows=ks4_rows,
+            latest_updated_at=None,
+            is_applicable=True,
+            has_any_rows=len(ks4_rows) > 0,
+        ),
+        study_16_18=SchoolDestinationStageSeries(
+            rows=(),
+            latest_updated_at=None,
+            is_applicable=False,
+            has_any_rows=False,
+        ),
+    )
 
 
 def test_get_school_trends_returns_expected_delta_and_direction() -> None:
@@ -324,6 +368,8 @@ def test_get_school_trends_returns_expected_delta_and_direction() -> None:
     assert result.series.admissions_oversubscription_ratio[2].delta == pytest.approx(0.06)
     assert result.series.admissions_cross_la_applications[2].value == 19
     assert result.section_completeness.admissions.status == "available"
+    assert result.series.ks4_overall_pct[2].value == pytest.approx(92.0)
+    assert result.section_completeness.destinations.status == "available"
 
     assert result.benchmarks.disadvantaged_pct[2].school_vs_national_delta == pytest.approx(3.0)
     assert result.benchmarks.disadvantaged_pct[2].school_vs_local_delta == pytest.approx(2.8)
@@ -459,7 +505,259 @@ def test_get_school_trends_returns_empty_series_for_school_without_any_rows() ->
     assert result.completeness.status == "unavailable"
     assert result.series.disadvantaged_pct == ()
     assert result.series.admissions_oversubscription_ratio == ()
+    assert result.series.ks4_overall_pct == ()
     assert result.benchmarks.disadvantaged_pct == ()
+
+
+def test_get_school_trends_hides_study_16_18_stage_and_marks_destinations_partial() -> None:
+    repository = FakeSchoolTrendsRepository(
+        demographics=SchoolDemographicsSeries(
+            urn="123456",
+            rows=(
+                SchoolDemographicsYearlyRow(
+                    academic_year="2022/23",
+                    disadvantaged_pct=20.0,
+                    fsm_pct=18.0,
+                    fsm6_pct=21.0,
+                    sen_pct=10.0,
+                    ehcp_pct=2.0,
+                    eal_pct=8.0,
+                    first_language_english_pct=90.0,
+                    first_language_unclassified_pct=1.0,
+                    male_pct=49.0,
+                    female_pct=51.0,
+                    pupil_mobility_pct=3.0,
+                ),
+                SchoolDemographicsYearlyRow(
+                    academic_year="2023/24",
+                    disadvantaged_pct=19.0,
+                    fsm_pct=17.5,
+                    fsm6_pct=20.2,
+                    sen_pct=10.0,
+                    ehcp_pct=2.5,
+                    eal_pct=8.0,
+                    first_language_english_pct=89.0,
+                    first_language_unclassified_pct=1.0,
+                    male_pct=49.5,
+                    female_pct=50.5,
+                    pupil_mobility_pct=2.6,
+                ),
+                SchoolDemographicsYearlyRow(
+                    academic_year="2024/25",
+                    disadvantaged_pct=21.0,
+                    fsm_pct=18.2,
+                    fsm6_pct=21.1,
+                    sen_pct=10.5,
+                    ehcp_pct=2.0,
+                    eal_pct=9.0,
+                    first_language_english_pct=88.5,
+                    first_language_unclassified_pct=0.8,
+                    male_pct=48.8,
+                    female_pct=51.2,
+                    pupil_mobility_pct=2.4,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
+        attendance=SchoolAttendanceSeries(
+            urn="123456",
+            rows=(
+                SchoolAttendanceYearlyRow(
+                    academic_year="2022/23",
+                    overall_attendance_pct=92.8,
+                    overall_absence_pct=7.2,
+                    persistent_absence_pct=15.3,
+                ),
+                SchoolAttendanceYearlyRow(
+                    academic_year="2023/24",
+                    overall_attendance_pct=93.0,
+                    overall_absence_pct=7.0,
+                    persistent_absence_pct=14.8,
+                ),
+                SchoolAttendanceYearlyRow(
+                    academic_year="2024/25",
+                    overall_attendance_pct=93.2,
+                    overall_absence_pct=6.8,
+                    persistent_absence_pct=14.1,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
+        behaviour=SchoolBehaviourSeries(
+            urn="123456",
+            rows=(
+                SchoolBehaviourYearlyRow(
+                    academic_year="2022/23",
+                    suspensions_count=95,
+                    suspensions_rate=12.4,
+                    permanent_exclusions_count=0,
+                    permanent_exclusions_rate=0.0,
+                ),
+                SchoolBehaviourYearlyRow(
+                    academic_year="2023/24",
+                    suspensions_count=109,
+                    suspensions_rate=14.8,
+                    permanent_exclusions_count=1,
+                    permanent_exclusions_rate=0.1,
+                ),
+                SchoolBehaviourYearlyRow(
+                    academic_year="2024/25",
+                    suspensions_count=121,
+                    suspensions_rate=16.4,
+                    permanent_exclusions_count=1,
+                    permanent_exclusions_rate=0.1,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
+        workforce=SchoolWorkforceSeries(
+            urn="123456",
+            rows=(
+                SchoolWorkforceYearlyRow(
+                    academic_year="2022/23",
+                    pupil_teacher_ratio=17.0,
+                    supply_staff_pct=3.1,
+                    teachers_3plus_years_pct=73.0,
+                    teacher_turnover_pct=10.8,
+                    qts_pct=94.5,
+                    qualifications_level6_plus_pct=79.0,
+                ),
+                SchoolWorkforceYearlyRow(
+                    academic_year="2023/24",
+                    pupil_teacher_ratio=16.7,
+                    supply_staff_pct=2.8,
+                    teachers_3plus_years_pct=74.0,
+                    teacher_turnover_pct=10.2,
+                    qts_pct=95.1,
+                    qualifications_level6_plus_pct=80.3,
+                ),
+                SchoolWorkforceYearlyRow(
+                    academic_year="2024/25",
+                    pupil_teacher_ratio=16.3,
+                    supply_staff_pct=2.4,
+                    teachers_3plus_years_pct=76.5,
+                    teacher_turnover_pct=9.8,
+                    qts_pct=95.2,
+                    qualifications_level6_plus_pct=81.1,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
+        admissions=SchoolAdmissionsSeries(
+            urn="123456",
+            rows=(
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2022/23",
+                    oversubscription_ratio=1.18,
+                    first_preference_offer_rate=0.71,
+                    any_preference_offer_rate=0.88,
+                    cross_la_applications=14,
+                    cross_la_offers=9,
+                ),
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2023/24",
+                    oversubscription_ratio=1.21,
+                    first_preference_offer_rate=0.69,
+                    any_preference_offer_rate=0.86,
+                    cross_la_applications=16,
+                    cross_la_offers=10,
+                ),
+                SchoolAdmissionsYearlyRow(
+                    academic_year="2024/25",
+                    oversubscription_ratio=1.27,
+                    first_preference_offer_rate=0.67,
+                    any_preference_offer_rate=0.84,
+                    cross_la_applications=19,
+                    cross_la_offers=11,
+                ),
+            ),
+            latest_updated_at=None,
+        ),
+        destinations=SchoolDestinationsSeries(
+            urn="123456",
+            ks4=SchoolDestinationStageSeries(
+                rows=(
+                    SchoolDestinationYearlyRow(
+                        academic_year="2022/23",
+                        overall_pct=90.0,
+                        education_pct=60.0,
+                        apprenticeship_pct=6.0,
+                        employment_pct=20.0,
+                        not_sustained_pct=2.0,
+                        activity_unknown_pct=2.0,
+                    ),
+                    SchoolDestinationYearlyRow(
+                        academic_year="2023/24",
+                        overall_pct=91.0,
+                        education_pct=61.0,
+                        apprenticeship_pct=6.5,
+                        employment_pct=20.0,
+                        not_sustained_pct=1.5,
+                        activity_unknown_pct=1.0,
+                    ),
+                    SchoolDestinationYearlyRow(
+                        academic_year="2024/25",
+                        overall_pct=92.0,
+                        education_pct=62.0,
+                        apprenticeship_pct=7.0,
+                        employment_pct=20.0,
+                        not_sustained_pct=1.0,
+                        activity_unknown_pct=1.0,
+                    ),
+                ),
+                latest_updated_at=None,
+                is_applicable=True,
+                has_any_rows=True,
+            ),
+            study_16_18=SchoolDestinationStageSeries(
+                rows=(
+                    SchoolDestinationYearlyRow(
+                        academic_year="2022/23",
+                        overall_pct=94.0,
+                        education_pct=70.0,
+                        apprenticeship_pct=4.0,
+                        employment_pct=18.0,
+                        not_sustained_pct=4.0,
+                        activity_unknown_pct=2.0,
+                    ),
+                    SchoolDestinationYearlyRow(
+                        academic_year="2023/24",
+                        overall_pct=95.0,
+                        education_pct=71.0,
+                        apprenticeship_pct=4.0,
+                        employment_pct=18.0,
+                        not_sustained_pct=4.0,
+                        activity_unknown_pct=2.0,
+                    ),
+                    SchoolDestinationYearlyRow(
+                        academic_year="2024/25",
+                        overall_pct=96.0,
+                        education_pct=72.0,
+                        apprenticeship_pct=4.0,
+                        employment_pct=18.0,
+                        not_sustained_pct=4.0,
+                        activity_unknown_pct=2.0,
+                    ),
+                ),
+                latest_updated_at=None,
+                is_applicable=True,
+                has_any_rows=True,
+            ),
+        ),
+        benchmarks=SchoolMetricBenchmarkSeries(
+            urn="123456",
+            rows=(),
+            latest_updated_at=None,
+        ),
+    )
+    use_case = GetSchoolTrendsUseCase(school_trends_repository=repository)
+
+    result = use_case.execute(urn="123456")
+
+    assert result.section_completeness.destinations.status == "partial"
+    assert result.section_completeness.destinations.reason_code == "unsupported_stage"
+    assert len(result.series.ks4_overall_pct) == 3
+    assert result.series.study_16_18_overall_pct == ()
 
 
 def test_get_school_trends_raises_not_found_when_school_is_missing() -> None:

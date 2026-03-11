@@ -20,6 +20,8 @@ from civitas.application.school_profiles.dto import (
     SchoolBehaviourLatestDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsLatestDto,
+    SchoolDestinationsLatestDto,
+    SchoolDestinationStageLatestDto,
     SchoolFinanceLatestDto,
     SchoolLeadershipSnapshotDto,
     SchoolOfstedLatestDto,
@@ -280,6 +282,26 @@ def _profile_response() -> SchoolProfileResponseDto:
             any_preference_offer_rate=0.714,
             admissions_policy="Not applicable",
         ),
+        destinations_latest=SchoolDestinationsLatestDto(
+            ks4=SchoolDestinationStageLatestDto(
+                academic_year="2023/24",
+                cohort_count=120,
+                qualification_group=None,
+                qualification_level=None,
+                overall_pct=92.0,
+                education_pct=61.0,
+                apprenticeship_pct=6.0,
+                employment_pct=21.0,
+                not_sustained_pct=7.0,
+                activity_unknown_pct=4.0,
+                fe_pct=28.0,
+                other_education_pct=7.0,
+                school_sixth_form_pct=19.0,
+                sixth_form_college_pct=7.0,
+                higher_education_pct=None,
+            ),
+            study_16_18=None,
+        ),
         finance_latest=SchoolFinanceLatestDto(
             academic_year="2023/24",
             total_income_gbp=2070000.0,
@@ -458,6 +480,12 @@ def _profile_response() -> SchoolProfileResponseDto:
                 last_updated_at=timestamp,
                 years_available=None,
             ),
+            destinations=SchoolProfileSectionCompletenessDto(
+                status="partial",
+                reason_code="unsupported_stage",
+                last_updated_at=timestamp,
+                years_available=None,
+            ),
             finance=SchoolProfileSectionCompletenessDto(
                 status="available",
                 reason_code=None,
@@ -560,11 +588,14 @@ def test_get_school_profile_returns_expected_contract() -> None:
     assert payload["workforce_latest"]["support_staff_post_mix"][0]["label"] == "Teaching assistant"
     assert payload["admissions_latest"]["oversubscription_ratio"] == 1.4
     assert payload["admissions_latest"]["applications_any_preference"] == 126
+    assert payload["destinations_latest"]["ks4"]["overall_pct"] == 92.0
+    assert payload["destinations_latest"]["study_16_18"] is None
     assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
     assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
     assert payload["finance_latest"]["supply_staff_costs_pct_of_staff_costs"] == 0.0401
     assert payload["benchmarks"] == {"metrics": []}
     assert payload["completeness"]["admissions"]["status"] == "available"
+    assert payload["completeness"]["destinations"]["reason_code"] == "unsupported_stage"
     assert payload["completeness"]["finance"]["status"] == "available"
     assert payload["completeness"]["performance"]["years_available"] == ["2023/24", "2024/25"]
     assert fake_use_case.calls == [("123456", None)]
@@ -590,6 +621,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
         behaviour_latest=None,
         workforce_latest=None,
         admissions_latest=None,
+        destinations_latest=None,
         finance_latest=None,
         leadership_snapshot=None,
         performance=None,
@@ -624,6 +656,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert payload["attendance_latest"] is None
     assert payload["performance"] is None
     assert payload["admissions_latest"] is None
+    assert payload["destinations_latest"] is None
     assert payload["finance_latest"] is None
     assert payload["ofsted_timeline"] == {
         "events": [],

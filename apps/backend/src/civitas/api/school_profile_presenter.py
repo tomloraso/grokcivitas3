@@ -22,6 +22,8 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileDemographicsHomeLanguageResponse,
     SchoolProfileDemographicsLatestResponse,
     SchoolProfileDemographicsSendPrimaryNeedResponse,
+    SchoolProfileDestinationsLatestResponse,
+    SchoolProfileDestinationStageLatestResponse,
     SchoolProfileFinanceLatestResponse,
     SchoolProfileLeadershipSnapshotResponse,
     SchoolProfileMetricBenchmarkResponse,
@@ -41,6 +43,7 @@ from civitas.api.schemas.school_profiles import (
 from civitas.application.access.dto import SectionAccessDto
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextDto,
+    SchoolDestinationStageLatestDto,
     SchoolProfileResponseDto,
     SchoolProfileSectionCompletenessDto,
 )
@@ -247,6 +250,15 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             admissions_policy=result.admissions_latest.admissions_policy,
         )
 
+    destinations_latest = None
+    if result.destinations_latest is not None:
+        destinations_latest = SchoolProfileDestinationsLatestResponse(
+            ks4=_to_destination_stage_latest_response(result.destinations_latest.ks4),
+            study_16_18=_to_destination_stage_latest_response(
+                result.destinations_latest.study_16_18
+            ),
+        )
+
     leadership_snapshot = None
     if result.leadership_snapshot is not None:
         leadership_snapshot = SchoolProfileLeadershipSnapshotResponse(
@@ -422,6 +434,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
         behaviour_latest=behaviour_latest,
         workforce_latest=workforce_latest,
         admissions_latest=admissions_latest,
+        destinations_latest=destinations_latest,
         finance_latest=finance_latest,
         leadership_snapshot=leadership_snapshot,
         performance=performance,
@@ -456,6 +469,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             behaviour=_to_section_completeness_response(result.completeness.behaviour),
             workforce=_to_section_completeness_response(result.completeness.workforce),
             admissions=_to_section_completeness_response(result.completeness.admissions),
+            destinations=_to_section_completeness_response(result.completeness.destinations),
             finance=_to_section_completeness_response(result.completeness.finance),
             leadership=_to_section_completeness_response(result.completeness.leadership),
             performance=_to_section_completeness_response(result.completeness.performance),
@@ -594,4 +608,28 @@ def _to_section_completeness_response(
         reason_code=value.reason_code,
         last_updated_at=value.last_updated_at,
         years_available=list(value.years_available) if value.years_available is not None else None,
+    )
+
+
+def _to_destination_stage_latest_response(
+    value: SchoolDestinationStageLatestDto | None,
+) -> SchoolProfileDestinationStageLatestResponse | None:
+    if value is None:
+        return None
+    return SchoolProfileDestinationStageLatestResponse(
+        academic_year=value.academic_year,
+        cohort_count=value.cohort_count,
+        qualification_group=value.qualification_group,
+        qualification_level=value.qualification_level,
+        overall_pct=value.overall_pct,
+        education_pct=value.education_pct,
+        apprenticeship_pct=value.apprenticeship_pct,
+        employment_pct=value.employment_pct,
+        not_sustained_pct=value.not_sustained_pct,
+        activity_unknown_pct=value.activity_unknown_pct,
+        fe_pct=value.fe_pct,
+        other_education_pct=value.other_education_pct,
+        school_sixth_form_pct=value.school_sixth_form_pct,
+        sixth_form_college_pct=value.sixth_form_college_pct,
+        higher_education_pct=value.higher_education_pct,
     )

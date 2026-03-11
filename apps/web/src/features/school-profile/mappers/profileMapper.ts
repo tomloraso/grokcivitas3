@@ -1,6 +1,8 @@
 import type {
+  SchoolProfileDestinationStageLatest,
   SchoolProfileResponse,
   SchoolProfileAnalystSection,
+  SchoolProfileDestinationsLatest,
   SchoolProfileNeighbourhoodSection,
   SchoolTrendDashboardResponse,
   SchoolTrendsResponse
@@ -36,6 +38,8 @@ import type {
   PerformanceVM,
   PerformanceYearVM,
   ProfileCompletenessVM,
+  SchoolDestinationsVM,
+  SchoolDestinationStageLatestVM,
   SchoolIdentityVM,
   SchoolProfileVM,
   SectionCompletenessReasonCode,
@@ -462,6 +466,44 @@ function mapAdmissions(profile: SchoolProfileResponse): AdmissionsLatestVM | nul
   };
 }
 
+function mapDestinationStage(
+  stage: SchoolProfileDestinationStageLatest | null | undefined
+): SchoolDestinationStageLatestVM | null {
+  if (!stage) {
+    return null;
+  }
+
+  return {
+    academicYear: stage.academic_year,
+    cohortCount: toOptionalNumber(stage.cohort_count),
+    qualificationGroup: toOptionalText(stage.qualification_group),
+    qualificationLevel: toOptionalText(stage.qualification_level),
+    overallPct: toOptionalNumber(stage.overall_pct),
+    educationPct: toOptionalNumber(stage.education_pct),
+    apprenticeshipPct: toOptionalNumber(stage.apprenticeship_pct),
+    employmentPct: toOptionalNumber(stage.employment_pct),
+    notSustainedPct: toOptionalNumber(stage.not_sustained_pct),
+    activityUnknownPct: toOptionalNumber(stage.activity_unknown_pct),
+    fePct: toOptionalNumber(stage.fe_pct),
+    otherEducationPct: toOptionalNumber(stage.other_education_pct),
+    schoolSixthFormPct: toOptionalNumber(stage.school_sixth_form_pct),
+    sixthFormCollegePct: toOptionalNumber(stage.sixth_form_college_pct),
+    higherEducationPct: toOptionalNumber(stage.higher_education_pct)
+  };
+}
+
+function mapDestinations(profile: SchoolProfileResponse): SchoolDestinationsVM | null {
+  const destinations = profile.destinations_latest as SchoolProfileDestinationsLatest | null;
+  if (!destinations) {
+    return null;
+  }
+
+  return {
+    ks4: mapDestinationStage(destinations.ks4),
+    study16To18: mapDestinationStage(destinations.study_16_18)
+  };
+}
+
 function mapLeadership(profile: SchoolProfileResponse): LeadershipSnapshotVM | null {
   const leadership = profile.leadership_snapshot;
   if (!leadership) {
@@ -723,6 +765,7 @@ function mapTrends(trends: SchoolTrendsResponse | null): TrendsVM | null {
       behaviour: mapSectionCompleteness(trends.section_completeness.behaviour),
       workforce: mapSectionCompleteness(trends.section_completeness.workforce),
       admissions: mapSectionCompleteness(trends.section_completeness.admissions),
+      destinations: mapSectionCompleteness(trends.section_completeness.destinations),
       finance: mapSectionCompleteness(trends.section_completeness.finance)
     }
   };
@@ -878,6 +921,7 @@ function mapCompleteness(
     behaviour: mapSectionCompleteness(profile.completeness.behaviour),
     workforce: mapSectionCompleteness(profile.completeness.workforce),
     admissions: mapSectionCompleteness(profile.completeness.admissions),
+    destinations: mapSectionCompleteness(profile.completeness.destinations),
     finance: mapSectionCompleteness(profile.completeness.finance),
     leadership: mapSectionCompleteness(profile.completeness.leadership),
     performance: mapSectionCompleteness(profile.completeness.performance),
@@ -937,6 +981,7 @@ export function mapProfileToVM(
     behaviour: mapBehaviour(profile),
     workforce: mapWorkforce(profile),
     admissions: mapAdmissions(profile),
+    destinations: mapDestinations(profile),
     finance: mapFinance(profile),
     leadership: mapLeadership(profile),
     performance: mapPerformance(profile),

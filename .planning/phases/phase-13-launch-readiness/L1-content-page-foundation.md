@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented
+- Last updated: 2026-03-11
 - Depends on:
   - `docs/architecture/frontend-conventions.md`
   - `.planning/phases/phase-5-ux-uplift/UX-4-typography-spacing-visual-hierarchy.md`
@@ -35,6 +35,7 @@ Establish the shared layout, typography, and per-page meta infrastructure that a
 2. Content pages use the existing `PageContainer` max-width constraint and site chrome (header + footer) but add prose-specific typography styling.
 3. Content pages are standard React Router routes — no CMS, no MDX, no external content source. Page copy lives in component files or co-located constants.
 4. All content page routes are defined in `paths.ts` so footer and header links use the same centralized path helpers.
+5. Site identity strings (product name, operator name, support email, and public origin) are read from shared site configuration so launch-readiness work can land before the final brand decision.
 
 ## Frontend Design
 

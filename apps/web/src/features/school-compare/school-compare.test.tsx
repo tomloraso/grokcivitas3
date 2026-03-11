@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -62,13 +63,15 @@ function renderCompare(
   );
 
   const result = render(
-    <ThemeProvider>
-      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
-        <CompareSelectionProvider initialItems={initialItems}>
-          <RouterProvider router={router} />
-        </CompareSelectionProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+          <CompareSelectionProvider initialItems={initialItems}>
+            <RouterProvider router={router} />
+          </CompareSelectionProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 
   return { ...result, router };

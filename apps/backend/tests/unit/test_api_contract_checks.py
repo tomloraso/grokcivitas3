@@ -287,6 +287,7 @@ def test_validate_school_profile_response_contract_accepts_required_properties()
             "workforce_latest": {},
             "admissions_latest": {},
             "finance_latest": {},
+            "destinations_latest": {},
             "leadership_snapshot": {},
             "performance": {},
             "ofsted_latest": {},
@@ -318,9 +319,9 @@ def test_validate_school_profile_response_contract_rejects_missing_properties() 
         RuntimeError,
         match=(
             "SchoolProfileResponse missing required properties: "
-            "admissions_latest, attendance_latest, behaviour_latest, finance_latest, "
-            "leadership_snapshot, neighbourhood, ofsted_timeline, performance, saved_state, "
-            "workforce_latest"
+            "admissions_latest, attendance_latest, behaviour_latest, destinations_latest, "
+            "finance_latest, leadership_snapshot, neighbourhood, ofsted_timeline, "
+            "performance, saved_state, workforce_latest"
         ),
     ):
         validate_school_profile_response_contract(openapi_schema)
@@ -338,6 +339,7 @@ def test_validate_school_profile_response_contract_does_not_require_required_lis
             "workforce_latest": {},
             "admissions_latest": {},
             "finance_latest": {},
+            "destinations_latest": {},
             "leadership_snapshot": {},
             "performance": {},
             "ofsted_latest": {},

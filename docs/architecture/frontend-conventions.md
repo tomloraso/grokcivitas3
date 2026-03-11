@@ -63,6 +63,13 @@ Phase 0D1 currently keeps shared primitives under `src/components/*` with local 
 3. Keep feature-specific presentation and styles inside the owning feature.
 4. Avoid repeating magic spacing/color values across unrelated components.
 
+## Site Identity and Metadata
+
+1. Product name, operator name, contact emails, and canonical public origin must come from shared site configuration, not scattered string literals.
+2. Frontend routes should use `PageMeta` for browser-visible title/description management instead of mutating `document.title` directly.
+3. Canonical URLs and structured-data absolute URLs should only render when a valid public origin is configured.
+4. Static SEO assets such as `robots.txt`, `sitemap.xml`, and `site.webmanifest` should be generated from the same site configuration so launch details stay consistent.
+
 ## Metric Display Pattern (StatCard / BenchmarkSlot)
 
 `StatCard` (`src/components/data/StatCard.tsx`) is the canonical component for displaying a single school metric. All new metric cards must use it.

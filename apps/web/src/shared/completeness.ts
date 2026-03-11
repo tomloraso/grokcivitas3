@@ -12,7 +12,8 @@ export type CompletenessReasonCode =
   | "not_applicable"
   | "source_coverage_gap"
   | "stale_after_school_refresh"
-  | "no_incidents_in_radius";
+  | "no_incidents_in_radius"
+  | "unsupported_stage";
 
 export type CompletenessMessageKey =
   | "missing"
@@ -28,7 +29,8 @@ export type CompletenessMessageKey =
   | "notApplicable"
   | "sourceCoverageGap"
   | "staleAfterSchoolRefresh"
-  | "noIncidentsInRadius";
+  | "noIncidentsInRadius"
+  | "unsupportedStage";
 
 const REASON_MESSAGE_KEYS: Record<
   CompletenessReasonCode,
@@ -47,7 +49,8 @@ const REASON_MESSAGE_KEYS: Record<
   not_applicable: "notApplicable",
   source_coverage_gap: "sourceCoverageGap",
   stale_after_school_refresh: "staleAfterSchoolRefresh",
-  no_incidents_in_radius: "noIncidentsInRadius"
+  no_incidents_in_radius: "noIncidentsInRadius",
+  unsupported_stage: "unsupportedStage"
 };
 
 const REASON_COPY: Record<CompletenessMessageKey, string> = {
@@ -76,7 +79,9 @@ const REASON_COPY: Record<CompletenessMessageKey, string> = {
   staleAfterSchoolRefresh:
     "This section will refresh after the next local-area data update.",
   noIncidentsInRadius:
-    "No incidents were recorded in this area for the latest reporting window."
+    "No incidents were recorded in this area for the latest reporting window.",
+  unsupportedStage:
+    "Some published destination stages are not yet supported in this view."
 };
 
 export function mapCompletenessReasonToMessageKey(

@@ -27,6 +27,9 @@ from civitas.infrastructure.pipelines.contracts import (
     gias as gias_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
+    leaver_destinations as leaver_destinations_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
     ofsted_latest as ofsted_latest_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
@@ -79,6 +82,12 @@ from civitas.infrastructure.pipelines.gias import (
 )
 from civitas.infrastructure.pipelines.gias import (
     GiasPipeline,
+)
+from civitas.infrastructure.pipelines.leaver_destinations import (
+    BRONZE_MANIFEST_FILE_NAME as LEAVER_DESTINATIONS_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.leaver_destinations import (
+    LeaverDestinationsPipeline,
 )
 from civitas.infrastructure.pipelines.ofsted_latest import (
     BRONZE_FILE_NAME as OFSTED_LATEST_BRONZE_FILE_NAME,
@@ -508,6 +517,64 @@ def test_school_admissions_download_writes_contract_version_to_manifest(tmp_path
     assert payload["normalization_contract_version"] == admissions_contract.CONTRACT_VERSION
     assert len(payload["assets"]) == 1
     assert payload["assets"][0]["bronze_file_name"] == "school_admissions.csv"
+
+
+def test_leaver_destinations_download_writes_contract_version_to_manifest(
+    tmp_path: Path,
+) -> None:
+    ks4_csv_path = tmp_path / "ees_ks4_inst_202223.csv"
+    ks4_csv_path.write_text(
+        "time_period,time_identifier,geographic_level,country_code,country_name,region_code,"
+        "region_name,old_la_code,new_la_code,la_name,local_authority_selection_status,"
+        "school_laestab,school_urn,school_name,admission_policy,entry_gender,"
+        "institution_group,institution_type,breakdown_topic,breakdown,data_type,version,"
+        "cohort,overall,education,fe,ssf,sfc,other_edu,appren,all_work,all_notsust,"
+        "all_unknown\n"
+        "202223,Academic year,School,E92000001,England,E12000007,London,213,E09000033,"
+        "Westminster,Selected,2136007,100001,Alpha School,Comprehensive,Mixed,"
+        "Local authority maintained schools,Community school,Total,Total,Percentage,1,"
+        "118,92.4,61.0,18.0,c,,4.0,7.3,17.5,3.1,4.5\n",
+        encoding="utf-8",
+    )
+    study_csv_path = tmp_path / "ees_ks5_inst_202223.csv"
+    study_csv_path.write_text(
+        "time_period,time_identifier,geographic_level,country_code,country_name,region_code,"
+        "region_name,old_la_code,new_la_code,la_name,local_authority_selection_status,"
+        "school_laestab,school_urn,school_name,admission_policy,entry_gender,"
+        "institution_group,institution_type,cohort_level_group,cohort_level,"
+        "breakdown_topic,breakdown,data_type,version,cohort,overall,education,he,fe,"
+        "other_edu,appren,all_work,all_notsust,all_unknown\n"
+        "202223,Academic year,School,E92000001,England,E12000007,London,201,E09000001,"
+        "City of London,Selected,2013614,100002,Beta Sixth Form,Not applicable,Mixed,"
+        "Academies,Academy converter,Total,Total,Total,Total,Number of students,1,"
+        "90,80,56,31,18,7,10,14,6,10\n",
+        encoding="utf-8",
+    )
+
+    pipeline = LeaverDestinationsPipeline(
+        engine=None,
+        ks4_source_csv=str(ks4_csv_path),
+        ks4_source_url="https://example.com/ks4.csv",
+        ks4_release_page_url="https://example.com/ks4-release",
+        ks4_data_catalogue_url="https://example.com/ks4-catalogue",
+        study_16_to_18_source_csv=str(study_csv_path),
+        study_16_to_18_source_url="https://example.com/16-to-18.csv",
+        study_16_to_18_release_page_url="https://example.com/16-to-18-release",
+        study_16_to_18_data_catalogue_url="https://example.com/16-to-18-catalogue",
+    )
+    context = _context(PipelineSource.LEAVER_DESTINATIONS, tmp_path / "bronze")
+
+    downloaded_rows = pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / LEAVER_DESTINATIONS_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert downloaded_rows == 2
+    assert (
+        payload["normalization_contract_version"] == leaver_destinations_contract.CONTRACT_VERSION
+    )
+    assert len(payload["assets"]) == 2
+    assert {asset["destination_stage"] for asset in payload["assets"]} == {"ks4", "16_to_18"}
+    assert payload["assets"][0]["public_csv_route_url"].startswith("https://example.com/")
 
 
 def test_school_financial_benchmarks_download_writes_contract_version_to_manifest(

@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -45,19 +46,21 @@ function renderProfileAtUrn(urn: string) {
   );
 
   return render(
-    <ThemeProvider>
-      <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
-        <SearchContextProvider>
-          <CompareSelectionProvider>
-            <TooltipProvider>
-              <ToastProvider>
-                <RouterProvider router={router} />
-              </ToastProvider>
-            </TooltipProvider>
-          </CompareSelectionProvider>
-        </SearchContextProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <AuthProvider autoLoad={false} initialSession={ANONYMOUS_SESSION}>
+          <SearchContextProvider>
+            <CompareSelectionProvider>
+              <TooltipProvider>
+                <ToastProvider>
+                  <RouterProvider router={router} />
+                </ToastProvider>
+              </TooltipProvider>
+            </CompareSelectionProvider>
+          </SearchContextProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 
@@ -85,6 +88,7 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByRole("heading", { name: "Day-to-Day at School" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Teachers & Staff" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "School Admissions" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Leaver Destinations" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "School Finance" })).toBeInTheDocument();
       expect(screen.getByRole("heading", { name: "Neighbourhood Context" })).toBeInTheDocument();
 
@@ -102,6 +106,8 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getAllByText("Oversubscription Ratio").length).toBeGreaterThan(0);
       expect(screen.getByText("Places Offered")).toBeInTheDocument();
       expect(screen.getByText("Cross-LA Offers")).toBeInTheDocument();
+      expect(screen.getAllByText("Overall Sustained Destinations").length).toBeGreaterThan(0);
+      expect(screen.getByText("School Sixth Form")).toBeInTheDocument();
       expect(screen.getAllByText("Teacher Headcount").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Average Teacher Salary").length).toBeGreaterThan(0);
       expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);
@@ -109,6 +115,10 @@ describe("SchoolProfileFeature", () => {
       expect(screen.getByRole("heading", { name: "Support Staff Roles" })).toBeInTheDocument();
       expect(screen.getAllByText("Headteacher").length).toBeGreaterThan(0);
       expect(screen.getByText("House Prices")).toBeInTheDocument();
+      expect(
+        screen.getByText(/16 to 18 study destinations are present in the source data/i)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Limited in this view: Destinations/i)).toBeInTheDocument();
       expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
     },
     15000,
@@ -287,6 +297,52 @@ describe("SchoolProfileFeature", () => {
     expect(screen.getByRole("heading", { name: "School Finance" })).toBeInTheDocument();
     expect(screen.queryByText("Supply Staff Costs Share")).not.toBeInTheDocument();
     expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);
+  });
+
+  it("renders the destinations empty state when the profile omits destination data", async () => {
+    const profileWithoutDestinations = structuredClone(PROFILE_RESPONSE);
+    profileWithoutDestinations.destinations_latest = null;
+    profileWithoutDestinations.completeness.destinations = {
+      status: "unavailable",
+      reason_code: "source_file_missing_for_year",
+      last_updated_at: null,
+      years_available: null
+    };
+
+    const trendsWithoutDestinations = structuredClone(TRENDS_RESPONSE);
+    trendsWithoutDestinations.series.ks4_overall_pct = [];
+    trendsWithoutDestinations.series.ks4_education_pct = [];
+    trendsWithoutDestinations.series.ks4_apprenticeship_pct = [];
+    trendsWithoutDestinations.series.ks4_employment_pct = [];
+    trendsWithoutDestinations.series.ks4_not_sustained_pct = [];
+    trendsWithoutDestinations.series.ks4_activity_unknown_pct = [];
+    trendsWithoutDestinations.series.study_16_18_overall_pct = [];
+    trendsWithoutDestinations.series.study_16_18_education_pct = [];
+    trendsWithoutDestinations.series.study_16_18_apprenticeship_pct = [];
+    trendsWithoutDestinations.series.study_16_18_employment_pct = [];
+    trendsWithoutDestinations.series.study_16_18_not_sustained_pct = [];
+    trendsWithoutDestinations.series.study_16_18_activity_unknown_pct = [];
+    trendsWithoutDestinations.section_completeness.destinations = {
+      status: "unavailable",
+      reason_code: "source_file_missing_for_year",
+      last_updated_at: null,
+      years_available: null
+    };
+
+    profileMock.mockResolvedValueOnce(profileWithoutDestinations);
+    trendsMock.mockResolvedValueOnce(trendsWithoutDestinations);
+
+    renderProfileAtUrn("100001");
+
+    expect(
+      await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("School leaver destinations data is not available")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/16 to 18 study destinations are present in the source data/i)
+    ).not.toBeInTheDocument();
   });
 
   it(
