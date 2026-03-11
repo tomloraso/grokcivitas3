@@ -261,6 +261,34 @@ describe("SchoolProfileFeature", () => {
     ).toBeGreaterThan(0);
   });
 
+  it("renders the finance section when the profile payload omits optional finance fields", async () => {
+    const partialFinanceProfile = structuredClone(PROFILE_RESPONSE);
+    const financeLatest = partialFinanceProfile.finance_latest as Record<string, unknown>;
+
+    delete financeLatest.in_year_balance_gbp;
+    delete financeLatest.total_grant_funding_gbp;
+    delete financeLatest.total_self_generated_funding_gbp;
+    delete financeLatest.supply_teaching_staff_costs_gbp;
+    delete financeLatest.education_support_staff_costs_gbp;
+    delete financeLatest.other_staff_costs_gbp;
+    delete financeLatest.premises_costs_gbp;
+    delete financeLatest.educational_supplies_costs_gbp;
+    delete financeLatest.bought_in_professional_services_costs_gbp;
+    delete financeLatest.catering_costs_gbp;
+    delete financeLatest.supply_staff_costs_pct_of_staff_costs;
+
+    profileMock.mockResolvedValueOnce(partialFinanceProfile);
+
+    renderProfileAtUrn("100001");
+
+    expect(
+      await screen.findByRole("heading", { name: "Camden Bridge Primary School" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "School Finance" })).toBeInTheDocument();
+    expect(screen.queryByText("Supply Staff Costs Share")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Income per Pupil").length).toBeGreaterThan(0);
+  });
+
   it(
     "passes accessibility smoke check",
     async () => {

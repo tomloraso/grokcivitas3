@@ -101,6 +101,49 @@ describe("mapProfileToVM", () => {
     expect(vm.completeness.trends.status).toBe("unavailable");
   });
 
+  it("normalizes missing finance numeric fields to null", () => {
+    const partialFinanceProfile = structuredClone(PROFILE_RESPONSE);
+    const financeLatest = partialFinanceProfile.finance_latest as Record<string, unknown>;
+
+    delete financeLatest.in_year_balance_gbp;
+    delete financeLatest.total_grant_funding_gbp;
+    delete financeLatest.total_self_generated_funding_gbp;
+    delete financeLatest.supply_teaching_staff_costs_gbp;
+    delete financeLatest.education_support_staff_costs_gbp;
+    delete financeLatest.other_staff_costs_gbp;
+    delete financeLatest.premises_costs_gbp;
+    delete financeLatest.educational_supplies_costs_gbp;
+    delete financeLatest.bought_in_professional_services_costs_gbp;
+    delete financeLatest.catering_costs_gbp;
+    delete financeLatest.supply_staff_costs_pct_of_staff_costs;
+
+    const vm = mapProfileToVM(partialFinanceProfile, TRENDS_RESPONSE, DASHBOARD_RESPONSE);
+
+    expect(vm.finance?.inYearBalanceGbp).toBeNull();
+    expect(vm.finance?.totalGrantFundingGbp).toBeNull();
+    expect(vm.finance?.totalSelfGeneratedFundingGbp).toBeNull();
+    expect(vm.finance?.supplyTeachingStaffCostsGbp).toBeNull();
+    expect(vm.finance?.supplyStaffCostsPctOfStaffCosts).toBeNull();
+  });
+
+  it("falls back when a completeness section is missing from the payload", () => {
+    const baseProfile = structuredClone(PROFILE_RESPONSE);
+    const completenessWithoutAdmissions = Object.fromEntries(
+      Object.entries(baseProfile.completeness as Record<string, unknown>).filter(
+        ([key]) => key !== "admissions"
+      )
+    );
+    const staleProfile = {
+      ...baseProfile,
+      completeness: completenessWithoutAdmissions,
+    } as typeof PROFILE_RESPONSE;
+
+    const vm = mapProfileToVM(staleProfile, TRENDS_RESPONSE, null);
+
+    expect(vm.completeness.admissions.status).toBe("unavailable");
+    expect(vm.completeness.admissions.messageKey).toBe("pipelineFailedRecently");
+  });
+
   it("maps locked analyst and neighbourhood previews without leaking premium data", () => {
     const lockedProfile = structuredClone(PROFILE_RESPONSE);
     lockedProfile.analyst = {

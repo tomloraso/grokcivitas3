@@ -686,11 +686,11 @@ export function getMetricCatalogEntry(metricKey: string): MetricCatalogEntry | n
 }
 
 export function formatMetricValue(
-  value: number | null,
+  value: number | null | undefined,
   unit: MetricUnit,
   decimalsOverride?: number
 ): string | null {
-  if (value === null) {
+  if (value == null) {
     return null;
   }
 
@@ -722,8 +722,11 @@ export function formatMetricValue(
   }
 }
 
-export function formatMetricDelta(value: number | null, unit: MetricUnit): string | null {
-  if (value === null) {
+export function formatMetricDelta(
+  value: number | null | undefined,
+  unit: MetricUnit
+): string | null {
+  if (value == null) {
     return null;
   }
 

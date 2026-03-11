@@ -402,7 +402,7 @@ export function SchoolFinanceSection({
       ? []
       : SUMMARY_METRICS.flatMap((metric) => {
           const value = metric.value(finance);
-          if (value === null) return [];
+          if (value == null) return [];
 
           const isBalance = metric.label === "In-Year Balance";
           const formatted = formatMetricValue(value, "currency") ?? "—";
@@ -444,7 +444,7 @@ export function SchoolFinanceSection({
             trendSeries,
             benchmark
           );
-          if (value === null) return [];
+          if (value == null) return [];
 
           return (
             <StatCard

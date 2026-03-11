@@ -67,6 +67,16 @@ interface SectionCompletenessContract {
   years_available?: string[] | null;
 }
 
+function fallbackSectionCompleteness(): SectionCompletenessVM {
+  return {
+    status: "unavailable",
+    reasonCode: "pipeline_failed_recently",
+    messageKey: mapCompletenessReasonToMessageKey("pipeline_failed_recently"),
+    lastUpdatedAt: null,
+    yearsAvailable: null
+  };
+}
+
 interface DashboardMetricMeta {
   section: MetricSectionKey;
   label: string;
@@ -87,6 +97,10 @@ function fallback(value: string | null | undefined, placeholder: string): string
 
 function toOptionalText(value: string | null | undefined): string | null {
   return value?.trim() ? value.trim() : null;
+}
+
+function toOptionalNumber(value: number | null | undefined): number | null {
+  return typeof value === "number" ? value : null;
 }
 
 function fmtDate(iso: string | null): string | null {
@@ -161,7 +175,13 @@ function academicYearKey(academicYear: string): number {
   return match ? Number(match[1]) : -1;
 }
 
-function mapSectionCompleteness(section: SectionCompletenessContract): SectionCompletenessVM {
+function mapSectionCompleteness(
+  section: SectionCompletenessContract | null | undefined
+): SectionCompletenessVM {
+  if (!section) {
+    return fallbackSectionCompleteness();
+  }
+
   return {
     status: section.status,
     reasonCode: section.reason_code,
@@ -393,26 +413,34 @@ function mapFinance(profile: SchoolProfileResponse): FinanceLatestVM | null {
 
   return {
     academicYear: finance.academic_year,
-    totalIncomeGbp: finance.total_income_gbp,
-    totalExpenditureGbp: finance.total_expenditure_gbp,
-    incomePerPupilGbp: finance.income_per_pupil_gbp,
-    expenditurePerPupilGbp: finance.expenditure_per_pupil_gbp,
-    totalStaffCostsGbp: finance.total_staff_costs_gbp,
-    staffCostsPctOfExpenditure: finance.staff_costs_pct_of_expenditure,
-    revenueReserveGbp: finance.revenue_reserve_gbp,
-    revenueReservePerPupilGbp: finance.revenue_reserve_per_pupil_gbp,
-    inYearBalanceGbp: finance.in_year_balance_gbp,
-    totalGrantFundingGbp: finance.total_grant_funding_gbp,
-    totalSelfGeneratedFundingGbp: finance.total_self_generated_funding_gbp,
-    teachingStaffCostsGbp: finance.teaching_staff_costs_gbp,
-    supplyTeachingStaffCostsGbp: finance.supply_teaching_staff_costs_gbp,
-    educationSupportStaffCostsGbp: finance.education_support_staff_costs_gbp,
-    otherStaffCostsGbp: finance.other_staff_costs_gbp,
-    premisesCostsGbp: finance.premises_costs_gbp,
-    educationalSuppliesCostsGbp: finance.educational_supplies_costs_gbp,
-    boughtInProfessionalServicesCostsGbp: finance.bought_in_professional_services_costs_gbp,
-    cateringCostsGbp: finance.catering_costs_gbp,
-    supplyStaffCostsPctOfStaffCosts: finance.supply_staff_costs_pct_of_staff_costs
+    totalIncomeGbp: toOptionalNumber(finance.total_income_gbp),
+    totalExpenditureGbp: toOptionalNumber(finance.total_expenditure_gbp),
+    incomePerPupilGbp: toOptionalNumber(finance.income_per_pupil_gbp),
+    expenditurePerPupilGbp: toOptionalNumber(finance.expenditure_per_pupil_gbp),
+    totalStaffCostsGbp: toOptionalNumber(finance.total_staff_costs_gbp),
+    staffCostsPctOfExpenditure: toOptionalNumber(finance.staff_costs_pct_of_expenditure),
+    revenueReserveGbp: toOptionalNumber(finance.revenue_reserve_gbp),
+    revenueReservePerPupilGbp: toOptionalNumber(finance.revenue_reserve_per_pupil_gbp),
+    inYearBalanceGbp: toOptionalNumber(finance.in_year_balance_gbp),
+    totalGrantFundingGbp: toOptionalNumber(finance.total_grant_funding_gbp),
+    totalSelfGeneratedFundingGbp: toOptionalNumber(finance.total_self_generated_funding_gbp),
+    teachingStaffCostsGbp: toOptionalNumber(finance.teaching_staff_costs_gbp),
+    supplyTeachingStaffCostsGbp: toOptionalNumber(finance.supply_teaching_staff_costs_gbp),
+    educationSupportStaffCostsGbp: toOptionalNumber(
+      finance.education_support_staff_costs_gbp
+    ),
+    otherStaffCostsGbp: toOptionalNumber(finance.other_staff_costs_gbp),
+    premisesCostsGbp: toOptionalNumber(finance.premises_costs_gbp),
+    educationalSuppliesCostsGbp: toOptionalNumber(
+      finance.educational_supplies_costs_gbp
+    ),
+    boughtInProfessionalServicesCostsGbp: toOptionalNumber(
+      finance.bought_in_professional_services_costs_gbp
+    ),
+    cateringCostsGbp: toOptionalNumber(finance.catering_costs_gbp),
+    supplyStaffCostsPctOfStaffCosts: toOptionalNumber(
+      finance.supply_staff_costs_pct_of_staff_costs
+    )
   };
 }
 
