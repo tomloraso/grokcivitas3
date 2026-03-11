@@ -25,18 +25,18 @@ interface EthnicityBreakdownProps {
 /* ------------------------------------------------------------------ */
 
 const SEGMENT_COLORS = [
-  "#A855F7", // purple (brand)
-  "#22d3ee", // cyan (accent)
-  "#3b82f6", // blue
-  "#f59e0b", // amber
-  "#22c55e", // green
-  "#ec4899", // pink
-  "#f97316", // orange
-  "#06b6d4", // teal
-  "#8b5cf6", // violet
-  "#14b8a6", // emerald
-  "#e879f9", // fuchsia
-  "#facc15", // yellow
+  "#2dd4bf", // teal-400
+  "#0d9488", // teal-600
+  "#38bdf8", // sky-400
+  "#0284c7", // sky-600
+  "#a78bfa", // violet-400
+  "#fbbf24", // amber-400
+  "#fb7185", // rose-400
+  "#22c55e", // emerald-500
+  "#9ca3af", // gray-400
+  "#c084fc", // purple-400
+  "#f97316", // orange-400
+  "#67e8f9", // cyan-300
 ];
 
 function segmentColor(index: number): string {
@@ -105,11 +105,13 @@ function LegendRow({
   group,
   colorIndex,
   isHovered,
+  isFaded,
   onHover,
 }: {
   group: EthnicityGroup;
   colorIndex: number;
   isHovered: boolean;
+  isFaded: boolean;
   onHover: (key: string | null) => void;
 }) {
   const countLabel =
@@ -118,8 +120,9 @@ function LegendRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded px-2 py-1 text-sm transition-colors duration-fast",
-        isHovered && "bg-surface/50"
+        "flex items-center gap-2 rounded px-2 py-1 text-sm transition-all duration-150",
+        isHovered && "bg-surface/50",
+        isFaded && "opacity-40"
       )}
       onMouseEnter={() => onHover(group.key)}
       onMouseLeave={() => onHover(null)}
@@ -191,6 +194,7 @@ export function EthnicityBreakdown({
               group={group}
               colorIndex={colorIndex}
               isHovered={hoveredKey === group.key}
+              isFaded={hoveredKey !== null && hoveredKey !== group.key}
               onHover={setHoveredKey}
             />
           );

@@ -95,6 +95,7 @@ class GetSchoolProfileUseCase:
         *,
         urn: str,
         viewer_user_id: UUID | None = None,
+        skip_access_checks: bool = False,
     ) -> SchoolProfileResponseDto:
         normalized_urn = urn.strip()
         profile = self._school_profile_repository.get_school_profile(normalized_urn)
@@ -277,6 +278,30 @@ class GetSchoolProfileUseCase:
                 revenue_reserve_gbp=profile.finance_latest.revenue_reserve_gbp,
                 revenue_reserve_per_pupil_gbp=(
                     profile.finance_latest.revenue_reserve_per_pupil_gbp
+                ),
+                in_year_balance_gbp=profile.finance_latest.in_year_balance_gbp,
+                total_grant_funding_gbp=profile.finance_latest.total_grant_funding_gbp,
+                total_self_generated_funding_gbp=(
+                    profile.finance_latest.total_self_generated_funding_gbp
+                ),
+                teaching_staff_costs_gbp=profile.finance_latest.teaching_staff_costs_gbp,
+                supply_teaching_staff_costs_gbp=(
+                    profile.finance_latest.supply_teaching_staff_costs_gbp
+                ),
+                education_support_staff_costs_gbp=(
+                    profile.finance_latest.education_support_staff_costs_gbp
+                ),
+                other_staff_costs_gbp=profile.finance_latest.other_staff_costs_gbp,
+                premises_costs_gbp=profile.finance_latest.premises_costs_gbp,
+                educational_supplies_costs_gbp=(
+                    profile.finance_latest.educational_supplies_costs_gbp
+                ),
+                bought_in_professional_services_costs_gbp=(
+                    profile.finance_latest.bought_in_professional_services_costs_gbp
+                ),
+                catering_costs_gbp=profile.finance_latest.catering_costs_gbp,
+                supply_staff_costs_pct_of_staff_costs=(
+                    profile.finance_latest.supply_staff_costs_pct_of_staff_costs
                 ),
             )
 
@@ -581,17 +606,18 @@ class GetSchoolProfileUseCase:
         if self._summary_repository is not None:
             overview_summary = self._summary_repository.get_summary(normalized_urn, "overview")
             analyst_summary = self._summary_repository.get_summary(normalized_urn, "analyst")
+        access_uc = None if skip_access_checks else self._evaluate_access_use_case
         analyst = _build_analyst_section(
             school_name=profile.school.name,
             analyst_text=analyst_summary.text if analyst_summary is not None else None,
             viewer_user_id=viewer_user_id,
-            evaluate_access_use_case=self._evaluate_access_use_case,
+            evaluate_access_use_case=access_uc,
         )
         neighbourhood = _build_neighbourhood_section(
             school_name=profile.school.name,
             area_context=area_context,
             viewer_user_id=viewer_user_id,
-            evaluate_access_use_case=self._evaluate_access_use_case,
+            evaluate_access_use_case=access_uc,
         )
         saved_state = _resolve_saved_school_state(
             school_urn=normalized_urn,

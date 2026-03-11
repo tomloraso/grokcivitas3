@@ -92,6 +92,7 @@ class GetSchoolCompareUseCase:
         *,
         urns: str,
         viewer_user_id: UUID | None = None,
+        skip_access_checks: bool = False,
     ) -> SchoolCompareResponseDto:
         normalized_urns = _normalize_requested_urns(urns)
         profiles_by_urn: dict[str, SchoolProfile] = {}
@@ -117,7 +118,7 @@ class GetSchoolCompareUseCase:
         schools = tuple(_build_school_dto(profiles_by_urn[urn]) for urn in normalized_urns)
         access = _resolve_compare_access(
             viewer_user_id=viewer_user_id,
-            evaluate_access_use_case=self._evaluate_access_use_case,
+            evaluate_access_use_case=None if skip_access_checks else self._evaluate_access_use_case,
         )
         if access.state == "locked":
             return SchoolCompareResponseDto(
@@ -354,12 +355,31 @@ def _metric_completeness(
     )
 
 
+_FINANCE_METRIC_KEYS = frozenset(
+    {
+        "total_income_gbp",
+        "total_expenditure_gbp",
+        "in_year_balance_gbp",
+        "finance_income_per_pupil_gbp",
+        "finance_expenditure_per_pupil_gbp",
+        "finance_staff_costs_pct_of_expenditure",
+        "finance_revenue_reserve_per_pupil_gbp",
+        "finance_supply_staff_costs_pct_of_staff_costs",
+    }
+)
+
+
 def _resolve_metric_value(
     *,
     profile: SchoolProfile,
     definition: CompareMetricDefinition,
     benchmark_row: SchoolMetricBenchmarkYearlyRow | None,
 ) -> _MetricValue:
+    # Finance metrics need ratio→percent conversion, so use dedicated extractor
+    # instead of the generic benchmark path (which doesn't convert).
+    if definition.metric_key in _FINANCE_METRIC_KEYS:
+        return _finance_metric_value(profile, definition)
+
     if definition.benchmark_supported:
         benchmark_value = _metric_value_from_benchmark(definition, benchmark_row)
         if benchmark_value is not None:
@@ -563,6 +583,34 @@ def _workforce_metric_value(
     )
 
 
+def _finance_metric_value(
+    profile: SchoolProfile,
+    definition: CompareMetricDefinition,
+) -> _MetricValue:
+    latest = profile.finance_latest
+    if latest is None:
+        return _MetricValue(None, None, None, None)
+
+    # Benchmarked keys use finance_ prefix; strip it for the field lookup
+    field_name = definition.metric_key
+    if field_name.startswith("finance_"):
+        field_name = field_name[len("finance_"):]
+
+    raw_value = getattr(latest, field_name, None)
+
+    # Finance percentages are stored as ratios (0.758 = 75.8%); convert
+    if raw_value is not None and definition.unit == "percent":
+        raw_value = raw_value * 100.0
+
+    numeric_value = _coerce_numeric_for_unit(raw_value, definition)
+    return _MetricValue(
+        value_text=_format_numeric_value(numeric_value, definition),
+        value_numeric=numeric_value,
+        year_label=latest.academic_year if numeric_value is not None else None,
+        snapshot_date=None,
+    )
+
+
 def _headteacher_name_value(profile: SchoolProfile) -> _MetricValue:
     leadership = profile.leadership_snapshot
     value_text = _clean_text(leadership.headteacher_name) if leadership is not None else None
@@ -668,6 +716,11 @@ def _area_house_price_value(
     )
 
 
+def _ratio_to_pct(value: float | None) -> float | None:
+    """Convert a 0-1 ratio to 0-100 percent."""
+    return value * 100.0 if value is not None else None
+
+
 def _build_benchmark_dto(
     definition: CompareMetricDefinition,
     benchmark_row: SchoolMetricBenchmarkYearlyRow | None,
@@ -675,19 +728,31 @@ def _build_benchmark_dto(
     if not definition.benchmark_supported or benchmark_row is None:
         return None
 
-    school_value = _coerce_numeric_for_unit(benchmark_row.school_value, definition)
+    # Finance percentages are stored as ratios in the benchmark table
+    is_finance_pct = (
+        definition.metric_key in _FINANCE_METRIC_KEYS and definition.unit == "percent"
+    )
+    bm_school = benchmark_row.school_value
+    bm_national = benchmark_row.national_value
+    bm_local = benchmark_row.local_value
+    if is_finance_pct:
+        bm_school = _ratio_to_pct(bm_school)
+        bm_national = _ratio_to_pct(bm_national)
+        bm_local = _ratio_to_pct(bm_local)
+
+    school_value = _coerce_numeric_for_unit(bm_school, definition)
     return SchoolCompareBenchmarkDto(
         academic_year=benchmark_row.academic_year,
         school_value=school_value,
-        national_value=benchmark_row.national_value,
-        local_value=benchmark_row.local_value,
+        national_value=bm_national,
+        local_value=bm_local,
         school_vs_national_delta=_to_optional_delta(
-            benchmark_row.school_value,
-            benchmark_row.national_value,
+            bm_school,
+            bm_national,
         ),
         school_vs_local_delta=_to_optional_delta(
-            benchmark_row.school_value,
-            benchmark_row.local_value,
+            bm_school,
+            bm_local,
         ),
         local_scope=benchmark_row.local_scope,
         local_area_code=benchmark_row.local_area_code,
@@ -781,11 +846,13 @@ def _format_numeric_value(
         return f"{int(value):,}"
     if definition.unit == "currency":
         numeric = float(value)
-        if numeric >= 1_000_000:
-            return f"£{numeric / 1_000_000:.1f}m"
-        if numeric >= 1_000:
-            return f"£{round(numeric / 1_000):,}k"
-        return f"£{round(numeric):,}"
+        sign = "-" if numeric < 0 else ""
+        abs_val = abs(numeric)
+        if abs_val >= 1_000_000:
+            return f"{sign}£{abs_val / 1_000_000:.1f}m"
+        if abs_val >= 1_000:
+            return f"{sign}£{round(abs_val / 1_000):,}k"
+        return f"{sign}£{round(abs_val):,}"
     if definition.unit == "percent":
         return f"{float(value):.{definition.decimals or 1}f}%"
     if definition.unit in {"rate", "ratio", "score", "years"}:

@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Current planning index
-- Last updated: 2026-03-10
+- Last updated: 2026-03-11
 - Scope: Full-stack delivery sequencing across backend, web, data pipelines, and AI summary generation
 
 ## How To Use This Document
@@ -308,7 +308,7 @@
 
 ### Phase 15 - School financial benchmarks
 
-- Status: Planned
+- Status: Implemented — pipeline, serving layer, and profile UI complete (2026-03-11)
 - Goal: Add annual academy financial benchmarking data from the Academies Accounts Return into the Bronze -> Silver -> Gold platform and expose finance metrics in trends, profiles, and benchmark materialization.
 - Folder: `.planning/phases/phase-15-school-financial-benchmarks/`
 - Detailed design:
@@ -427,7 +427,7 @@
 | 12 | Growth, admin, SEO, exports, optimization | Planned |
 | 13 | Product pages, legal compliance, SEO infra, cookie consent | Planned |
 | 14 | Account favourites and saved research workflows | Planned |
-| 15 | Academy financial benchmarks and finance trends | Planned |
+| 15 | Academy financial benchmarks and finance trends | Implemented |
 | 16 | Deeper workforce census metrics and staffing structure | Planned |
 | 17 | School-level admissions demand and offer signals | Planned |
 | 18 | KS4 and 16-18 leaver destination outcomes | Planned |

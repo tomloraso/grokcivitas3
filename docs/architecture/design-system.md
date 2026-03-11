@@ -343,9 +343,67 @@ Simple percentage bar: `h-2 w-full rounded-full bg-surface/75` with filled porti
 
 ---
 
+### Stacked Bar + Legend Pattern
+
+A shared layout used by **EthnicityBreakdown**, **FundingBar**, and **SpendingBar**. Any new proportion/breakdown chart must follow this pattern exactly.
+
+**Chart colour palette** — solid hex values, never opacity-based Tailwind classes (invisible on dark canvas):
+
+```typescript
+const CHART_COLORS = [
+  "#2dd4bf", // teal-400
+  "#0d9488", // teal-600
+  "#38bdf8", // sky-400
+  "#0284c7", // sky-600
+  "#a78bfa", // violet-400
+  "#fbbf24", // amber-400
+  "#fb7185", // rose-400
+  "#22c55e", // emerald-500
+  "#9ca3af", // gray-400
+  "#c084fc", // purple-400
+  "#f97316", // orange-400
+  "#67e8f9", // cyan-300
+];
+```
+
+Two-colour variant for binary breakdowns (e.g. funding sources):
+```typescript
+const FUNDING_HEX = ["#2dd4bf", "#fbbf24"] as const;
+```
+
+**Layout structure:**
+
+1. **Stacked bar** — `flex h-3 w-full overflow-hidden rounded-full`, each segment sized by `width: ${pct}%` with `minWidth: 2` and inline `backgroundColor` from the palette. Segments separated by `1px solid var(--color-bg-surface)`.
+
+2. **Legend grid** — `grid grid-cols-1 gap-0.5 sm:grid-cols-2`. Each row:
+   - Colour dot: `h-2.5 w-2.5 rounded-full` with inline `backgroundColor`
+   - Truncated label: `truncate text-secondary`
+   - Right-aligned percentage: `ml-auto tabular-nums font-medium text-primary`
+   - Optional secondary value (count or amount): `tabular-nums text-xs text-secondary`
+
+3. **Show more/less toggle** — displayed when items exceed `initialVisibleCount` (default 8).
+
+**Bidirectional hover interaction:**
+
+- `useState<string | null>(null)` tracks the hovered item key
+- Hovering a **bar segment** highlights the corresponding **legend row** and vice versa
+- Non-hovered items fade to `opacity: 0.3` (bar segments) / `opacity-40` (legend rows)
+- Hovered legend row gets `bg-surface/50` highlight
+- All transitions use `duration-fast` (120ms)
+
+**Remainder slice (spending breakdown):**
+
+When known cost categories don't sum to 100%, add an "Other Costs" remainder slice so the bar always reaches full width. Calculate as `totalExpenditure - sum(knownCategories)`.
+
+**Canonical implementations:**
+- `components/data/EthnicityBreakdown.tsx` — generic, reusable
+- `features/school-profile/components/SchoolFinanceSection.tsx` — `FundingBar` and `SpendingBar` inline components
+
+---
+
 ### EthnicityBreakdown (`components/data/EthnicityBreakdown.tsx`)
 
-Stacked proportion bar with sortable legend, hover interaction, collapsible items. 12-colour palette.
+Stacked proportion bar with sortable legend, bidirectional hover, collapsible items. Uses the shared **Stacked Bar + Legend Pattern** above.
 
 ---
 
@@ -790,10 +848,11 @@ When using a mobile sticky bar, add `pb-20 lg:pb-0` to main content to prevent o
 7. **Never show completeness noise per-cell** — suppress section-level reason codes in compare
 8. **Never hard-code metric labels** — use `metricCatalog.ts` as the single source
 9. **Never use raw `<button>`** — always use the `Button` component
-10. **Never use hex colours directly** — use Tailwind semantic tokens (`text-brand`, `bg-surface`, etc.)
+10. **Never use hex colours directly for text/bg** — use Tailwind semantic tokens (`text-brand`, `bg-surface`, etc.) — **exception: chart segments** which must use inline hex from `CHART_COLORS` palette
 11. **Never skip the `panel-surface` class on section cards** — it provides the glass aesthetic
 12. **Never omit `aria-labelledby` on `<section>`** — every section needs an accessible heading link
 13. **Never use `gap-8` or wider spacing on mobile** — tighten to `gap-5` with `sm:gap-8`
+14. **Never use opacity-based Tailwind classes for chart colours** (e.g. `bg-sky-500/15`) — they are invisible on the dark canvas. Use solid hex values from `CHART_COLORS` via inline `style`
 
 ---
 

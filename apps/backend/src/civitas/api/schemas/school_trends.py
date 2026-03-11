@@ -72,6 +72,7 @@ class SchoolTrendsSeriesResponse(BaseModel):
     staff_costs_pct_of_expenditure: list[SchoolTrendPointResponse]
     revenue_reserve_per_pupil_gbp: list[SchoolTrendPointResponse]
     teaching_staff_costs_per_pupil_gbp: list[SchoolTrendPointResponse]
+    supply_staff_costs_pct_of_staff_costs: list[SchoolTrendPointResponse]
 
 
 class SchoolTrendsBenchmarksResponse(BaseModel):
@@ -121,6 +122,7 @@ class SchoolTrendsBenchmarksResponse(BaseModel):
     staff_costs_pct_of_expenditure: list[SchoolTrendBenchmarkPointResponse]
     revenue_reserve_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
     teaching_staff_costs_per_pupil_gbp: list[SchoolTrendBenchmarkPointResponse]
+    supply_staff_costs_pct_of_staff_costs: list[SchoolTrendBenchmarkPointResponse]
 
 
 class SchoolTrendsHistoryQualityResponse(BaseModel):

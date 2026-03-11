@@ -141,6 +141,18 @@ export interface FinanceLatestVM {
   staffCostsPctOfExpenditure: number | null;
   revenueReserveGbp: number | null;
   revenueReservePerPupilGbp: number | null;
+  inYearBalanceGbp: number | null;
+  totalGrantFundingGbp: number | null;
+  totalSelfGeneratedFundingGbp: number | null;
+  teachingStaffCostsGbp: number | null;
+  supplyTeachingStaffCostsGbp: number | null;
+  educationSupportStaffCostsGbp: number | null;
+  otherStaffCostsGbp: number | null;
+  premisesCostsGbp: number | null;
+  educationalSuppliesCostsGbp: number | null;
+  boughtInProfessionalServicesCostsGbp: number | null;
+  cateringCostsGbp: number | null;
+  supplyStaffCostsPctOfStaffCosts: number | null;
 }
 
 export interface LeadershipSnapshotVM {

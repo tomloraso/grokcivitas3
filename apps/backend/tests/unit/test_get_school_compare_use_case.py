@@ -619,6 +619,7 @@ def test_get_school_compare_returns_aligned_rows_in_request_order() -> None:
         "attendance",
         "behaviour",
         "workforce",
+        "finance",
         "performance",
         "area",
     ]

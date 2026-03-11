@@ -399,7 +399,19 @@ function mapFinance(profile: SchoolProfileResponse): FinanceLatestVM | null {
     totalStaffCostsGbp: finance.total_staff_costs_gbp,
     staffCostsPctOfExpenditure: finance.staff_costs_pct_of_expenditure,
     revenueReserveGbp: finance.revenue_reserve_gbp,
-    revenueReservePerPupilGbp: finance.revenue_reserve_per_pupil_gbp
+    revenueReservePerPupilGbp: finance.revenue_reserve_per_pupil_gbp,
+    inYearBalanceGbp: finance.in_year_balance_gbp,
+    totalGrantFundingGbp: finance.total_grant_funding_gbp,
+    totalSelfGeneratedFundingGbp: finance.total_self_generated_funding_gbp,
+    teachingStaffCostsGbp: finance.teaching_staff_costs_gbp,
+    supplyTeachingStaffCostsGbp: finance.supply_teaching_staff_costs_gbp,
+    educationSupportStaffCostsGbp: finance.education_support_staff_costs_gbp,
+    otherStaffCostsGbp: finance.other_staff_costs_gbp,
+    premisesCostsGbp: finance.premises_costs_gbp,
+    educationalSuppliesCostsGbp: finance.educational_supplies_costs_gbp,
+    boughtInProfessionalServicesCostsGbp: finance.bought_in_professional_services_costs_gbp,
+    cateringCostsGbp: finance.catering_costs_gbp,
+    supplyStaffCostsPctOfStaffCosts: finance.supply_staff_costs_pct_of_staff_costs
   };
 }
 

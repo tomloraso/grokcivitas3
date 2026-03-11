@@ -83,6 +83,7 @@ class SchoolCompareSectionResponse(BaseModel):
         "attendance",
         "behaviour",
         "workforce",
+        "finance",
         "performance",
         "area",
     ]

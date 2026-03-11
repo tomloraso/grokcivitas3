@@ -113,6 +113,8 @@ class SchoolFinanceYearlyRow:
     teaching_staff_costs_per_pupil_gbp: float | None
     revenue_reserve_gbp: float | None
     revenue_reserve_per_pupil_gbp: float | None
+    supply_staff_costs_pct_of_staff_costs: float | None
+    in_year_balance_gbp: float | None
 
 
 @dataclass(frozen=True)

@@ -27,6 +27,7 @@ const SECTION_LABEL_MAP: Record<string, string> = {
   behaviour: "Day-to-Day at School",
   demographics: "Pupil Demographics",
   workforce: "Teachers & Staff",
+  finance: "School Finance",
   area: "Neighbourhood Context",
 };
 
@@ -37,6 +38,7 @@ const SECTION_ORDER: string[] = [
   "Day-to-Day at School",
   "Pupil Demographics",
   "Teachers & Staff",
+  "School Finance",
   "Neighbourhood Context",
 ];
 

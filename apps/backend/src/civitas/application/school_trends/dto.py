@@ -79,6 +79,7 @@ class SchoolTrendsSeriesDto:
     staff_costs_pct_of_expenditure: tuple[SchoolTrendPointDto, ...]
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendPointDto, ...]
+    supply_staff_costs_pct_of_staff_costs: tuple[SchoolTrendPointDto, ...]
     teacher_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
     teacher_fte_total: tuple[SchoolTrendPointDto, ...] = ()
     support_staff_headcount_total: tuple[SchoolTrendPointDto, ...] = ()
@@ -129,6 +130,7 @@ class SchoolTrendsBenchmarksDto:
     staff_costs_pct_of_expenditure: tuple[SchoolTrendBenchmarkPointDto, ...]
     revenue_reserve_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
     teaching_staff_costs_per_pupil_gbp: tuple[SchoolTrendBenchmarkPointDto, ...]
+    supply_staff_costs_pct_of_staff_costs: tuple[SchoolTrendBenchmarkPointDto, ...]
     teacher_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
     teacher_fte_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()
     support_staff_headcount_total: tuple[SchoolTrendBenchmarkPointDto, ...] = ()

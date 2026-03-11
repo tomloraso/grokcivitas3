@@ -21,6 +21,7 @@ Replace DfE-internal category names with parent-language headings and rewrite se
 | Academic performance | Academic Performance | Results & Progress | *(none)* | *(none — year range shown instead)* |
 | Attendance & behaviour | Attendance and Behaviour | Day-to-Day at School | "Latest published attendance, persistent absence, suspensions and exclusions." | "How regularly pupils come to school, and how the school manages behaviour." |
 | Workforce | Workforce and Leadership | Teachers & Staff | "Staffing ratios, teacher profile measures and leadership metadata." | "Classroom staffing ratios, teacher experience, and who leads the school." |
+| Finance | *(new section)* | School Finance | "Latest Totals", "Funding Sources", "Where the Money Goes", "Per-Pupil & Benchmarked" | "Published academy finance data and per-pupil benchmarks." |
 
 ## Aria IDs Updated
 

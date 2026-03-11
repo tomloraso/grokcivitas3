@@ -226,6 +226,75 @@ Cards were over-padded on mobile, creating an "old people mode" feel. Tightened 
 
 All interactive elements retain ≥ 44px touch targets.
 
+### School Finance section (P15-UI, 2026-03-11)
+
+**Canonical location:** `src/features/school-profile/components/SchoolFinanceSection.tsx`
+
+The finance section follows the same `benchmarkDashboard` wiring pattern as all other profile sections. It surfaces 21 finance fields across four visually distinct subsections:
+
+**1. Latest Totals** — 5 summary cards (Total Income, Total Expenditure, Staff Costs, Revenue Reserve, In-Year Balance) rendered as `StatCard variant="mini" size="sm"` inside a glass inner card. In-Year Balance uses `trendDirection` to show surplus (▲) or deficit (▼) at a glance. Layout: `grid grid-cols-2 gap-x-6 gap-y-4 lg:grid-cols-5`.
+
+**2. Funding Sources** — `FundingBar` component: stacked proportion bar (teal for grants, amber for self-generated) + two-column legend grid matching the ethnicity breakdown layout (colour dot, truncated label, right-aligned percentage, secondary amount). Built by `buildFundingMix()`.
+
+**3. Where the Money Goes** — `SpendingBar` component: stacked proportion bar with up to 9 categories (8 named + "Other Costs" remainder) + two-column legend grid. Same layout as ethnicity and funding. Built by `buildSpendingBreakdown()`.
+
+**4. Per-Pupil & Benchmarked** — 6 benchmarked cards in a standard `MetricGrid columns={3} mobileTwo`: Income/Pupil, Expenditure/Pupil, Staff Costs %, Revenue Reserve/Pupil, Teaching Staff Costs/Pupil, Supply Staff Costs Share. These receive benchmark bars (school / local / national) from the benchmark dashboard via `toBenchmarkSlot()`.
+
+**Visual separation:** `border-t border-border-subtle/50 pt-5` dividers between subsections.
+
+**Spending breakdown "Other Costs":** When known cost categories don't sum to total expenditure (common — the AAR has cost lines not surfaced individually), an "Other Costs" slice fills the remainder so the bar always reaches 100%.
+
+**Negative currency formatting:** `formatMetricValue` in `metricCatalog.ts` uses `Math.abs()` for threshold comparison with a sign prefix, so `-276000` renders as `-£276k`.
+
+---
+
+### Chart colour palette (P15-UI, 2026-03-11)
+
+A shared solid-colour palette used across all stacked bars and category breakdowns. Designed for high contrast on the dark navy canvas — no opacity variants.
+
+| Index | Tailwind class | Hex | Role |
+|---|---|---|---|
+| 0 | `teal-400` | `#2dd4bf` | Primary / first category |
+| 1 | `teal-600` | `#0d9488` | Secondary teal |
+| 2 | `sky-400` | `#38bdf8` | Blue accent |
+| 3 | `sky-600` | `#0284c7` | Darker blue |
+| 4 | `violet-400` | `#a78bfa` | Purple |
+| 5 | `amber-400` | `#fbbf24` | Warm accent |
+| 6 | `rose-400` | `#fb7185` | Pink |
+| 7 | `emerald-500` | `#22c55e` | Green |
+| 8 | `gray-400` | `#9ca3af` | Neutral / "Other" |
+| 9 | `purple-400` | `#c084fc` | Extended purple |
+| 10 | `orange-400` | `#f97316` | Extended warm |
+| 11 | `cyan-300` | `#67e8f9` | Extended cool |
+
+**Used by:**
+- `SchoolFinanceSection.tsx` — `CHART_COLORS` (hex, indices 0–8) and `FUNDING_HEX` (hex, teal-400 + amber-400)
+- `EthnicityBreakdown.tsx` — `SEGMENT_COLORS` (hex, indices 0–11)
+
+**Rule:** Never use opacity-based Tailwind colours (`bg-brand/40`, `bg-sky-500/15`) for chart segments — they vanish on the dark canvas. Always use full-opacity solid hex values from this palette.
+
+### Stacked bar + legend pattern (P15-UI, 2026-03-11)
+
+All proportion visualisations (ethnicity, funding sources, spending breakdown) share identical layout and hover behaviour:
+
+**Layout:**
+- Stacked bar: `flex h-3 overflow-hidden rounded-full`, segments sized by `width: ${pct}%`
+- Legend: `grid grid-cols-1 gap-0.5 sm:grid-cols-2` — each row is colour dot (`h-2.5 w-2.5 rounded-full`) + truncated label (`truncate text-secondary`) + right-aligned percentage (`ml-auto tabular-nums font-medium text-primary`) + optional secondary value (`text-xs text-secondary`)
+
+**Hover interaction (bidirectional):**
+- Hovering a bar segment or legend row highlights that item and fades all others
+- Bar segments: non-hovered fade to `opacity: 0.3`, `transition-opacity duration-150`
+- Legend rows: active gets `bg-surface/50` highlight; non-hovered get `opacity-40` via Tailwind class
+- State managed by `useState<string | null>` keyed on category label/group key
+
+**Canonical implementations:**
+- `EthnicityBreakdown.tsx` — `StackedBar` + `LegendRow` sub-components, `hoveredKey` state
+- `SchoolFinanceSection.tsx` — `FundingBar` + `SpendingBar` components, `hovered` state
+
+**Rule:** New proportion charts must follow this pattern. Do not use separate tooltip popovers or different fade values.
+
+---
+
 ### Compare page — design system (P13.1–P13.5, 2026-03-10)
 
 **Canonical location:** `src/features/school-compare/`

@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Extended — P14.2 complete, all deliverables done (2026-03-10)
-- Last updated: 2026-03-10
+- Status: Extended — P15-UI complete (2026-03-11)
+- Last updated: 2026-03-11
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
 - Detailed brief: `.planning/ux-overhaul/README.md`
@@ -53,6 +53,10 @@ Section components (import via shim — no changes needed)
   └── DemographicsAndTrendsPanel  → "Pupil Demographics"  ← benchmarks added P12
   each accepts: benchmarkDashboard: BenchmarkDashboardVM | null
   each builds:  Map<metricKey, BenchmarkMetricVM> → BenchmarkSlot
+
+SchoolFinanceSection (imports from ui/stat-card directly)
+  └── Summary totals: variant="mini" size="sm" inside glass inner card
+  └── Benchmarked: standard MetricGrid columns={3} mobileTwo
 
 NeighbourhoodSection (imports from ui/stat-card directly)
   └── variant="mini" size="sm" StatCards inside bordered containers
@@ -207,6 +211,21 @@ SchoolProfileFeature
 - 2026-03-10 (P11.1 — StatCard Title Case migration):
   - **`stat-card.tsx`** — removed `uppercase tracking-[0.08em]` from label `<span>`, replaced with `tracking-[0.04em]`. Labels now render in their natural Title Case from `metricCatalog.ts` (e.g. "Free School Meals", "English as Additional Language") instead of ALL CAPS. No section component changes needed — source strings were already Title Case.
   - **`apps/web/README.md`** — added "Title case rule" to StatCard design system section.
+
+- 2026-03-11 (P15-UI — School Finance section, expanded):
+  - **`SchoolFinanceSection.tsx`** — full rewrite with 4 subsections: (1) Latest Totals — 5 summary cards including In-Year Balance with `trendDirection` surplus/deficit indicator, `lg:grid-cols-5`; (2) Funding Sources — horizontal stacked bar (Grant vs Self-Generated) with colour-coded segments, amounts, and percentages via `buildFundingMix()`; (3) Where the Money Goes — spending breakdown bar with up to 8 cost categories (Teaching, Supply, Support, Other Staff, Premises, Supplies, Professional Services, Catering) sorted by size via `buildSpendingBreakdown()` and `SPEND_COLORS`; (4) Per-Pupil & Benchmarked — 6 metrics with benchmark bars including new Supply Staff Costs Share.
+  - **Backend (21 profile fields)** — added 12 new fields to finance_latest across all layers: `in_year_balance_gbp`, `total_grant_funding_gbp`, `total_self_generated_funding_gbp`, `teaching_staff_costs_gbp`, `supply_teaching_staff_costs_gbp`, `education_support_staff_costs_gbp`, `other_staff_costs_gbp`, `premises_costs_gbp`, `educational_supplies_costs_gbp`, `bought_in_professional_services_costs_gbp`, `catering_costs_gbp`, `supply_staff_costs_pct_of_staff_costs`. Updated domain model, DTO, schema, repository, use case, presenter.
+  - **Backend (trends + benchmarks)** — added `supply_staff_costs_pct_of_staff_costs` to series, benchmarks, and all 3 CROSS JOIN LATERAL benchmark query blocks. New metric catalog entry: `finance_supply_staff_costs_pct_of_staff_costs`.
+  - **Frontend types** — regenerated `openapi.json` and `generated-types.ts`; updated `FinanceLatestVM` (12 new fields), `profileMapper.ts`, `metricCatalog.ts` (new Supply Staff Costs Share entry).
+  - **`SchoolProfileFeature.tsx`** — `<SchoolFinanceSection>` wired with `finance`, `trends`, `completeness`, and `benchmarkDashboard` props inside a `ProfileSectionAccordion` (defaultOpen={false}).
+  - **`metricCatalog.ts`** — negative currency formatting fixed: `-276000` now renders as `-£276k` instead of `£-276000`. Uses `Math.abs()` for threshold checks with sign prefix.
+  - **`profileMapper.ts`** — finance completeness field mapped from API response.
+
+- 2026-03-11 (P15-UI.2 — Chart hover consistency + colour palette):
+  - **`SchoolFinanceSection.tsx`** — refactored `FundingBar` and `SpendingBar` to match ethnicity breakdown layout: stacked bar + two-column legend grid (`grid-cols-1 sm:grid-cols-2 gap-0.5`), colour dot + truncated label + right-aligned percentage + secondary amount. Switched from Tailwind class colours to inline hex via `CHART_COLORS` / `FUNDING_HEX` arrays. Added bidirectional hover: bar segments fade to `opacity: 0.3`, legend rows fade to `opacity-40`, active row gets `bg-surface/50`. "Other Costs" remainder slice fills bar to 100%. Fixed benchmark key mismatch (`finance_` prefix). Ran `materialize-benchmarks --all` to populate national/local values.
+  - **`EthnicityBreakdown.tsx`** — added `isFaded` prop to `LegendRow`; non-hovered legend rows now fade to `opacity-40` (matching finance bars). Updated `SEGMENT_COLORS` from old purple/cyan/blue hex to shared teal-400/sky-400/violet-400/amber-400 palette.
+  - **`metricCatalog.ts`** — added `finance_` prefixed aliases for all 6 finance benchmark keys so `getMetricCatalogEntry()` resolves them correctly from the benchmark dashboard API.
+  - **`apps/web/README.md`** — added "Stacked bar + legend pattern" design system section documenting shared layout, hover interaction, and canonical implementations. Updated chart colour palette to document hex-based `CHART_COLORS` / `FUNDING_HEX`.
 
 - 2026-03-11 (P12.1 — Benchmark delta neutrality):
   - **`stat-card.tsx`** — removed conditional teal/red colouring (`deltaColorClass`) from regional/national benchmark delta values; all deltas now render in neutral gray (`#94A3B8`). "This school" bar stays teal. Facts-only Loira Voss style.

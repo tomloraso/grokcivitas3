@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented (2026-03-11)
+- Last updated: 2026-03-11
 - Depends on:
   - `.planning/phases/phase-15-school-financial-benchmarks/15B-aar-pipeline-and-gold-schema.md`
 
@@ -15,7 +15,7 @@ Because the current profile and trends APIs use stable response shapes, finance 
 
 ## Serving Model
 
-Profile latest additions:
+Profile latest additions (21 fields total):
 
 - `finance_latest.total_income_gbp`
 - `finance_latest.total_expenditure_gbp`
@@ -25,6 +25,18 @@ Profile latest additions:
 - `finance_latest.staff_costs_pct_of_expenditure`
 - `finance_latest.revenue_reserve_gbp`
 - `finance_latest.revenue_reserve_per_pupil_gbp`
+- `finance_latest.in_year_balance_gbp`
+- `finance_latest.total_grant_funding_gbp`
+- `finance_latest.total_self_generated_funding_gbp`
+- `finance_latest.teaching_staff_costs_gbp`
+- `finance_latest.supply_teaching_staff_costs_gbp`
+- `finance_latest.education_support_staff_costs_gbp`
+- `finance_latest.other_staff_costs_gbp`
+- `finance_latest.premises_costs_gbp`
+- `finance_latest.educational_supplies_costs_gbp`
+- `finance_latest.bought_in_professional_services_costs_gbp`
+- `finance_latest.catering_costs_gbp`
+- `finance_latest.supply_staff_costs_pct_of_staff_costs`
 - `finance_latest.source_academic_year`
 
 Profile completeness additions:
@@ -54,10 +66,20 @@ Add finance metrics to the metric catalog used by benchmark materialization:
 - `finance_staff_costs_pct_of_expenditure`
 - `finance_revenue_reserve_per_pupil_gbp`
 - `finance_teaching_staff_costs_per_pupil_gbp`
+- `finance_supply_staff_costs_pct_of_staff_costs`
 
-These metrics should flow through the existing `metric_benchmarks_yearly` materialization before Phase 20 redesigns the benchmark model.
+These metrics flow through the existing `metric_benchmarks_yearly` materialization before Phase 20 redesigns the benchmark model.
 
-This phase does not add finance rows to the compare API or compare UI. The benchmark keys above should use stable naming so Phase 20 or a later compare-focused phase can register them without renaming.
+Finance metrics are also registered in the compare metric catalog (`COMPARE_METRIC_CATALOG`), adding 8 finance rows across 3 non-benchmarked totals (income, expenditure, in-year balance) and 5 benchmarked per-pupil/ratio metrics. The compare frontend maps the backend `finance` section to "School Finance" and renders it between "Teachers & Staff" and "Neighbourhood Context" to match the school profile ordering.
+
+## Frontend Finance Section
+
+The school profile finance section renders 4 subsections:
+
+1. **Latest Totals** — 5 summary cards (Income, Expenditure, Staff Costs, Reserve, In-Year Balance)
+2. **Funding Sources** — stacked bar (Grant Funding vs Self-Generated)
+3. **Where the Money Goes** — spending breakdown bar with up to 8 cost categories
+4. **Per-Pupil & Benchmarked** — 6 metrics with school/local/national benchmark bars
 
 ## Repository File Plan
 

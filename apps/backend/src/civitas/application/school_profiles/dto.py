@@ -191,6 +191,18 @@ class SchoolFinanceLatestDto:
     staff_costs_pct_of_expenditure: float | None
     revenue_reserve_gbp: float | None
     revenue_reserve_per_pupil_gbp: float | None
+    in_year_balance_gbp: float | None
+    total_grant_funding_gbp: float | None
+    total_self_generated_funding_gbp: float | None
+    teaching_staff_costs_gbp: float | None
+    supply_teaching_staff_costs_gbp: float | None
+    education_support_staff_costs_gbp: float | None
+    other_staff_costs_gbp: float | None
+    premises_costs_gbp: float | None
+    educational_supplies_costs_gbp: float | None
+    bought_in_professional_services_costs_gbp: float | None
+    catering_costs_gbp: float | None
+    supply_staff_costs_pct_of_staff_costs: float | None
 
 
 @dataclass(frozen=True)

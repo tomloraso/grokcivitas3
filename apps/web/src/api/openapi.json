@@ -574,9 +574,6 @@
           "404": {
             "description": "Postcode not found."
           },
-          "503": {
-            "description": "Postcode resolver unavailable."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -586,6 +583,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Postcode resolver unavailable."
           }
         }
       }
@@ -680,9 +680,6 @@
           "404": {
             "description": "One or more school URNs were not found."
           },
-          "503": {
-            "description": "School compare datastore unavailable."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -692,6 +689,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "School compare datastore unavailable."
           }
         }
       }
@@ -729,9 +729,6 @@
           "404": {
             "description": "School URN not found."
           },
-          "503": {
-            "description": "School profile datastore unavailable."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -741,6 +738,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "School profile datastore unavailable."
           }
         }
       }
@@ -778,9 +778,6 @@
           "404": {
             "description": "School URN not found."
           },
-          "503": {
-            "description": "School trends datastore unavailable."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -790,6 +787,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "School trends datastore unavailable."
           }
         }
       }
@@ -827,9 +827,6 @@
           "404": {
             "description": "School URN not found."
           },
-          "503": {
-            "description": "School trends datastore unavailable."
-          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -839,6 +836,9 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "School trends datastore unavailable."
           }
         }
       }
@@ -1070,7 +1070,8 @@
         "type": "object",
         "required": [
           "access",
-          "count"
+          "count",
+          "schools"
         ],
         "title": "AccountFavouritesResponse"
       },
@@ -2097,6 +2098,7 @@
               "attendance",
               "behaviour",
               "workforce",
+              "finance",
               "performance",
               "area"
             ],
@@ -3437,6 +3439,138 @@
               }
             ],
             "title": "Revenue Reserve Per Pupil Gbp"
+          },
+          "in_year_balance_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Year Balance Gbp"
+          },
+          "total_grant_funding_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Grant Funding Gbp"
+          },
+          "total_self_generated_funding_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Self Generated Funding Gbp"
+          },
+          "teaching_staff_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teaching Staff Costs Gbp"
+          },
+          "supply_teaching_staff_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supply Teaching Staff Costs Gbp"
+          },
+          "education_support_staff_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Education Support Staff Costs Gbp"
+          },
+          "other_staff_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Staff Costs Gbp"
+          },
+          "premises_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Premises Costs Gbp"
+          },
+          "educational_supplies_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Educational Supplies Costs Gbp"
+          },
+          "bought_in_professional_services_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bought In Professional Services Costs Gbp"
+          },
+          "catering_costs_gbp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catering Costs Gbp"
+          },
+          "supply_staff_costs_pct_of_staff_costs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supply Staff Costs Pct Of Staff Costs"
           }
         },
         "type": "object",
@@ -3449,7 +3583,19 @@
           "total_staff_costs_gbp",
           "staff_costs_pct_of_expenditure",
           "revenue_reserve_gbp",
-          "revenue_reserve_per_pupil_gbp"
+          "revenue_reserve_per_pupil_gbp",
+          "in_year_balance_gbp",
+          "total_grant_funding_gbp",
+          "total_self_generated_funding_gbp",
+          "teaching_staff_costs_gbp",
+          "supply_teaching_staff_costs_gbp",
+          "education_support_staff_costs_gbp",
+          "other_staff_costs_gbp",
+          "premises_costs_gbp",
+          "educational_supplies_costs_gbp",
+          "bought_in_professional_services_costs_gbp",
+          "catering_costs_gbp",
+          "supply_staff_costs_pct_of_staff_costs"
         ],
         "title": "SchoolProfileFinanceLatestResponse"
       },
@@ -4984,69 +5130,6 @@
         ],
         "title": "SchoolProfileSectionCompletenessResponse"
       },
-      "SchoolProfileWorkforceBreakdownItemResponse": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "headcount": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Headcount"
-          },
-          "fte": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fte"
-          },
-          "headcount_pct": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Headcount Pct"
-          },
-          "fte_pct": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fte Pct"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "label",
-          "headcount"
-        ],
-        "title": "SchoolProfileWorkforceBreakdownItemResponse"
-      },
       "SchoolProfileWorkforceLatestResponse": {
         "properties": {
           "academic_year": {
@@ -5867,6 +5950,48 @@
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
           },
+          "income_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Income Per Pupil Gbp"
+          },
+          "expenditure_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Expenditure Per Pupil Gbp"
+          },
+          "staff_costs_pct_of_expenditure": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Staff Costs Pct Of Expenditure"
+          },
+          "revenue_reserve_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Revenue Reserve Per Pupil Gbp"
+          },
+          "teaching_staff_costs_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Teaching Staff Costs Per Pupil Gbp"
+          },
+          "supply_staff_costs_pct_of_staff_costs": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
+            },
+            "type": "array",
+            "title": "Supply Staff Costs Pct Of Staff Costs"
+          },
           "teacher_headcount_total": {
             "items": {
               "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
@@ -5985,41 +6110,6 @@
             },
             "type": "array",
             "title": "Third Party Support Staff Headcount"
-          },
-          "income_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
-            },
-            "type": "array",
-            "title": "Income Per Pupil Gbp"
-          },
-          "expenditure_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
-            },
-            "type": "array",
-            "title": "Expenditure Per Pupil Gbp"
-          },
-          "staff_costs_pct_of_expenditure": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
-            },
-            "type": "array",
-            "title": "Staff Costs Pct Of Expenditure"
-          },
-          "revenue_reserve_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
-            },
-            "type": "array",
-            "title": "Revenue Reserve Per Pupil Gbp"
-          },
-          "teaching_staff_costs_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendBenchmarkPointResponse"
-            },
-            "type": "array",
-            "title": "Teaching Staff Costs Per Pupil Gbp"
           }
         },
         "type": "object",
@@ -6069,7 +6159,8 @@
           "expenditure_per_pupil_gbp",
           "staff_costs_pct_of_expenditure",
           "revenue_reserve_per_pupil_gbp",
-          "teaching_staff_costs_per_pupil_gbp"
+          "teaching_staff_costs_per_pupil_gbp",
+          "supply_staff_costs_pct_of_staff_costs"
         ],
         "title": "SchoolTrendsBenchmarksResponse"
       },
@@ -6405,6 +6496,48 @@
             "type": "array",
             "title": "Qualifications Level6 Plus Pct"
           },
+          "income_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Income Per Pupil Gbp"
+          },
+          "expenditure_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Expenditure Per Pupil Gbp"
+          },
+          "staff_costs_pct_of_expenditure": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Staff Costs Pct Of Expenditure"
+          },
+          "revenue_reserve_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Revenue Reserve Per Pupil Gbp"
+          },
+          "teaching_staff_costs_per_pupil_gbp": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Teaching Staff Costs Per Pupil Gbp"
+          },
+          "supply_staff_costs_pct_of_staff_costs": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolTrendPointResponse"
+            },
+            "type": "array",
+            "title": "Supply Staff Costs Pct Of Staff Costs"
+          },
           "teacher_headcount_total": {
             "items": {
               "$ref": "#/components/schemas/SchoolTrendPointResponse"
@@ -6523,41 +6656,6 @@
             },
             "type": "array",
             "title": "Third Party Support Staff Headcount"
-          },
-          "income_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendPointResponse"
-            },
-            "type": "array",
-            "title": "Income Per Pupil Gbp"
-          },
-          "expenditure_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendPointResponse"
-            },
-            "type": "array",
-            "title": "Expenditure Per Pupil Gbp"
-          },
-          "staff_costs_pct_of_expenditure": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendPointResponse"
-            },
-            "type": "array",
-            "title": "Staff Costs Pct Of Expenditure"
-          },
-          "revenue_reserve_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendPointResponse"
-            },
-            "type": "array",
-            "title": "Revenue Reserve Per Pupil Gbp"
-          },
-          "teaching_staff_costs_per_pupil_gbp": {
-            "items": {
-              "$ref": "#/components/schemas/SchoolTrendPointResponse"
-            },
-            "type": "array",
-            "title": "Teaching Staff Costs Per Pupil Gbp"
           }
         },
         "type": "object",
@@ -6607,7 +6705,8 @@
           "expenditure_per_pupil_gbp",
           "staff_costs_pct_of_expenditure",
           "revenue_reserve_per_pupil_gbp",
-          "teaching_staff_costs_per_pupil_gbp"
+          "teaching_staff_costs_per_pupil_gbp",
+          "supply_staff_costs_pct_of_staff_costs"
         ],
         "title": "SchoolTrendsSeriesResponse"
       },
@@ -6950,6 +7049,69 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "SchoolProfileWorkforceBreakdownItemResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "headcount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headcount"
+          },
+          "fte": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fte"
+          },
+          "headcount_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headcount Pct"
+          },
+          "fte_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fte Pct"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "headcount"
+        ],
+        "title": "SchoolProfileWorkforceBreakdownItemResponse"
       }
     }
   }

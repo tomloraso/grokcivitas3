@@ -149,6 +149,56 @@ export const METRIC_CATALOG: Record<string, MetricCatalogEntry> = {
     section: "finance",
     unit: "currency"
   },
+  supply_staff_costs_pct_of_staff_costs: {
+    key: "supply_staff_costs_pct_of_staff_costs",
+    label: "Supply Staff Costs Share",
+    description: "The proportion of total staff costs spent on supply (temporary) teaching staff. High supply spending can indicate difficulty retaining permanent teachers.",
+    section: "finance",
+    unit: "percent"
+  },
+  // Dashboard/benchmark API uses finance_ prefixed keys for finance metrics
+  finance_income_per_pupil_gbp: {
+    key: "finance_income_per_pupil_gbp",
+    label: "Income per Pupil",
+    description: "Total income divided by full-time equivalent pupils. Helps compare school income levels on a like-for-like basis.",
+    section: "finance",
+    unit: "currency"
+  },
+  finance_expenditure_per_pupil_gbp: {
+    key: "finance_expenditure_per_pupil_gbp",
+    label: "Expenditure per Pupil",
+    description: "Total expenditure divided by full-time equivalent pupils. Useful for comparing school spending levels across different school sizes.",
+    section: "finance",
+    unit: "currency"
+  },
+  finance_staff_costs_pct_of_expenditure: {
+    key: "finance_staff_costs_pct_of_expenditure",
+    label: "Staff Costs Share of Expenditure",
+    description: "The proportion of total expenditure spent on staff costs. This shows how much of the school's spending goes on staffing.",
+    section: "finance",
+    unit: "percent"
+  },
+  finance_revenue_reserve_per_pupil_gbp: {
+    key: "finance_revenue_reserve_per_pupil_gbp",
+    label: "Revenue Reserve per Pupil",
+    description: "Revenue reserves divided by full-time equivalent pupils. Gives context on retained financial headroom relative to school size.",
+    section: "finance",
+    unit: "currency"
+  },
+  finance_teaching_staff_costs_per_pupil_gbp: {
+    key: "finance_teaching_staff_costs_per_pupil_gbp",
+    label: "Teaching Staff Costs per Pupil",
+    description: "Teaching staff costs divided by full-time equivalent pupils. Indicates direct classroom staffing spend relative to school size.",
+    section: "finance",
+    unit: "currency"
+  },
+  finance_supply_staff_costs_pct_of_staff_costs: {
+    key: "finance_supply_staff_costs_pct_of_staff_costs",
+    label: "Supply Staff Costs Share",
+    description: "The proportion of total staff costs spent on supply (temporary) teaching staff. High supply spending can indicate difficulty retaining permanent teachers.",
+    section: "finance",
+    unit: "percent"
+  },
   overall_attendance_pct: {
     key: "overall_attendance_pct",
     label: "Overall Attendance",
@@ -603,10 +653,13 @@ export function formatMetricValue(
         maximumFractionDigits:
           decimalsOverride ?? (Number.isInteger(value) ? 0 : 1)
       });
-    case "currency":
-      if (value >= 1_000_000) return `£${(value / 1_000_000).toFixed(1)}m`;
-      if (value >= 1_000) return `£${Math.round(value / 1_000)}k`;
-      return `£${Math.round(value)}`;
+    case "currency": {
+      const sign = value < 0 ? "-" : "";
+      const abs = Math.abs(value);
+      if (abs >= 1_000_000) return `${sign}£${(abs / 1_000_000).toFixed(1)}m`;
+      if (abs >= 1_000) return `${sign}£${Math.round(abs / 1_000)}k`;
+      return `${sign}£${Math.round(abs)}`;
+    }
     case "percent":
       return `${value.toFixed(decimalsOverride ?? 1)}%`;
     case "ratio":

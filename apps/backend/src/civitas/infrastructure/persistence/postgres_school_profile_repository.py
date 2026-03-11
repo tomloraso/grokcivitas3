@@ -499,6 +499,18 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                                 staff_costs_pct_of_expenditure,
                                 revenue_reserve_gbp,
                                 revenue_reserve_per_pupil_gbp,
+                                in_year_balance_gbp,
+                                total_grant_funding_gbp,
+                                total_self_generated_funding_gbp,
+                                teaching_staff_costs_gbp,
+                                supply_teaching_staff_costs_gbp,
+                                education_support_staff_costs_gbp,
+                                other_staff_costs_gbp,
+                                premises_costs_gbp,
+                                educational_supplies_costs_gbp,
+                                bought_in_professional_services_costs_gbp,
+                                catering_costs_gbp,
+                                supply_staff_costs_pct_of_staff_costs,
                                 updated_at
                             FROM school_financials_yearly
                             WHERE urn = :urn
@@ -1116,6 +1128,34 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                 revenue_reserve_gbp=_to_optional_float(finance_row["revenue_reserve_gbp"]),
                 revenue_reserve_per_pupil_gbp=_to_optional_float(
                     finance_row["revenue_reserve_per_pupil_gbp"]
+                ),
+                in_year_balance_gbp=_to_optional_float(finance_row["in_year_balance_gbp"]),
+                total_grant_funding_gbp=_to_optional_float(
+                    finance_row["total_grant_funding_gbp"]
+                ),
+                total_self_generated_funding_gbp=_to_optional_float(
+                    finance_row["total_self_generated_funding_gbp"]
+                ),
+                teaching_staff_costs_gbp=_to_optional_float(
+                    finance_row["teaching_staff_costs_gbp"]
+                ),
+                supply_teaching_staff_costs_gbp=_to_optional_float(
+                    finance_row["supply_teaching_staff_costs_gbp"]
+                ),
+                education_support_staff_costs_gbp=_to_optional_float(
+                    finance_row["education_support_staff_costs_gbp"]
+                ),
+                other_staff_costs_gbp=_to_optional_float(finance_row["other_staff_costs_gbp"]),
+                premises_costs_gbp=_to_optional_float(finance_row["premises_costs_gbp"]),
+                educational_supplies_costs_gbp=_to_optional_float(
+                    finance_row["educational_supplies_costs_gbp"]
+                ),
+                bought_in_professional_services_costs_gbp=_to_optional_float(
+                    finance_row["bought_in_professional_services_costs_gbp"]
+                ),
+                catering_costs_gbp=_to_optional_float(finance_row["catering_costs_gbp"]),
+                supply_staff_costs_pct_of_staff_costs=_to_optional_float(
+                    finance_row["supply_staff_costs_pct_of_staff_costs"]
                 ),
             )
 

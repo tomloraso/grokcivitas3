@@ -94,6 +94,12 @@ DASHBOARD_METRIC_CATALOG: tuple[tuple[str, str, str, str], ...] = (
         "Teaching Staff Costs per Pupil",
         "currency",
     ),
+    (
+        "finance",
+        "finance_supply_staff_costs_pct_of_staff_costs",
+        "Supply Staff Costs Share",
+        "percent",
+    ),
     ("attendance", "overall_attendance_pct", "Overall Attendance (%)", "percent"),
     ("attendance", "overall_absence_pct", "Overall Absence (%)", "percent"),
     ("attendance", "persistent_absence_pct", "Persistent Absence (%)", "percent"),
@@ -469,6 +475,10 @@ class GetSchoolTrendsUseCase:
                     rows=finance_rows,
                     metric_value=lambda row: row.teaching_staff_costs_per_pupil_gbp,
                 ),
+                supply_staff_costs_pct_of_staff_costs=_build_metric_series(
+                    rows=finance_rows,
+                    metric_value=lambda row: row.supply_staff_costs_pct_of_staff_costs,
+                ),
             ),
             benchmarks=SchoolTrendsBenchmarksDto(
                 disadvantaged_pct=_build_metric_benchmark_series(
@@ -654,6 +664,10 @@ class GetSchoolTrendsUseCase:
                 teaching_staff_costs_per_pupil_gbp=_build_metric_benchmark_series(
                     rows_by_metric=benchmark_rows_by_metric,
                     metric_key="finance_teaching_staff_costs_per_pupil_gbp",
+                ),
+                supply_staff_costs_pct_of_staff_costs=_build_metric_benchmark_series(
+                    rows_by_metric=benchmark_rows_by_metric,
+                    metric_key="finance_supply_staff_costs_pct_of_staff_costs",
                 ),
             ),
             completeness=_build_overall_completeness(

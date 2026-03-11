@@ -329,6 +329,8 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                                 teaching_staff_costs_per_pupil_gbp,
                                 revenue_reserve_gbp,
                                 revenue_reserve_per_pupil_gbp,
+                                supply_staff_costs_pct_of_staff_costs,
+                                in_year_balance_gbp,
                                 updated_at
                             FROM school_financials_yearly
                             WHERE urn = :urn
@@ -372,6 +374,10 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                     revenue_reserve_per_pupil_gbp=_to_optional_float(
                         row["revenue_reserve_per_pupil_gbp"]
                     ),
+                    supply_staff_costs_pct_of_staff_costs=_to_optional_float(
+                        row["supply_staff_costs_pct_of_staff_costs"]
+                    ),
+                    in_year_balance_gbp=_to_optional_float(row["in_year_balance_gbp"]),
                 )
                 for row in rows
             ),
@@ -783,6 +789,10 @@ def _get_metric_benchmark_rows_from_cache(
                             (
                                 'finance_teaching_staff_costs_per_pupil_gbp',
                                 finance.teaching_staff_costs_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_supply_staff_costs_pct_of_staff_costs',
+                                finance.supply_staff_costs_pct_of_staff_costs::double precision
                             )
                     ) AS metric(metric_key, metric_value)
                     WHERE finance.urn = :urn
@@ -1187,6 +1197,10 @@ def _compute_metric_benchmark_rows(
                             (
                                 'finance_teaching_staff_costs_per_pupil_gbp',
                                 finance.teaching_staff_costs_per_pupil_gbp::double precision
+                            ),
+                            (
+                                'finance_supply_staff_costs_pct_of_staff_costs',
+                                finance.supply_staff_costs_pct_of_staff_costs::double precision
                             )
                     ) AS metric(metric_key, metric_value)
 

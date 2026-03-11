@@ -694,7 +694,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "performance" | "area";
+            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "finance" | "performance" | "area";
             /** Label */
             label: string;
             /** Rows */
@@ -1015,6 +1015,30 @@ export interface components {
             revenue_reserve_gbp: number | null;
             /** Revenue Reserve Per Pupil Gbp */
             revenue_reserve_per_pupil_gbp: number | null;
+            /** In Year Balance Gbp */
+            in_year_balance_gbp: number | null;
+            /** Total Grant Funding Gbp */
+            total_grant_funding_gbp: number | null;
+            /** Total Self Generated Funding Gbp */
+            total_self_generated_funding_gbp: number | null;
+            /** Teaching Staff Costs Gbp */
+            teaching_staff_costs_gbp: number | null;
+            /** Supply Teaching Staff Costs Gbp */
+            supply_teaching_staff_costs_gbp: number | null;
+            /** Education Support Staff Costs Gbp */
+            education_support_staff_costs_gbp: number | null;
+            /** Other Staff Costs Gbp */
+            other_staff_costs_gbp: number | null;
+            /** Premises Costs Gbp */
+            premises_costs_gbp: number | null;
+            /** Educational Supplies Costs Gbp */
+            educational_supplies_costs_gbp: number | null;
+            /** Bought In Professional Services Costs Gbp */
+            bought_in_professional_services_costs_gbp: number | null;
+            /** Catering Costs Gbp */
+            catering_costs_gbp: number | null;
+            /** Supply Staff Costs Pct Of Staff Costs */
+            supply_staff_costs_pct_of_staff_costs: number | null;
         };
         /** SchoolProfileLeadershipSnapshotResponse */
         SchoolProfileLeadershipSnapshotResponse: {
@@ -1570,6 +1594,8 @@ export interface components {
             revenue_reserve_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
             /** Teaching Staff Costs Per Pupil Gbp */
             teaching_staff_costs_per_pupil_gbp: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
+            /** Supply Staff Costs Pct Of Staff Costs */
+            supply_staff_costs_pct_of_staff_costs: components["schemas"]["SchoolTrendBenchmarkPointResponse"][];
         };
         /** SchoolTrendsCompletenessResponse */
         SchoolTrendsCompletenessResponse: {
@@ -1708,6 +1734,8 @@ export interface components {
             revenue_reserve_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
             /** Teaching Staff Costs Per Pupil Gbp */
             teaching_staff_costs_per_pupil_gbp: components["schemas"]["SchoolTrendPointResponse"][];
+            /** Supply Staff Costs Pct Of Staff Costs */
+            supply_staff_costs_pct_of_staff_costs: components["schemas"]["SchoolTrendPointResponse"][];
         };
         /** SchoolsSearchCenterResponse */
         SchoolsSearchCenterResponse: {

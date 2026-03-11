@@ -211,6 +211,30 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             staff_costs_pct_of_expenditure=result.finance_latest.staff_costs_pct_of_expenditure,
             revenue_reserve_gbp=result.finance_latest.revenue_reserve_gbp,
             revenue_reserve_per_pupil_gbp=result.finance_latest.revenue_reserve_per_pupil_gbp,
+            in_year_balance_gbp=result.finance_latest.in_year_balance_gbp,
+            total_grant_funding_gbp=result.finance_latest.total_grant_funding_gbp,
+            total_self_generated_funding_gbp=(
+                result.finance_latest.total_self_generated_funding_gbp
+            ),
+            teaching_staff_costs_gbp=result.finance_latest.teaching_staff_costs_gbp,
+            supply_teaching_staff_costs_gbp=(
+                result.finance_latest.supply_teaching_staff_costs_gbp
+            ),
+            education_support_staff_costs_gbp=(
+                result.finance_latest.education_support_staff_costs_gbp
+            ),
+            other_staff_costs_gbp=result.finance_latest.other_staff_costs_gbp,
+            premises_costs_gbp=result.finance_latest.premises_costs_gbp,
+            educational_supplies_costs_gbp=(
+                result.finance_latest.educational_supplies_costs_gbp
+            ),
+            bought_in_professional_services_costs_gbp=(
+                result.finance_latest.bought_in_professional_services_costs_gbp
+            ),
+            catering_costs_gbp=result.finance_latest.catering_costs_gbp,
+            supply_staff_costs_pct_of_staff_costs=(
+                result.finance_latest.supply_staff_costs_pct_of_staff_costs
+            ),
         )
 
     leadership_snapshot = None

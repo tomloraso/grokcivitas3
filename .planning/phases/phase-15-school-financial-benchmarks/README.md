@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented — pipeline, serving layer, and profile UI complete (2026-03-11)
+- Last updated: 2026-03-11
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Legacy workstream IDs: `15A` through `15D`
@@ -50,14 +50,15 @@ In scope:
 
 - annual academy finance ingest from verified AAR workbooks
 - per-pupil and ratio metrics derived from published fields
-- finance latest and trend exposure in the backend serving layer
-- benchmark registration for finance metrics
+- finance latest and trend exposure in the backend serving layer (21 profile fields, 7 trend series)
+- benchmark registration for 6 finance metrics (including supply staff costs share)
+- rich school profile finance UI: summary totals, funding sources bar, spending breakdown, benchmarked per-pupil cards
 
 Out of scope:
 
 - maintained-school CFR parity without a verified school-level source contract
 - trust-level finance rollups beyond school-level facts needed for a school profile
-- school compare API or UI expansion for finance metrics in this phase
+- ~~school compare API or UI expansion for finance metrics~~ _(delivered: 8 finance metrics added to compare catalog and UI, 2026-03-11)_
 - request-time workbook reads or ad hoc spreadsheet parsing in the API layer
 
 ## Definition Of Done

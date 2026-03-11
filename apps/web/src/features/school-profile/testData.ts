@@ -262,7 +262,19 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     total_staff_costs_gbp: 1432000,
     staff_costs_pct_of_expenditure: 72.3,
     revenue_reserve_gbp: 182000,
-    revenue_reserve_per_pupil_gbp: 910
+    revenue_reserve_per_pupil_gbp: 910,
+    in_year_balance_gbp: 90000,
+    total_grant_funding_gbp: 1850000,
+    total_self_generated_funding_gbp: 220000,
+    teaching_staff_costs_gbp: 980000,
+    supply_teaching_staff_costs_gbp: 45000,
+    education_support_staff_costs_gbp: 270000,
+    other_staff_costs_gbp: 137000,
+    premises_costs_gbp: 185000,
+    educational_supplies_costs_gbp: 120000,
+    bought_in_professional_services_costs_gbp: 95000,
+    catering_costs_gbp: 68000,
+    supply_staff_costs_pct_of_staff_costs: 3.1
   },
   leadership_snapshot: {
     headteacher_name: "A. Smith",
@@ -958,6 +970,9 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
     ],
     teaching_staff_costs_per_pupil_gbp: [
       { academic_year: "2023/24", value: 6120, delta: null, direction: null }
+    ],
+    supply_staff_costs_pct_of_staff_costs: [
+      { academic_year: "2023/24", value: 3.1, delta: null, direction: null }
     ]
   },
   benchmarks: {
@@ -1158,6 +1173,19 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
         local_value: 5980,
         school_vs_national_delta: 670,
         school_vs_local_delta: 140,
+        local_scope: "local_authority_district",
+        local_area_code: "E09000007",
+        local_area_label: "Camden"
+      }
+    ],
+    supply_staff_costs_pct_of_staff_costs: [
+      {
+        academic_year: "2023/24",
+        school_value: 3.1,
+        national_value: 4.8,
+        local_value: 3.9,
+        school_vs_national_delta: -1.7,
+        school_vs_local_delta: -0.8,
         local_scope: "local_authority_district",
         local_area_code: "E09000007",
         local_area_label: "Camden"
