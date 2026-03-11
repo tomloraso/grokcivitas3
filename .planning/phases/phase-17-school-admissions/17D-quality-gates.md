@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented (2026-03-11)
+- Last updated: 2026-03-11
 
 ## Required Commands
 

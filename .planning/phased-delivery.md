@@ -290,7 +290,7 @@
 
 ### Phase 14 - Favourites and saved research workflows
 
-- Status: Planned, deferred until after go-live unless spare pre-launch capacity appears
+- Status: Implemented - favourites and saved library delivered (2026-03-10); BUG-009 save 404 remains open
 - Goal: Add account-owned school favourites and a lightweight saved research library on top of the Phase 10 identity and entitlement foundation.
 - Folder: `.planning/phases/phase-14-favourites-and-saved-research/`
 - Detailed design:
@@ -325,7 +325,7 @@
 
 ### Phase 16 - Workforce census depth
 
-- Status: Planned
+- Status: Implemented - workforce depth pipeline, serving layer, and profile/trends exposure complete (2026-03-11)
 - Goal: Expand workforce coverage from the current summary metrics into teacher characteristics, support-staff structure, pay, absence, vacancy, and third-party support datasets using published school-level workforce files.
 - Folder: `.planning/phases/phase-16-workforce-census-depth/`
 - Detailed design:
@@ -342,7 +342,7 @@
 
 ### Phase 17 - School admissions
 
-- Status: Planned
+- Status: Implemented - join-key persistence, admissions pipeline, and serving integration complete (2026-03-11)
 - Goal: Add school-level admissions demand and offer metrics, starting with deterministic GIAS join-key support and then annual admissions pipeline promotion into profile, trends, and benchmarks.
 - Folder: `.planning/phases/phase-17-school-admissions/`
 - Detailed design:
@@ -426,10 +426,10 @@
 | 11 | Fast postcode results table with server-side shortlist signals | Planned |
 | 12 | Growth, admin, SEO, exports, optimization | Planned |
 | 13 | Product pages, legal compliance, SEO infra, cookie consent | Planned |
-| 14 | Account favourites and saved research workflows | Planned |
+| 14 | Account favourites and saved research workflows | Implemented |
 | 15 | Academy financial benchmarks and finance trends | Implemented |
-| 16 | Deeper workforce census metrics and staffing structure | Planned |
-| 17 | School-level admissions demand and offer signals | Planned |
+| 16 | Deeper workforce census metrics and staffing structure | Implemented |
+| 17 | School-level admissions demand and offer signals | Implemented |
 | 18 | KS4 and 16-18 leaver destination outcomes | Planned |
 | 19 | Subject-level KS4 and 16-18 performance | Planned |
 | 20 | Similar-school percentile benchmarking model | Planned |

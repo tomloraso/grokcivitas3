@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented - workforce depth pipeline, serving layer, and profile/trends exposure complete (2026-03-11)
+- Last updated: 2026-03-11
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Legacy workstream IDs: `16A` through `16D`

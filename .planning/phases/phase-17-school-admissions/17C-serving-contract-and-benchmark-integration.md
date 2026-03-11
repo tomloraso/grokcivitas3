@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-10
+- Status: Implemented (2026-03-11)
+- Last updated: 2026-03-11
 - Depends on:
   - `.planning/phases/phase-17-school-admissions/17B-admissions-pipeline-and-gold-schema.md`
 

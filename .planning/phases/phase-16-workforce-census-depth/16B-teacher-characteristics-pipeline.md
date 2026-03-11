@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Planned
-- Last updated: 2026-03-09
+- Status: Implemented (2026-03-11)
+- Last updated: 2026-03-11
 - Depends on:
   - `.planning/phases/phase-16-workforce-census-depth/16A-source-catalog-and-schema-freeze.md`
 

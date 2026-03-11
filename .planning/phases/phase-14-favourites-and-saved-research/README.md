@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Implemented — BUG-009 (save 404) open
-- Last updated: 2026-03-10
+- Status: Implemented - favourites and saved library delivered (2026-03-10); BUG-009 save 404 remains open
+- Last updated: 2026-03-11
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 
@@ -65,7 +65,7 @@ Before implementation starts, the phase should already assume these concrete ext
 ## Tracking Log
 
 - 2026-03-10: Phase 14 implemented and committed (`fec7d4f`). SaveSchoolButton with Heart icon, tooltip, status-aware labels. Backend favourites API with `saved_schools` table. Mapper compat fix for undefined `saved_state` on search results (`favourites/mappers.ts`).
-- 2026-03-10: BUG-009 logged — "Save for later" returns 404 error toast. Possible causes: migration not applied, proxy port mismatch, or data inconsistency. Logged in `.planning/known-issues.md`.
+- 2026-03-10: BUG-009 logged - "Save for later" returns 404 error toast. Possible causes: migration not applied, proxy port mismatch, or data inconsistency. Logged in `.planning/known-issues.md`.
 
 ## Definition Of Done
 
