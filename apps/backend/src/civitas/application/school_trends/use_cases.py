@@ -27,6 +27,14 @@ from civitas.application.school_trends.ports.school_benchmark_materializer impor
 from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
+from civitas.application.subject_performance.dto import (
+    SchoolSubjectPerformanceGroupRowDto,
+    SchoolSubjectPerformanceSeriesDto,
+    SchoolSubjectSummaryDto,
+)
+from civitas.application.subject_performance.ports.subject_performance_repository import (
+    SubjectPerformanceRepository,
+)
 from civitas.domain.school_trends.models import (
     SchoolAdmissionsYearlyRow,
     SchoolAttendanceYearlyRow,
@@ -39,10 +47,15 @@ from civitas.domain.school_trends.models import (
     SchoolMetricBenchmarkYearlyRow,
     SchoolWorkforceYearlyRow,
 )
+from civitas.domain.subject_performance.models import (
+    SchoolSubjectPerformanceSeries,
+    SchoolSubjectSummary,
+)
 
 MIN_YEARS_FOR_DELTA = 2
 MIN_YEARS_FOR_COMPLETE_HISTORY = 3
 STUDY_16_18_DESTINATIONS_ENABLED = False
+STUDY_16_18_SUBJECT_PERFORMANCE_ENABLED = False
 DashboardSectionKey = Literal[
     "demographics",
     "admissions",
@@ -242,8 +255,13 @@ DASHBOARD_METRIC_CATALOG: tuple[tuple[str, str, str, str], ...] = (
 
 
 class GetSchoolTrendsUseCase:
-    def __init__(self, school_trends_repository: SchoolTrendsRepository) -> None:
+    def __init__(
+        self,
+        school_trends_repository: SchoolTrendsRepository,
+        subject_performance_repository: SubjectPerformanceRepository | None = None,
+    ) -> None:
         self._school_trends_repository = school_trends_repository
+        self._subject_performance_repository = subject_performance_repository
 
     def execute(self, *, urn: str) -> SchoolTrendsResponseDto:
         normalized_urn = urn.strip()
@@ -334,6 +352,14 @@ class GetSchoolTrendsUseCase:
         )
         finance_completeness = _build_finance_completeness(finance_series)
         benchmark_rows_by_metric = _group_benchmark_rows_by_metric(benchmark_series.rows)
+        subject_performance = None
+        if self._subject_performance_repository is not None:
+            subject_performance = _to_subject_performance_series_dto(
+                self._subject_performance_repository.get_subject_performance_series(
+                    normalized_urn,
+                    include_16_to_18=STUDY_16_18_SUBJECT_PERFORMANCE_ENABLED,
+                )
+            )
 
         return SchoolTrendsResponseDto(
             urn=demographics_series.urn,
@@ -826,6 +852,7 @@ class GetSchoolTrendsUseCase:
                 destinations=destinations_completeness,
                 finance=finance_completeness,
             ),
+            subject_performance=subject_performance,
         )
 
 
@@ -1399,3 +1426,40 @@ def _to_optional_delta(school_value: float | None, benchmark_value: float | None
     if school_value is None or benchmark_value is None:
         return None
     return float(school_value) - float(benchmark_value)
+
+
+def _to_subject_performance_series_dto(
+    value: SchoolSubjectPerformanceSeries | None,
+) -> SchoolSubjectPerformanceSeriesDto | None:
+    if value is None:
+        return None
+    return SchoolSubjectPerformanceSeriesDto(
+        rows=tuple(
+            SchoolSubjectPerformanceGroupRowDto(
+                academic_year=row.academic_year,
+                key_stage=row.key_stage,
+                qualification_family=row.qualification_family,
+                exam_cohort=row.exam_cohort,
+                subjects=tuple(_to_subject_summary_dto(item) for item in row.subjects),
+            )
+            for row in value.rows
+        ),
+        latest_updated_at=value.latest_updated_at,
+    )
+
+
+def _to_subject_summary_dto(value: SchoolSubjectSummary) -> SchoolSubjectSummaryDto:
+    return SchoolSubjectSummaryDto(
+        academic_year=value.academic_year,
+        key_stage=value.key_stage,
+        qualification_family=value.qualification_family,
+        exam_cohort=value.exam_cohort,
+        subject=value.subject,
+        source_version=value.source_version,
+        entries_count_total=value.entries_count_total,
+        high_grade_count=value.high_grade_count,
+        high_grade_share_pct=value.high_grade_share_pct,
+        pass_grade_count=value.pass_grade_count,
+        pass_grade_share_pct=value.pass_grade_share_pct,
+        ranking_eligible=value.ranking_eligible,
+    )

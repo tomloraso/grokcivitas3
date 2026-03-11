@@ -42,6 +42,9 @@ from civitas.api.schemas.schools import (
 from civitas.api.schemas.tasks import TaskCreateRequest, TaskResponse
 from civitas.api.school_compare_presenter import to_school_compare_response
 from civitas.api.school_profile_presenter import to_school_profile_response
+from civitas.api.subject_performance_presenter import (
+    to_subject_performance_series_response,
+)
 from civitas.application.identity.dto import SessionUserDto
 from civitas.application.school_compare.errors import (
     InvalidSchoolCompareParametersError,
@@ -331,6 +334,7 @@ def get_school_trends(
             ),
             finance=_to_school_trends_completeness_response(result.section_completeness.finance),
         ),
+        subject_performance=to_subject_performance_series_response(result.subject_performance),
     )
 
 

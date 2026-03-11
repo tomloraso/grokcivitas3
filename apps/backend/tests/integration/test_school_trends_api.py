@@ -25,6 +25,11 @@ from civitas.application.school_trends.errors import (
     SchoolTrendsDataUnavailableError,
     SchoolTrendsNotFoundError,
 )
+from civitas.application.subject_performance.dto import (
+    SchoolSubjectPerformanceGroupRowDto,
+    SchoolSubjectPerformanceSeriesDto,
+    SchoolSubjectSummaryDto,
+)
 
 client = TestClient(app)
 
@@ -721,6 +726,47 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     years_available=("2023/24",),
                 ),
             ),
+            subject_performance=SchoolSubjectPerformanceSeriesDto(
+                rows=(
+                    SchoolSubjectPerformanceGroupRowDto(
+                        academic_year="2024/25",
+                        key_stage="ks4",
+                        qualification_family="gcse",
+                        exam_cohort=None,
+                        subjects=(
+                            SchoolSubjectSummaryDto(
+                                academic_year="2024/25",
+                                key_stage="ks4",
+                                qualification_family="gcse",
+                                exam_cohort=None,
+                                subject="Mathematics",
+                                source_version="revised",
+                                entries_count_total=30,
+                                high_grade_count=18,
+                                high_grade_share_pct=60.0,
+                                pass_grade_count=27,
+                                pass_grade_share_pct=90.0,
+                                ranking_eligible=True,
+                            ),
+                            SchoolSubjectSummaryDto(
+                                academic_year="2024/25",
+                                key_stage="ks4",
+                                qualification_family="gcse",
+                                exam_cohort=None,
+                                subject="History",
+                                source_version="revised",
+                                entries_count_total=18,
+                                high_grade_count=4,
+                                high_grade_share_pct=22.2222,
+                                pass_grade_count=11,
+                                pass_grade_share_pct=61.1111,
+                                ranking_eligible=True,
+                            ),
+                        ),
+                    ),
+                ),
+                latest_updated_at=None,
+            ),
         )
     )
     app.dependency_overrides[get_school_trends_use_case] = lambda: fake_use_case
@@ -742,6 +788,10 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["series"]["ks4_overall_pct"][0]["value"] == 92.0
     assert payload["series"]["study_16_18_overall_pct"] == []
     assert payload["series"]["income_per_pupil_gbp"][0]["value"] == 6634.62
+    assert payload["subject_performance"]["rows"][0]["subjects"][0]["subject"] == "Mathematics"
+    assert payload["subject_performance"]["rows"][0]["subjects"][1][
+        "pass_grade_share_pct"
+    ] == pytest.approx(61.1111)
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
     assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"

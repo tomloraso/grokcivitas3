@@ -44,6 +44,8 @@ class FakePipelineRunner:
             "dfe_performance",
             "school_admissions",
             "leaver_destinations",
+            "ks4_subject_performance",
+            "sixteen_to_eighteen_subject_performance",
             "ofsted_latest",
             "ofsted_timeline",
             "ons_imd",
@@ -277,6 +279,37 @@ def test_pipeline_run_leaver_destinations_source_success(
     assert result.exit_code == 0
     assert fake_runner.ran_source == "leaver_destinations"
     assert "leaver_destinations: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_ks4_subject_performance_source_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["pipeline", "run", "--source", "ks4_subject_performance"])
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "ks4_subject_performance"
+    assert "ks4_subject_performance: succeeded" in result.stdout.lower()
+
+
+def test_pipeline_run_sixteen_to_eighteen_subject_performance_source_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_runner = FakePipelineRunner(result=_result(PipelineRunStatus.SUCCEEDED))
+    monkeypatch.setattr("civitas.cli.main.pipeline_runner", lambda: fake_runner)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        app,
+        ["pipeline", "run", "--source", "sixteen_to_eighteen_subject_performance"],
+    )
+
+    assert result.exit_code == 0
+    assert fake_runner.ran_source == "sixteen_to_eighteen_subject_performance"
+    assert "sixteen_to_eighteen_subject_performance: succeeded" in result.stdout.lower()
 
 
 def test_pipeline_run_ofsted_timeline_source_success(monkeypatch: pytest.MonkeyPatch) -> None:

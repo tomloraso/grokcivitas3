@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-09
+- Last updated: 2026-03-11
 - Phase owner: Product + Engineering
 - Source phase: `.planning/phased-delivery.md`
 - Legacy workstream IDs: `19A` through `19D`
@@ -22,6 +22,12 @@ This phase also freezes an important scope boundary: verified subject value-adde
 
 KS4 subject performance aligns with the current project brief. The 16-18 slice extends beyond the current 4-16 MVP brief and should be sequenced accordingly unless the brief is updated.
 
+Implementation sequencing rule:
+
+- ship KS4 end to end first
+- keep 16-18 backend-ready but releasable independently
+- do not expose 16-18 subject-performance UI/API slices as part of the 4-16 MVP without an explicit brief update
+
 ## Delivery Model
 
 1. `19A-source-contract-and-scope-freeze.md`
@@ -33,5 +39,7 @@ KS4 subject performance aligns with the current project brief. The 16-18 slice e
 
 - KS4 subject results are ingested at school level.
 - 16-18 subject entry and grade results are ingested at school level.
-- Subject-performance summaries can be served without request-time CSV parsing.
+- Subject-performance runs use explicit pipeline sources rather than overloading `dfe_performance`.
+- Detailed Gold rows preserve published source-version auditability without overwriting provisional/revised/final variants.
+- Subject-performance summaries can be served without request-time CSV parsing and are materialized from an explicit canonical-version selection rule.
 - School-level subject value-added remains out of scope until a verified source exists.

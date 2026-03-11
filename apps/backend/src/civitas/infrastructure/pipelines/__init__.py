@@ -9,6 +9,7 @@ from .dfe_behaviour import DfeBehaviourPipeline
 from .dfe_performance import DfePerformancePipeline
 from .dfe_workforce import DfeWorkforcePipeline
 from .gias import GiasPipeline
+from .ks4_subject_performance import Ks4SubjectPerformancePipeline
 from .leaver_destinations import LeaverDestinationsPipeline
 from .ofsted_latest import OfstedLatestPipeline
 from .ofsted_timeline import OfstedTimelinePipeline
@@ -16,6 +17,9 @@ from .ons_imd import OnsImdPipeline
 from .police_crime_context import PoliceCrimeContextPipeline
 from .school_admissions import SchoolAdmissionsPipeline
 from .school_financial_benchmarks import SchoolFinancialBenchmarksPipeline
+from .sixteen_to_eighteen_subject_performance import (
+    SixteenToEighteenSubjectPerformancePipeline,
+)
 from .uk_house_prices import UkHousePricesPipeline
 
 
@@ -84,6 +88,26 @@ def pipeline_registry(
             study_16_to_18_data_catalogue_url=(
                 pipeline_settings.leaver_destinations_16_to_18_data_catalogue_url
             ),
+        ),
+        PipelineSource.KS4_SUBJECT_PERFORMANCE: Ks4SubjectPerformancePipeline(
+            engine=engine,
+            source_csv=pipeline_settings.ks4_subject_performance_source_csv,
+            source_url=pipeline_settings.ks4_subject_performance_source_url,
+            release_page_url=pipeline_settings.ks4_subject_performance_release_page_url,
+            data_catalogue_url=pipeline_settings.ks4_subject_performance_data_catalogue_url,
+        ),
+        PipelineSource.SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE: (
+            SixteenToEighteenSubjectPerformancePipeline(
+                engine=engine,
+                source_csv=(pipeline_settings.sixteen_to_eighteen_subject_performance_source_csv),
+                source_url=(pipeline_settings.sixteen_to_eighteen_subject_performance_source_url),
+                release_page_url=(
+                    pipeline_settings.sixteen_to_eighteen_subject_performance_release_page_url
+                ),
+                data_catalogue_url=(
+                    pipeline_settings.sixteen_to_eighteen_subject_performance_data_catalogue_url
+                ),
+            )
         ),
         PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: SchoolFinancialBenchmarksPipeline(
             engine=engine,

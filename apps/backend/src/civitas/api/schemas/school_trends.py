@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from civitas.api.schemas.subject_performance import SchoolSubjectPerformanceSeriesResponse
+
 BenchmarkScope = Literal["local_authority_district", "phase"]
 
 
@@ -193,6 +195,7 @@ class SchoolTrendsResponse(BaseModel):
     benchmarks: SchoolTrendsBenchmarksResponse
     completeness: SchoolTrendsCompletenessResponse
     section_completeness: SchoolTrendsSectionCompletenessResponse
+    subject_performance: SchoolSubjectPerformanceSeriesResponse | None = None
 
 
 class SchoolTrendDashboardMetricResponse(BaseModel):

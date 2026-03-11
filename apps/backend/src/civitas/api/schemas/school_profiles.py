@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.favourites import SavedSchoolStateResponse
+from civitas.api.schemas.subject_performance import SchoolSubjectPerformanceLatestResponse
 
 
 class SchoolProfileSchoolResponse(BaseModel):
@@ -472,6 +473,7 @@ class SchoolProfileResponse(BaseModel):
     ofsted_timeline: SchoolProfileOfstedTimelineResponse
     neighbourhood: SchoolProfileNeighbourhoodSectionResponse
     saved_state: SavedSchoolStateResponse
+    subject_performance: SchoolSubjectPerformanceLatestResponse | None = None
     benchmarks: SchoolProfileBenchmarksResponse = Field(
         default_factory=SchoolProfileBenchmarksResponse
     )

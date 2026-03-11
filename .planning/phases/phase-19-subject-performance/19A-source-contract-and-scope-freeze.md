@@ -3,7 +3,7 @@
 ## Document Control
 
 - Status: Planned
-- Last updated: 2026-03-09
+- Last updated: 2026-03-11
 - Depends on:
   - `.planning/project-brief.md`
   - `docs/runbooks/pipelines.md`
@@ -113,13 +113,32 @@ Scope rule:
 ## Bronze Strategy
 
 1. Store raw CSV assets under:
-   - `data/bronze/subject_performance/ks4/<academic_year>/`
-   - `data/bronze/subject_performance/16_to_18/<academic_year>/`
-2. Manifest captures source URL, checksum, and row count.
-3. Use explicit configured dataset URLs rather than overloading `dfe_performance`.
+   - `data/bronze/ks4_subject_performance/<run-date>/<academic_year>/`
+   - `data/bronze/sixteen_to_eighteen_subject_performance/<run-date>/<academic_year>/`
+2. Register explicit pipeline sources:
+   - `ks4_subject_performance`
+   - `sixteen_to_eighteen_subject_performance`
+3. Add dedicated settings for each source's public CSV route, release page URL, and data-catalogue URL rather than overloading `dfe_performance` or `leaver_destinations`.
+4. Manifest captures:
+   - source URL
+   - release page URL
+   - data-catalogue URL
+   - published `version`
+   - observed headers
+   - checksum
+   - row count
+   - download timestamp
+5. Bronze remains the immutable audit surface for every downloaded asset; Silver/Gold may derive canonical serving rows from it but must not discard the underlying asset metadata.
+
+## Versioning Rule
+
+1. Published source `version` values are treated as meaningful release states, not incidental metadata.
+2. If the same business-grain row is published in multiple versions, pipeline storage must preserve each version distinctly somewhere queryable by operators.
+3. The serving layer must use an explicit preferred-version rule instead of whichever version happened to load last.
 
 ## Acceptance Criteria
 
 1. Source contracts are frozen before pipeline code lands.
 2. School-level and national-only sources are not conflated.
 3. The phase remains honest about what is and is not supported by verified school-level data.
+4. Pipeline source registration and configuration are explicit enough that subject-performance runs can be operated independently in the existing Bronze -> Silver -> Gold framework.

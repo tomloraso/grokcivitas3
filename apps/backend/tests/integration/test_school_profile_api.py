@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from uuid import UUID
 
+import pytest
 from fastapi.testclient import TestClient
 
 from civitas.api.dependencies import get_current_session_use_case, get_school_profile_use_case
@@ -41,6 +42,11 @@ from civitas.application.school_profiles.dto import (
 from civitas.application.school_profiles.errors import (
     SchoolProfileDataUnavailableError,
     SchoolProfileNotFoundError,
+)
+from civitas.application.subject_performance.dto import (
+    SchoolSubjectPerformanceGroupRowDto,
+    SchoolSubjectPerformanceLatestDto,
+    SchoolSubjectSummaryDto,
 )
 
 client = TestClient(app)
@@ -535,6 +541,79 @@ def _profile_response() -> SchoolProfileResponseDto:
                 years_available=None,
             ),
         ),
+        subject_performance=SchoolSubjectPerformanceLatestDto(
+            strongest_subjects=(
+                SchoolSubjectSummaryDto(
+                    academic_year="2024/25",
+                    key_stage="ks4",
+                    qualification_family="gcse",
+                    exam_cohort=None,
+                    subject="Mathematics",
+                    source_version="revised",
+                    entries_count_total=30,
+                    high_grade_count=18,
+                    high_grade_share_pct=60.0,
+                    pass_grade_count=27,
+                    pass_grade_share_pct=90.0,
+                    ranking_eligible=True,
+                ),
+            ),
+            weakest_subjects=(
+                SchoolSubjectSummaryDto(
+                    academic_year="2024/25",
+                    key_stage="ks4",
+                    qualification_family="gcse",
+                    exam_cohort=None,
+                    subject="History",
+                    source_version="revised",
+                    entries_count_total=18,
+                    high_grade_count=4,
+                    high_grade_share_pct=22.2222,
+                    pass_grade_count=11,
+                    pass_grade_share_pct=61.1111,
+                    ranking_eligible=True,
+                ),
+            ),
+            stage_breakdowns=(
+                SchoolSubjectPerformanceGroupRowDto(
+                    academic_year="2024/25",
+                    key_stage="ks4",
+                    qualification_family="gcse",
+                    exam_cohort=None,
+                    subjects=(
+                        SchoolSubjectSummaryDto(
+                            academic_year="2024/25",
+                            key_stage="ks4",
+                            qualification_family="gcse",
+                            exam_cohort=None,
+                            subject="Mathematics",
+                            source_version="revised",
+                            entries_count_total=30,
+                            high_grade_count=18,
+                            high_grade_share_pct=60.0,
+                            pass_grade_count=27,
+                            pass_grade_share_pct=90.0,
+                            ranking_eligible=True,
+                        ),
+                        SchoolSubjectSummaryDto(
+                            academic_year="2024/25",
+                            key_stage="ks4",
+                            qualification_family="gcse",
+                            exam_cohort=None,
+                            subject="History",
+                            source_version="revised",
+                            entries_count_total=18,
+                            high_grade_count=4,
+                            high_grade_share_pct=22.2222,
+                            pass_grade_count=11,
+                            pass_grade_share_pct=61.1111,
+                            ranking_eligible=True,
+                        ),
+                    ),
+                ),
+            ),
+            latest_updated_at=timestamp,
+        ),
         saved_state=SavedSchoolStateDto(
             status="requires_auth",
             saved_at=None,
@@ -593,6 +672,12 @@ def test_get_school_profile_returns_expected_contract() -> None:
     assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
     assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
     assert payload["finance_latest"]["supply_staff_costs_pct_of_staff_costs"] == 0.0401
+    assert payload["subject_performance"]["strongest_subjects"][0]["subject"] == "Mathematics"
+    assert payload["subject_performance"]["weakest_subjects"][0]["subject"] == "History"
+    assert payload["subject_performance"]["stage_breakdowns"][0]["qualification_family"] == "gcse"
+    assert payload["subject_performance"]["stage_breakdowns"][0]["subjects"][1][
+        "high_grade_share_pct"
+    ] == pytest.approx(22.2222)
     assert payload["benchmarks"] == {"metrics": []}
     assert payload["completeness"]["admissions"]["status"] == "available"
     assert payload["completeness"]["destinations"]["reason_code"] == "unsupported_stage"
@@ -638,6 +723,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
             ),
         ),
         completeness=result.completeness,
+        subject_performance=None,
         saved_state=SavedSchoolStateDto(
             status="not_saved",
             saved_at=None,
@@ -658,6 +744,7 @@ def test_get_school_profile_returns_null_subsections_when_data_missing() -> None
     assert payload["admissions_latest"] is None
     assert payload["destinations_latest"] is None
     assert payload["finance_latest"] is None
+    assert payload["subject_performance"] is None
     assert payload["ofsted_timeline"] == {
         "events": [],
         "coverage": {

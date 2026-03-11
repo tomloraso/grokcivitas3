@@ -104,6 +104,29 @@ DEFAULT_LEAVER_DESTINATIONS_16_TO_18_SOURCE_URL = (
     "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
     "bbee3278-589b-436f-a031-adeb0368e49f/csv"
 )
+DEFAULT_KS4_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL = (
+    "https://explore-education-statistics.service.gov.uk/find-statistics/key-stage-4-performance"
+)
+DEFAULT_KS4_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "49abed18-1c61-489f-afc0-11f501335da1"
+)
+DEFAULT_KS4_SUBJECT_PERFORMANCE_SOURCE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "49abed18-1c61-489f-afc0-11f501335da1/csv"
+)
+DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL = (
+    "https://explore-education-statistics.service.gov.uk/find-statistics/"
+    "a-level-and-other-16-to-18-results"
+)
+DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "9a275c77-4325-4ac8-aa9e-b1a2bd3ab63b"
+)
+DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_SOURCE_URL = (
+    "https://explore-education-statistics.service.gov.uk/data-catalogue/data-set/"
+    "9a275c77-4325-4ac8-aa9e-b1a2bd3ab63b/csv"
+)
 DEFAULT_IMD_RELEASE = "iod2025"
 DEFAULT_HOUSE_PRICES_SOURCE_URL = (
     "https://publicdata.landregistry.gov.uk/market-trend-data/"
@@ -204,6 +227,14 @@ class PipelineSettings(BaseModel):
     leaver_destinations_16_to_18_source_url: str
     leaver_destinations_16_to_18_release_page_url: str
     leaver_destinations_16_to_18_data_catalogue_url: str
+    ks4_subject_performance_source_csv: str | None = None
+    ks4_subject_performance_source_url: str
+    ks4_subject_performance_release_page_url: str
+    ks4_subject_performance_data_catalogue_url: str
+    sixteen_to_eighteen_subject_performance_source_csv: str | None = None
+    sixteen_to_eighteen_subject_performance_source_url: str
+    sixteen_to_eighteen_subject_performance_release_page_url: str
+    sixteen_to_eighteen_subject_performance_data_catalogue_url: str
     school_financial_benchmarks_workbook_urls: tuple[str, ...]
     imd_source_csv: str | None = None
     imd_release: str
@@ -225,6 +256,8 @@ class PipelineSettings(BaseModel):
     max_reject_ratio_dfe_performance: float
     max_reject_ratio_school_admissions: float
     max_reject_ratio_leaver_destinations: float
+    max_reject_ratio_ks4_subject_performance: float
+    max_reject_ratio_sixteen_to_eighteen_subject_performance: float
     max_reject_ratio_school_financial_benchmarks: float
     max_reject_ratio_ofsted_latest: float
     max_reject_ratio_ofsted_timeline: float
@@ -262,6 +295,8 @@ class DataQualitySettings(BaseModel):
     freshness_sla_hours_dfe_performance: PositiveInt
     freshness_sla_hours_school_admissions: PositiveInt
     freshness_sla_hours_leaver_destinations: PositiveInt
+    freshness_sla_hours_ks4_subject_performance: PositiveInt
+    freshness_sla_hours_sixteen_to_eighteen_subject_performance: PositiveInt
     freshness_sla_hours_school_financial_benchmarks: PositiveInt
     freshness_sla_hours_ofsted_latest: PositiveInt
     freshness_sla_hours_ofsted_timeline: PositiveInt
@@ -283,6 +318,10 @@ class DataQualitySettings(BaseModel):
             "dfe_performance": float(self.freshness_sla_hours_dfe_performance),
             "school_admissions": float(self.freshness_sla_hours_school_admissions),
             "leaver_destinations": float(self.freshness_sla_hours_leaver_destinations),
+            "ks4_subject_performance": float(self.freshness_sla_hours_ks4_subject_performance),
+            "sixteen_to_eighteen_subject_performance": float(
+                self.freshness_sla_hours_sixteen_to_eighteen_subject_performance
+            ),
             "school_financial_benchmarks": float(
                 self.freshness_sla_hours_school_financial_benchmarks
             ),
@@ -509,6 +548,38 @@ class AppSettings(BaseSettings):
         default=DEFAULT_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL,
         validation_alias="CIVITAS_LEAVER_DESTINATIONS_16_TO_18_DATA_CATALOGUE_URL",
     )
+    ks4_subject_performance_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_KS4_SUBJECT_PERFORMANCE_SOURCE_CSV",
+    )
+    ks4_subject_performance_source_url: str = Field(
+        default=DEFAULT_KS4_SUBJECT_PERFORMANCE_SOURCE_URL,
+        validation_alias="CIVITAS_KS4_SUBJECT_PERFORMANCE_SOURCE_URL",
+    )
+    ks4_subject_performance_release_page_url: str = Field(
+        default=DEFAULT_KS4_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL,
+        validation_alias="CIVITAS_KS4_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL",
+    )
+    ks4_subject_performance_data_catalogue_url: str = Field(
+        default=DEFAULT_KS4_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL,
+        validation_alias="CIVITAS_KS4_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL",
+    )
+    sixteen_to_eighteen_subject_performance_source_csv: str | None = Field(
+        default=None,
+        validation_alias="CIVITAS_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_SOURCE_CSV",
+    )
+    sixteen_to_eighteen_subject_performance_source_url: str = Field(
+        default=DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_SOURCE_URL,
+        validation_alias="CIVITAS_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_SOURCE_URL",
+    )
+    sixteen_to_eighteen_subject_performance_release_page_url: str = Field(
+        default=DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL,
+        validation_alias="CIVITAS_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_RELEASE_PAGE_URL",
+    )
+    sixteen_to_eighteen_subject_performance_data_catalogue_url: str = Field(
+        default=DEFAULT_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL,
+        validation_alias="CIVITAS_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_DATA_CATALOGUE_URL",
+    )
     school_financial_benchmarks_workbook_urls: str | None = Field(
         default=",".join(DEFAULT_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS),
         validation_alias="CIVITAS_SCHOOL_FINANCIAL_BENCHMARKS_WORKBOOK_URLS",
@@ -611,6 +682,20 @@ class AppSettings(BaseSettings):
         ge=0.0,
         le=1.0,
         validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_LEAVER_DESTINATIONS",
+    )
+    pipeline_max_reject_ratio_ks4_subject_performance: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias="CIVITAS_PIPELINE_MAX_REJECT_RATIO_KS4_SUBJECT_PERFORMANCE",
+    )
+    pipeline_max_reject_ratio_sixteen_to_eighteen_subject_performance: float = Field(
+        default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
+        ge=0.0,
+        le=1.0,
+        validation_alias=(
+            "CIVITAS_PIPELINE_MAX_REJECT_RATIO_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE"
+        ),
     )
     pipeline_max_reject_ratio_school_financial_benchmarks: float = Field(
         default=DEFAULT_PIPELINE_MAX_REJECT_RATIO,
@@ -736,6 +821,16 @@ class AppSettings(BaseSettings):
     data_quality_freshness_sla_hours_leaver_destinations: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
         validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_LEAVER_DESTINATIONS",
+    )
+    data_quality_freshness_sla_hours_ks4_subject_performance: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias="CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_KS4_SUBJECT_PERFORMANCE",
+    )
+    data_quality_freshness_sla_hours_sixteen_to_eighteen_subject_performance: PositiveInt = Field(
+        default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
+        validation_alias=(
+            "CIVITAS_DATA_QUALITY_FRESHNESS_SLA_HOURS_SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE"
+        ),
     )
     data_quality_freshness_sla_hours_school_financial_benchmarks: PositiveInt = Field(
         default=DEFAULT_DATA_QUALITY_FRESHNESS_SLA_HOURS,
@@ -950,6 +1045,26 @@ class AppSettings(BaseSettings):
             leaver_destinations_16_to_18_data_catalogue_url=(
                 self.leaver_destinations_16_to_18_data_catalogue_url
             ),
+            ks4_subject_performance_source_csv=self.ks4_subject_performance_source_csv,
+            ks4_subject_performance_source_url=self.ks4_subject_performance_source_url,
+            ks4_subject_performance_release_page_url=(
+                self.ks4_subject_performance_release_page_url
+            ),
+            ks4_subject_performance_data_catalogue_url=(
+                self.ks4_subject_performance_data_catalogue_url
+            ),
+            sixteen_to_eighteen_subject_performance_source_csv=(
+                self.sixteen_to_eighteen_subject_performance_source_csv
+            ),
+            sixteen_to_eighteen_subject_performance_source_url=(
+                self.sixteen_to_eighteen_subject_performance_source_url
+            ),
+            sixteen_to_eighteen_subject_performance_release_page_url=(
+                self.sixteen_to_eighteen_subject_performance_release_page_url
+            ),
+            sixteen_to_eighteen_subject_performance_data_catalogue_url=(
+                self.sixteen_to_eighteen_subject_performance_data_catalogue_url
+            ),
             school_financial_benchmarks_workbook_urls=_parse_csv_tokens(
                 self.school_financial_benchmarks_workbook_urls
             ),
@@ -978,6 +1093,12 @@ class AppSettings(BaseSettings):
             max_reject_ratio_school_admissions=self.pipeline_max_reject_ratio_school_admissions,
             max_reject_ratio_leaver_destinations=(
                 self.pipeline_max_reject_ratio_leaver_destinations
+            ),
+            max_reject_ratio_ks4_subject_performance=(
+                self.pipeline_max_reject_ratio_ks4_subject_performance
+            ),
+            max_reject_ratio_sixteen_to_eighteen_subject_performance=(
+                self.pipeline_max_reject_ratio_sixteen_to_eighteen_subject_performance
             ),
             max_reject_ratio_school_financial_benchmarks=(
                 self.pipeline_max_reject_ratio_school_financial_benchmarks
@@ -1035,6 +1156,12 @@ class AppSettings(BaseSettings):
             ),
             freshness_sla_hours_leaver_destinations=(
                 self.data_quality_freshness_sla_hours_leaver_destinations
+            ),
+            freshness_sla_hours_ks4_subject_performance=(
+                self.data_quality_freshness_sla_hours_ks4_subject_performance
+            ),
+            freshness_sla_hours_sixteen_to_eighteen_subject_performance=(
+                self.data_quality_freshness_sla_hours_sixteen_to_eighteen_subject_performance
             ),
             freshness_sla_hours_school_financial_benchmarks=(
                 self.data_quality_freshness_sla_hours_school_financial_benchmarks
@@ -1111,6 +1238,14 @@ class AppSettings(BaseSettings):
         "leaver_destinations_16_to_18_source_url",
         "leaver_destinations_16_to_18_release_page_url",
         "leaver_destinations_16_to_18_data_catalogue_url",
+        "ks4_subject_performance_source_csv",
+        "ks4_subject_performance_source_url",
+        "ks4_subject_performance_release_page_url",
+        "ks4_subject_performance_data_catalogue_url",
+        "sixteen_to_eighteen_subject_performance_source_csv",
+        "sixteen_to_eighteen_subject_performance_source_url",
+        "sixteen_to_eighteen_subject_performance_release_page_url",
+        "sixteen_to_eighteen_subject_performance_data_catalogue_url",
         "school_financial_benchmarks_workbook_urls",
         "imd_source_csv",
         "house_prices_source_csv",

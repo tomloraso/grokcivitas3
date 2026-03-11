@@ -27,6 +27,9 @@ from civitas.infrastructure.pipelines.contracts import (
     gias as gias_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
+    ks4_subject_performance as ks4_subject_performance_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
     leaver_destinations as leaver_destinations_contract,
 )
 from civitas.infrastructure.pipelines.contracts import (
@@ -46,6 +49,9 @@ from civitas.infrastructure.pipelines.contracts import (
 )
 from civitas.infrastructure.pipelines.contracts import (
     school_financial_benchmarks as finance_contract,
+)
+from civitas.infrastructure.pipelines.contracts import (
+    sixteen_to_eighteen_subject_performance as sixteen_to_eighteen_subject_performance_contract,
 )
 from civitas.infrastructure.pipelines.demographics_release_files import (
     BRONZE_MANIFEST_FILE_NAME as DEMOGRAPHICS_MANIFEST_FILE_NAME,
@@ -82,6 +88,12 @@ from civitas.infrastructure.pipelines.gias import (
 )
 from civitas.infrastructure.pipelines.gias import (
     GiasPipeline,
+)
+from civitas.infrastructure.pipelines.ks4_subject_performance import (
+    BRONZE_MANIFEST_FILE_NAME as KS4_SUBJECT_PERFORMANCE_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.ks4_subject_performance import (
+    Ks4SubjectPerformancePipeline,
 )
 from civitas.infrastructure.pipelines.leaver_destinations import (
     BRONZE_MANIFEST_FILE_NAME as LEAVER_DESTINATIONS_MANIFEST_FILE_NAME,
@@ -122,6 +134,12 @@ from civitas.infrastructure.pipelines.school_financial_benchmarks import (
 )
 from civitas.infrastructure.pipelines.school_financial_benchmarks import (
     SchoolFinancialBenchmarksPipeline,
+)
+from civitas.infrastructure.pipelines.sixteen_to_eighteen_subject_performance import (
+    BRONZE_MANIFEST_FILE_NAME as SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_MANIFEST_FILE_NAME,
+)
+from civitas.infrastructure.pipelines.sixteen_to_eighteen_subject_performance import (
+    SixteenToEighteenSubjectPerformancePipeline,
 )
 
 FIXTURES_ROOT = Path(__file__).resolve().parent.parent / "fixtures"
@@ -575,6 +593,89 @@ def test_leaver_destinations_download_writes_contract_version_to_manifest(
     assert len(payload["assets"]) == 2
     assert {asset["destination_stage"] for asset in payload["assets"]} == {"ks4", "16_to_18"}
     assert payload["assets"][0]["public_csv_route_url"].startswith("https://example.com/")
+
+
+def test_ks4_subject_performance_download_writes_contract_version_to_manifest(
+    tmp_path: Path,
+) -> None:
+    csv_path = tmp_path / "ks4_subject_performance.csv"
+    csv_path.write_text(
+        "time_period,time_identifier,geographic_level,country_code,country_name,"
+        "school_laestab,school_urn,school_name,old_la_code,new_la_code,la_name,version,"
+        "establishment_type_group,pupil_count,qualification_type,qualification_detailed,"
+        "grade_structure,subject,discount_code,subject_discount_group,grade,number_achieving\n"
+        "202425,Academic year,School,E92000001,England,2136007,100001,Alpha School,213,"
+        "E09000033,Westminster,Revised,Local authority maintained schools,118,GCSE,"
+        "GCSE (9-1) Full Course,9 / 8 / 7 / 6 / 5 / 4 / 3 / 2 / 1 / U / X,"
+        "Mathematics,MA1,Mathematics,7,24\n",
+        encoding="utf-8",
+    )
+
+    pipeline = Ks4SubjectPerformancePipeline(
+        engine=None,
+        source_csv=str(csv_path),
+        source_url="https://example.com/ks4-subject-performance.csv",
+        release_page_url="https://example.com/ks4-subject-performance-release",
+        data_catalogue_url="https://example.com/ks4-subject-performance-catalogue",
+    )
+    context = _context(PipelineSource.KS4_SUBJECT_PERFORMANCE, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = context.bronze_source_path / KS4_SUBJECT_PERFORMANCE_MANIFEST_FILE_NAME
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert (
+        payload["normalization_contract_version"]
+        == ks4_subject_performance_contract.CONTRACT_VERSION
+    )
+    assert len(payload["assets"]) == 1
+    assert payload["assets"][0]["academic_year"] == "2024/25"
+    assert (
+        payload["assets"][0]["public_csv_route_url"]
+        == "https://example.com/ks4-subject-performance.csv"
+    )
+
+
+def test_sixteen_to_eighteen_subject_performance_download_writes_contract_version_to_manifest(
+    tmp_path: Path,
+) -> None:
+    csv_path = tmp_path / "sixteen_to_eighteen_subject_performance.csv"
+    csv_path.write_text(
+        "time_period,time_identifier,geographic_level,country_code,country_name,version,"
+        "old_la_code,new_la_code,la_name,school_name,school_urn,school_laestab,exam_cohort,"
+        "qualification_detailed,qualification_level,a_level_equivelent_size,"
+        "gcse_equivelent_size,grade_structure,subject,grade,entries_count\n"
+        "202425,Academic year,School,E92000001,England,Revised,201,E09000001,"
+        "City of London,Beta Sixth Form,100002,2013614,A level,GCE A level,3,1,4,"
+        "*,A,B,C,D,E,Mathematics,A,12\n",
+        encoding="utf-8",
+    )
+
+    pipeline = SixteenToEighteenSubjectPerformancePipeline(
+        engine=None,
+        source_csv=str(csv_path),
+        source_url="https://example.com/16-to-18-subject-performance.csv",
+        release_page_url="https://example.com/16-to-18-subject-performance-release",
+        data_catalogue_url="https://example.com/16-to-18-subject-performance-catalogue",
+    )
+    context = _context(PipelineSource.SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE, tmp_path / "bronze")
+
+    pipeline.download(context)
+
+    manifest_path = (
+        context.bronze_source_path / SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE_MANIFEST_FILE_NAME
+    )
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert (
+        payload["normalization_contract_version"]
+        == sixteen_to_eighteen_subject_performance_contract.CONTRACT_VERSION
+    )
+    assert len(payload["assets"]) == 1
+    assert payload["assets"][0]["academic_year"] == "2024/25"
+    assert (
+        payload["assets"][0]["public_csv_route_url"]
+        == "https://example.com/16-to-18-subject-performance.csv"
+    )
 
 
 def test_school_financial_benchmarks_download_writes_contract_version_to_manifest(

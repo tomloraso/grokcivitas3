@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
+from civitas.application.subject_performance.dto import SchoolSubjectPerformanceSeriesDto
+
 TrendDirection = Literal["up", "down", "flat"]
 BenchmarkScope = Literal["local_authority_district", "phase"]
 TrendCompletenessStatus = Literal["available", "partial", "unavailable"]
@@ -200,6 +202,7 @@ class SchoolTrendsResponseDto:
     benchmarks: SchoolTrendsBenchmarksDto
     completeness: SchoolTrendsCompletenessDto
     section_completeness: SchoolTrendsSectionCompletenessDto
+    subject_performance: SchoolSubjectPerformanceSeriesDto | None = None
 
 
 @dataclass(frozen=True)

@@ -107,6 +107,9 @@ from civitas.infrastructure.persistence.postgres_school_trends_repository import
 from civitas.infrastructure.persistence.postgres_session_repository import (
     PostgresSessionRepository,
 )
+from civitas.infrastructure.persistence.postgres_subject_performance_repository import (
+    PostgresSubjectPerformanceRepository,
+)
 from civitas.infrastructure.persistence.postgres_summary_context_repository import (
     PostgresSummaryContextRepository,
 )
@@ -144,6 +147,12 @@ _SEARCH_SUMMARY_AFFECTING_PIPELINE_SOURCES = frozenset(
         PipelineSource.GIAS,
         PipelineSource.DFE_PERFORMANCE,
         PipelineSource.OFSTED_LATEST,
+    }
+)
+_PROFILE_CACHE_AFFECTING_PIPELINE_SOURCES = frozenset(
+    {
+        PipelineSource.KS4_SUBJECT_PERFORMANCE,
+        PipelineSource.SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE,
     }
 )
 
@@ -401,6 +410,12 @@ def school_trends_repository() -> PostgresSchoolTrendsRepository:
 
 
 @lru_cache(maxsize=1)
+def subject_performance_repository() -> PostgresSubjectPerformanceRepository:
+    settings = app_settings()
+    return PostgresSubjectPerformanceRepository(engine=db_engine(settings.database.url))
+
+
+@lru_cache(maxsize=1)
 def summary_repository() -> PostgresSummaryRepository:
     settings = app_settings()
     return PostgresSummaryRepository(engine=db_engine(settings.database.url))
@@ -478,6 +493,7 @@ def get_school_profile_use_case() -> GetSchoolProfileUseCase:
         refresh_school_profile_repository=raw_school_profile_repository(),
         postcode_context_resolver=postcode_resolver(),
         school_trends_repository=school_trends_repository(),
+        subject_performance_repository=subject_performance_repository(),
         summary_repository=summary_repository(),
         evaluate_access_use_case=evaluate_access_use_case(),
         saved_school_state_resolver=get_saved_school_states_use_case(),
@@ -495,6 +511,7 @@ def get_school_compare_use_case() -> GetSchoolCompareUseCase:
 def get_school_trends_use_case() -> GetSchoolTrendsUseCase:
     return GetSchoolTrendsUseCase(
         school_trends_repository=school_trends_repository(),
+        subject_performance_repository=subject_performance_repository(),
     )
 
 
@@ -609,6 +626,8 @@ def _materialize_benchmarks_after_pipeline_success(context: PipelineRunContext) 
     if context.source in _SEARCH_SUMMARY_AFFECTING_PIPELINE_SOURCES:
         materialize_school_search_summaries_use_case().execute()
     if context.source not in _BENCHMARK_AFFECTING_PIPELINE_SOURCES:
+        if context.source in _PROFILE_CACHE_AFFECTING_PIPELINE_SOURCES:
+            school_profile_cache_invalidator().invalidate_school_profile_cache()
         return
     materialize_school_benchmarks_use_case().execute()
 
@@ -639,6 +658,14 @@ def pipeline_runner() -> PipelineRunner:
         ),
         PipelineSource.SCHOOL_ADMISSIONS: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_school_admissions
+        ),
+        PipelineSource.KS4_SUBJECT_PERFORMANCE: PipelineQualityConfig(
+            max_reject_ratio=settings.pipeline.max_reject_ratio_ks4_subject_performance
+        ),
+        PipelineSource.SIXTEEN_TO_EIGHTEEN_SUBJECT_PERFORMANCE: PipelineQualityConfig(
+            max_reject_ratio=(
+                settings.pipeline.max_reject_ratio_sixteen_to_eighteen_subject_performance
+            )
         ),
         PipelineSource.SCHOOL_FINANCIAL_BENCHMARKS: PipelineQualityConfig(
             max_reject_ratio=settings.pipeline.max_reject_ratio_school_financial_benchmarks

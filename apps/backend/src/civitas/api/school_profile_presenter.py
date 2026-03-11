@@ -40,6 +40,9 @@ from civitas.api.schemas.school_profiles import (
     SchoolProfileWorkforceBreakdownItemResponse,
     SchoolProfileWorkforceLatestResponse,
 )
+from civitas.api.subject_performance_presenter import (
+    to_subject_performance_latest_response,
+)
 from civitas.application.access.dto import SectionAccessDto
 from civitas.application.school_profiles.dto import (
     SchoolAreaContextDto,
@@ -446,6 +449,7 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             teaser_text=result.neighbourhood.teaser_text,
         ),
         saved_state=to_saved_school_state_response(result.saved_state),
+        subject_performance=to_subject_performance_latest_response(result.subject_performance),
         benchmarks=SchoolProfileBenchmarksResponse(
             metrics=[
                 SchoolProfileMetricBenchmarkResponse(

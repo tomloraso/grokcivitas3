@@ -64,15 +64,28 @@ from civitas.application.school_summaries.ports.summary_repository import Summar
 from civitas.application.school_trends.ports.school_trends_repository import (
     SchoolTrendsRepository,
 )
+from civitas.application.subject_performance.dto import (
+    SchoolSubjectPerformanceGroupRowDto,
+    SchoolSubjectPerformanceLatestDto,
+    SchoolSubjectSummaryDto,
+)
+from civitas.application.subject_performance.ports.subject_performance_repository import (
+    SubjectPerformanceRepository,
+)
 from civitas.domain.access.value_objects import AccessDecisionReasonCode
 from civitas.domain.school_profiles.models import SchoolDestinationStageLatest, SchoolProfile
 from civitas.domain.school_trends.models import SchoolMetricBenchmarkYearlyRow
+from civitas.domain.subject_performance.models import (
+    SchoolSubjectPerformanceLatest,
+    SchoolSubjectSummary,
+)
 
 ANALYST_DISCLAIMER = (
     "This analyst view is AI-generated from public government data. "
     "It highlights patterns in the published evidence, but it is not official advice or a recommendation."
 )
 STUDY_16_18_DESTINATIONS_ENABLED = False
+STUDY_16_18_SUBJECT_PERFORMANCE_ENABLED = False
 
 
 class GetSchoolProfileUseCase:
@@ -82,6 +95,7 @@ class GetSchoolProfileUseCase:
         refresh_school_profile_repository: SchoolProfileRepository | None = None,
         postcode_context_resolver: PostcodeContextResolver | None = None,
         school_trends_repository: SchoolTrendsRepository | None = None,
+        subject_performance_repository: SubjectPerformanceRepository | None = None,
         summary_repository: SummaryRepository | None = None,
         evaluate_access_use_case: EvaluateAccessUseCase | None = None,
         saved_school_state_resolver: SavedSchoolStateResolver | None = None,
@@ -90,6 +104,7 @@ class GetSchoolProfileUseCase:
         self._refresh_school_profile_repository = refresh_school_profile_repository
         self._postcode_context_resolver = postcode_context_resolver
         self._school_trends_repository = school_trends_repository
+        self._subject_performance_repository = subject_performance_repository
         self._summary_repository = summary_repository
         self._evaluate_access_use_case = evaluate_access_use_case
         self._saved_school_state_resolver = saved_school_state_resolver
@@ -666,6 +681,14 @@ class GetSchoolProfileUseCase:
             viewer_user_id=viewer_user_id,
             saved_school_state_resolver=self._saved_school_state_resolver,
         )
+        subject_performance = None
+        if self._subject_performance_repository is not None:
+            subject_performance = _to_subject_performance_latest_dto(
+                self._subject_performance_repository.get_latest_subject_performance(
+                    normalized_urn,
+                    include_16_to_18=STUDY_16_18_SUBJECT_PERFORMANCE_ENABLED,
+                )
+            )
 
         return SchoolProfileResponseDto(
             school=SchoolProfileSchoolDto(
@@ -728,6 +751,7 @@ class GetSchoolProfileUseCase:
             saved_state=saved_state,
             benchmarks=benchmarks,
             completeness=completeness,
+            subject_performance=subject_performance,
         )
 
     def _build_profile_benchmarks(self, urn: str) -> SchoolProfileBenchmarksDto:
@@ -833,6 +857,47 @@ def _to_destination_stage_latest_dto(
         school_sixth_form_pct=stage.school_sixth_form_pct,
         sixth_form_college_pct=stage.sixth_form_college_pct,
         higher_education_pct=stage.higher_education_pct,
+    )
+
+
+def _to_subject_performance_latest_dto(
+    value: SchoolSubjectPerformanceLatest | None,
+) -> SchoolSubjectPerformanceLatestDto | None:
+    if value is None:
+        return None
+    return SchoolSubjectPerformanceLatestDto(
+        strongest_subjects=tuple(
+            _to_subject_summary_dto(item) for item in value.strongest_subjects
+        ),
+        weakest_subjects=tuple(_to_subject_summary_dto(item) for item in value.weakest_subjects),
+        stage_breakdowns=tuple(
+            SchoolSubjectPerformanceGroupRowDto(
+                academic_year=row.academic_year,
+                key_stage=row.key_stage,
+                qualification_family=row.qualification_family,
+                exam_cohort=row.exam_cohort,
+                subjects=tuple(_to_subject_summary_dto(item) for item in row.subjects),
+            )
+            for row in value.stage_breakdowns
+        ),
+        latest_updated_at=value.latest_updated_at,
+    )
+
+
+def _to_subject_summary_dto(value: SchoolSubjectSummary) -> SchoolSubjectSummaryDto:
+    return SchoolSubjectSummaryDto(
+        academic_year=value.academic_year,
+        key_stage=value.key_stage,
+        qualification_family=value.qualification_family,
+        exam_cohort=value.exam_cohort,
+        subject=value.subject,
+        source_version=value.source_version,
+        entries_count_total=value.entries_count_total,
+        high_grade_count=value.high_grade_count,
+        high_grade_share_pct=value.high_grade_share_pct,
+        pass_grade_count=value.pass_grade_count,
+        pass_grade_share_pct=value.pass_grade_share_pct,
+        ranking_eligible=value.ranking_eligible,
     )
 
 
