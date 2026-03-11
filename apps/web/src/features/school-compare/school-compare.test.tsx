@@ -122,6 +122,11 @@ describe("SchoolCompareFeature", () => {
     expect(compareMock).toHaveBeenCalledWith(["100001", "200002"]);
     expect(screen.getAllByText("England 18.0% | Westminster 19.2%")[0]).toBeInTheDocument();
     expect(screen.getAllByText("— Not applicable")[0]).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /Neighbourhood Context/i })
+    );
+
     expect(
       screen.getAllByText(
         "The source currently has limited coverage for this information."

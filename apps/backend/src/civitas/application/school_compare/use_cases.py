@@ -594,7 +594,7 @@ def _finance_metric_value(
     # Benchmarked keys use finance_ prefix; strip it for the field lookup
     field_name = definition.metric_key
     if field_name.startswith("finance_"):
-        field_name = field_name[len("finance_"):]
+        field_name = field_name[len("finance_") :]
 
     raw_value = getattr(latest, field_name, None)
 
@@ -729,9 +729,7 @@ def _build_benchmark_dto(
         return None
 
     # Finance percentages are stored as ratios in the benchmark table
-    is_finance_pct = (
-        definition.metric_key in _FINANCE_METRIC_KEYS and definition.unit == "percent"
-    )
+    is_finance_pct = definition.metric_key in _FINANCE_METRIC_KEYS and definition.unit == "percent"
     bm_school = benchmark_row.school_value
     bm_national = benchmark_row.national_value
     bm_local = benchmark_row.local_value

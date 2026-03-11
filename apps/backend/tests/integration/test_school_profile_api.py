@@ -290,6 +290,18 @@ def _profile_response() -> SchoolProfileResponseDto:
             staff_costs_pct_of_expenditure=0.7682,
             revenue_reserve_gbp=275000.0,
             revenue_reserve_per_pupil_gbp=881.41,
+            in_year_balance_gbp=40000.0,
+            total_grant_funding_gbp=1810000.0,
+            total_self_generated_funding_gbp=260000.0,
+            teaching_staff_costs_gbp=1045000.0,
+            supply_teaching_staff_costs_gbp=62500.0,
+            education_support_staff_costs_gbp=282000.0,
+            other_staff_costs_gbp=170000.0,
+            premises_costs_gbp=190000.0,
+            educational_supplies_costs_gbp=118000.0,
+            bought_in_professional_services_costs_gbp=93000.0,
+            catering_costs_gbp=71000.0,
+            supply_staff_costs_pct_of_staff_costs=0.0401,
         ),
         leadership_snapshot=SchoolLeadershipSnapshotDto(
             headteacher_name="A. Jones",
@@ -550,6 +562,7 @@ def test_get_school_profile_returns_expected_contract() -> None:
     assert payload["admissions_latest"]["applications_any_preference"] == 126
     assert payload["finance_latest"]["income_per_pupil_gbp"] == 6634.62
     assert payload["finance_latest"]["staff_costs_pct_of_expenditure"] == 0.7682
+    assert payload["finance_latest"]["supply_staff_costs_pct_of_staff_costs"] == 0.0401
     assert payload["benchmarks"] == {"metrics": []}
     assert payload["completeness"]["admissions"]["status"] == "available"
     assert payload["completeness"]["finance"]["status"] == "available"

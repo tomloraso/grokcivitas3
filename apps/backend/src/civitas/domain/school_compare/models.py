@@ -475,4 +475,3 @@ COMPARE_METRIC_CATALOG: tuple[CompareMetricDefinition, ...] = (
         decimals=1,
     ),
 )
-

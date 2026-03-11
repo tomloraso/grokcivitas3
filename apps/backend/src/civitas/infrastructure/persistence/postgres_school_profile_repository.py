@@ -1158,9 +1158,7 @@ class PostgresSchoolProfileRepository(SchoolProfileRepository):
                     finance_row["revenue_reserve_per_pupil_gbp"]
                 ),
                 in_year_balance_gbp=_to_optional_float(finance_row["in_year_balance_gbp"]),
-                total_grant_funding_gbp=_to_optional_float(
-                    finance_row["total_grant_funding_gbp"]
-                ),
+                total_grant_funding_gbp=_to_optional_float(finance_row["total_grant_funding_gbp"]),
                 total_self_generated_funding_gbp=_to_optional_float(
                     finance_row["total_self_generated_funding_gbp"]
                 ),

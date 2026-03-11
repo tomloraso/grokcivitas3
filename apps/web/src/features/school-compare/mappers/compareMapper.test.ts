@@ -51,9 +51,23 @@ describe("mapCompareToVM", () => {
 
   it("keeps unsupported and unavailable cells explicit", () => {
     const vm = mapCompareToVM(COMPARE_RESPONSE, new Map(), "/compare?urns=100001,200002");
-    const unsupportedCell = vm.sections[1].rows[0].cells[1];
-    const unavailableCell = vm.sections[2].rows[0].cells[1];
-    const inspectionDateCell = vm.sections[0].rows[1].cells[0];
+    const demographicsSection = vm.sections.find(
+      (section) => section.label === "Pupil Demographics"
+    );
+    const neighbourhoodSection = vm.sections.find(
+      (section) => section.label === "Neighbourhood Context"
+    );
+    const ofstedSection = vm.sections.find(
+      (section) => section.label === "Ofsted Profile"
+    );
+
+    expect(demographicsSection).toBeDefined();
+    expect(neighbourhoodSection).toBeDefined();
+    expect(ofstedSection).toBeDefined();
+
+    const unsupportedCell = demographicsSection!.rows[0].cells[1];
+    const unavailableCell = neighbourhoodSection!.rows[0].cells[1];
+    const inspectionDateCell = ofstedSection!.rows[1].cells[0];
 
     expect(unsupportedCell.displayValue).toBe("Not applicable");
     expect(unsupportedCell.availability).toBe("unsupported");

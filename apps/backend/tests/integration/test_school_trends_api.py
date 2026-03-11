@@ -449,6 +449,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
                     ),
                 ),
                 teaching_staff_costs_per_pupil_gbp=(),
+                supply_staff_costs_pct_of_staff_costs=(),
                 admissions_oversubscription_ratio=(
                     SchoolTrendPointDto(
                         academic_year="2024/25",
@@ -608,6 +609,7 @@ def test_get_school_trends_returns_expected_contract() -> None:
                 staff_costs_pct_of_expenditure=(),
                 revenue_reserve_per_pupil_gbp=(),
                 teaching_staff_costs_per_pupil_gbp=(),
+                supply_staff_costs_pct_of_staff_costs=(),
                 admissions_oversubscription_ratio=(
                     SchoolTrendBenchmarkPointDto(
                         academic_year="2024/25",
