@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from datetime import date
-
 from civitas.infrastructure.pipelines.contracts import dfe_workforce as contract
 
 
-def test_normalize_row_maps_legacy_workforce_and_leadership_fields() -> None:
+def test_normalize_row_maps_legacy_workforce_fields() -> None:
     normalized, rejection = contract.normalize_row(
         {
             "school_urn": "123456",
@@ -16,10 +14,6 @@ def test_normalize_row_maps_legacy_workforce_and_leadership_fields() -> None:
             "teacher_turnover_pct": "9.8",
             "qts_pct": "95.2",
             "qualifications_level6_plus_pct": "81.1",
-            "headteacher_name": "A. Jones",
-            "headteacher_start_date": "2020-09-01",
-            "headteacher_tenure_years": "4.5",
-            "leadership_turnover_score": "1.2",
         },
         release_slug="2023-24",
         release_version_id="wf-rv-2024",
@@ -36,10 +30,6 @@ def test_normalize_row_maps_legacy_workforce_and_leadership_fields() -> None:
     assert normalized["teacher_turnover_pct"] == 9.8
     assert normalized["qts_pct"] == 95.2
     assert normalized["qualifications_level6_plus_pct"] == 81.1
-    assert normalized["headteacher_name"] == "A. Jones"
-    assert normalized["headteacher_start_date"] == date(2020, 9, 1)
-    assert normalized["headteacher_tenure_years"] == 4.5
-    assert normalized["leadership_turnover_score"] == 1.2
     assert normalized["source_dataset_id"] == "workforce:wf-rv-2024"
     assert normalized["source_dataset_version"] == "workforce:wf-file-2024"
 
@@ -55,10 +45,6 @@ def test_normalize_row_handles_legacy_suppression_tokens() -> None:
             "teacher_turnover_pct": "na",
             "qts_pct": "n/a",
             "qualifications_level6_plus_pct": "ne",
-            "headteacher_name": "",
-            "headteacher_start_date": ".",
-            "headteacher_tenure_years": "SUPP",
-            "leadership_turnover_score": "SUPP",
         },
         release_slug="2023-24",
         release_version_id="wf-rv-2024",
@@ -73,10 +59,6 @@ def test_normalize_row_handles_legacy_suppression_tokens() -> None:
     assert normalized["teacher_turnover_pct"] is None
     assert normalized["qts_pct"] is None
     assert normalized["qualifications_level6_plus_pct"] is None
-    assert normalized["headteacher_name"] is None
-    assert normalized["headteacher_start_date"] is None
-    assert normalized["headteacher_tenure_years"] is None
-    assert normalized["leadership_turnover_score"] is None
 
 
 def test_normalize_row_rejects_invalid_values() -> None:

@@ -30,10 +30,6 @@ class NormalizedLegacyWorkforceRow(TypedDict):
     teacher_turnover_pct: float | None
     qts_pct: float | None
     qualifications_level6_plus_pct: float | None
-    headteacher_name: str | None
-    headteacher_start_date: date | None
-    headteacher_tenure_years: float | None
-    leadership_turnover_score: float | None
     source_dataset_id: str
     source_dataset_version: str | None
 
@@ -232,29 +228,6 @@ def normalize_legacy_workforce_row(
     except ValueError:
         return None, "invalid_qualifications_level6_plus_pct"
 
-    try:
-        headteacher_start_date = parse_optional_date(
-            _pick(raw_row, "headteacher_start_date", "head_start_date")
-        )
-    except ValueError:
-        return None, "invalid_headteacher_start_date"
-
-    try:
-        headteacher_tenure_years = parse_optional_numeric(
-            _pick(raw_row, "headteacher_tenure_years"),
-            min_value=0.0,
-        )
-    except ValueError:
-        return None, "invalid_headteacher_tenure_years"
-
-    try:
-        leadership_turnover_score = parse_optional_numeric(
-            _pick(raw_row, "leadership_turnover_score"),
-            min_value=0.0,
-        )
-    except ValueError:
-        return None, "invalid_leadership_turnover_score"
-
     return (
         NormalizedLegacyWorkforceRow(
             urn=urn,
@@ -265,10 +238,6 @@ def normalize_legacy_workforce_row(
             teacher_turnover_pct=teacher_turnover_pct,
             qts_pct=qts_pct,
             qualifications_level6_plus_pct=qualifications_level6_plus_pct,
-            headteacher_name=parse_optional_text(_pick(raw_row, "headteacher_name", "head_name")),
-            headteacher_start_date=headteacher_start_date,
-            headteacher_tenure_years=headteacher_tenure_years,
-            leadership_turnover_score=leadership_turnover_score,
             source_dataset_id=f"workforce:{release_version_id}",
             source_dataset_version=f"workforce:{file_id}",
         ),

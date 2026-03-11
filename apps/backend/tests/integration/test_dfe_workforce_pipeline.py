@@ -107,6 +107,10 @@ def _ensure_schema(engine: Engine) -> None:
                     type text NULL,
                     status text NULL,
                     postcode text NULL,
+                    head_title text NULL,
+                    head_first_name text NULL,
+                    head_last_name text NULL,
+                    head_job_title text NULL,
                     easting double precision NOT NULL,
                     northing double precision NOT NULL,
                     location geography(Point, 4326) NOT NULL,
@@ -119,6 +123,13 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        for statement in (
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_title text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_first_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_last_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS head_job_title text NULL",
+        ):
+            connection.execute(text(statement))
         connection.execute(
             text(
                 """
@@ -303,21 +314,37 @@ def _seed_schools(engine: Engine) -> None:
                 """
                 INSERT INTO schools (
                     urn, name, phase, type, status, postcode,
+                    head_title, head_first_name, head_last_name, head_job_title,
                     easting, northing, location, updated_at
                 ) VALUES
                 (
                     '100001', 'Alpha School', 'Primary', 'Community school', 'Open', 'SW1A 1AA',
+                    'Dr', 'Ada', 'Jones', 'Headteacher',
                     529090, 179645,
                     ST_GeogFromText('SRID=4326;POINT(-0.141 51.501)'),
                     timezone('utc', now())
                 ),
                 (
                     '100002', 'Beta School', 'Primary', 'Community school', 'Open', 'SW1A 2AA',
+                    'Ms', 'Bea', 'Smith', 'Headteacher',
                     529200, 179700,
                     ST_GeogFromText('SRID=4326;POINT(-0.140 51.502)'),
                     timezone('utc', now())
                 )
-                ON CONFLICT (urn) DO NOTHING
+                ON CONFLICT (urn) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    phase = EXCLUDED.phase,
+                    type = EXCLUDED.type,
+                    status = EXCLUDED.status,
+                    postcode = EXCLUDED.postcode,
+                    head_title = EXCLUDED.head_title,
+                    head_first_name = EXCLUDED.head_first_name,
+                    head_last_name = EXCLUDED.head_last_name,
+                    head_job_title = EXCLUDED.head_job_title,
+                    easting = EXCLUDED.easting,
+                    northing = EXCLUDED.northing,
+                    location = EXCLUDED.location,
+                    updated_at = timezone('utc', now())
                 """
             )
         )
@@ -386,14 +413,14 @@ def _write_manifest_and_assets(context: PipelineRunContext) -> None:
     legacy_name = "dfe_workforce_legacy_2024.csv"
     _write_csv(
         context.bronze_source_path / legacy_name,
-        "school_urn,time_period,geographic_level,time_identifier,pupil_teacher_ratio,supply_teacher_pct,teachers_3plus_years_pct,teacher_turnover_pct,qts_pct,qualifications_level6_plus_pct,headteacher_name,headteacher_start_date,headteacher_tenure_years,leadership_turnover_score\n"
-        "100001,202324,School,Academic year,16.7,2.8,74.0,10.2,95.1,80.3,A. Smith,2019-09-01,5.5,1.5\n"
-        "100001,202425,School,Academic year,16.3,2.4,76.5,9.8,95.2,81.1,A. Jones,2020-09-01,4.5,1.2\n"
-        "100002,202425,School,Academic year,SUPP,.,x,na,n/a,ne,,.,SUPP,SUPP\n"
-        ",202425,School,Academic year,16.0,2.0,70.0,9.0,95.0,80.0,H. Name,2021-09-01,3.0,1.0\n"
-        "ABC,202425,School,Academic year,16.0,2.0,70.0,9.0,95.0,80.0,H. Name,2021-09-01,3.0,1.0\n"
-        "12345,202425,School,Academic year,16.0,2.0,70.0,9.0,95.0,80.0,H. Name,2021-09-01,3.0,1.0\n"
-        "100001,202425,National,Academic year,16.3,2.4,76.5,9.8,95.2,81.1,A. Jones,2020-09-01,4.5,1.2\n",
+        "school_urn,time_period,geographic_level,time_identifier,pupil_to_qual_teacher_ratio,pupil_to_qual_unqual_teacher_ratio,pupil_to_adult_ratio\n"
+        "100001,202324,School,Academic year,17.1,16.7,8.9\n"
+        "100001,202425,School,Academic year,16.9,16.3,8.4\n"
+        "100002,202425,School,Academic year,SUPP,.,x\n"
+        ",202425,School,Academic year,16.0,16.0,8.0\n"
+        "ABC,202425,School,Academic year,16.0,16.0,8.0\n"
+        "12345,202425,School,Academic year,16.0,16.0,8.0\n"
+        "100001,202425,National,Academic year,16.9,16.3,8.4\n",
     )
 
     teacher_characteristics_name = "teacher_characteristics_2024.zip"
@@ -699,15 +726,22 @@ def test_dfe_workforce_pipeline_stage_and_promote_materialize_workforce_depth(
         leadership = connection.execute(
             text(
                 """
-                SELECT headteacher_name, headteacher_start_date, headteacher_tenure_years
+                SELECT
+                    headteacher_name,
+                    headteacher_start_date,
+                    headteacher_tenure_years,
+                    leadership_turnover_score,
+                    source_dataset_id
                 FROM school_leadership_snapshot
                 WHERE urn = '100001'
                 """
             )
         ).one()
-        assert leadership[0] == "A. Jones"
-        assert str(leadership[1]) == "2020-09-01"
-        assert leadership[2] == pytest.approx(4.5)
+        assert leadership[0] == "Ada Jones"
+        assert leadership[1] is None
+        assert leadership[2] is None
+        assert leadership[3] is None
+        assert leadership[4] == "gias"
 
     second_context = _context(bronze_root)
     _insert_run_row(engine, second_context)

@@ -55,7 +55,7 @@ Minimum indicator groups:
 - Attendance and behaviour: attendance, persistent absence, suspensions, and exclusions.
 - Performance: KS2, KS4, Attainment 8, Progress 8, EBacc, and disadvantaged gap where published.
 - Staffing signals: pupil-to-teacher ratio, supply share, QTS coverage, teacher turnover and related workforce metrics where school-level data exists.
-- Leadership and inspection: headteacher and tenure signals, Ofsted latest rating, sub-judgements, and timeline.
+- Leadership and inspection: headteacher identity where school-level data exists, tenure signals only where school-level data is published, Ofsted latest rating, sub-judgements, and timeline.
 - Finance: academy total income and expenditure, per-pupil income and expenditure, staff costs breakdown (teaching, supply, support, other), revenue reserves, in-year balance, funding sources (grant vs self-generated), premises and catering costs, supply staff costs share, and per-pupil benchmarks from the Academies Accounts Return.
 - Area context: local crime context, IMD and IDACI, and house-price context.
 - Trends and benchmarks: multi-year coverage, year-on-year deltas, dashboard views, and benchmark context.

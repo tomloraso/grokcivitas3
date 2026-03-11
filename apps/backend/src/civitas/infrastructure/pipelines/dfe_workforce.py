@@ -541,7 +541,6 @@ class DfeWorkforcePipeline:
                 release_version_id=release_version_id,
                 file_id="ed1c5650-9e67-453d-0d91-08ddcde6ffdc",
                 file_name="Size of the school workforce CSV",
-                source_status="empty",
             ),
             _ReleaseFileDescriptor(
                 asset_kind=_TEACHER_TURNOVER_ASSET_KIND,
@@ -550,7 +549,6 @@ class DfeWorkforcePipeline:
                 release_version_id=release_version_id,
                 file_id="8aab402f-9fc3-44bf-c16d-08ddd67d4d79",
                 file_name="Teacher turnover school-level CSV",
-                source_status="empty",
             ),
         )
 
@@ -645,10 +643,6 @@ def _create_stage_tables(
                 teacher_turnover_pct double precision NULL,
                 qts_pct double precision NULL,
                 qualifications_level6_plus_pct double precision NULL,
-                headteacher_name text NULL,
-                headteacher_start_date date NULL,
-                headteacher_tenure_years double precision NULL,
-                leadership_turnover_score double precision NULL,
                 source_dataset_id text NOT NULL,
                 source_dataset_version text NULL,
                 PRIMARY KEY (urn, academic_year)
@@ -807,10 +801,6 @@ def _create_stage_tables(
                 "teacher_turnover_pct",
                 "qts_pct",
                 "qualifications_level6_plus_pct",
-                "headteacher_name",
-                "headteacher_start_date",
-                "headteacher_tenure_years",
-                "leadership_turnover_score",
                 "source_dataset_id",
                 "source_dataset_version",
             ),
@@ -1582,24 +1572,30 @@ def _upsert_leadership_snapshot(
     connection: Connection,
     stage_tables: Mapping[str, str],
 ) -> int:
+    del stage_tables
     return int(
         connection.execute(
             text(
-                f"""
+                """
                 WITH leadership_latest AS (
-                    SELECT DISTINCT ON (legacy.urn)
-                        legacy.urn,
-                        legacy.headteacher_name,
-                        legacy.headteacher_start_date,
-                        legacy.headteacher_tenure_years,
-                        legacy.leadership_turnover_score,
-                        legacy.source_dataset_id,
-                        legacy.source_dataset_version
-                    FROM staging.{stage_tables[_LEGACY_WORKFORCE_ASSET_KIND]} AS legacy
-                    INNER JOIN schools ON schools.urn = legacy.urn
-                    ORDER BY legacy.urn,
-                             substring(legacy.academic_year from 1 for 4)::integer DESC,
-                             legacy.academic_year DESC
+                    SELECT
+                        schools.urn,
+                        NULLIF(
+                            btrim(
+                                concat_ws(
+                                    ' ',
+                                    NULLIF(schools.head_first_name, ''),
+                                    NULLIF(schools.head_last_name, '')
+                                )
+                            ),
+                            ''
+                        ) AS headteacher_name,
+                        CAST(NULL AS date) AS headteacher_start_date,
+                        CAST(NULL AS double precision) AS headteacher_tenure_years,
+                        CAST(NULL AS double precision) AS leadership_turnover_score,
+                        'gias' AS source_dataset_id,
+                        CAST(NULL AS text) AS source_dataset_version
+                    FROM schools
                 ),
                 upserted AS (
                     INSERT INTO school_leadership_snapshot (
