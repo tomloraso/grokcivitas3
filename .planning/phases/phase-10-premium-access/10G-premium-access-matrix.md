@@ -102,7 +102,7 @@ Per-surface teaser depth:
 | AI analyst summary | First 2-3 sentences of the analyst text | Clear teaser text, then progressive blur over remaining placeholder content, inline CTA overlay | "Get the full analyst view for [School Name]" |
 | Neighbourhood context | Short teaser line or minimal teaser payload describing available local context | Visible teaser line, then blur or fade treatment with inline CTA overlay | "See the full neighbourhood context for [School Name]" |
 | Compare workflow | Locked action metadata plus requested school context for direct-route locked state | Disabled or locked action with teaser modal, or locked route state if navigated directly | "Compare [School Name] side by side with Premium" |
-| Deferred favourites | None | Hidden until Phase 14 | Not applicable |
+| Deferred favourites | None | Hidden until Phase 13 | Not applicable |
 
 What must never be blurred or hidden:
 
@@ -172,8 +172,8 @@ Premium copy must position paid access as deeper interpretation and workflow sup
 | Account | Upgrade CTA and plan explanation | Full access | Full access | Free baseline | - | Phase 10 | Paywall explanation should be visible wherever relevant. |
 | Account | Current plan or access-status page | Sign-in required | Full access | Signed-in helper | - | Phase 10 | Useful for support and purchase recovery. |
 | Billing | Hosted checkout start flow | Sign-in required | Full access | Signed-in helper | - | Phase 10 | Not a paid feature itself; it is the purchase path. |
-| Saved workflow | School favourites and saved research library | Not available | Full access when implemented | Deferred | `premium_favourites` | Phase 14 | Explicitly deferred out of the Phase 10 launch bundle. |
-| Export | PDF or report export | Not available | Full access when implemented | Deferred | `premium_report_export` | Phase 12 | Already outside MVP scope. |
+| Saved workflow | School favourites and saved research library | Not available | Full access when implemented | Deferred | `premium_favourites` | Phase 13 | Explicitly deferred out of the Phase 10 launch bundle. |
+| Export | PDF or report export | Not available | Full access when implemented | Deferred | `premium_report_export` | Phase 20 | Already outside MVP scope. |
 
 ## Launch Scope Decision Summary
 
@@ -207,8 +207,8 @@ Premium copy must position paid access as deeper interpretation and workflow sup
 | `premium_ai_analyst` | Profile analyst section | user session + requested section capability | `GET /api/v1/schools/{urn}` returns free baseline plus locked analyst section with `teaser_text` when absent; full analyst payload when present | Clear teaser text then progressive blur, inline contextual CTA overlay | Profile cache must vary by access state or be invalidated on upgrade and sign-out | First launch capability. |
 | `premium_neighbourhood` | Profile neighbourhood section | user session + requested section capability | `GET /api/v1/schools/{urn}` returns a locked neighbourhood section with teaser metadata when absent; full area-context payload when present | Visible teaser line, then blur or fade treatment with inline CTA overlay | Profile cache must vary by access state or be invalidated on upgrade and sign-out | Launch capability designed so policy can later move neighbourhood back to free without redesign. |
 | `premium_comparison` | Compare entry points and compare route | user session + compare capability | Compare endpoint returns locked metadata plus requested school context when absent; full compare payload when present | Visible locked compare action and teaser modal, plus locked direct-route state | Compare cache must vary by access state | Launch workflow capability. |
-| `premium_favourites` | Future favourites and saved-library flows | user session + favourites capability | Future save or library endpoints expose locked metadata until enabled | Visible save affordance or library CTA once implemented | Per-user cache and state only | Deferred to Phase 14. |
-| `premium_report_export` | Future export endpoints | user session + export capability | Export endpoints reject or return paywall metadata when absent | Export CTA locked until premium is active | Minimal cache impact; authorization check on mutation path | Phase 12 candidate. |
+| `premium_favourites` | Future favourites and saved-library flows | user session + favourites capability | Future save or library endpoints expose locked metadata until enabled | Visible save affordance or library CTA once implemented | Per-user cache and state only | Deferred to Phase 13. |
+| `premium_report_export` | Future export endpoints | user session + export capability | Export endpoints reject or return paywall metadata when absent | Export CTA locked until premium is active | Minimal cache impact; authorization check on mutation path | Phase 20 candidate. |
 
 ## Implementation Rules Derived From This Matrix
 
@@ -227,7 +227,7 @@ Premium copy must position paid access as deeper interpretation and workflow sup
 
 1. Whether neighbourhood context should remain premium after launch learning or move back into the free baseline.
 2. Whether the compare teaser experience should default to an inline locked card, a modal, or both.
-3. Whether a later launch should expand Premium again with favourites after Phase 14 is designed.
+3. Whether a later launch should expand Premium again with favourites after Phase 13 is designed.
 
 ## Resolved Decisions
 

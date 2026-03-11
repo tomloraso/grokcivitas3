@@ -7,7 +7,7 @@ Turn the measured latency findings for the two core school journeys into an impl
 - `/schools/:urn`
 - `/compare?urns=...`
 
-This supplements `.planning/phases/phase-12-post-mvp/11E-performance-and-cache-optimization.md` with a near-term, evidence-based plan for the current product.
+This supplements `.planning/phases/phase-20-post-mvp/11E-performance-and-cache-optimization.md` with a near-term, evidence-based plan for the current product.
 
 ## Status (2026-03-08)
 

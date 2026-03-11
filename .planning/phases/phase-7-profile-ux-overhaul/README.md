@@ -198,8 +198,8 @@ SchoolProfileFeature
   - **`school-compare.test.tsx`** — updated table query to `getAllByRole("table")` (one table per open accordion section).
   - **`apps/web/README.md`** — updated P13 section to P13.1 with accordion pattern docs.
 
-- 2026-03-10 (Phase 14 compat fix):
-  - **`favourites/mappers.ts`** — `mapSavedSchoolState()` now accepts `undefined | null` and returns a default `not_saved` state. Phase 14 added `saved_state` to search result types but the backend doesn't always include it; calling the mapper on `undefined` crashed the search page with `Cannot read properties of undefined (reading 'status')`.
+- 2026-03-10 (Phase 13 compat fix):
+  - **`favourites/mappers.ts`** — `mapSavedSchoolState()` now accepts `undefined | null` and returns a default `not_saved` state. Phase 13 added `saved_state` to search result types but the backend doesn't always include it; calling the mapper on `undefined` crashed the search page with `Cannot read properties of undefined (reading 'status')`.
 
 - 2026-03-10 (P13 — Compare page rebuild):
   - **`SchoolCompareFeature.tsx`** — full rewrite. Extracted inline components into dedicated files. Slim header with share button (clipboard copy). Premium gate replaced with compact `ComparePremiumBanner` (slim Panel). Dev premium bypass extracted to `isDevUnlocked` boolean. Section matrix replaced with `CompareMetricTable`.

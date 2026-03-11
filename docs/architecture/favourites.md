@@ -1,6 +1,6 @@
 # Saved Schools
 
-Phase 14 adds account-owned saved schools across backend and web.
+Phase 13 adds account-owned saved schools across backend and web.
 
 ## Scope
 
