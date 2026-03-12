@@ -1,5 +1,6 @@
 from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.school_compare import (
+    SchoolCompareBenchmarkContextResponse,
     SchoolCompareBenchmarkResponse,
     SchoolCompareCellResponse,
     SchoolCompareResponse,
@@ -66,6 +67,17 @@ def to_school_compare_response(result: SchoolCompareResponseDto) -> SchoolCompar
                                         local_scope=cell.benchmark.local_scope,
                                         local_area_code=cell.benchmark.local_area_code,
                                         local_area_label=cell.benchmark.local_area_label,
+                                        contexts=[
+                                            SchoolCompareBenchmarkContextResponse(
+                                                scope=context.scope,
+                                                label=context.label,
+                                                value=context.value,
+                                                percentile_rank=context.percentile_rank,
+                                                school_count=context.school_count,
+                                                area_code=context.area_code,
+                                            )
+                                            for context in cell.benchmark.contexts
+                                        ],
                                     )
                                     if cell.benchmark is not None
                                     else None

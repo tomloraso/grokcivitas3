@@ -5,7 +5,8 @@ from pydantic import BaseModel
 
 from civitas.api.schemas.subject_performance import SchoolSubjectPerformanceSeriesResponse
 
-BenchmarkScope = Literal["local_authority_district", "phase"]
+BenchmarkScope = Literal["national", "local_authority_district", "phase", "similar_school"]
+LocalBenchmarkScope = Literal["local_authority_district", "phase"]
 
 
 class SchoolTrendPointResponse(BaseModel):
@@ -22,9 +23,19 @@ class SchoolTrendBenchmarkPointResponse(BaseModel):
     local_value: float | None
     school_vs_national_delta: float | None
     school_vs_local_delta: float | None
-    local_scope: BenchmarkScope
+    local_scope: LocalBenchmarkScope
     local_area_code: str
     local_area_label: str
+    contexts: list["SchoolBenchmarkContextResponse"]
+
+
+class SchoolBenchmarkContextResponse(BaseModel):
+    scope: BenchmarkScope
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
 
 
 class SchoolTrendsSeriesResponse(BaseModel):

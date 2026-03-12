@@ -386,6 +386,22 @@ export interface BenchmarkTrendPointVM {
   localValue: number | null;
   schoolVsNationalDelta: number | null;
   schoolVsLocalDelta: number | null;
+  contexts: BenchmarkContextVM[];
+}
+
+export type BenchmarkContextScope =
+  | "national"
+  | "local_authority_district"
+  | "phase"
+  | "similar_school";
+
+export interface BenchmarkContextVM {
+  scope: BenchmarkContextScope;
+  label: string;
+  value: number | null;
+  percentileRank: number | null;
+  schoolCount: number | null;
+  areaCode: string | null;
 }
 
 export interface BenchmarkMetricVM {
@@ -402,6 +418,7 @@ export interface BenchmarkMetricVM {
   localScope: "local_authority_district" | "phase";
   localAreaCode: string;
   localAreaLabel: string;
+  contexts: BenchmarkContextVM[];
   trendPoints: BenchmarkTrendPointVM[];
 }
 

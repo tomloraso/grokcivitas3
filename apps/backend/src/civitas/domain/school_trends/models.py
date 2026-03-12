@@ -3,7 +3,8 @@ from datetime import datetime
 from typing import Literal
 
 TrendCompletenessStatus = Literal["available", "partial", "unavailable"]
-BenchmarkScope = Literal["local_authority_district", "phase"]
+BenchmarkScope = Literal["national", "local_authority_district", "phase", "similar_school"]
+LocalBenchmarkScope = Literal["local_authority_district", "phase"]
 TrendCompletenessReasonCode = Literal[
     "source_missing",
     "insufficient_years_published",
@@ -177,15 +178,26 @@ class SchoolDestinationsSeries:
 
 
 @dataclass(frozen=True)
+class SchoolMetricBenchmarkContext:
+    scope: BenchmarkScope
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolMetricBenchmarkYearlyRow:
     metric_key: str
     academic_year: str
     school_value: float | None
     national_value: float | None
     local_value: float | None
-    local_scope: BenchmarkScope
+    local_scope: LocalBenchmarkScope
     local_area_code: str
     local_area_label: str
+    contexts: tuple[SchoolMetricBenchmarkContext, ...] = ()
 
 
 @dataclass(frozen=True)

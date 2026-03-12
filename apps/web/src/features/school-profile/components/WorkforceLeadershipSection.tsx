@@ -2,11 +2,10 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
-import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
 import { Card } from "../../../components/ui/Card";
+import { buildBenchmarkSlot } from "../benchmarkSlot";
 import {
-  formatMetricDelta,
   formatMetricValue,
   getMetricCatalogEntry,
   WORKFORCE_METRIC_KEYS
@@ -74,34 +73,6 @@ const WORKFORCE_STABILITY_KEYS = WORKFORCE_METRIC_KEYS.filter((metricKey) =>
 const WORKFORCE_PRESSURE_KEYS = WORKFORCE_METRIC_KEYS.filter((metricKey) =>
   WORKFORCE_PRESSURE_SET.has(metricKey)
 );
-
-function benchmarkDecimals(metric: BenchmarkMetricVM): number {
-  const catalog = getMetricCatalogEntry(metric.metricKey);
-  if (typeof catalog?.decimals === "number") {
-    return catalog.decimals;
-  }
-  if (metric.unit === "count" || metric.unit === "currency") return 0;
-  if (metric.unit === "ratio") return 1;
-  return 2;
-}
-
-function toBenchmarkSlot(metric: BenchmarkMetricVM): BenchmarkSlot {
-  return {
-    localLabel: metric.localAreaLabel,
-    schoolRaw: metric.schoolValue,
-    localRaw: metric.localValue,
-    nationalRaw: metric.nationalValue,
-    isPercent: metric.unit === "percent",
-    displayDecimals: benchmarkDecimals(metric),
-    schoolValueFormatted: formatMetricValue(metric.schoolValue, metric.unit),
-    localValueFormatted: formatMetricValue(metric.localValue, metric.unit),
-    nationalValueFormatted: formatMetricValue(metric.nationalValue, metric.unit),
-    schoolVsLocalDelta: metric.schoolVsLocalDelta,
-    schoolVsNationalDelta: metric.schoolVsNationalDelta,
-    schoolVsLocalDeltaFormatted: formatMetricDelta(metric.schoolVsLocalDelta, metric.unit),
-    schoolVsNationalDeltaFormatted: formatMetricDelta(metric.schoolVsNationalDelta, metric.unit),
-  };
-}
 
 function renderTrendFooter(series: TrendSeriesVM | undefined) {
   if (!series || series.latestDelta === null) {
@@ -213,7 +184,7 @@ function buildMetricCards(
         description={catalog.description}
         value={formatMetricValue(value, catalog.unit, catalog.decimals) ?? "n/a"}
         footer={renderTrendFooter(trendLookup.get(metricKey))}
-        benchmark={benchmark ? toBenchmarkSlot(benchmark) : undefined}
+        benchmark={benchmark ? buildBenchmarkSlot(benchmark) : undefined}
         variant={
           metricKey === "pupil_teacher_ratio" || metricKey === "teacher_headcount_total"
             ? "hero"

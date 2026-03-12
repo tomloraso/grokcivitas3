@@ -9,6 +9,8 @@ from civitas.api.main import app
 from civitas.application.access.dto import SectionAccessDto
 from civitas.application.identity.dto import CurrentSessionDto
 from civitas.application.school_compare.dto import (
+    SchoolCompareBenchmarkContextDto,
+    SchoolCompareBenchmarkDto,
     SchoolCompareCellDto,
     SchoolCompareResponseDto,
     SchoolCompareRowDto,
@@ -110,7 +112,27 @@ def test_get_school_compare_returns_expected_contract() -> None:
                                     availability="available",
                                     completeness_status="available",
                                     completeness_reason_code=None,
-                                    benchmark=None,
+                                    benchmark=SchoolCompareBenchmarkDto(
+                                        academic_year="2024/25",
+                                        school_value=16.9,
+                                        national_value=15.1,
+                                        local_value=16.2,
+                                        school_vs_national_delta=1.8,
+                                        school_vs_local_delta=0.7,
+                                        local_scope="local_authority_district",
+                                        local_area_code="E09000033",
+                                        local_area_label="Westminster",
+                                        contexts=(
+                                            SchoolCompareBenchmarkContextDto(
+                                                scope="similar_school",
+                                                label="Similar Schools",
+                                                value=16.4,
+                                                percentile_rank=78.5,
+                                                school_count=36,
+                                                area_code=None,
+                                            ),
+                                        ),
+                                    ),
                                 ),
                             ),
                         ),
@@ -136,6 +158,14 @@ def test_get_school_compare_returns_expected_contract() -> None:
     }
     assert payload["schools"][0]["urn"] == "100001"
     assert payload["sections"][0]["rows"][0]["metric_key"] == "ofsted_overall_effectiveness"
+    assert (
+        payload["sections"][0]["rows"][0]["cells"][0]["benchmark"]["contexts"][0]["scope"]
+        == "similar_school"
+    )
+    assert (
+        payload["sections"][0]["rows"][0]["cells"][0]["benchmark"]["contexts"][0]["percentile_rank"]
+        == 78.5
+    )
     assert fake_use_case.calls == [("100001,200002", None)]
 
 

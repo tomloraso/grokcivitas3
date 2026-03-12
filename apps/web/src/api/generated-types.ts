@@ -601,6 +601,42 @@ export interface components {
             /** Reason Code */
             reason_code: ("free_baseline" | "premium_capability_missing" | "anonymous_user" | "artefact_not_published" | "artefact_not_supported" | "entitlement_expired" | "entitlement_revoked") | null;
         };
+        /** SchoolBenchmarkContextResponse */
+        SchoolBenchmarkContextResponse: {
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "national" | "local_authority_district" | "phase" | "similar_school";
+            /** Label */
+            label: string;
+            /** Value */
+            value: number | null;
+            /** Percentile Rank */
+            percentile_rank: number | null;
+            /** School Count */
+            school_count: number | null;
+            /** Area Code */
+            area_code?: string | null;
+        };
+        /** SchoolCompareBenchmarkContextResponse */
+        SchoolCompareBenchmarkContextResponse: {
+            /**
+             * Scope
+             * @enum {string}
+             */
+            scope: "national" | "local_authority_district" | "phase" | "similar_school";
+            /** Label */
+            label: string;
+            /** Value */
+            value: number | null;
+            /** Percentile Rank */
+            percentile_rank: number | null;
+            /** School Count */
+            school_count: number | null;
+            /** Area Code */
+            area_code?: string | null;
+        };
         /** SchoolCompareBenchmarkResponse */
         SchoolCompareBenchmarkResponse: {
             /** Academic Year */
@@ -624,6 +660,8 @@ export interface components {
             local_area_code: string;
             /** Local Area Label */
             local_area_label: string;
+            /** Contexts */
+            contexts: components["schemas"]["SchoolCompareBenchmarkContextResponse"][];
         };
         /** SchoolCompareCellResponse */
         SchoolCompareCellResponse: {
@@ -1135,6 +1173,8 @@ export interface components {
             local_area_code: string;
             /** Local Area Label */
             local_area_label: string;
+            /** Contexts */
+            contexts?: components["schemas"]["SchoolBenchmarkContextResponse"][];
         };
         /** SchoolProfileNeighbourhoodSectionResponse */
         SchoolProfileNeighbourhoodSectionResponse: {
@@ -1291,6 +1331,7 @@ export interface components {
             ofsted_timeline: components["schemas"]["SchoolProfileOfstedTimelineResponse"];
             neighbourhood: components["schemas"]["SchoolProfileNeighbourhoodSectionResponse"];
             saved_state: components["schemas"]["SavedSchoolStateResponse"];
+            subject_performance?: components["schemas"]["SchoolSubjectPerformanceLatestResponse"] | null;
             benchmarks?: components["schemas"]["SchoolProfileBenchmarksResponse"];
             completeness: components["schemas"]["SchoolProfileCompletenessResponse"];
         };
@@ -1495,6 +1536,70 @@ export interface components {
             /** Availability */
             availability: string;
         };
+        /** SchoolSubjectPerformanceGroupRowResponse */
+        SchoolSubjectPerformanceGroupRowResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /**
+             * Key Stage
+             * @enum {string}
+             */
+            key_stage: "ks4" | "16_to_18";
+            /** Qualification Family */
+            qualification_family: string;
+            /** Exam Cohort */
+            exam_cohort: string | null;
+            /** Subjects */
+            subjects?: components["schemas"]["SchoolSubjectSummaryResponse"][];
+        };
+        /** SchoolSubjectPerformanceLatestResponse */
+        SchoolSubjectPerformanceLatestResponse: {
+            /** Strongest Subjects */
+            strongest_subjects?: components["schemas"]["SchoolSubjectSummaryResponse"][];
+            /** Weakest Subjects */
+            weakest_subjects?: components["schemas"]["SchoolSubjectSummaryResponse"][];
+            /** Stage Breakdowns */
+            stage_breakdowns?: components["schemas"]["SchoolSubjectPerformanceGroupRowResponse"][];
+            /** Latest Updated At */
+            latest_updated_at: string | null;
+        };
+        /** SchoolSubjectPerformanceSeriesResponse */
+        SchoolSubjectPerformanceSeriesResponse: {
+            /** Rows */
+            rows?: components["schemas"]["SchoolSubjectPerformanceGroupRowResponse"][];
+            /** Latest Updated At */
+            latest_updated_at: string | null;
+        };
+        /** SchoolSubjectSummaryResponse */
+        SchoolSubjectSummaryResponse: {
+            /** Academic Year */
+            academic_year: string;
+            /**
+             * Key Stage
+             * @enum {string}
+             */
+            key_stage: "ks4" | "16_to_18";
+            /** Qualification Family */
+            qualification_family: string;
+            /** Exam Cohort */
+            exam_cohort: string | null;
+            /** Subject */
+            subject: string;
+            /** Source Version */
+            source_version: string;
+            /** Entries Count Total */
+            entries_count_total: number;
+            /** High Grade Count */
+            high_grade_count: number | null;
+            /** High Grade Share Pct */
+            high_grade_share_pct: number | null;
+            /** Pass Grade Count */
+            pass_grade_count: number | null;
+            /** Pass Grade Share Pct */
+            pass_grade_share_pct: number | null;
+            /** Ranking Eligible */
+            ranking_eligible: boolean;
+        };
         /** SchoolTrendBenchmarkPointResponse */
         SchoolTrendBenchmarkPointResponse: {
             /** Academic Year */
@@ -1518,6 +1623,8 @@ export interface components {
             local_area_code: string;
             /** Local Area Label */
             local_area_label: string;
+            /** Contexts */
+            contexts: components["schemas"]["SchoolBenchmarkContextResponse"][];
         };
         /** SchoolTrendDashboardMetricResponse */
         SchoolTrendDashboardMetricResponse: {
@@ -1700,6 +1807,7 @@ export interface components {
             benchmarks: components["schemas"]["SchoolTrendsBenchmarksResponse"];
             completeness: components["schemas"]["SchoolTrendsCompletenessResponse"];
             section_completeness: components["schemas"]["SchoolTrendsSectionCompletenessResponse"];
+            subject_performance?: components["schemas"]["SchoolSubjectPerformanceSeriesResponse"] | null;
         };
         /** SchoolTrendsSectionCompletenessResponse */
         SchoolTrendsSectionCompletenessResponse: {

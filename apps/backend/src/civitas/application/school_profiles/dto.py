@@ -436,6 +436,16 @@ class SchoolPerformanceDto:
 
 
 @dataclass(frozen=True)
+class SchoolBenchmarkContextDto:
+    scope: Literal["national", "local_authority_district", "phase", "similar_school"]
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolProfileMetricBenchmarkDto:
     metric_key: str
     academic_year: str
@@ -447,6 +457,7 @@ class SchoolProfileMetricBenchmarkDto:
     local_scope: Literal["local_authority_district", "phase"]
     local_area_code: str
     local_area_label: str
+    contexts: tuple[SchoolBenchmarkContextDto, ...] = ()
 
 
 @dataclass(frozen=True)

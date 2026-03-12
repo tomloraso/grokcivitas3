@@ -1,6 +1,8 @@
 import type {
   SchoolProfileDestinationStageLatest,
+  SchoolProfileMetricBenchmark,
   SchoolProfileResponse,
+  SchoolTrendBenchmarkPoint,
   SchoolProfileAnalystSection,
   SchoolProfileDestinationsLatest,
   SchoolProfileNeighbourhoodSection,
@@ -24,6 +26,7 @@ import type {
   AdmissionsLatestVM,
   AreaContextVM,
   AreaDeprivationDomainVM,
+  BenchmarkContextVM,
   BenchmarkDashboardVM,
   BenchmarkMetricVM,
   BehaviourLatestVM,
@@ -92,6 +95,7 @@ interface DashboardMetricMeta {
     local_value: number | null;
     school_vs_national_delta: number | null;
     school_vs_local_delta: number | null;
+    contexts: BenchmarkContextVM[];
   }[];
 }
 
@@ -785,6 +789,22 @@ function normalizeDashboardUnit(unit: string): MetricUnit {
   }
 }
 
+function mapBenchmarkContexts(
+  contexts:
+    | SchoolProfileMetricBenchmark["contexts"]
+    | SchoolTrendBenchmarkPoint["contexts"]
+    | undefined
+): BenchmarkContextVM[] {
+  return (contexts ?? []).map((context) => ({
+    scope: context.scope,
+    label: context.label,
+    value: context.value,
+    percentileRank: context.percentile_rank,
+    schoolCount: context.school_count,
+    areaCode: context.area_code ?? null,
+  }));
+}
+
 function buildDashboardMetricMap(
   dashboard: SchoolTrendDashboardResponse | null
 ): Map<string, DashboardMetricMeta> {
@@ -805,7 +825,8 @@ function buildDashboardMetricMap(
           national_value: point.national_value,
           local_value: point.local_value,
           school_vs_national_delta: point.school_vs_national_delta,
-          school_vs_local_delta: point.school_vs_local_delta
+          school_vs_local_delta: point.school_vs_local_delta,
+          contexts: mapBenchmarkContexts(point.contexts),
         }))
       });
     }
@@ -853,6 +874,7 @@ function buildBenchmarkDashboard(
       localScope: snapshotMetric.local_scope,
       localAreaCode: snapshotMetric.local_area_code,
       localAreaLabel: snapshotMetric.local_area_label,
+      contexts: mapBenchmarkContexts(snapshotMetric.contexts),
       trendPoints:
         dashboardMetric?.points.map((point) => ({
           academicYear: point.academic_year,
@@ -860,7 +882,8 @@ function buildBenchmarkDashboard(
           nationalValue: point.national_value,
           localValue: point.local_value,
           schoolVsNationalDelta: point.school_vs_national_delta,
-          schoolVsLocalDelta: point.school_vs_local_delta
+          schoolVsLocalDelta: point.school_vs_local_delta,
+          contexts: point.contexts,
         })) ?? []
     });
   }

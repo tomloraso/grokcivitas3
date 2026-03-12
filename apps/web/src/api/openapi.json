@@ -1737,6 +1737,148 @@
         ],
         "title": "SavedSchoolStateResponse"
       },
+      "SchoolBenchmarkContextResponse": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "national",
+              "local_authority_district",
+              "phase",
+              "similar_school"
+            ],
+            "title": "Scope"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "percentile_rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentile Rank"
+          },
+          "school_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Count"
+          },
+          "area_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope",
+          "label",
+          "value",
+          "percentile_rank",
+          "school_count"
+        ],
+        "title": "SchoolBenchmarkContextResponse"
+      },
+      "SchoolCompareBenchmarkContextResponse": {
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "national",
+              "local_authority_district",
+              "phase",
+              "similar_school"
+            ],
+            "title": "Scope"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "percentile_rank": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percentile Rank"
+          },
+          "school_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Count"
+          },
+          "area_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "scope",
+          "label",
+          "value",
+          "percentile_rank",
+          "school_count"
+        ],
+        "title": "SchoolCompareBenchmarkContextResponse"
+      },
       "SchoolCompareBenchmarkResponse": {
         "properties": {
           "academic_year": {
@@ -1816,6 +1958,13 @@
           "local_area_label": {
             "type": "string",
             "title": "Local Area Label"
+          },
+          "contexts": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolCompareBenchmarkContextResponse"
+            },
+            "type": "array",
+            "title": "Contexts"
           }
         },
         "type": "object",
@@ -1828,7 +1977,8 @@
           "school_vs_local_delta",
           "local_scope",
           "local_area_code",
-          "local_area_label"
+          "local_area_label",
+          "contexts"
         ],
         "title": "SchoolCompareBenchmarkResponse"
       },
@@ -4053,6 +4203,13 @@
           "local_area_label": {
             "type": "string",
             "title": "Local Area Label"
+          },
+          "contexts": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolBenchmarkContextResponse"
+            },
+            "type": "array",
+            "title": "Contexts"
           }
         },
         "type": "object",
@@ -4890,6 +5047,16 @@
           },
           "saved_state": {
             "$ref": "#/components/schemas/SavedSchoolStateResponse"
+          },
+          "subject_performance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolSubjectPerformanceLatestResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "benchmarks": {
             "$ref": "#/components/schemas/SchoolProfileBenchmarksResponse"
@@ -5934,6 +6101,229 @@
         ],
         "title": "SchoolSearchLatestOfstedResponse"
       },
+      "SchoolSubjectPerformanceGroupRowResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "key_stage": {
+            "type": "string",
+            "enum": [
+              "ks4",
+              "16_to_18"
+            ],
+            "title": "Key Stage"
+          },
+          "qualification_family": {
+            "type": "string",
+            "title": "Qualification Family"
+          },
+          "exam_cohort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Cohort"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSubjectSummaryResponse"
+            },
+            "type": "array",
+            "title": "Subjects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "key_stage",
+          "qualification_family",
+          "exam_cohort"
+        ],
+        "title": "SchoolSubjectPerformanceGroupRowResponse"
+      },
+      "SchoolSubjectPerformanceLatestResponse": {
+        "properties": {
+          "strongest_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSubjectSummaryResponse"
+            },
+            "type": "array",
+            "title": "Strongest Subjects"
+          },
+          "weakest_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSubjectSummaryResponse"
+            },
+            "type": "array",
+            "title": "Weakest Subjects"
+          },
+          "stage_breakdowns": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSubjectPerformanceGroupRowResponse"
+            },
+            "type": "array",
+            "title": "Stage Breakdowns"
+          },
+          "latest_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latest_updated_at"
+        ],
+        "title": "SchoolSubjectPerformanceLatestResponse"
+      },
+      "SchoolSubjectPerformanceSeriesResponse": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolSubjectPerformanceGroupRowResponse"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "latest_updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latest_updated_at"
+        ],
+        "title": "SchoolSubjectPerformanceSeriesResponse"
+      },
+      "SchoolSubjectSummaryResponse": {
+        "properties": {
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          },
+          "key_stage": {
+            "type": "string",
+            "enum": [
+              "ks4",
+              "16_to_18"
+            ],
+            "title": "Key Stage"
+          },
+          "qualification_family": {
+            "type": "string",
+            "title": "Qualification Family"
+          },
+          "exam_cohort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Cohort"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "source_version": {
+            "type": "string",
+            "title": "Source Version"
+          },
+          "entries_count_total": {
+            "type": "integer",
+            "title": "Entries Count Total"
+          },
+          "high_grade_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High Grade Count"
+          },
+          "high_grade_share_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "High Grade Share Pct"
+          },
+          "pass_grade_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Grade Count"
+          },
+          "pass_grade_share_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pass Grade Share Pct"
+          },
+          "ranking_eligible": {
+            "type": "boolean",
+            "title": "Ranking Eligible"
+          }
+        },
+        "type": "object",
+        "required": [
+          "academic_year",
+          "key_stage",
+          "qualification_family",
+          "exam_cohort",
+          "subject",
+          "source_version",
+          "entries_count_total",
+          "high_grade_count",
+          "high_grade_share_pct",
+          "pass_grade_count",
+          "pass_grade_share_pct",
+          "ranking_eligible"
+        ],
+        "title": "SchoolSubjectSummaryResponse"
+      },
       "SchoolTrendBenchmarkPointResponse": {
         "properties": {
           "academic_year": {
@@ -6013,6 +6403,13 @@
           "local_area_label": {
             "type": "string",
             "title": "Local Area Label"
+          },
+          "contexts": {
+            "items": {
+              "$ref": "#/components/schemas/SchoolBenchmarkContextResponse"
+            },
+            "type": "array",
+            "title": "Contexts"
           }
         },
         "type": "object",
@@ -6025,7 +6422,8 @@
           "school_vs_local_delta",
           "local_scope",
           "local_area_code",
-          "local_area_label"
+          "local_area_label",
+          "contexts"
         ],
         "title": "SchoolTrendBenchmarkPointResponse"
       },
@@ -6718,6 +7116,16 @@
           },
           "section_completeness": {
             "$ref": "#/components/schemas/SchoolTrendsSectionCompletenessResponse"
+          },
+          "subject_performance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SchoolSubjectPerformanceSeriesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

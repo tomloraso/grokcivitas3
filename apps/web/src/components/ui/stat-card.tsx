@@ -63,6 +63,12 @@ export interface BenchmarkSlot {
   schoolVsNationalDelta: number | null;
   schoolVsLocalDeltaFormatted: string | null;
   schoolVsNationalDeltaFormatted: string | null;
+  similarSchool?: {
+    label: string;
+    valueFormatted: string | null;
+    percentileRank: number | null;
+    schoolCount: number | null;
+  } | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -129,6 +135,8 @@ function BenchmarkBlock({ benchmark }: { benchmark: BenchmarkSlot }): JSX.Elemen
     return rv === null ? 0 : Math.min(100, Math.max(0, (rv / scale) * 100));
   };
 
+  const similarSchoolSummary = formatSimilarSchoolSummary(benchmark.similarSchool ?? null);
+
   return (
     <div className="mt-auto space-y-2 border-t border-border-subtle/50 pt-2.5">
       <div className="space-y-2 sm:space-y-2.5">
@@ -160,8 +168,73 @@ function BenchmarkBlock({ benchmark }: { benchmark: BenchmarkSlot }): JSX.Elemen
           />
         ) : null}
       </div>
+      {benchmark.similarSchool &&
+      (benchmark.similarSchool.valueFormatted || similarSchoolSummary) ? (
+        <div className="rounded-md border border-border-subtle/50 bg-surface/40 px-2.5 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-medium text-secondary">
+              {benchmark.similarSchool.label}
+            </span>
+            {benchmark.similarSchool.valueFormatted ? (
+              <span className="text-[10px] font-semibold tabular-nums text-primary">
+                {benchmark.similarSchool.valueFormatted}
+              </span>
+            ) : null}
+          </div>
+          {similarSchoolSummary ? (
+            <p className="mt-1 text-[11px] leading-snug text-secondary">
+              {similarSchoolSummary}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function formatOrdinal(value: number): string {
+  const rounded = Math.round(value);
+  const remainder = rounded % 100;
+
+  if (remainder >= 11 && remainder <= 13) {
+    return `${rounded}th`;
+  }
+
+  switch (rounded % 10) {
+    case 1:
+      return `${rounded}st`;
+    case 2:
+      return `${rounded}nd`;
+    case 3:
+      return `${rounded}rd`;
+    default:
+      return `${rounded}th`;
+  }
+}
+
+function formatSimilarSchoolSummary(
+  similarSchool:
+    | {
+        percentileRank: number | null;
+        schoolCount: number | null;
+      }
+    | null
+): string | null {
+  if (!similarSchool) {
+    return null;
+  }
+
+  const parts: string[] = [];
+
+  if (similarSchool.percentileRank !== null) {
+    parts.push(`${formatOrdinal(similarSchool.percentileRank)} percentile`);
+  }
+
+  if (similarSchool.schoolCount !== null) {
+    parts.push(`cohort of ${similarSchool.schoolCount.toLocaleString("en-GB")} schools`);
+  }
+
+  return parts.length > 0 ? parts.join(" in a ") : null;
 }
 
 /* ------------------------------------------------------------------ */

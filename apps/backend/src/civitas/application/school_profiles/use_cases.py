@@ -27,6 +27,7 @@ from civitas.application.school_profiles.dto import (
     SchoolAreaHousePricesDto,
     SchoolAttendanceLatestDto,
     SchoolBehaviourLatestDto,
+    SchoolBenchmarkContextDto,
     SchoolDemographicsCoverageDto,
     SchoolDemographicsEthnicityGroupDto,
     SchoolDemographicsHomeLanguageDto,
@@ -786,6 +787,17 @@ class GetSchoolProfileUseCase:
                 local_scope=row.local_scope,
                 local_area_code=row.local_area_code,
                 local_area_label=row.local_area_label,
+                contexts=tuple(
+                    SchoolBenchmarkContextDto(
+                        scope=context.scope,
+                        label=context.label,
+                        value=context.value,
+                        percentile_rank=context.percentile_rank,
+                        school_count=context.school_count,
+                        area_code=context.area_code,
+                    )
+                    for context in row.contexts
+                ),
             )
             for row in sorted(
                 latest_by_metric.values(),

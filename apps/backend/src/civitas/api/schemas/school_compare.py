@@ -15,6 +15,15 @@ class SchoolCompareSchoolResponse(BaseModel):
     age_range_label: str
 
 
+class SchoolCompareBenchmarkContextResponse(BaseModel):
+    scope: Literal["national", "local_authority_district", "phase", "similar_school"]
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
 class SchoolCompareBenchmarkResponse(BaseModel):
     academic_year: str
     school_value: float | int | None
@@ -25,6 +34,7 @@ class SchoolCompareBenchmarkResponse(BaseModel):
     local_scope: Literal["local_authority_district", "phase"]
     local_area_code: str
     local_area_label: str
+    contexts: list[SchoolCompareBenchmarkContextResponse]
 
 
 class SchoolCompareCellResponse(BaseModel):

@@ -390,6 +390,15 @@ class SchoolProfilePerformanceResponse(BaseModel):
     history: list[SchoolProfilePerformanceYearResponse] = Field(default_factory=list)
 
 
+class SchoolBenchmarkContextResponse(BaseModel):
+    scope: Literal["national", "local_authority_district", "phase", "similar_school"]
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
 class SchoolProfileMetricBenchmarkResponse(BaseModel):
     metric_key: str
     academic_year: str
@@ -401,6 +410,7 @@ class SchoolProfileMetricBenchmarkResponse(BaseModel):
     local_scope: Literal["local_authority_district", "phase"]
     local_area_code: str
     local_area_label: str
+    contexts: list[SchoolBenchmarkContextResponse] = Field(default_factory=list)
 
 
 class SchoolProfileBenchmarksResponse(BaseModel):

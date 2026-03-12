@@ -9,6 +9,7 @@ from civitas.api.dependencies import (
 )
 from civitas.api.main import app
 from civitas.application.school_trends.dto import (
+    SchoolBenchmarkContextDto,
     SchoolTrendBenchmarkPointDto,
     SchoolTrendDashboardMetricDto,
     SchoolTrendDashboardResponseDto,
@@ -529,6 +530,24 @@ def test_get_school_trends_returns_expected_contract() -> None:
                         local_scope="local_authority_district",
                         local_area_code="E09000033",
                         local_area_label="Westminster",
+                        contexts=(
+                            SchoolBenchmarkContextDto(
+                                scope="national",
+                                label="England",
+                                value=15.1,
+                                percentile_rank=74.0,
+                                school_count=22000,
+                                area_code="england",
+                            ),
+                            SchoolBenchmarkContextDto(
+                                scope="similar_school",
+                                label="Similar Schools",
+                                value=16.4,
+                                percentile_rank=78.5,
+                                school_count=36,
+                                area_code=None,
+                            ),
+                        ),
                     ),
                 ),
                 fsm6_pct=(),
@@ -795,6 +814,12 @@ def test_get_school_trends_returns_expected_contract() -> None:
     assert payload["completeness"]["reason_code"] == "insufficient_years_published"
     assert payload["benchmarks"]["fsm_pct"][0]["local_scope"] == "local_authority_district"
     assert payload["benchmarks"]["fsm_pct"][0]["local_area_label"] == "Westminster"
+    assert payload["benchmarks"]["fsm_pct"][0]["contexts"][0]["scope"] == "national"
+    assert payload["benchmarks"]["fsm_pct"][0]["contexts"][1]["scope"] == "similar_school"
+    assert payload["benchmarks"]["fsm_pct"][0]["contexts"][1]["percentile_rank"] == pytest.approx(
+        78.5
+    )
+    assert payload["benchmarks"]["fsm_pct"][0]["contexts"][1]["school_count"] == 36
     assert payload["benchmarks"]["teacher_headcount_total"][0]["school_value"] == 42.0
     assert payload["benchmarks"]["admissions_cross_la_applications"][0]["school_value"] == 18
     assert payload["benchmarks"]["teacher_average_mean_salary_gbp"][0][

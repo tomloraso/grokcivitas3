@@ -2,12 +2,11 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
-import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
+import { buildBenchmarkSlot } from "../benchmarkSlot";
 import {
   ATTENDANCE_METRIC_KEYS,
   BEHAVIOUR_METRIC_KEYS,
-  formatMetricDelta,
   formatMetricValue,
   getMetricCatalogEntry
 } from "../metricCatalog";
@@ -29,30 +28,6 @@ interface AttendanceBehaviourSectionProps {
   attendanceCompleteness: SectionCompletenessVM;
   behaviourCompleteness: SectionCompletenessVM;
   benchmarkDashboard: BenchmarkDashboardVM | null;
-}
-
-function barDecimals(unit: BenchmarkMetricVM["unit"]): number {
-  if (unit === "count" || unit === "currency") return 0;
-  if (unit === "ratio") return 1;
-  return 2;
-}
-
-function toBenchmarkSlot(metric: BenchmarkMetricVM): BenchmarkSlot {
-  return {
-    localLabel: metric.localAreaLabel,
-    schoolRaw: metric.schoolValue,
-    localRaw: metric.localValue,
-    nationalRaw: metric.nationalValue,
-    isPercent: metric.unit === "percent",
-    displayDecimals: barDecimals(metric.unit),
-    schoolValueFormatted: formatMetricValue(metric.schoolValue, metric.unit),
-    localValueFormatted: formatMetricValue(metric.localValue, metric.unit),
-    nationalValueFormatted: formatMetricValue(metric.nationalValue, metric.unit),
-    schoolVsLocalDelta: metric.schoolVsLocalDelta,
-    schoolVsNationalDelta: metric.schoolVsNationalDelta,
-    schoolVsLocalDeltaFormatted: formatMetricDelta(metric.schoolVsLocalDelta, metric.unit),
-    schoolVsNationalDeltaFormatted: formatMetricDelta(metric.schoolVsNationalDelta, metric.unit),
-  };
 }
 
 function renderTrendFooter(series: TrendSeriesVM | undefined) {
@@ -97,7 +72,7 @@ function AttendanceMetricCard({
   metricKey: string;
   value: number | null;
   series: TrendSeriesVM | undefined;
-  benchmark: BenchmarkSlot | undefined;
+  benchmark: ReturnType<typeof buildBenchmarkSlot> | undefined;
   variant?: "hero" | "default";
 }): JSX.Element {
   const catalog = getMetricCatalogEntry(metricKey);
@@ -188,7 +163,7 @@ export function AttendanceBehaviourSection({
                 metricKey={metricKey}
                 value={value}
                 series={trendLookup.get(metricKey)}
-                benchmark={bm ? toBenchmarkSlot(bm) : undefined}
+                benchmark={bm ? buildBenchmarkSlot(bm) : undefined}
                 variant={metricKey === "overall_attendance_pct" ? "hero" : "default"}
               />
             );
@@ -228,7 +203,7 @@ export function AttendanceBehaviourSection({
                 metricKey={metricKey}
                 value={value}
                 series={trendLookup.get(metricKey)}
-                benchmark={bm ? toBenchmarkSlot(bm) : undefined}
+                benchmark={bm ? buildBenchmarkSlot(bm) : undefined}
               />
             );
           })}

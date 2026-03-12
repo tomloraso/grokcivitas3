@@ -121,6 +121,7 @@ export const COMPARE_RESPONSE: SchoolCompareResponse = {
                 local_scope: "local_authority_district",
                 local_area_code: "E09000033",
                 local_area_label: "Westminster",
+                contexts: [],
               },
             },
             {
@@ -195,6 +196,7 @@ export const COMPARE_RESPONSE: SchoolCompareResponse = {
                 local_scope: "local_authority_district",
                 local_area_code: "E09000033",
                 local_area_label: "Westminster",
+                contexts: [],
               },
             },
             {
@@ -216,6 +218,7 @@ export const COMPARE_RESPONSE: SchoolCompareResponse = {
                 local_scope: "local_authority_district",
                 local_area_code: "E09000033",
                 local_area_label: "Westminster",
+                contexts: [],
               },
             },
           ],

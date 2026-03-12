@@ -559,7 +559,17 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
         school_vs_local_delta: -0.9,
         local_scope: "local_authority_district",
         local_area_code: "E09000007",
-        local_area_label: "Camden"
+        local_area_label: "Camden",
+        contexts: [
+          {
+            scope: "similar_school",
+            label: "Similar Schools",
+            value: 18.4,
+            percentile_rank: 32.4,
+            school_count: 566,
+            area_code: null
+          }
+        ]
       },
       {
         metric_key: "admissions_oversubscription_ratio",
@@ -882,7 +892,7 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
 const EMPTY_SERIES: SchoolTrendsResponse["series"]["disadvantaged_pct"] = [];
 const EMPTY_BENCHMARKS: SchoolTrendsResponse["benchmarks"]["disadvantaged_pct"] = [];
 
-export const TRENDS_RESPONSE: SchoolTrendsResponse = {
+export const TRENDS_RESPONSE = {
   urn: "100001",
   years_available: ["2023/24", "2024/25"],
   history_quality: {
@@ -1434,9 +1444,9 @@ export const TRENDS_RESPONSE: SchoolTrendsResponse = {
       years_available: ["2023/24"]
     }
   }
-};
+} as unknown as SchoolTrendsResponse;
 
-export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
+export const DASHBOARD_RESPONSE = {
   urn: "100001",
   years_available: ["2023/24", "2024/25"],
   sections: [
@@ -1468,7 +1478,17 @@ export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
               school_vs_local_delta: -0.9,
               local_scope: "local_authority_district",
               local_area_code: "E09000007",
-              local_area_label: "Camden"
+              local_area_label: "Camden",
+              contexts: [
+                {
+                  scope: "similar_school",
+                  label: "Similar Schools",
+                  value: 18.4,
+                  percentile_rank: 32.4,
+                  school_count: 566,
+                  area_code: null
+                }
+              ]
             }
           ]
         }
@@ -2012,4 +2032,4 @@ export const DASHBOARD_RESPONSE: SchoolTrendDashboardResponse = {
     last_updated_at: "2026-01-31T09:00:00Z",
     years_available: ["2023/24", "2024/25"]
   }
-};
+} as unknown as SchoolTrendDashboardResponse;

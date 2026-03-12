@@ -75,6 +75,29 @@ describe("mapProfileToVM", () => {
     expect(vm.neighbourhood.areaContext?.crime?.annualIncidentsPer1000).toHaveLength(3);
     expect(vm.benchmarkDashboard?.sections).toHaveLength(8);
     expect(vm.benchmarkDashboard?.sections.some((section) => section.key === "admissions")).toBe(true);
+    const disadvantagedBenchmark = vm.benchmarkDashboard?.sections
+      .flatMap((section) => section.metrics)
+      .find((metric) => metric.metricKey === "disadvantaged_pct");
+    expect(disadvantagedBenchmark?.contexts).toEqual([
+      {
+        scope: "similar_school",
+        label: "Similar Schools",
+        value: 18.4,
+        percentileRank: 32.4,
+        schoolCount: 566,
+        areaCode: null,
+      },
+    ]);
+    expect(disadvantagedBenchmark?.trendPoints.at(-1)?.contexts).toEqual([
+      {
+        scope: "similar_school",
+        label: "Similar Schools",
+        value: 18.4,
+        percentileRank: 32.4,
+        schoolCount: 566,
+        areaCode: null,
+      },
+    ]);
     expect(vm.trends?.series.some((series) => series.metricKey === "teacher_vacancy_rate")).toBe(true);
   });
 

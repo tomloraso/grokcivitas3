@@ -17,6 +17,7 @@ from civitas.api.favourites_presenter import to_saved_school_state_response
 from civitas.api.schemas.school_compare import SchoolCompareResponse
 from civitas.api.schemas.school_profiles import SchoolProfileResponse
 from civitas.api.schemas.school_trends import (
+    SchoolBenchmarkContextResponse,
     SchoolTrendBenchmarkPointResponse,
     SchoolTrendDashboardMetricResponse,
     SchoolTrendDashboardResponse,
@@ -370,7 +371,7 @@ def get_school_trend_dashboard(
                         label=metric.label,
                         unit=metric.unit,
                         points=[
-                            SchoolTrendBenchmarkPointResponse(**point.__dict__)
+                            _to_school_trend_benchmark_point_response(point)
                             for point in metric.points
                         ],
                     )
@@ -404,7 +405,28 @@ def _to_school_trend_point_response(point: SchoolTrendPointDto) -> SchoolTrendPo
 def _to_school_trend_benchmark_point_response(
     point: SchoolTrendBenchmarkPointDto,
 ) -> SchoolTrendBenchmarkPointResponse:
-    return SchoolTrendBenchmarkPointResponse(**point.__dict__)
+    return SchoolTrendBenchmarkPointResponse(
+        academic_year=point.academic_year,
+        school_value=point.school_value,
+        national_value=point.national_value,
+        local_value=point.local_value,
+        school_vs_national_delta=point.school_vs_national_delta,
+        school_vs_local_delta=point.school_vs_local_delta,
+        local_scope=point.local_scope,
+        local_area_code=point.local_area_code,
+        local_area_label=point.local_area_label,
+        contexts=[
+            SchoolBenchmarkContextResponse(
+                scope=context.scope,
+                label=context.label,
+                value=context.value,
+                percentile_rank=context.percentile_rank,
+                school_count=context.school_count,
+                area_code=context.area_code,
+            )
+            for context in point.contexts
+        ],
+    )
 
 
 def _to_school_trends_series_response(series: SchoolTrendsSeriesDto) -> SchoolTrendsSeriesResponse:

@@ -89,6 +89,14 @@ def _ensure_schema(engine: Engine) -> None:
         connection.execute(
             text("ALTER TABLE schools ADD COLUMN IF NOT EXISTS sixth_form text NULL")
         )
+        for statement in (
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS admissions_policy text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS religious_character text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS urban_rural text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_name text NULL",
+            "ALTER TABLE schools ADD COLUMN IF NOT EXISTS la_code text NULL",
+        ):
+            connection.execute(text(statement))
         connection.execute(
             text(
                 """
@@ -269,7 +277,17 @@ def _ensure_schema(engine: Engine) -> None:
             "ALTER TABLE school_workforce_yearly "
             "ADD COLUMN IF NOT EXISTS teacher_tempfilled_vacancy_rate double precision NULL",
             "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS teaching_assistants_per_100_pupils double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS non_classroom_support_staff_per_100_pupils double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS admin_clerical_staff_per_100_pupils double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS all_support_staff_per_100_pupils double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
             "ADD COLUMN IF NOT EXISTS third_party_support_staff_headcount double precision NULL",
+            "ALTER TABLE school_workforce_yearly "
+            "ADD COLUMN IF NOT EXISTS agency_teachers_headcount double precision NULL",
         ):
             connection.execute(text(statement))
         connection.execute(
@@ -504,6 +522,101 @@ def _ensure_schema(engine: Engine) -> None:
                 """
             )
         )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_admissions_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    oversubscription_ratio double precision NULL,
+                    first_preference_offer_rate double precision NULL,
+                    any_preference_offer_rate double precision NULL,
+                    cross_la_applications integer NULL,
+                    cross_la_offers integer NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_destinations_benchmark_yearly (
+                    urn text NOT NULL REFERENCES schools(urn) ON DELETE CASCADE,
+                    academic_year text NOT NULL,
+                    ks4_overall_pct double precision NULL,
+                    ks4_education_pct double precision NULL,
+                    ks4_apprenticeship_pct double precision NULL,
+                    ks4_employment_pct double precision NULL,
+                    ks4_not_sustained_pct double precision NULL,
+                    ks4_activity_unknown_pct double precision NULL,
+                    study_16_18_overall_pct double precision NULL,
+                    study_16_18_education_pct double precision NULL,
+                    study_16_18_apprenticeship_pct double precision NULL,
+                    study_16_18_employment_pct double precision NULL,
+                    study_16_18_not_sustained_pct double precision NULL,
+                    study_16_18_activity_unknown_pct double precision NULL,
+                    updated_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS metric_benchmark_cohorts_yearly (
+                    cohort_id uuid PRIMARY KEY,
+                    academic_year text NOT NULL,
+                    metric_key text NOT NULL,
+                    benchmark_scope text NOT NULL,
+                    cohort_type text NOT NULL,
+                    cohort_label text NOT NULL,
+                    cohort_signature text NOT NULL,
+                    definition_json jsonb NOT NULL,
+                    school_count integer NOT NULL,
+                    computed_at_utc timestamptz NOT NULL DEFAULT timezone('utc', now())
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS metric_benchmark_distributions_yearly (
+                    cohort_id uuid PRIMARY KEY REFERENCES metric_benchmark_cohorts_yearly(cohort_id)
+                        ON DELETE CASCADE,
+                    mean_value numeric(14,4) NULL,
+                    p10_value numeric(14,4) NULL,
+                    p25_value numeric(14,4) NULL,
+                    median_value numeric(14,4) NULL,
+                    p75_value numeric(14,4) NULL,
+                    p90_value numeric(14,4) NULL,
+                    minimum_value numeric(14,4) NULL,
+                    maximum_value numeric(14,4) NULL
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS school_metric_percentiles_yearly (
+                    urn text NOT NULL,
+                    academic_year text NOT NULL,
+                    metric_key text NOT NULL,
+                    benchmark_scope text NOT NULL,
+                    cohort_id uuid NOT NULL REFERENCES metric_benchmark_cohorts_yearly(cohort_id)
+                        ON DELETE CASCADE,
+                    metric_value numeric(14,4) NOT NULL,
+                    percentile_rank numeric(7,4) NOT NULL,
+                    computed_at_utc timestamptz NOT NULL DEFAULT timezone('utc', now()),
+                    PRIMARY KEY (urn, academic_year, metric_key, benchmark_scope)
+                )
+                """
+            )
+        )
 
 
 def _seed_data(engine: Engine) -> None:
@@ -529,6 +642,56 @@ def _seed_data(engine: Engine) -> None:
                     '2004-09-01',
                     NULL
                 )
+                ON CONFLICT (urn) DO NOTHING
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO schools (
+                    urn,
+                    name,
+                    phase,
+                    type,
+                    status,
+                    postcode,
+                    admissions_policy,
+                    religious_character,
+                    urban_rural,
+                    la_name,
+                    la_code,
+                    easting,
+                    northing,
+                    location,
+                    capacity,
+                    pupil_count,
+                    open_date,
+                    close_date
+                )
+                SELECT
+                    '93' || lpad(peer_id::text, 4, '0'),
+                    'Generated Similar Peer ' || peer_id::text,
+                    'Secondary',
+                    'Academy',
+                    'Open',
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    'Westminster',
+                    '213',
+                    0,
+                    0,
+                    ST_SetSRID(
+                        ST_MakePoint(-0.1400 + (peer_id * 0.0001), 51.5000 + (peer_id * 0.0001)),
+                        4326
+                    )::geography(Point, 4326),
+                    700,
+                    645 + (peer_id % 10),
+                    '2008-09-01',
+                    NULL
+                FROM generate_series(1, 32) AS peer_id
                 ON CONFLICT (urn) DO NOTHING
                 """
             )
@@ -784,6 +947,66 @@ def _seed_data(engine: Engine) -> None:
                     staff_costs_pct_of_expenditure = EXCLUDED.staff_costs_pct_of_expenditure,
                     teaching_staff_costs_per_pupil_gbp = EXCLUDED.teaching_staff_costs_per_pupil_gbp,
                     revenue_reserve_per_pupil_gbp = EXCLUDED.revenue_reserve_per_pupil_gbp
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO school_demographics_yearly (
+                    urn,
+                    academic_year,
+                    disadvantaged_pct,
+                    fsm_pct,
+                    fsm6_pct,
+                    sen_pct,
+                    ehcp_pct,
+                    eal_pct,
+                    first_language_english_pct,
+                    first_language_unclassified_pct,
+                    male_pct,
+                    female_pct,
+                    pupil_mobility_pct,
+                    total_pupils,
+                    has_ethnicity_data,
+                    has_top_languages_data,
+                    has_fsm6_data,
+                    has_gender_data,
+                    has_mobility_data,
+                    has_send_primary_need_data,
+                    source_dataset_id
+                )
+                SELECT
+                    '93' || lpad(peer_id::text, 4, '0'),
+                    '2024/25',
+                    18.0 + ((peer_id % 5) * 0.4),
+                    15.0 + (peer_id % 4),
+                    16.5 + (peer_id % 4),
+                    12.0 + ((peer_id % 3) * 0.5),
+                    2.0 + ((peer_id % 2) * 0.5),
+                    7.5 + ((peer_id % 3) * 0.4),
+                    89.0,
+                    1.0,
+                    49.5,
+                    50.5,
+                    3.0 + ((peer_id % 3) * 0.2),
+                    640 + (peer_id % 12),
+                    true,
+                    false,
+                    true,
+                    true,
+                    true,
+                    false,
+                    'generated-similar-peers'
+                FROM generate_series(1, 32) AS peer_id
+                ON CONFLICT (urn, academic_year) DO UPDATE SET
+                    disadvantaged_pct = EXCLUDED.disadvantaged_pct,
+                    fsm_pct = EXCLUDED.fsm_pct,
+                    fsm6_pct = EXCLUDED.fsm6_pct,
+                    sen_pct = EXCLUDED.sen_pct,
+                    ehcp_pct = EXCLUDED.ehcp_pct,
+                    eal_pct = EXCLUDED.eal_pct,
+                    total_pupils = EXCLUDED.total_pupils
                 """
             )
         )
@@ -1479,39 +1702,76 @@ def _seed_data(engine: Engine) -> None:
 
 def _cleanup_data(engine: Engine) -> None:
     with engine.begin() as connection:
+        connection.execute(
+            text(
+                "DELETE FROM school_metric_percentiles_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
+        connection.execute(text("DELETE FROM metric_benchmark_distributions_yearly"))
+        connection.execute(text("DELETE FROM metric_benchmark_cohorts_yearly"))
         connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
         connection.execute(
-            text("DELETE FROM school_financials_yearly WHERE urn IN ('920001', '920002', '920003')")
+            text(
+                "DELETE FROM school_destinations_benchmark_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_admissions_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_financials_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
         )
         connection.execute(
             text("DELETE FROM area_house_price_context WHERE area_code IN ('E09000033')")
         )
         connection.execute(
-            text("DELETE FROM area_crime_context WHERE urn IN ('920001', '920002', '920003')")
+            text(
+                "DELETE FROM area_crime_context "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
         )
         connection.execute(
             text(
-                "DELETE FROM school_performance_yearly WHERE urn IN ('920001', '920002', '920003')"
+                "DELETE FROM school_performance_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
             )
         )
         connection.execute(
             text(
                 "DELETE FROM school_leaver_destinations_yearly "
-                "WHERE urn IN ('920001', '920002', '920003')"
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
             )
         )
         connection.execute(
-            text("DELETE FROM school_workforce_yearly WHERE urn IN ('920001', '920002', '920003')")
-        )
-        connection.execute(
-            text("DELETE FROM school_behaviour_yearly WHERE urn IN ('920001', '920002', '920003')")
-        )
-        connection.execute(
-            text("DELETE FROM school_attendance_yearly WHERE urn IN ('920001', '920002', '920003')")
+            text(
+                "DELETE FROM school_workforce_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
         )
         connection.execute(
             text(
-                "DELETE FROM school_demographics_yearly WHERE urn IN ('920001', '920002', '920003')"
+                "DELETE FROM school_behaviour_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_attendance_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
+        connection.execute(
+            text(
+                "DELETE FROM school_demographics_yearly "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
             )
         )
         connection.execute(
@@ -1520,7 +1780,12 @@ def _cleanup_data(engine: Engine) -> None:
         connection.execute(
             text("DELETE FROM postcode_cache WHERE postcode IN ('SW1A1AA', 'SW1A3AA')")
         )
-        connection.execute(text("DELETE FROM schools WHERE urn IN ('920001', '920002', '920003')"))
+        connection.execute(
+            text(
+                "DELETE FROM schools "
+                "WHERE urn IN ('920001', '920002', '920003') OR urn LIKE '9300%'"
+            )
+        )
 
 
 def test_school_trends_repository_returns_demographics_ordered_by_academic_year(
@@ -1765,6 +2030,9 @@ def test_school_trends_repository_materializes_metric_benchmarks_for_requested_u
 
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+        connection.execute(text("DELETE FROM school_metric_percentiles_yearly"))
+        connection.execute(text("DELETE FROM metric_benchmark_distributions_yearly"))
+        connection.execute(text("DELETE FROM metric_benchmark_cohorts_yearly"))
 
     inserted_rows = repository.materialize_metric_benchmarks_for_urns(("920001",))
 
@@ -1779,10 +2047,32 @@ def test_school_trends_repository_materializes_metric_benchmarks_for_requested_u
     assert 0.0 <= fsm_2024.national_value <= 100.0
     assert fsm_2024.local_value is not None
     assert 0.0 <= fsm_2024.local_value <= 100.0
+    similar_context = next(
+        context for context in fsm_2024.contexts if context.scope == "similar_school"
+    )
+    assert similar_context.value is not None
+    assert 0.0 <= similar_context.percentile_rank <= 100.0
+    assert similar_context.school_count is not None
+    assert similar_context.school_count >= 30
 
     finance_income_2024 = by_metric_year[("finance_income_per_pupil_gbp", "2024/25")]
     assert finance_income_2024.national_value is not None
     assert finance_income_2024.local_value is not None
+
+    with engine.connect() as connection:
+        cohort_count = connection.execute(
+            text("SELECT count(*) FROM metric_benchmark_cohorts_yearly")
+        ).scalar_one()
+        distribution_count = connection.execute(
+            text("SELECT count(*) FROM metric_benchmark_distributions_yearly")
+        ).scalar_one()
+        percentile_count = connection.execute(
+            text("SELECT count(*) FROM school_metric_percentiles_yearly")
+        ).scalar_one()
+
+    assert cohort_count > 0
+    assert distribution_count > 0
+    assert percentile_count > 0
 
 
 def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Engine) -> None:
@@ -1790,6 +2080,9 @@ def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Eng
 
     with engine.begin() as connection:
         connection.execute(text("DELETE FROM metric_benchmarks_yearly"))
+        connection.execute(text("DELETE FROM school_metric_percentiles_yearly"))
+        connection.execute(text("DELETE FROM metric_benchmark_distributions_yearly"))
+        connection.execute(text("DELETE FROM metric_benchmark_cohorts_yearly"))
 
     inserted_rows = repository.materialize_all_metric_benchmarks()
 
@@ -1831,6 +2124,20 @@ def test_school_trends_repository_materializes_all_metric_benchmarks(engine: Eng
 
     assert ("national", "england") in finance_scopes
     assert ("phase", "Secondary") in finance_scopes
+
+    with engine.connect() as connection:
+        similar_count = connection.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM school_metric_percentiles_yearly
+                WHERE urn = '920001'
+                  AND benchmark_scope = 'similar_school'
+                """
+            )
+        ).scalar_one()
+
+    assert similar_count > 0
 
 
 def test_school_trends_repository_returns_empty_rows_for_school_without_history(

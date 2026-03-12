@@ -13,6 +13,7 @@ from civitas.application.school_trends.errors import SchoolTrendsDataUnavailable
 from civitas.application.school_trends.ports.school_trends_repository import SchoolTrendsRepository
 from civitas.domain.school_trends.models import (
     BenchmarkScope,
+    LocalBenchmarkScope,
     SchoolAdmissionsSeries,
     SchoolAdmissionsYearlyRow,
     SchoolAttendanceSeries,
@@ -26,10 +27,15 @@ from civitas.domain.school_trends.models import (
     SchoolDestinationYearlyRow,
     SchoolFinanceSeries,
     SchoolFinanceYearlyRow,
+    SchoolMetricBenchmarkContext,
     SchoolMetricBenchmarkSeries,
     SchoolMetricBenchmarkYearlyRow,
     SchoolWorkforceSeries,
     SchoolWorkforceYearlyRow,
+)
+from civitas.infrastructure.persistence.metric_benchmark_materializer import (
+    load_metric_benchmark_scope_rows,
+    rebuild_metric_benchmark_cache,
 )
 
 logger = logging.getLogger(__name__)
@@ -582,7 +588,9 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
                 if not _school_exists(connection, urn):
                     return None
 
-                benchmark_rows = _get_metric_benchmark_rows_from_cache(connection, urn)
+                benchmark_rows = load_metric_benchmark_scope_rows(connection, urn)
+                if len(benchmark_rows) == 0:
+                    benchmark_rows = tuple(_get_metric_benchmark_rows_from_cache(connection, urn))
         except SQLAlchemyError as exc:
             raise SchoolTrendsDataUnavailableError(
                 "School trends datastore is unavailable."
@@ -601,19 +609,7 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
 
         return SchoolMetricBenchmarkSeries(
             urn=urn,
-            rows=tuple(
-                SchoolMetricBenchmarkYearlyRow(
-                    metric_key=str(row["metric_key"]),
-                    academic_year=str(row["academic_year"]),
-                    school_value=_to_optional_float(row["school_value"]),
-                    national_value=_to_optional_float(row["national_value"]),
-                    local_value=_to_optional_float(row["local_value"]),
-                    local_scope=_to_benchmark_scope(row["local_scope"]),
-                    local_area_code=_to_optional_str(row["local_area_code"]) or "unknown",
-                    local_area_label=_to_optional_str(row["local_area_label"]) or "Unknown",
-                )
-                for row in benchmark_rows
-            ),
+            rows=_build_metric_benchmark_yearly_rows(benchmark_rows),
             latest_updated_at=None,
         )
 
@@ -622,7 +618,7 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             with self._engine.begin() as connection:
                 if connection.dialect.name == "postgresql":
                     connection.execute(text("SET LOCAL work_mem = '64MB'"))
-                return _rebuild_metric_benchmark_rows(connection)
+                return rebuild_metric_benchmark_cache(connection)
         except SQLAlchemyError as exc:
             raise SchoolTrendsDataUnavailableError(
                 "School trends datastore is unavailable."
@@ -639,16 +635,7 @@ class PostgresSchoolTrendsRepository(SchoolTrendsRepository):
             with self._engine.begin() as connection:
                 if connection.dialect.name == "postgresql":
                     connection.execute(text("SET LOCAL work_mem = '64MB'"))
-                persisted_rows = 0
-                for urn in normalized_urns:
-                    if not _school_exists(connection, urn):
-                        continue
-                    benchmark_rows = _compute_metric_benchmark_rows(connection, urn)
-                    persisted_rows += _persist_metric_benchmark_rows(
-                        connection,
-                        [dict(benchmark_row) for benchmark_row in benchmark_rows],
-                    )
-                return persisted_rows
+                return rebuild_metric_benchmark_cache(connection)
         except SQLAlchemyError as exc:
             raise SchoolTrendsDataUnavailableError(
                 "School trends datastore is unavailable."
@@ -750,9 +737,112 @@ def _to_optional_str(value: object) -> str | None:
 
 def _to_benchmark_scope(value: object) -> BenchmarkScope:
     normalized = _to_optional_str(value)
+    if normalized == "national":
+        return "national"
+    if normalized == "local_authority_district":
+        return "local_authority_district"
+    if normalized == "similar_school":
+        return "similar_school"
+    return "phase"
+
+
+def _to_local_benchmark_scope(value: object) -> LocalBenchmarkScope:
+    normalized = _to_optional_str(value)
     if normalized == "local_authority_district":
         return "local_authority_district"
     return "phase"
+
+
+def _build_metric_benchmark_yearly_rows(
+    rows: Sequence[Mapping[str, object]],
+) -> tuple[SchoolMetricBenchmarkYearlyRow, ...]:
+    if len(rows) == 0:
+        return ()
+
+    if "benchmark_scope" not in rows[0]:
+        return tuple(
+            SchoolMetricBenchmarkYearlyRow(
+                metric_key=str(row["metric_key"]),
+                academic_year=str(row["academic_year"]),
+                school_value=_to_optional_float(row["school_value"]),
+                national_value=_to_optional_float(row["national_value"]),
+                local_value=_to_optional_float(row["local_value"]),
+                local_scope=_to_local_benchmark_scope(row["local_scope"]),
+                local_area_code=_to_optional_str(row["local_area_code"]) or "unknown",
+                local_area_label=_to_optional_str(row["local_area_label"]) or "Unknown",
+                contexts=(),
+            )
+            for row in rows
+        )
+
+    grouped: dict[tuple[str, str], list[Mapping[str, object]]] = {}
+    for row in rows:
+        key = (str(row["metric_key"]), str(row["academic_year"]))
+        grouped.setdefault(key, []).append(row)
+
+    yearly_rows: list[SchoolMetricBenchmarkYearlyRow] = []
+    for (metric_key, academic_year), metric_rows in sorted(grouped.items()):
+        contexts = tuple(
+            SchoolMetricBenchmarkContext(
+                scope=_to_benchmark_scope(row["benchmark_scope"]),
+                label=_to_optional_str(row.get("cohort_label")) or "Unknown",
+                value=_to_optional_float(row.get("benchmark_value")),
+                percentile_rank=_to_optional_float(row.get("percentile_rank")),
+                school_count=_to_optional_int(row.get("school_count")),
+                area_code=_to_optional_str(row.get("benchmark_area")),
+            )
+            for row in sorted(metric_rows, key=_benchmark_scope_sort_key)
+        )
+        context_by_scope = {context.scope: context for context in contexts}
+        national_context = cast(
+            SchoolMetricBenchmarkContext | None, context_by_scope.get("national")
+        )
+        local_context = cast(
+            SchoolMetricBenchmarkContext | None,
+            context_by_scope.get("local_authority_district") or context_by_scope.get("phase"),
+        )
+        if local_context is None:
+            local_scope: LocalBenchmarkScope = "phase"
+            local_area_code = "unknown"
+            local_area_label = "Unknown"
+            local_value = None
+        else:
+            local_scope = (
+                "local_authority_district"
+                if local_context.scope == "local_authority_district"
+                else "phase"
+            )
+            local_area_code = local_context.area_code or "unknown"
+            local_area_label = local_context.label
+            local_value = local_context.value
+        school_value = _to_optional_float(metric_rows[0].get("school_value"))
+        yearly_rows.append(
+            SchoolMetricBenchmarkYearlyRow(
+                metric_key=metric_key,
+                academic_year=academic_year,
+                school_value=school_value,
+                national_value=national_context.value if national_context is not None else None,
+                local_value=local_value,
+                local_scope=local_scope,
+                local_area_code=local_area_code,
+                local_area_label=local_area_label,
+                contexts=contexts,
+            )
+        )
+    return tuple(yearly_rows)
+
+
+def _benchmark_scope_sort_key(row: Mapping[str, object]) -> int:
+    scope = _to_benchmark_scope(row.get("benchmark_scope"))
+    if scope == "national":
+        return 1
+    if scope == "local_authority_district":
+        return 2
+    if scope == "phase":
+        return 3
+    if scope == "similar_school":
+        return 4
+    return 9
 
 
 def _school_finance_is_applicable(
@@ -1240,6 +1330,18 @@ def _get_metric_benchmark_rows_from_cache(
 
 
 def _metric_benchmark_rows_are_partial(rows: Sequence[Mapping[str, object]]) -> bool:
+    if len(rows) == 0:
+        return False
+    if "benchmark_scope" in rows[0]:
+        grouped_scopes: dict[tuple[str, str], set[BenchmarkScope]] = {}
+        for row in rows:
+            key = (str(row["metric_key"]), str(row["academic_year"]))
+            grouped_scopes.setdefault(key, set()).add(_to_benchmark_scope(row["benchmark_scope"]))
+        return any(
+            "national" not in scopes
+            or ("local_authority_district" not in scopes and "phase" not in scopes)
+            for scopes in grouped_scopes.values()
+        )
     return any(
         _to_optional_str(row.get("national_metric_key")) is None
         or _to_optional_str(row.get("local_metric_key")) is None

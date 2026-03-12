@@ -12,6 +12,7 @@ from civitas.application.access.policies import (
 )
 from civitas.application.access.use_cases import EvaluateAccessUseCase
 from civitas.application.school_compare.dto import (
+    SchoolCompareBenchmarkContextDto,
     SchoolCompareBenchmarkDto,
     SchoolCompareCellDto,
     SchoolCompareResponseDto,
@@ -755,6 +756,17 @@ def _build_benchmark_dto(
         local_scope=benchmark_row.local_scope,
         local_area_code=benchmark_row.local_area_code,
         local_area_label=benchmark_row.local_area_label,
+        contexts=tuple(
+            SchoolCompareBenchmarkContextDto(
+                scope=context.scope,
+                label=context.label,
+                value=_ratio_to_pct(context.value) if is_finance_pct else context.value,
+                percentile_rank=context.percentile_rank,
+                school_count=context.school_count,
+                area_code=context.area_code,
+            )
+            for context in benchmark_row.contexts
+        ),
     )
 
 

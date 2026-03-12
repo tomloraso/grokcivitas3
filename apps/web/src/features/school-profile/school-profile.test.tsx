@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { HelmetProvider } from "react-helmet-async";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -120,6 +120,14 @@ describe("SchoolProfileFeature", () => {
       ).toBeInTheDocument();
       expect(screen.getByText(/Limited in this view: Destinations/i)).toBeInTheDocument();
       expect(screen.getAllByText("Camden").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Similar Schools").length).toBeGreaterThan(0);
+      const similarSchoolSummary = screen.getByText(
+        /32nd percentile in a cohort of 566 schools/i
+      );
+      expect(similarSchoolSummary).toBeInTheDocument();
+      const similarSchoolBlock = similarSchoolSummary.closest("div");
+      expect(similarSchoolBlock).not.toBeNull();
+      expect(within(similarSchoolBlock as HTMLElement).getByText("18.40%")).toBeInTheDocument();
     },
     15000,
   );

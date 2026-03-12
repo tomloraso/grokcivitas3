@@ -2,11 +2,10 @@ import { MetricGrid } from "../../../components/data/MetricGrid";
 import { MetricUnavailable } from "../../../components/data/MetricUnavailable";
 import { Sparkline } from "../../../components/data/Sparkline";
 import { StatCard } from "../../../components/data/StatCard";
-import type { BenchmarkSlot } from "../../../components/data/StatCard";
 import { TrendIndicator } from "../../../components/data/TrendIndicator";
+import { buildBenchmarkSlot } from "../benchmarkSlot";
 import { Card } from "../../../components/ui/Card";
 import {
-  formatMetricDelta,
   formatMetricValue,
   getMetricCatalogEntry
 } from "../metricCatalog";
@@ -75,38 +74,6 @@ const BENCHMARKED_METRICS: {
     metricKey: "admissions_cross_la_applications"
   }
 ];
-
-function benchmarkDecimals(metric: BenchmarkMetricVM): number {
-  const catalog = getMetricCatalogEntry(metric.metricKey);
-  if (typeof catalog?.decimals === "number") {
-    return catalog.decimals;
-  }
-  if (metric.unit === "count" || metric.unit === "currency") {
-    return 0;
-  }
-  if (metric.unit === "ratio") {
-    return 1;
-  }
-  return 2;
-}
-
-function toBenchmarkSlot(metric: BenchmarkMetricVM): BenchmarkSlot {
-  return {
-    localLabel: metric.localAreaLabel,
-    schoolRaw: metric.schoolValue,
-    localRaw: metric.localValue,
-    nationalRaw: metric.nationalValue,
-    isPercent: metric.unit === "percent",
-    displayDecimals: benchmarkDecimals(metric),
-    schoolValueFormatted: formatMetricValue(metric.schoolValue, metric.unit),
-    localValueFormatted: formatMetricValue(metric.localValue, metric.unit),
-    nationalValueFormatted: formatMetricValue(metric.nationalValue, metric.unit),
-    schoolVsLocalDelta: metric.schoolVsLocalDelta,
-    schoolVsNationalDelta: metric.schoolVsNationalDelta,
-    schoolVsLocalDeltaFormatted: formatMetricDelta(metric.schoolVsLocalDelta, metric.unit),
-    schoolVsNationalDeltaFormatted: formatMetricDelta(metric.schoolVsNationalDelta, metric.unit)
-  };
-}
 
 function latestSeriesValue(series: TrendSeriesVM | undefined): number | null {
   if (!series) {
@@ -224,7 +191,7 @@ export function SchoolAdmissionsSection({
         description={catalog.description}
         value={formatMetricValue(value, catalog.unit, catalog.decimals) ?? "n/a"}
         footer={renderTrendFooter(trendSeries)}
-        benchmark={benchmark ? toBenchmarkSlot(benchmark) : undefined}
+        benchmark={benchmark ? buildBenchmarkSlot(benchmark) : undefined}
         variant={metric.variant ?? "default"}
       />
     );

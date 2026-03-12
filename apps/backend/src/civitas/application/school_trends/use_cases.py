@@ -6,6 +6,7 @@ from civitas.application.school_profiles.ports.school_profile_cache_invalidator 
     SchoolProfileCacheInvalidator,
 )
 from civitas.application.school_trends.dto import (
+    SchoolBenchmarkContextDto,
     SchoolTrendBenchmarkPointDto,
     SchoolTrendDashboardMetricDto,
     SchoolTrendDashboardResponseDto,
@@ -983,6 +984,17 @@ def _build_metric_benchmark_series(
             local_scope=row.local_scope,
             local_area_code=row.local_area_code,
             local_area_label=row.local_area_label,
+            contexts=tuple(
+                SchoolBenchmarkContextDto(
+                    scope=context.scope,
+                    label=context.label,
+                    value=context.value,
+                    percentile_rank=context.percentile_rank,
+                    school_count=context.school_count,
+                    area_code=context.area_code,
+                )
+                for context in row.contexts
+            ),
         )
         for row in rows
     )

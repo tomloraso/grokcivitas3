@@ -3,6 +3,7 @@ from __future__ import annotations
 from civitas.api.favourites_presenter import to_saved_school_state_response
 from civitas.api.schemas.access import SectionAccessResponse
 from civitas.api.schemas.school_profiles import (
+    SchoolBenchmarkContextResponse,
     SchoolProfileAdmissionsLatestResponse,
     SchoolProfileAnalystSectionResponse,
     SchoolProfileAreaContextCoverageResponse,
@@ -463,6 +464,17 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
                     local_scope=metric.local_scope,
                     local_area_code=metric.local_area_code,
                     local_area_label=metric.local_area_label,
+                    contexts=[
+                        SchoolBenchmarkContextResponse(
+                            scope=context.scope,
+                            label=context.label,
+                            value=context.value,
+                            percentile_rank=context.percentile_rank,
+                            school_count=context.school_count,
+                            area_code=context.area_code,
+                        )
+                        for context in metric.contexts
+                    ],
                 )
                 for metric in result.benchmarks.metrics
             ],

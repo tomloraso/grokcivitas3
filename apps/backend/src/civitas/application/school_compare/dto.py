@@ -9,7 +9,7 @@ from civitas.domain.school_compare.models import (
     CompareMetricUnit,
     CompareSectionKey,
 )
-from civitas.domain.school_trends.models import BenchmarkScope
+from civitas.domain.school_trends.models import BenchmarkScope, LocalBenchmarkScope
 
 
 @dataclass(frozen=True)
@@ -23,6 +23,16 @@ class SchoolCompareSchoolDto:
 
 
 @dataclass(frozen=True)
+class SchoolCompareBenchmarkContextDto:
+    scope: BenchmarkScope
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolCompareBenchmarkDto:
     academic_year: str
     school_value: float | int | None
@@ -30,9 +40,10 @@ class SchoolCompareBenchmarkDto:
     local_value: float | None
     school_vs_national_delta: float | None
     school_vs_local_delta: float | None
-    local_scope: BenchmarkScope
+    local_scope: LocalBenchmarkScope
     local_area_code: str
     local_area_label: str
+    contexts: tuple[SchoolCompareBenchmarkContextDto, ...] = ()
 
 
 @dataclass(frozen=True)

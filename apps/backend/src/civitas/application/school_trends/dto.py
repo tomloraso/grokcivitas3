@@ -5,7 +5,8 @@ from typing import Literal
 from civitas.application.subject_performance.dto import SchoolSubjectPerformanceSeriesDto
 
 TrendDirection = Literal["up", "down", "flat"]
-BenchmarkScope = Literal["local_authority_district", "phase"]
+BenchmarkScope = Literal["national", "local_authority_district", "phase", "similar_school"]
+LocalBenchmarkScope = Literal["local_authority_district", "phase"]
 TrendCompletenessStatus = Literal["available", "partial", "unavailable"]
 TrendCompletenessReasonCode = Literal[
     "source_missing",
@@ -32,6 +33,16 @@ class SchoolTrendPointDto:
 
 
 @dataclass(frozen=True)
+class SchoolBenchmarkContextDto:
+    scope: BenchmarkScope
+    label: str
+    value: float | None
+    percentile_rank: float | None
+    school_count: int | None
+    area_code: str | None = None
+
+
+@dataclass(frozen=True)
 class SchoolTrendBenchmarkPointDto:
     academic_year: str
     school_value: float | int | None
@@ -39,9 +50,10 @@ class SchoolTrendBenchmarkPointDto:
     local_value: float | None
     school_vs_national_delta: float | None
     school_vs_local_delta: float | None
-    local_scope: BenchmarkScope
+    local_scope: LocalBenchmarkScope
     local_area_code: str
     local_area_label: str
+    contexts: tuple[SchoolBenchmarkContextDto, ...] = ()
 
 
 @dataclass(frozen=True)
