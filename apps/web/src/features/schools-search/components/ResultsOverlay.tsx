@@ -186,16 +186,32 @@ function ResultsTable({
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border-separate border-spacing-0">
-        <thead className="bg-canvas/95">
+        <thead className="sticky top-0 z-10">
           <tr className="text-left text-xs uppercase tracking-[0.16em] text-secondary">
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">School</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Distance</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Phase</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Type</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Ofsted</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Academic</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Pupils</th>
-            <th className="border-b border-border-subtle/70 px-4 py-3 font-medium">Actions</th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              School
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Distance
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Phase
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Type
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Ofsted
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Academic
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Pupils
+            </th>
+            <th className="border-b border-border-subtle/70 bg-canvas/95 px-4 py-3 font-medium backdrop-blur">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -542,11 +558,11 @@ export function ResultsOverlay({
       <div className={cn("relative z-10 flex h-full", isMobile ? "p-0" : "items-center justify-center p-4 sm:p-6")}>
         <Panel
           className={cn(
-            "scrollbar-hide h-full w-full overflow-y-auto overflow-x-hidden border border-border-subtle/70 bg-canvas/94 shadow-[0_24px_80px_rgba(6,10,18,0.55)]",
+            "flex h-full w-full flex-col overflow-hidden border border-border-subtle/70 bg-canvas/94 shadow-[0_24px_80px_rgba(6,10,18,0.55)]",
             isMobile ? "rounded-none" : "max-w-[1180px] rounded-[1.5rem]",
           )}
         >
-          <header className="sticky top-0 z-20 border-b border-border-subtle/70 bg-canvas/94 px-4 py-4 sm:px-6 sm:py-5">
+          <header className="shrink-0 border-b border-border-subtle/70 px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
@@ -651,7 +667,7 @@ export function ResultsOverlay({
             ) : null}
           </header>
 
-          <div className="px-4 py-4 sm:px-6 sm:py-5">
+          <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             {status === "loading" && !result ? (
               <div className="space-y-4">
                 <LoadingSkeleton lines={3} />
