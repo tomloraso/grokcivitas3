@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from civitas.api.dependencies import (
     get_create_task_use_case,
@@ -235,15 +235,25 @@ def search_schools_by_name(
     },
 )
 def get_school_compare(
+    request: Request,
     response: Response,
     urns: str | None = Query(default=None),
     viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: GetSchoolCompareUseCase = Depends(get_school_compare_use_case),
 ) -> SchoolCompareResponse:
+    # Dev-only: X-Dev-Access: premium header bypasses access checks (local env only)
+    skip_access = False
+    if request.headers.get("x-dev-access") == "premium":
+        from civitas.bootstrap.container import app_settings  # noqa: PLC0415
+
+        if app_settings().runtime_environment in {"local", "test"}:
+            skip_access = True
+
     try:
         result = use_case.execute(
             urns=urns or "",
             viewer_user_id=viewer.id if viewer is not None else None,
+            skip_access_checks=skip_access,
         )
     except InvalidSchoolCompareParametersError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -265,15 +275,25 @@ def get_school_compare(
     },
 )
 def get_school_profile(
+    request: Request,
     response: Response,
     urn: str,
     viewer: SessionUserDto | None = Depends(get_optional_session_user),
     use_case: GetSchoolProfileUseCase = Depends(get_school_profile_use_case),
 ) -> SchoolProfileResponse:
+    # Dev-only: X-Dev-Access: premium header bypasses access checks (local env only)
+    skip_access = False
+    if request.headers.get("x-dev-access") == "premium":
+        from civitas.bootstrap.container import app_settings  # noqa: PLC0415
+
+        if app_settings().runtime_environment in {"local", "test"}:
+            skip_access = True
+
     try:
         result = use_case.execute(
             urn=urn,
             viewer_user_id=viewer.id if viewer is not None else None,
+            skip_access_checks=skip_access,
         )
     except SchoolProfileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -315,25 +335,12 @@ def get_school_trends(
         benchmarks=_to_school_trends_benchmarks_response(result.benchmarks),
         completeness=_to_school_trends_completeness_response(result.completeness),
         section_completeness=SchoolTrendsSectionCompletenessResponse(
-            demographics=_to_school_trends_completeness_response(
-                result.section_completeness.demographics
-            ),
-            attendance=_to_school_trends_completeness_response(
-                result.section_completeness.attendance
-            ),
-            behaviour=_to_school_trends_completeness_response(
-                result.section_completeness.behaviour
-            ),
-            workforce=_to_school_trends_completeness_response(
-                result.section_completeness.workforce
-            ),
-            admissions=_to_school_trends_completeness_response(
-                result.section_completeness.admissions
-            ),
-            destinations=_to_school_trends_completeness_response(
-                result.section_completeness.destinations
-            ),
-            finance=_to_school_trends_completeness_response(result.section_completeness.finance),
+            **{
+                field_name: _to_school_trends_completeness_response(
+                    getattr(result.section_completeness, field_name)
+                )
+                for field_name in SchoolTrendsSectionCompletenessResponse.model_fields
+            }
         ),
         subject_performance=to_subject_performance_series_response(result.subject_performance),
     )
@@ -391,6 +398,7 @@ def get_school_trend_dashboard(
             ),
         ),
     )
+
 
 
 def _to_school_trend_point_response(point: SchoolTrendPointDto) -> SchoolTrendPointResponse:

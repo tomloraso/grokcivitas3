@@ -54,7 +54,10 @@ import type {
   AttendanceLatestVM,
   AnalystSectionVM,
   WorkforceBreakdownItemVM,
-  WorkforceLatestVM
+  WorkforceLatestVM,
+  SubjectPerformanceVM,
+  SubjectPerformanceGroupVM,
+  SubjectSummaryVM
 } from "../types";
 
 const DEPRIVATION_DOMAIN_LABELS: Record<string, string> = {
@@ -549,6 +552,8 @@ function mapOfsted(profile: SchoolProfileResponse): OfstedVM | null {
     leadershipAndManagementLabel: ofsted.leadership_and_management_label,
     isGraded: ofsted.is_graded,
     ungradedOutcome: ofsted.ungraded_outcome,
+    effectiveRatingCode: ofsted.effective_overall_effectiveness_code ?? null,
+    effectiveRatingLabel: ofsted.effective_overall_effectiveness_label ?? null,
     providerPageUrl: toOptionalText(ofsted.provider_page_url)
   };
 }
@@ -989,6 +994,75 @@ function mapUnsupported(profile: SchoolProfileResponse): UnsupportedMetricVM[] {
   return unsupported;
 }
 
+/* ------------------------------------------------------------------ */
+/* Subject Performance                                                 */
+/* ------------------------------------------------------------------ */
+
+function mapSubjectSummary(raw: {
+  academic_year: string;
+  key_stage: "ks4" | "16_to_18";
+  qualification_family: string;
+  exam_cohort: string | null;
+  subject: string;
+  entries_count_total: number;
+  high_grade_count: number | null;
+  high_grade_share_pct: number | null;
+  pass_grade_count: number | null;
+  pass_grade_share_pct: number | null;
+  ranking_eligible: boolean;
+}): SubjectSummaryVM {
+  return {
+    academicYear: raw.academic_year,
+    keyStage: raw.key_stage,
+    qualificationFamily: raw.qualification_family,
+    examCohort: raw.exam_cohort ?? null,
+    subject: raw.subject,
+    entriesCountTotal: raw.entries_count_total,
+    highGradeCount: raw.high_grade_count ?? null,
+    highGradeSharePct: raw.high_grade_share_pct ?? null,
+    passGradeCount: raw.pass_grade_count ?? null,
+    passGradeSharePct: raw.pass_grade_share_pct ?? null,
+  };
+}
+
+function mapSubjectPerformance(profile: SchoolProfileResponse): SubjectPerformanceVM | null {
+  const sp = (profile as Record<string, unknown>).subject_performance as {
+    strongest_subjects?: unknown[];
+    weakest_subjects?: unknown[];
+    stage_breakdowns?: unknown[];
+    latest_updated_at?: string | null;
+  } | null | undefined;
+
+  if (!sp) return null;
+
+  const strongest = (sp.strongest_subjects ?? []) as Parameters<typeof mapSubjectSummary>[0][];
+  const weakest = (sp.weakest_subjects ?? []) as Parameters<typeof mapSubjectSummary>[0][];
+  const breakdowns = (sp.stage_breakdowns ?? []) as Array<{
+    academic_year: string;
+    key_stage: "ks4" | "16_to_18";
+    qualification_family: string;
+    exam_cohort: string | null;
+    subjects: Parameters<typeof mapSubjectSummary>[0][];
+  }>;
+
+  if (strongest.length === 0 && weakest.length === 0 && breakdowns.length === 0) {
+    return null;
+  }
+
+  return {
+    strongestSubjects: strongest.map(mapSubjectSummary),
+    weakestSubjects: weakest.map(mapSubjectSummary),
+    stageBreakdowns: breakdowns.map((b): SubjectPerformanceGroupVM => ({
+      academicYear: b.academic_year,
+      keyStage: b.key_stage,
+      qualificationFamily: b.qualification_family,
+      examCohort: b.exam_cohort ?? null,
+      subjects: (b.subjects ?? []).map(mapSubjectSummary),
+    })),
+    latestUpdatedAt: sp.latest_updated_at ?? null,
+  };
+}
+
 export function mapProfileToVM(
   profile: SchoolProfileResponse,
   trends: SchoolTrendsResponse | null,
@@ -1008,6 +1082,7 @@ export function mapProfileToVM(
     finance: mapFinance(profile),
     leadership: mapLeadership(profile),
     performance: mapPerformance(profile),
+    subjectPerformance: mapSubjectPerformance(profile),
     ofsted: mapOfsted(profile),
     ofstedTimeline: mapOfstedTimeline(profile),
     neighbourhood: mapNeighbourhoodSection(profile.neighbourhood),

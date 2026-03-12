@@ -295,6 +295,8 @@ def to_school_profile_response(result: SchoolProfileResponseDto) -> SchoolProfil
             days_since_most_recent_inspection=result.ofsted_latest.days_since_most_recent_inspection,
             is_graded=result.ofsted_latest.is_graded,
             ungraded_outcome=result.ofsted_latest.ungraded_outcome,
+            effective_overall_effectiveness_code=result.ofsted_latest.effective_overall_effectiveness_code,
+            effective_overall_effectiveness_label=result.ofsted_latest.effective_overall_effectiveness_label,
             provider_page_url=result.ofsted_latest.provider_page_url,
         )
 
@@ -649,3 +651,4 @@ def _to_destination_stage_latest_response(
         sixth_form_college_pct=value.sixth_form_college_pct,
         higher_education_pct=value.higher_education_pct,
     )
+

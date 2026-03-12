@@ -400,6 +400,8 @@ export const PROFILE_RESPONSE: SchoolProfileResponse = {
     days_since_most_recent_inspection: 61,
     is_graded: true,
     ungraded_outcome: null,
+    effective_overall_effectiveness_code: "2",
+    effective_overall_effectiveness_label: "Good",
     provider_page_url: "https://reports.ofsted.gov.uk/provider/21/100001"
   },
   ofsted_timeline: {

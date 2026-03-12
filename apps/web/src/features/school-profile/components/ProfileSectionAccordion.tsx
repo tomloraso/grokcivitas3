@@ -53,7 +53,7 @@ export function ProfileSectionAccordion({
       </button>
 
       {/* Content — always visible on desktop, conditional on mobile */}
-      <div className={cn(!open ? "hidden lg:block" : "lg:block")}>
+      <div className={cn(!open ? "hidden lg:block" : "lg:block", "space-y-4")}>
         {children}
       </div>
     </>

@@ -79,9 +79,9 @@ function formatInspectionAge(daysSince: number | null): string | null {
 
 function OfstedSignal({ ofsted }: { ofsted: OfstedVM }): JSX.Element {
   const isUngraded = !ofsted.isGraded;
-  const code = ofsted.ratingCode;
+  const code = ofsted.effectiveRatingCode ?? ofsted.ratingCode;
   const colors = code ? OFSTED_COLORS[code] : null;
-  const label = ofsted.ratingLabel ?? (code ? OFSTED_LABELS[code] : null);
+  const label = ofsted.effectiveRatingLabel ?? ofsted.ratingLabel ?? (code ? OFSTED_LABELS[code] : null);
   const inspectionAge = formatInspectionAge(ofsted.daysSinceMostRecentInspection);
 
   return (
@@ -105,9 +105,12 @@ function OfstedSignal({ ofsted }: { ofsted: OfstedVM }): JSX.Element {
         </span>
         <span
           className={`text-sm font-semibold leading-tight ${colors?.text ?? "text-secondary"}`}
-          aria-label={`Ofsted rating: ${isUngraded ? "Ungraded" : (label ?? "Not rated")}`}
+          aria-label={`Ofsted rating: ${label ?? "Not rated"}${isUngraded && ofsted.effectiveRatingCode ? " (monitoring visit)" : ""}`}
         >
-          {isUngraded ? "Ungraded" : (label ?? "Not rated")}
+          {label ?? "Not rated"}
+          {isUngraded && ofsted.effectiveRatingCode ? (
+            <span className="ml-1 text-[10px] font-normal text-disabled">(monitoring visit)</span>
+          ) : null}
         </span>
         {ofsted.mostRecentInspectionDate ? (
           <span className="text-[11px] text-disabled">

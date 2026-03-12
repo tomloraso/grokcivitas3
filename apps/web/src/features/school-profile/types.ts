@@ -244,6 +244,8 @@ export interface OfstedVM {
   leadershipAndManagementLabel: string | null;
   isGraded: boolean;
   ungradedOutcome: string | null;
+  effectiveRatingCode: string | null;
+  effectiveRatingLabel: string | null;
   providerPageUrl: string | null;
 }
 
@@ -513,6 +515,42 @@ export interface NeighbourhoodSectionVM {
   teaserText: string | null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Subject Performance                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface SubjectSummaryVM {
+  academicYear: string;
+  keyStage: "ks4" | "16_to_18";
+  qualificationFamily: string;
+  examCohort: string | null;
+  subject: string;
+  entriesCountTotal: number;
+  highGradeCount: number | null;
+  highGradeSharePct: number | null;
+  passGradeCount: number | null;
+  passGradeSharePct: number | null;
+}
+
+export interface SubjectPerformanceGroupVM {
+  academicYear: string;
+  keyStage: "ks4" | "16_to_18";
+  qualificationFamily: string;
+  examCohort: string | null;
+  subjects: SubjectSummaryVM[];
+}
+
+export interface SubjectPerformanceVM {
+  strongestSubjects: SubjectSummaryVM[];
+  weakestSubjects: SubjectSummaryVM[];
+  stageBreakdowns: SubjectPerformanceGroupVM[];
+  latestUpdatedAt: string | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile VM                                                          */
+/* ------------------------------------------------------------------ */
+
 export interface SchoolProfileVM {
   school: SchoolIdentityVM;
   savedState: SavedSchoolStateVM;
@@ -527,6 +565,7 @@ export interface SchoolProfileVM {
   finance: FinanceLatestVM | null;
   leadership: LeadershipSnapshotVM | null;
   performance: PerformanceVM | null;
+  subjectPerformance: SubjectPerformanceVM | null;
   ofsted: OfstedVM | null;
   ofstedTimeline: OfstedTimelineVM;
   neighbourhood: NeighbourhoodSectionVM;

@@ -243,6 +243,8 @@ class SchoolProfileOfstedLatestResponse(BaseModel):
     days_since_most_recent_inspection: int | None
     is_graded: bool
     ungraded_outcome: str | None
+    effective_overall_effectiveness_code: str | None
+    effective_overall_effectiveness_label: str | None
     provider_page_url: str | None = None
 
 
@@ -488,3 +490,4 @@ class SchoolProfileResponse(BaseModel):
         default_factory=SchoolProfileBenchmarksResponse
     )
     completeness: SchoolProfileCompletenessResponse
+

@@ -431,6 +431,10 @@ def _resolve_metric_value(
         return _area_crime_value(profile, definition)
     if metric_key in {"area_house_price_average", "area_house_price_annual_change_pct"}:
         return _area_house_price_value(profile, definition)
+    if metric_key.startswith("admissions_"):
+        return _admissions_metric_value(profile, definition)
+    if metric_key.startswith("destinations_"):
+        return _destinations_metric_value(profile, definition)
     return _MetricValue(None, None, None, None)
 
 
@@ -714,6 +718,79 @@ def _area_house_price_value(
         value_numeric=numeric_value,
         year_label=None,
         snapshot_date=_parse_year_month(house_prices.latest_month),
+    )
+
+
+_ADMISSIONS_FIELD_MAP: dict[str, str] = {
+    "admissions_places_offered": "places_offered_total",
+    "admissions_applications_first_preference": "applications_first_preference",
+    "admissions_applications_any_preference": "applications_any_preference",
+    "admissions_oversubscription_ratio": "oversubscription_ratio",
+    "admissions_first_preference_offer_rate": "first_preference_offer_rate",
+    "admissions_policy": "admissions_policy",
+}
+
+_DESTINATIONS_FIELD_MAP: dict[str, str] = {
+    "destinations_ks4_overall_pct": "overall_pct",
+    "destinations_ks4_education_pct": "education_pct",
+    "destinations_ks4_apprenticeship_pct": "apprenticeship_pct",
+    "destinations_ks4_employment_pct": "employment_pct",
+    "destinations_ks4_not_sustained_pct": "not_sustained_pct",
+}
+
+
+def _admissions_metric_value(
+    profile: SchoolProfile,
+    definition: CompareMetricDefinition,
+) -> _MetricValue:
+    latest = profile.admissions_latest
+    if latest is None:
+        return _MetricValue(None, None, None, None)
+
+    field_name = _ADMISSIONS_FIELD_MAP.get(definition.metric_key)
+    if field_name is None:
+        return _MetricValue(None, None, None, None)
+
+    raw_value = getattr(latest, field_name, None)
+
+    # Text metric (admissions_policy)
+    if definition.unit == "text":
+        value_text = _clean_text(raw_value) if isinstance(raw_value, str) else None
+        return _MetricValue(value_text, None, latest.academic_year if value_text else None, None)
+
+    # Offer rates are stored as 0-1 ratios; convert to percent
+    if definition.unit == "percent" and raw_value is not None:
+        raw_value = raw_value * 100.0
+
+    numeric_value = _coerce_numeric_for_unit(raw_value, definition)
+    return _MetricValue(
+        value_text=_format_numeric_value(numeric_value, definition),
+        value_numeric=numeric_value,
+        year_label=latest.academic_year if numeric_value is not None else None,
+        snapshot_date=None,
+    )
+
+
+def _destinations_metric_value(
+    profile: SchoolProfile,
+    definition: CompareMetricDefinition,
+) -> _MetricValue:
+    destinations = profile.destinations_latest
+    if destinations is None or destinations.ks4 is None:
+        return _MetricValue(None, None, None, None)
+
+    stage = destinations.ks4
+    field_name = _DESTINATIONS_FIELD_MAP.get(definition.metric_key)
+    if field_name is None:
+        return _MetricValue(None, None, None, None)
+
+    raw_value = getattr(stage, field_name, None)
+    numeric_value = _coerce_numeric_for_unit(raw_value, definition)
+    return _MetricValue(
+        value_text=_format_numeric_value(numeric_value, definition),
+        value_numeric=numeric_value,
+        year_label=stage.academic_year if numeric_value is not None else None,
+        snapshot_date=None,
     )
 
 

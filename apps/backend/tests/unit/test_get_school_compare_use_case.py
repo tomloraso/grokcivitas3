@@ -631,6 +631,8 @@ def test_get_school_compare_returns_aligned_rows_in_request_order() -> None:
         "workforce",
         "finance",
         "performance",
+        "admissions",
+        "destinations",
         "area",
     ]
 

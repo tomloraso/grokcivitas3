@@ -732,7 +732,7 @@ export interface components {
              * Key
              * @enum {string}
              */
-            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "finance" | "performance" | "area";
+            key: "inspection" | "demographics" | "attendance" | "behaviour" | "workforce" | "finance" | "performance" | "admissions" | "destinations" | "area";
             /** Label */
             label: string;
             /** Rows */
@@ -1225,6 +1225,10 @@ export interface components {
             is_graded: boolean;
             /** Ungraded Outcome */
             ungraded_outcome: string | null;
+            /** Effective Overall Effectiveness Code */
+            effective_overall_effectiveness_code: string | null;
+            /** Effective Overall Effectiveness Label */
+            effective_overall_effectiveness_label: string | null;
             /** Provider Page Url */
             provider_page_url?: string | null;
         };

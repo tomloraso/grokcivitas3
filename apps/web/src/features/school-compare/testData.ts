@@ -226,6 +226,76 @@ export const COMPARE_RESPONSE: SchoolCompareResponse = {
       ],
     },
     {
+      key: "admissions",
+      label: "Admissions",
+      rows: [
+        {
+          metric_key: "admissions_places_offered",
+          label: "Places Offered",
+          unit: "count",
+          cells: [
+            {
+              urn: "100001",
+              value_text: "60",
+              value_numeric: 60,
+              year_label: "2024/25",
+              snapshot_date: null,
+              availability: "available",
+              completeness_status: "available",
+              completeness_reason_code: null,
+              benchmark: null,
+            },
+            {
+              urn: "200002",
+              value_text: "180",
+              value_numeric: 180,
+              year_label: "2024/25",
+              snapshot_date: null,
+              availability: "available",
+              completeness_status: "available",
+              completeness_reason_code: null,
+              benchmark: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      key: "destinations",
+      label: "Destinations",
+      rows: [
+        {
+          metric_key: "destinations_ks4_overall_pct",
+          label: "KS4 Sustained Destinations",
+          unit: "percent",
+          cells: [
+            {
+              urn: "100001",
+              value_text: null,
+              value_numeric: null,
+              year_label: null,
+              snapshot_date: null,
+              availability: "unsupported",
+              completeness_status: "unavailable",
+              completeness_reason_code: "not_applicable",
+              benchmark: null,
+            },
+            {
+              urn: "200002",
+              value_text: "92.0%",
+              value_numeric: 92.0,
+              year_label: "2022/23",
+              snapshot_date: null,
+              availability: "available",
+              completeness_status: "available",
+              completeness_reason_code: null,
+              benchmark: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
       key: "area",
       label: "Area",
       rows: [

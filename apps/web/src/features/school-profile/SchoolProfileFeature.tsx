@@ -72,6 +72,7 @@ import { SchoolOverviewSection } from "./components/SchoolOverviewSection";
 import { SchoolAdmissionsSection } from "./components/SchoolAdmissionsSection";
 import { SchoolDestinationsSection } from "./components/SchoolDestinationsSection";
 import { SchoolFinanceSection } from "./components/SchoolFinanceSection";
+import { SubjectPerformanceSection } from "./components/SubjectPerformanceSection";
 import { WorkforceLeadershipSection } from "./components/WorkforceLeadershipSection";
 import { useSchoolProfile } from "./hooks/useSchoolProfile";
 
@@ -314,6 +315,9 @@ export function SchoolProfileFeature(): JSX.Element {
                     performance={profile.performance}
                     completeness={profile.completeness.performance}
                     benchmarkDashboard={profile.benchmarkDashboard}
+                  />
+                  <SubjectPerformanceSection
+                    subjectPerformance={profile.subjectPerformance}
                   />
                 </ProfileSectionAccordion>
               </div>

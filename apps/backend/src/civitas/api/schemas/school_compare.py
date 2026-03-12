@@ -96,6 +96,8 @@ class SchoolCompareSectionResponse(BaseModel):
         "workforce",
         "finance",
         "performance",
+        "admissions",
+        "destinations",
         "area",
     ]
     label: str

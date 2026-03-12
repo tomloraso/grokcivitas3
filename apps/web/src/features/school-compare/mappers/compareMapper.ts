@@ -28,6 +28,8 @@ const SECTION_LABEL_MAP: Record<string, string> = {
   demographics: "Pupil Demographics",
   workforce: "Teachers & Staff",
   finance: "School Finance",
+  admissions: "School Admissions",
+  destinations: "Leaver Destinations",
   area: "Neighbourhood Context",
 };
 
@@ -39,6 +41,8 @@ const SECTION_ORDER: string[] = [
   "Pupil Demographics",
   "Teachers & Staff",
   "School Finance",
+  "School Admissions",
+  "Leaver Destinations",
   "Neighbourhood Context",
 ];
 

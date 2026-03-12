@@ -84,8 +84,18 @@ function InspectionTypeLabel({ type }: { type: string }): JSX.Element {
 }
 
 function outcomeLabel(event: OfstedTimelineVM["events"][number]): string {
-  if (event.outcomeLabel) return event.outcomeLabel;
-  if (event.headlineOutcome) return event.headlineOutcome;
+  // Section 8 inspections are recorded as "Not judged" by Ofsted — they are
+  // monitoring visits, not full graded inspections.  Prefer any headline
+  // outcome text first, then surface a clearer label than "Not judged".
+  if (event.outcomeLabel && event.outcomeLabel !== "Not judged") {
+    return event.outcomeLabel;
+  }
+  if (event.headlineOutcome) {
+    return event.headlineOutcome;
+  }
+  if (event.outcomeLabel === "Not judged") {
+    return "Monitoring visit";
+  }
   return "Outcome not published";
 }
 

@@ -88,6 +88,34 @@ ANALYST_DISCLAIMER = (
 STUDY_16_18_DESTINATIONS_ENABLED = False
 STUDY_16_18_SUBJECT_PERFORMANCE_ENABLED = False
 
+_UNGRADED_OUTCOME_RATINGS: dict[str, tuple[str, str]] = {
+    "outstanding": ("1", "Outstanding"),
+    "good": ("2", "Good"),
+    "requires improvement": ("3", "Requires Improvement"),
+    "inadequate": ("4", "Inadequate"),
+}
+
+
+def _resolve_effective_ofsted_rating(
+    graded_code: str | None,
+    graded_label: str | None,
+    ungraded_outcome: str | None,
+) -> tuple[str | None, str | None]:
+    """Return the effective Ofsted rating code and label.
+
+    For graded inspections the raw code/label are already authoritative.
+    For ungraded (Section 8) inspections the ``ungraded_outcome`` field
+    (e.g. "School remains Good") carries the effective rating.
+    """
+    if graded_code:
+        return graded_code, graded_label
+    if ungraded_outcome:
+        lower = ungraded_outcome.lower()
+        for keyword, (code, label) in _UNGRADED_OUTCOME_RATINGS.items():
+            if keyword in lower:
+                return code, label
+    return None, None
+
 
 class GetSchoolProfileUseCase:
     def __init__(
@@ -362,6 +390,11 @@ class GetSchoolProfileUseCase:
 
         ofsted_latest = None
         if profile.ofsted_latest is not None:
+            eff_code, eff_label = _resolve_effective_ofsted_rating(
+                profile.ofsted_latest.overall_effectiveness_code,
+                profile.ofsted_latest.overall_effectiveness_label,
+                profile.ofsted_latest.ungraded_outcome,
+            )
             ofsted_latest = SchoolOfstedLatestDto(
                 overall_effectiveness_code=profile.ofsted_latest.overall_effectiveness_code,
                 overall_effectiveness_label=profile.ofsted_latest.overall_effectiveness_label,
@@ -383,6 +416,8 @@ class GetSchoolProfileUseCase:
                 days_since_most_recent_inspection=profile.ofsted_latest.days_since_most_recent_inspection,
                 is_graded=profile.ofsted_latest.is_graded,
                 ungraded_outcome=profile.ofsted_latest.ungraded_outcome,
+                effective_overall_effectiveness_code=eff_code,
+                effective_overall_effectiveness_label=eff_label,
                 provider_page_url=profile.ofsted_latest.provider_page_url,
             )
 
@@ -1120,3 +1155,4 @@ def _resolve_saved_school_state(
         user_id=viewer_user_id,
         school_urns=(school_urn,),
     ).get(school_urn, anonymous_saved_school_state())
+

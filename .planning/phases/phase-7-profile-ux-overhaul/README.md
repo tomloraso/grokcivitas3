@@ -2,8 +2,8 @@
 
 ## Document Control
 
-- Status: Extended — P15-UI complete (2026-03-11)
-- Last updated: 2026-03-11
+- Status: Extended — P16 compare page admissions & destinations (2026-03-12)
+- Last updated: 2026-03-12
 - Phase owner: Product + Design (UX direction: Liora Voss)
 - Source phase: `.planning/phased-delivery.md`
 - Detailed brief: `.planning/ux-overhaul/README.md`
@@ -48,8 +48,10 @@ apps/web/src/components/data/StatCard.tsx  ← re-export shim only (P10)
 
 Section components (import via shim — no changes needed)
   ├── AcademicPerformanceSection  → "Results & Progress"
+  │     └── SubjectPerformanceSection  → inside same accordion (P15)
+  ├── SchoolDestinationsSection   → "Leaver Destinations"  ← stacked bar upgrade (P15)
   ├── AttendanceBehaviourSection  → "Day-to-Day at School"
-  ├── WorkforceLeadershipSection  → "Teachers & Staff"
+  ├── WorkforceLeadershipSection  → "Teachers & Staff"  ← empty-state notices (P15)
   └── DemographicsAndTrendsPanel  → "Pupil Demographics"  ← benchmarks added P12
   each accepts: benchmarkDashboard: BenchmarkDashboardVM | null
   each builds:  Map<metricKey, BenchmarkMetricVM> → BenchmarkSlot
@@ -64,6 +66,12 @@ NeighbourhoodSection (imports from ui/stat-card directly)
 
 SchoolProfileFeature
   └── BenchmarkComparisonSection removed (data inline with each section)
+
+Compare metric catalog (apps/backend/src/civitas/domain/school_compare/models.py)
+  10 sections: inspection → demographics → attendance → behaviour →
+               workforce → finance → performance → admissions → destinations → area
+  55 metrics total (44 original + 6 admissions + 5 destinations)  ← P16
+  Frontend sections mapped: "School Admissions", "Leaver Destinations"  ← P16
 ```
 
 ## Deliverables
@@ -95,6 +103,8 @@ SchoolProfileFeature
 | P14 | Profile action bar redesign | Complete (2026-03-10) |
 | P14.1 | Button animation standardisation | Complete (2026-03-10) |
 | P14.2 | Site-wide button variant standardisation | Complete (2026-03-10) |
+| P15 | `P15-new-data-sections.md` | Complete (2026-03-12) — subject performance section, destinations stacked bar upgrade, workforce empty-state notices |
+| P16 | Compare page: admissions & destinations | Complete (2026-03-12) — 11 new compare metrics across 2 new sections |
 
 ## Execution Sequence
 
@@ -211,6 +221,28 @@ SchoolProfileFeature
 - 2026-03-10 (P11.1 — StatCard Title Case migration):
   - **`stat-card.tsx`** — removed `uppercase tracking-[0.08em]` from label `<span>`, replaced with `tracking-[0.04em]`. Labels now render in their natural Title Case from `metricCatalog.ts` (e.g. "Free School Meals", "English as Additional Language") instead of ALL CAPS. No section component changes needed — source strings were already Title Case.
   - **`apps/web/README.md`** — added "Title case rule" to StatCard design system section.
+
+- 2026-03-12 (P16 — Compare page: admissions & destinations):
+  - **Backend `models.py`** — added `admissions` and `destinations` to `CompareSectionKey`, `CompareCompletenessKey`, `COMPARE_SECTION_ORDER`, `COMPARE_SECTION_LABELS`. Added 11 new `CompareMetricDefinition` entries: 6 admissions (Places Offered, First Preference Applications, All Applications, Oversubscription Ratio, First Preference Offer Rate, Admissions Policy) + 5 KS4 destinations (Sustained Destinations, Education, Apprenticeship, Employment, Not Sustained).
+  - **Backend `use_cases.py`** — added `_admissions_metric_value()` and `_destinations_metric_value()` resolvers with field maps (`_ADMISSIONS_FIELD_MAP`, `_DESTINATIONS_FIELD_MAP`). Offer rates converted from 0-1 ratio to percent. Text metric (admissions policy) handled separately.
+  - **Backend `school_compare.py` schema** — added `admissions` and `destinations` to section key Literal.
+  - **Frontend `compareMapper.ts`** — added "School Admissions" and "Leaver Destinations" to `SECTION_LABEL_MAP` and `SECTION_ORDER`. No component changes needed — existing `CompareAccordionContent` and `CompareMobileContent` handle new sections automatically.
+  - **Frontend `testData.ts`** — added admissions and destinations test fixture sections.
+  - **Backend `test_get_school_compare_use_case.py`** — updated section order assertion to include new sections.
+  - **OpenAPI types** — regenerated `openapi.json` and `generated-types.ts` with new section keys.
+  - **`SubjectPerformanceSection.tsx`** — fixed panel wrapper (`panel-surface` card), header size (`text-lg sm:text-xl`), and table column alignment (`table-fixed` with `colgroup`).
+  - **`ProfileSectionAccordion.tsx`** — added `space-y-4` to content div for spacing between sibling cards in same accordion.
+
+- 2026-03-12 (P15 — New data sections):
+  - **`SubjectPerformanceSection.tsx`** (new) — per-subject exam results section inside "Results & Progress" accordion. Three components: `SubjectRankTable` (strongest/weakest top-5 with desktop table + mobile cards), `SubjectBreakdownGroup` (expandable per-qualification with stacked proportional bar weighted by entries, bidirectional hover, full subject table), and main `SubjectPerformanceSection` wrapper. No benchmarks (unavailable). No trend data (not in series).
+  - **`SchoolDestinationsSection.tsx`** — visual upgrade from flat StatCard grid to design-system Stacked Bar + Legend pattern. Hero `StatCard` for overall sustained %. `DestinationBar` with fixed colour mapping (teal/sky/violet/gray). `DestinationLegend` with inline trend indicators and bidirectional hover. `EducationBreakdownList` as legend-style sub-breakdown.
+  - **`WorkforceLeadershipSection.tsx`** — removed `.filter(cards.length > 0)` on metric sub-groups. Empty groups now render with "No published data for this period" notice instead of being silently hidden. Top-level "Workforce unavailable" fallback retained when ALL groups are empty.
+  - **`types.ts`** — added `SubjectSummaryVM`, `SubjectPerformanceGroupVM`, `SubjectPerformanceVM` interfaces. Added `subjectPerformance` to `SchoolProfileVM`.
+  - **`profileMapper.ts`** — added `mapSubjectSummary()` and `mapSubjectPerformance()` mapper functions.
+  - **`SchoolProfileFeature.tsx`** — wired `SubjectPerformanceSection` inside "Results & Progress" accordion below `AcademicPerformanceSection`.
+  - **`testData.ts`** — added `effective_overall_effectiveness_code/label` fields for Ofsted schema compliance.
+  - **OpenAPI types** — regenerated `openapi.json` and `generated-types.ts` from running backend (includes effective Ofsted fields from prior session).
+  - **`P15-new-data-sections.md`** planning doc created.
 
 - 2026-03-11 (P15-UI — School Finance section, expanded):
   - **`SchoolFinanceSection.tsx`** — full rewrite with 4 subsections: (1) Latest Totals — 5 summary cards including In-Year Balance with `trendDirection` surplus/deficit indicator, `lg:grid-cols-5`; (2) Funding Sources — horizontal stacked bar (Grant vs Self-Generated) with colour-coded segments, amounts, and percentages via `buildFundingMix()`; (3) Where the Money Goes — spending breakdown bar with up to 8 cost categories (Teaching, Supply, Support, Other Staff, Premises, Supplies, Professional Services, Catering) sorted by size via `buildSpendingBreakdown()` and `SPEND_COLORS`; (4) Per-Pupil & Benchmarked — 6 metrics with benchmark bars including new Supply Staff Costs Share.

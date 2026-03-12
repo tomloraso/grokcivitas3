@@ -274,6 +274,8 @@ class SchoolOfstedLatestDto:
     days_since_most_recent_inspection: int | None
     is_graded: bool
     ungraded_outcome: str | None
+    effective_overall_effectiveness_code: str | None
+    effective_overall_effectiveness_label: str | None
     provider_page_url: str | None = None
 
 
@@ -521,3 +523,4 @@ class SchoolProfileResponseDto:
     benchmarks: SchoolProfileBenchmarksDto = field(
         default_factory=lambda: SchoolProfileBenchmarksDto(metrics=())
     )
+

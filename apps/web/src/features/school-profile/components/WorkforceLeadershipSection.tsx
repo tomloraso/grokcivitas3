@@ -366,7 +366,9 @@ export function WorkforceLeadershipSection({
         benchmarkLookup
       )
     }
-  ].filter((group) => group.cards.length > 0);
+  ];
+
+  const allEmpty = metricGroups.every((group) => group.cards.length === 0);
 
   return (
     <section
@@ -398,7 +400,7 @@ export function WorkforceLeadershipSection({
           completeness={workforceCompleteness}
         />
 
-        {metricGroups.length === 0 ? (
+        {allEmpty ? (
           <MetricUnavailable metricLabel="Workforce" />
         ) : (
           <div className="space-y-5">
@@ -410,9 +412,15 @@ export function WorkforceLeadershipSection({
                   </h4>
                   <p className="text-sm text-secondary">{group.description}</p>
                 </div>
-                <MetricGrid columns={4} mobileTwo>
-                  {group.cards}
-                </MetricGrid>
+                {group.cards.length > 0 ? (
+                  <MetricGrid columns={4} mobileTwo>
+                    {group.cards}
+                  </MetricGrid>
+                ) : (
+                  <p className="text-sm text-disabled">
+                    No published data for this period.
+                  </p>
+                )}
               </div>
             ))}
           </div>
